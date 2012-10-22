@@ -70,7 +70,13 @@ Details:
 
 * Create your deployment images
  - using KVM create however many hardware notes your emulated cloud will have,
-   ensuring that for each one you select ooodemo as the network device)
+   ensuring that for each one you select ooodemo as the network device.
+   - Give them no less than 1GB of disk each, we suggest 2GB.
+   - 512MB of memory is probably enough.
+   - Tell KVM you will install the virtual machine via PXE, as that will avoid
+     asking you for a disk image or installation media.
+   - A nice trick is to make one then to clone it N-1 times, after powering it
+     off.
  - <here be dragons>
 
 =======
