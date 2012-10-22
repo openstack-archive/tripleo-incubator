@@ -76,11 +76,28 @@ Details:
 =======
 devas notes
 -----------
+
+* after deploy and run-time images are created, and devstack is started,
+  edit and run the following to inform the baremetal hypervisor of your hardware
 <pre>
-1) ubuntu desktop machine
-• wired network no DHCP
-• devstack with patch?
-• wired network with no DHCP server
-• deploy kernel and ramdisk made by NTT's script (or NobodyCam's version thereof)
-        10:11 < devananda> - some luck
+export BM_SERVICE_HOST_NAME=
+export BM_TARGET_MAC=
+export BM_FAKE_MAC=
+export BM_KERNEL=vmlinuz-3.2.0-29-generic
+export BM_RAMDISK=bm-deploy-ramdisk.3.2.0-29.img
+export BM_RUN_KERNEL=vmlinuz-3.2.0-29-generic
+export BM_RUN_RAMDISK=initrd.img-3.2.0-29-generic
+cd ~/demo/scripts/
+./prepare-devstack-for-baremetal.sh
 </pre>
+* if all goes well, you should be able to run this to start a node now:
+  source ~/devstack/openrc && nova boot --flavor 99 --image bare_metal --key_name default bmtest
+
+
+* What my home environment looks like
+ - 1gE cisco switch (no DHCP)
+ - local git and apt mirror
+ - a "server" running devstack
+ - a "server" available for PXE boot
+ - limited bandwidth (monkeys in a tree provide my internet)
+
