@@ -8,28 +8,28 @@ Overview:
 Details:
 
 * add a bridge to your own machine - e.g. ooodemo
-in /etc/network/interfaces:
-iface ooodemo inet manual
-    # If you want ip4 connectivity from your machine to the demo environment.
-    # This is optional (the demo environment has to be able to reach out which
-    # is independent).
-    # address 192.168.2.1
-    # netmask 255.255.255.0
-    # If you want to bridge it onto your LAN - possibly unwise as DHCP requests
-    # will have to race to be answered by the demo bootstrap VM rather than
-    # your LAN DHCP server. It may be better to use NAT - but if so configure
-    # NAT by hand: Do not use the libvirt NAT environment, because you don't
-    # want dnsmasq answering DHCP queries for these VM's. Note that you need
-    # one of NAT or bridging, as the setup process requires branches of
-    # openstack from ye old internets.
-    # bridge_ports eth0
-    # To do NAT:
-    up iptables -t nat -A POSTROUTING -j MASQUERADE -s 192.168.2.0/24
-and add ooodemo to the 'auto' line.
+  in /etc/network/interfaces:
 
-This sets up a bridge that we will use to communicate between a 'bootstrap' VM and the VM's that will pretend to be bare metal. 
+    iface ooodemo inet manual
+        # If you want ip4 connectivity from your machine to the demo environment.
+        # This is optional (the demo environment has to be able to reach out which
+        # is independent).
+        # address 192.168.2.1
+        # netmask 255.255.255.0
+        # If you want to bridge it onto your LAN - possibly unwise as DHCP requests
+        # will have to race to be answered by the demo bootstrap VM rather than
+        # your LAN DHCP server. It may be better to use NAT - but if so configure
+        # NAT by hand: Do not use the libvirt NAT environment, because you don't
+        # want dnsmasq answering DHCP queries for these VM's. Note that you need
+        # one of NAT or bridging, as the setup process requires branches of
+        # openstack from ye old internets.
+        # bridge_ports eth0
+        # To do NAT:
+        up iptables -t nat -A POSTROUTING -j MASQUERADE -s 192.168.2.0/24
 
-will bridge that onto eth0. It doesn't need any ports at all, unless you want to have remote access to it.
+  and add ooodemo to the 'auto' line.
+
+  This sets up a bridge that we will use to communicate between a 'bootstrap' VM and the VM's that will pretend to be bare metal. 
 
 * Exclude that bridge from dnsmasq:
  - add except-interface=ooodemo to your dnsmasq setup (e.g. in a file in /etc/dnsmasq.d/foo)
