@@ -46,7 +46,8 @@ Details:
    ooodemo shared network device rather than the default NAT set.
  - install Ubuntu into that VM
    - set default user name to "stack", or add as separate user
- - reboot it and manually configure its network:
+ - reboot it and manually configure its network. If you use different details,
+   adjust everything mentioned in this file, including the localrc, to match.
    + address 192.168.2.2
    + netmask 255.255.255.0
    + gateway (if you set up NAT) 192.168.2.1 or your router (if you bridged)
