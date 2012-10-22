@@ -87,7 +87,7 @@ $GLANCE image-update --property "kernel_id=$aki" $ami
 $GLANCE image-update --property "ramdisk_id=$ari" $ami
 
 # create instance type (aka flavor)
-$NOVA_MANAGE instance_type create --name=$BM_NODE_NAME --cpu=2 --memory=4096 --root_gb=10 --ephemeral_gb=20 --flavor=99 --swap=1024 --rxtx_factor=1
+$NOVA_MANAGE instance_type create --name=$BM_NODE_NAME --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=99 --swap=0 --rxtx_factor=1
 $NOVA_MANAGE instance_type set_key --name=$BM_NODE_NAME --key cpu_arch --value "x86_64"
 
 # restart dnsmask
@@ -98,10 +98,10 @@ sudo dnsmasq --conf-file= --port=0 --enable-tftp --tftp-root=/tftpboot --dhcp-bo
 $BM_SCRIPT_PATH/$BM_SCRIPT db sync
 
 # make sure deploy server is running
-[ $(pgrep -f "python '.*/$BM_HELPER'") ] || $BM_SCRIPT_PATH/$BM_HELPER &
+[ $(pgrep -f "python $BM_HELPER") ] || $BM_SCRIPT_PATH/$BM_HELPER &
 
 # make bare-metal DB aware of our HW node and its network interfaces
-$BM_SCRIPT_PATH/$BM_SCRIPT node create --host=$BM_SERVICE_HOST_NAME --cpus=4 --memory_mb=8192 --local_gb=64 --pm_address=$PM_ADDR --pm_user=$PM_USER --pm_password=$PM_PASS --prov_mac=$BM_TARGET_MAC --terminal_port=0
+$BM_SCRIPT_PATH/$BM_SCRIPT node create --host=$BM_SERVICE_HOST_NAME --cpus=1 --memory_mb=512 --local_gb=0 --pm_address=$PM_ADDR --pm_user=$PM_USER --pm_password=$PM_PASS --prov_mac=$BM_TARGET_MAC --terminal_port=0
 $BM_SCRIPT_PATH/$BM_SCRIPT interface create --node_id=1 --mac_address=$BM_FAKE_MAC --datapath_id=0 --port_no=0
 
 # add keypair... optional step
