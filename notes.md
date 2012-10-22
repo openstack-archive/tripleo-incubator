@@ -42,6 +42,7 @@ Details:
  - download an Ubuntu 12.10 .iso
  - using the libvirt GUI or command line (your choice) create a new VM, Give it 1GB of memory, 8GB of disk and - this is the key bit - tell it to use the ooodemo shared network device rather than the default NAT set.
  - install Ubuntu into that VM
+   - set default user name to "stack", or add as separate user
  - reboot it and manually configure its network:
    192.168.2.2 netmask 255.255.255.0 gateway (if you set up NAT) 192.168.2.1
    DNS - whatever your DNS details are.
@@ -50,13 +51,17 @@ Details:
    establish that your VM can reach the internet to obtain packages.
 
 * Configure your bootstrap VM:
- - install git and clone devstack into it wherever you like::
+ - install git and, as the "stack" user, clone devstack into /home/stack/devstack:
    git clone git://github.com/tripleo/devstack.git
    cd devstack
    git checkout baremetal-dev
- - grab devstack (from where?)
- - grab the localrc for devstack (from where)
+ - clone demo into /home/stack/demo
+   cd ..
+   git clone git://github.com/tripleo/demo.git
+ - copy the localrc into devstack (and edit it?)
+   cp ~/demo/localrc ~/devstack/localrc
  - run devstack
+   cd ~/devstack && ./stack.sh
 
 * Create your deployment images
  - using KVM create however many hardware notes your emulated cloud will have,
@@ -67,9 +72,6 @@ Details:
  • wired network no DHCP
  • devstack with patch?
  • wired network with no DHCP server
- • devstack with a minor patch (ah! i need to push this to github)
- • fancy localrc file (ah! I should stick this somewhere for everyone)
- • our nova branch
  • deploy kernel and ramdisk made by NTT's script (or NobodyCam's version thereof)
  10:11 < devananda> - some luck
 
