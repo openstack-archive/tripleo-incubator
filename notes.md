@@ -10,7 +10,7 @@ Details:
 * add a bridge to your own machine - e.g. ooodemo
   in /etc/network/interfaces:
 
-        iface ooodemo inet manual
+        iface ooodemo inet static
             # If you want ip4 connectivity from your machine to the demo environment.
             # This is optional (the demo environment has to be able to reach out which
             # is independent).
