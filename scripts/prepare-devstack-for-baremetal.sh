@@ -67,8 +67,9 @@ GRANT ALL PRIVILEGES ON nova_bm.* TO '$MYSQL_USER'@'$MYSQL_HOST' IDENTIFIED BY '
 EOL
 
 MYSQL=$(which mysql)
+$MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -e "CREATE DATABASE IF NOT EXISTS nova_bm CHARACTER SET utf8;"
 $MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -e "$sql"
-$MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -v -v -f nova_bm < init_nova_bm_db.sql
+$MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -v -v -f nova_bm < $(dirname $0)/init_nova_bm_db.sql
 
 # load main AMI
 [ -e $IMG_PATH/$BM_IMAGE ] && \
@@ -84,6 +85,7 @@ $MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -v -v -f nova_bm < init_nova_bm_db.sql
    ari=$($GLANCE --verbose add is_public=true container_format=ari disk_format=ari name='ari-01' < $IMG_PATH/$BM_RAMDISK) && \
    ari=$(echo "$ari" | head -1 | awk '{print $6}')
 
+#XXXXXXXXXXXx------------------ things work up to here -----------------
 # associate deploy aki and ari to main AMI
 $GLANCE image-update --property "deploy_kernel_id=$aki" $ami
 $GLANCE image-update --property "deploy_ramdisk_id=$ari" $ami
