@@ -50,12 +50,18 @@ Details:
    - set default user name to "stack", or add as separate user
  - reboot it and manually configure its network. If you use different details,
    adjust everything mentioned in this file, including the localrc, to match.
-   Using /etc/resolve/interfaces, removing resolvconf and editing
+   Using /etc/network/interfaces, removing resolvconf and editing
    /etc/resolv.conf is probably the most reliable approach.
-   + address 192.168.2.2
-   + netmask 255.255.255.0
-   + gateway (if you set up NAT) 192.168.2.1 or your router (if you bridged)
-   + nameserver - whatever your DNS details are.
+
+            address 192.168.2.2
+            netmask 255.255.255.0
+            gateway 192.168.2.1
+            # or your router (if you bridged)
+   
+   And for /etc/resolv.conf:
+
+            nameserver - whatever your DNS details are.
+
  - If you want to ssh into this machine, ensure openssh-server is installed and
    use ssh-copy-id to copy your public key into it. This will also help
    establish that your VM can reach the internet to obtain packages.
