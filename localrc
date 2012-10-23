@@ -64,6 +64,7 @@ instance_type_extra_specs=cpu_arch:x86_64 \
 power_manager=nova.virt.baremetal.ipmi.DummyIpmi \
 scheduler_host_manager=nova.scheduler.baremetal_host_manager.BaremetalHostManager \
 firewall_driver=nova.virt.libvirt.firewall.NoopFirewallDriver \
+scheduler_default_filters=AllHostsFilter \
 )
 
 # Logging
