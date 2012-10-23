@@ -25,6 +25,7 @@ ADMIN_PASSWORD=nomoresecrete
 MYSQL_PASSWORD=stackdb
 RABBIT_PASSWORD=stackqueue
 SERVICE_PASSWORD=$ADMIN_PASSWORD
+SERVICE_TOKEN=cde90da2fb9471d421ed
 
 # Network Configuration
 # ---------------------
@@ -34,6 +35,9 @@ HOST_IP=192.168.2.2
 FIXED_NETWORK_SIZE=8
 FIXED_RANGE=192.168.2.32/27
 PUBLIC_INTERFACE=eth0
+
+# Un-comment this if you want to test without the interwebs
+# OFFLINE=True
 
 # Repo changes
 # ------------
