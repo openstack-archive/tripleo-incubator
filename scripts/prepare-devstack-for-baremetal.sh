@@ -20,14 +20,14 @@ BM_NODE_NAME=${BM_NODE_NAME:-bare_metal}
 
 KERNEL_VER=${KERNEL_VER:-`uname -r`}
 
-# The deployment bits - I think (robertc)
-BM_IMAGE=${BM_IMAGE:-bm-node-image.$KERNEL_VER.img}
-BM_KERNEL=${BM_KERNEL:-vmlinuz-$KERNEL_VER}
-BM_RAMDISK=${BM_RAMDISK:-bm-deploy-ramdisk.$KERNEL_VER.img}
+# The deployment bits
+BM_DEPLOY_KERNEL=${BM_DEPLOY_KERNEL:-vmlinuz-$KERNEL_VER}
+BM_DEPLOY_RAMDISK=${BM_DEPLOY_RAMDISK:-bm-deploy-ramdisk.$KERNEL_VER.img}
 
-# The end user runtime bits - I think (robertc) 
-BM_RUN_KERNEL=${BM_RUN_KERNEL:-$BM_KERNEL}
-BM_RUN_RAMDISK=${BM_RUN_RAMDISK:-$BM_RAMDISK}
+# The end user runtime bits
+BM_IMAGE=${BM_IMAGE:-bm-node-image.$KERNEL_VER.img}
+BM_RUN_KERNEL=${BM_RUN_KERNEL:-$BM_DEPLOY_KERNEL}
+BM_RUN_RAMDISK=${BM_RUN_RAMDISK:-$BM_DEPLOY_RAMDISK}
 
 DNSMASQ_IFACE=${DNSMASQ_IFACE:-$PUBLIC_INTERFACE}
 DNSMASQ_IFACE=${DNSMASQ_IFACE:-eth0}
@@ -56,11 +56,11 @@ function load_image {
 set -o xtrace
 
 # build deployment ramdisk if needed 
-if [ ! -e $IMG_PATH/$BM_RAMDISK ]; then
+if [ ! -e $IMG_PATH/$BM_DEPLOY_RAMDISK ]; then
     pushd ~stack/baremetal-initrd-builder
-    ./baremetal-mkinitrd.sh $IMG_PATH/$BM_RAMDISK $KERNEL_VER
-    sudo cp /boot/$BM_KERNEL $IMG_PATH/$BM_KERNEL
-    sudo chmod a+r $IMG_PATH/$BM_KERNEL
+    ./baremetal-mkinitrd.sh $IMG_PATH/$BM_DEPLOY_RAMDISK $KERNEL_VER
+    sudo cp /boot/vmlinuz-$KERNEL_VER $IMG_PATH/$BM_DEPLOY_KERNEL
+    sudo chmod a+r $IMG_PATH/$BM_DEPLOY_KERNEL
     popd
 fi
 
@@ -78,19 +78,19 @@ $MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -e "$sql"
 $MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -v -v -f nova_bm < $(dirname $0)/init_nova_bm_db.sql
 
 ami=$(load_image "ami" $BM_NODE_NAME $BM_IMAGE)
-aki=$(load_image "aki" "aki-01" $BM_KERNEL)
-ari=$(load_image "ari" "ari-01" $BM_RAMDISK)
+aki=$(load_image "aki" "aki-01" $BM_DEPLOY_KERNEL)
+ari=$(load_image "ari" "ari-01" $BM_DEPLOY_RAMDISK)
 
 # associate deploy aki and ari to main AMI
 $GLANCE image-update --property "deploy_kernel_id=$aki" $ami
 $GLANCE image-update --property "deploy_ramdisk_id=$ari" $ami
 
 # load run-time aki and ari, if specified
-if [ $BM_RUN_KERNEL != $BM_KERNEL ]; then
+if [ $BM_RUN_KERNEL != $BM_DEPLOY_KERNEL ]; then
    aki=$(load_image "aki" "aki-02" $BM_RUN_KERNEL)
 fi
 
-if [ $BM_RUN_RAMDISK != $BM_RAMDISK ]; then
+if [ $BM_RUN_RAMDISK != $BM_DEPLOY_RAMDISK ]; then
    ari=$(load_image "ari" "ari-02" $BM_RUN_RAMDISK)
 fi
 
