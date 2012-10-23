@@ -93,7 +93,20 @@ Details:
             make
             sudo make install
 
+* Create deployment kernel and ramdisk
+ - change to the baremetal-initrd-builder directory created with above git command
+   cd ~stack/baremetal-initrd-builder
+ - run the baremetal-mkinitrd.sh script
+   ./baremetal-mkinitrd.sh <ramdisk_image_name> `uname -r`
+ - move the image file created above and a copy of your kernel to a directory so 
+   they can be loaded into glance by the prepare-devstack-for-baremetal.sh script.
+   - cp <ramdisk_image_name> /tmp/DeployRamdisk.img
+   - sudo cp /boot/vmlinuz-`uname -r` /tmp/DeployKernel
+   - Make sure kernel is readable so it can be loaded in to glance.
+     sudo chmod 644 /tmp/DeployKernel
+
  - Run scripts/prepare-devstack-for-baremetal.sh
+
 
 
 * Create your 'baremetal' nodes.
