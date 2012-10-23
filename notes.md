@@ -67,7 +67,7 @@ Details:
    establish that your VM can reach the internet to obtain packages.
  - Workaround https://bugs.launchpad.net/horizon/+bug/1070083 -
 
-            cd /usr/bin && ln -s node nodejs
+            cd /usr/bin && ln -s nodejs node
 
 * Configure your bootstrap VM:
  - install git and, as the "stack" user, clone devstack into /home/stack/devstack:
