@@ -55,6 +55,7 @@ if [ ! -e $IMG_PATH/$BM_RAMDISK ]; then
     pushd ~stack/baremetal-initrd-builder
     ./baremetal-mkinitrd.sh $IMG_PATH/$BM_RAMDISK $KERNEL_VER
     cp /boot/$BM_KERNEL $IMG_PATH/$BM_KERNEL
+    popd
 fi
 
 #####
