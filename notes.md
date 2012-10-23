@@ -85,6 +85,7 @@ devas notes
 
 * after deploy and run-time images are created, and devstack is started,
   edit and run the following to inform the baremetal hypervisor of your hardware
+
         export BM_SERVICE_HOST_NAME=
         export BM_TARGET_MAC=
         export BM_FAKE_MAC=
@@ -94,6 +95,7 @@ devas notes
         export BM_RUN_RAMDISK=initrd.img-3.2.0-29-generic
         cd ~/demo/scripts/
         ./prepare-devstack-for-baremetal.sh
+
 * if all goes well, you should be able to run this to start a node now:
   source ~/devstack/openrc && nova boot --flavor 99 --image bare_metal --key_name default bmtest
 
@@ -103,3 +105,16 @@ devas notes
  - a "server" running devstack
  - a "server" available for PXE boot
  - limited bandwidth (monkeys in a tree provide my internet)
+
+* make sure {{{dnsmasq}}} is installed but ''not'' running
+* create {{{/tftpboot}}} directory, if not exist
+* create {{{/opt/stack/horizon/openstack_dashboard/static/pxe_cfg_files}}} directory, if not exist
+* create following dirs as root
+
+        mkdir /var/lib/nova
+        mkdir /var/lib/nova/baremetal
+        mkdir /var/lib/nova/baremetal/console
+        mkdir /var/lib/nova/baremetal/dnsmasq
+        touch /var/lib/nova/baremetal/dnsmasq/dnsmasq-dhcp.host
+        chown -R stack:stack /var/lib/nova
+
