@@ -48,10 +48,12 @@ Details:
    - set default user name to "stack", or add as separate user
  - reboot it and manually configure its network. If you use different details,
    adjust everything mentioned in this file, including the localrc, to match.
+   Using /etc/resolve/interfaces, removing resolvconf and editing
+   /etc/resolv.conf is probably the most reliable approach.
    + address 192.168.2.2
    + netmask 255.255.255.0
    + gateway (if you set up NAT) 192.168.2.1 or your router (if you bridged)
-   + DNS - whatever your DNS details are.
+   + nameserver - whatever your DNS details are.
  - If you want to ssh into this machine, ensure openssh-server is installed and
    use ssh-copy-id to copy your public key into it. This will also help
    establish that your VM can reach the internet to obtain packages.
@@ -71,26 +73,30 @@ Details:
  - run devstack
    cd devstack && ./stack.sh
    . ./openrc
- - Prep baremetal stuff - this will become part of devstack soon.
+ - Prep baremetal stuff - these will become part of devstack soon.
  - dependencies:
 
             sudo apt-get install dnsmasq syslinux ipmitool qemu-kvm open-iscsi busybox tgt
             sudo /etc/init.d/dnsmasq stop
             sudo update-rc.d dnsmasq disable
 
- - deployment ramdisk and kernel:
+ - deployment ramdisk and kernel tools
 
             cd ~stack
             git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
-            cd baremetal-initrd-builder
-            ./baremetal-mkinitrd.sh ../`uname -r`.ramdisk `uname -r`
-            glance add name="baremetal deployment ramdisk" is_public=true container_format=ari disk_format=ari < ../`uname -r`.ramdisk
-            glance add name="baremetal deployment kernel" is_public=true container_format=aki disk_format=aki < /boot/vmlinuz-`uname -r`
+            cd ..
+            wget http://shellinabox.googlecode.com/files/shellinabox-2.14.tar.gz
+            tar xzf shellinabox-2.14.tar.gz
+            cd shellinabox-2.14
+            sudo apt-get install gcc make
+            ./configure
+            make
+            sudo make install
+
+ - Run scripts/prepare-devstack-for-baremetal.sh
 
 
-
-
-* Create your deployment images
+* Create your 'baremetal' nodes.
  - using KVM create however many hardware notes your emulated cloud will have,
    ensuring that for each one you select ooodemo as the network device.
    - Give them no less than 1GB of disk each, we suggest 2GB.

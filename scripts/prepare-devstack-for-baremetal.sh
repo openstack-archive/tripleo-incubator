@@ -1,5 +1,8 @@
 #/bin/bash
 
+# If something goes wrong bail, don't continue to the end
+set -e
+
 DEVSTACK_PATH=${DEVSTACK_PATH:-/home/stack/devstack}
 [ -e $DEVSTACK_PATH/openrc ] && \
    source $DEVSTACK_PATH/openrc
@@ -15,13 +18,18 @@ NOVA_MANAGE=${NOVA_MANAGE:-/usr/local/bin/nova-manage}
 IMG_PATH=${IMG_PATH:-/home/stack/devstack/files}
 BM_NODE_NAME=${BM_NODE_NAME:-bare_metal}
 
-BM_IMAGE=${BM_IMAGE:-bm-node-image.3.2.0-27.img}
-BM_KERNEL=${BM_KERNEL:-vmlinuz-3.2.0-27-generic}
-BM_RAMDISK=${BM_RAMDISK:-bm-deploy-ramdisk.3.2.0-27.img}
+KERNEL_VER=${KERNEL_VER:-`uname -r`}
 
+# The deployment bits - I think (robertc)
+BM_IMAGE=${BM_IMAGE:-bm-node-image.$KERNEL_VER.img}
+BM_KERNEL=${BM_KERNEL:-vmlinuz-$KERNEL_VER}
+BM_RAMDISK=${BM_RAMDISK:-bm-deploy-ramdisk.$KERNEL_VER.img}
+
+# The end user runtime bits - I think (robertc) 
 BM_RUN_KERNEL=${BM_RUN_KERNEL:-$BM_KERNEL}
 BM_RUN_RAMDISK=${BM_RUN_RAMDISK:-$BM_RAMDISK}
 
+# TODO: get these from localrc
 DNSMASQ_IFACE=${DNSMASQ_IFACE:-eth0}
 DNSMASQ_RANGE=${DNSMASQ_RANGE:-192.168.2.33,192.168.2.63}
 
@@ -34,14 +42,20 @@ if [ ! -e $BM_SCRIPT_PATH/$BM_SCRIPT ]; then
    exit 1
 fi
 
-BM_SERVICE_HOST_NAME=${BM_SERVICE_HOST_NAME:-devstack}
+BM_SERVICE_HOST_NAME=${BM_SERVICE_HOST_NAME:-`hostname`}
 BM_TARGET_MAC=${BM_TARGET_MAC:-01:23:45:67:89:01}
-BM_FAKE_MAC=${BM_FAKE_MAC:-01:23:45:67:89:02}
 
 PM_ADDR=${PM_ADDR:-1.2.3.4}
 PM_USER=${PM_USER:-root}
 PM_PASS=${PM_PASS:-secret}
 set -o xtrace
+
+# build deployment ramdisk if needed 
+if [ ! -e $IMG_PATH/$BM_RAMDISK ]; then
+    pushd ~stack/baremetal-initrd-builder
+    ./baremetal-mkinitrd.sh $IMG_PATH/$BM_RAMDISK $KERNEL_VER
+    cp /boot/$BM_KERNEL $IMG_PATH/$BM_KERNEL
+fi
 
 #####
 # fix mysql issues created by the NTT patch
@@ -100,9 +114,8 @@ $BM_SCRIPT_PATH/$BM_SCRIPT db sync
 # make sure deploy server is running
 [ $(pgrep -f "$BM_HELPER") ] || $BM_SCRIPT_PATH/$BM_HELPER &
 
-# make bare-metal DB aware of our HW node and its network interfaces
+# make bare-metal DB aware of our HW node and any additional network interfaces
 $BM_SCRIPT_PATH/$BM_SCRIPT node create --host=$BM_SERVICE_HOST_NAME --cpus=1 --memory_mb=512 --local_gb=0 --pm_address=$PM_ADDR --pm_user=$PM_USER --pm_password=$PM_PASS --prov_mac=$BM_TARGET_MAC --terminal_port=0
-$BM_SCRIPT_PATH/$BM_SCRIPT interface create --node_id=1 --mac_address=$BM_FAKE_MAC --datapath_id=0 --port_no=0
 
 # add keypair... optional step
 $NOVA keypair-add --pub_key ~/.ssh/authorized_keys  default
