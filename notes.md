@@ -17,13 +17,13 @@ Details:
             # address 192.168.2.1
             # netmask 255.255.255.0
             # If you want to bridge it onto your LAN change none to eth0
-            # - possibly unwise as DHCP requests
-            # will have to race to be answered by the demo bootstrap VM rather than
-            # your LAN DHCP server. It may be better to use NAT - but if so configure
-            # NAT by hand: Do not use the libvirt NAT environment, because you don't
-            # want dnsmasq answering DHCP queries for these VM's. Note that you need
-            # one of NAT or bridging, as the setup process requires branches of
-            # openstack from ye old internets.
+            # - possibly unwise as DHCP requests will have to race to be
+            # answered by the demo bootstrap VM rather than your LAN DHCP
+            # server. It may be better to use NAT - but if so configure NAT by
+            # hand: Do not use the libvirt NAT environment, because you don't
+            # want dnsmasq answering DHCP queries for these VM's. Note that you
+            # need one of NAT or bridging, as the setup process requires
+            # branches of openstack from ye old internets.
             bridge_ports none
             # To do NAT:
             up iptables -t nat -A POSTROUTING -j MASQUERADE -s 192.168.2.0/24
