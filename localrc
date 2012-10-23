@@ -34,13 +34,6 @@ HOST_IP=192.168.2.2
 FIXED_NETWORK_SIZE=8
 FIXED_RANGE=192.168.2.32/27
 PUBLIC_INTERFACE=eth0
-FLAT_INTERFACE=eth0
-
-# You probably don't need to change this
-FORCE_DHCP_RELEASE=False
-STUB_NETWORK=False
-NET_MAN=FlatManager
-
 
 # Repo changes
 # ------------
@@ -55,17 +48,14 @@ NOVA_BRANCH=baremetal-dev
 # -------------------------
 VIRT_DRIVER=baremetal
 
-EXTRA_OPTS=( \
-compute_driver=nova.virt.baremetal.driver.BareMetalDriver \
-baremetal_driver=nova.virt.baremetal.pxe.PXE \
-baremetal_sql_connection=mysql://$MYSQL_USER:$MYSQL_PASSWORD@localhost/nova_bm?charset=utf8 \
-baremetal_tftp_root=/tftpboot \
-instance_type_extra_specs=cpu_arch:x86_64 \
-power_manager=nova.virt.baremetal.ipmi.DummyIpmi \
-scheduler_host_manager=nova.scheduler.baremetal_host_manager.BaremetalHostManager \
-firewall_driver=nova.virt.libvirt.firewall.NoopFirewallDriver \
-scheduler_default_filters=AllHostsFilter \
-)
+# if you need to add extra options to /etc/nova/nova.conf, and don't want to add
+# them to the "BareMetal" section of stack.sh, put them here, one option per line.
+# For example:
+#
+# EXTRA_OPTS=( \
+# scheduler_default_filters=AllHostsFilter \
+# )
+
 
 # Logging
 # -------
