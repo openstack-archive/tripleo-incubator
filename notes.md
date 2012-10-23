@@ -70,6 +70,17 @@ Details:
    cp demo/localrc devstack/localrc
  - run devstack
    cd devstack && ./stack.sh
+ - Prep baremetal stuff - this will become part of devstack soon.
+ - instance ramdisk:
+
+            sudo apt-get install dnsmasq syslinux ipmitool qemu-kvm open-iscsi busybox tgt
+            cd ~stack
+            git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
+            cd baremetal-initrd-builder
+            ./baremetal-mkinitrd.sh ../`uname -r`.ramdisk `uname -r`
+
+
+
 
 * Create your deployment images
  - using KVM create however many hardware notes your emulated cloud will have,
