@@ -90,7 +90,7 @@ $GLANCE image-update --property "ramdisk_id=$ari" $ami
 $NOVA_MANAGE instance_type create --name=$BM_NODE_NAME --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=99 --swap=0 --rxtx_factor=1
 $NOVA_MANAGE instance_type set_key --name=$BM_NODE_NAME --key cpu_arch --value "x86_64"
 
-# restart dnsmask
+# restart dnsmasq
 sudo pkill dnsmasq
 sudo dnsmasq --conf-file= --port=0 --enable-tftp --tftp-root=/tftpboot --dhcp-boot=pxelinux.0 --bind-interfaces --pid-file=/var/run/dnsmasq.pid --interface=$DNSMASQ_IFACE --dhcp-range=$DNSMASQ_RANGE
 

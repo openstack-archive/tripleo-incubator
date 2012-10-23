@@ -70,14 +70,22 @@ Details:
    cp demo/localrc devstack/localrc
  - run devstack
    cd devstack && ./stack.sh
+   . ./openrc
  - Prep baremetal stuff - this will become part of devstack soon.
- - instance ramdisk:
+ - dependencies:
 
             sudo apt-get install dnsmasq syslinux ipmitool qemu-kvm open-iscsi busybox tgt
+            sudo /etc/init.d/dnsmasq stop
+            sudo update-rc.d dnsmasq disable
+
+ - deployment ramdisk and kernel:
+
             cd ~stack
             git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
             cd baremetal-initrd-builder
             ./baremetal-mkinitrd.sh ../`uname -r`.ramdisk `uname -r`
+            glance add name="baremetal deployment ramdisk" is_public=true container_format=ari disk_format=ari < ../`uname -r`.ramdisk
+            glance add name="baremetal deployment kernel" is_public=true container_format=aki disk_format=aki < /boot/vmlinuz-`uname -r`
 
 
 
