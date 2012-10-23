@@ -36,8 +36,9 @@ Details:
  - add except-interface=ooodemo to your dnsmasq setup (e.g. in a file in /etc/dnsmasq.d/foo)
 
 * Activate these changes:
- - sudo service networking restart
- - sudo service libvirt-bin restart
+
+        sudo service networking restart
+        sudo service libvirt-bin restart
 
 * Create your bootstrap VM:
  - download an Ubuntu 12.10 .iso
@@ -58,22 +59,31 @@ Details:
    use ssh-copy-id to copy your public key into it. This will also help
    establish that your VM can reach the internet to obtain packages.
  - Workaround https://bugs.launchpad.net/horizon/+bug/1070083 -
-   cd /usr/bin && ln -s node nodejs
+
+            cd /usr/bin && ln -s node nodejs
 
 * Configure your bootstrap VM:
  - install git and, as the "stack" user, clone devstack into /home/stack/devstack:
-   git clone git://github.com/tripleo/devstack.git
-   cd devstack
-   git checkout baremetal-dev
+
+            git clone git://github.com/tripleo/devstack.git
+            cd devstack
+            git checkout baremetal-dev
+
  - clone demo into /home/stack/demo
-   cd ..
-   git clone git://github.com/tripleo/demo.git
+
+            cd ..
+            git clone git://github.com/tripleo/demo.git
+
  - copy the localrc into devstack (and edit it?)
-   cp demo/localrc devstack/localrc
- - run devstack
-   cd devstack && ./stack.sh
-   . ./openrc
- - Prep baremetal stuff - these will become part of devstack soon.
+
+            cp demo/localrc devstack/localrc
+
+- run devstack
+
+            cd devstack && ./stack.sh
+            . ./openrc
+
+- Prep baremetal stuff - these will become part of devstack soon.
  - dependencies:
 
             sudo apt-get install dnsmasq syslinux ipmitool qemu-kvm open-iscsi busybox tgt
@@ -92,18 +102,6 @@ Details:
             ./configure
             make
             sudo make install
-
-* Create deployment kernel and ramdisk
- - change to the baremetal-initrd-builder directory created with above git command
-       <pre>cd ~stack/baremetal-initrd-builder</pre>
- - run the baremetal-mkinitrd.sh script
-       <pre>./baremetal-mkinitrd.sh \<ramdisk_image_name\> $(uname -r)</pre>
- - move the image file created above and a copy of your kernel to a directory so 
-   they can be loaded into glance by the prepare-devstack-for-baremetal.sh script.
-       <pre>cp <ramdisk_image_name> /tmp/DeployRamdisk.img
-       sudo cp /boot/vmlinuz-$(uname -r) /tmp/DeployKernel</pre>
-   - Make sure kernel is readable so it can be loaded in to glance.
-       <pre>sudo chmod 644 /tmp/DeployKernel</pre>
 
  - Run scripts/prepare-devstack-for-baremetal.sh
 
