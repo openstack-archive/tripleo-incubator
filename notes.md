@@ -97,7 +97,7 @@ Details:
  - change to the baremetal-initrd-builder directory created with above git command
        <pre>cd ~stack/baremetal-initrd-builder</pre>
  - run the baremetal-mkinitrd.sh script
-       <pre>./baremetal-mkinitrd.sh <ramdisk_image_name> $(uname -r)</pre>
+       <pre>./baremetal-mkinitrd.sh \<ramdisk_image_name\> $(uname -r)</pre>
  - move the image file created above and a copy of your kernel to a directory so 
    they can be loaded into glance by the prepare-devstack-for-baremetal.sh script.
        <pre>cp <ramdisk_image_name> /tmp/DeployRamdisk.img
