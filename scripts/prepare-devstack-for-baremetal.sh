@@ -98,7 +98,7 @@ sudo dnsmasq --conf-file= --port=0 --enable-tftp --tftp-root=/tftpboot --dhcp-bo
 $BM_SCRIPT_PATH/$BM_SCRIPT db sync
 
 # make sure deploy server is running
-[ $(pgrep -f "python $BM_HELPER") ] || $BM_SCRIPT_PATH/$BM_HELPER &
+[ $(pgrep -f "$BM_HELPER") ] || $BM_SCRIPT_PATH/$BM_HELPER &
 
 # make bare-metal DB aware of our HW node and its network interfaces
 $BM_SCRIPT_PATH/$BM_SCRIPT node create --host=$BM_SERVICE_HOST_NAME --cpus=1 --memory_mb=512 --local_gb=0 --pm_address=$PM_ADDR --pm_user=$PM_USER --pm_password=$PM_PASS --prov_mac=$BM_TARGET_MAC --terminal_port=0
