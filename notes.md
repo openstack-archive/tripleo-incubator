@@ -55,6 +55,8 @@ Details:
  - If you want to ssh into this machine, ensure openssh-server is installed and
    use ssh-copy-id to copy your public key into it. This will also help
    establish that your VM can reach the internet to obtain packages.
+ - Workaround https://bugs.launchpad.net/horizon/+bug/1070083 -
+   cd /usr/bin && ln -s node nodejs
 
 * Configure your bootstrap VM:
  - install git and, as the "stack" user, clone devstack into /home/stack/devstack:
