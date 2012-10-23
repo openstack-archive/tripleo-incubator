@@ -70,6 +70,11 @@ Details:
             cd /usr/bin && ln -s nodejs node
 
 * Configure your bootstrap VM:
+ - Setup a network proxy if you have one:
+
+            export http_proxy=http://192.168.1.101:8080/
+            echo 'Acquire::http::Proxy "http://192.168.1.101:8080/";' | sudo dd of=/etc/apt/apt.conf.d/60proxy
+
  - install git and, as the "stack" user, clone devstack into /home/stack/devstack:
 
             git clone git://github.com/tripleo/devstack.git
