@@ -52,22 +52,16 @@ PM_PASS=${PM_PASS:-secret}
 
 
 function load_image {
-   if [ ! -r $IMG_PATH/$3 ]; then
-      echo "Can not read image $IMG_PATH/$3" >&2
-      exit 1
-   fi
-   retval=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $IMG_PATH/$3)
-   if [ ! "$retval" ]; then
-      echo "Failed to load image $3 into glance" >&2
-      exit 1
-   fi
-   id=$(echo "$retval" | head -1 | awk '{print $6}')
-   echo $id
+   [ -r $IMG_PATH/$3 ] || die "Can not read image $IMG_PATH/$3"
+   out=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $IMG_PATH/$3)
+   [ "$out" ] || die "Failed to load image $3 into glance"
+   uuid=$(echo "$out" | head -1 | awk '{print $6}')
+   echo $uuid
 }
 
 set -o xtrace
 
-# build deployment ramdisk if needed 
+# build deployment ramdisk if needed
 if [ ! -e $IMG_PATH/$BM_DEPLOY_RAMDISK ]; then
     pushd ~stack/baremetal-initrd-builder
     ./baremetal-mkinitrd.sh $IMG_PATH/$BM_DEPLOY_RAMDISK $KERNEL_VER
