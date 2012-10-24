@@ -52,7 +52,15 @@ PM_PASS=${PM_PASS:-secret}
 
 
 function load_image {
+   if [ ! -r $IMG_PATH/$3 ]; then
+      echo "Can not read image $IMG_PATH/$3" >&2
+      exit 1
+   fi
    retval=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $IMG_PATH/$3)
+   if [ ! "$retval" ]; then
+      echo "Failed to load image $3 into glance" >&2
+      exit 1
+   fi
    id=$(echo "$retval" | head -1 | awk '{print $6}')
    echo $id
 }
