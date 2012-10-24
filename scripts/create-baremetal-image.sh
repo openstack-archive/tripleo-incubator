@@ -2,27 +2,36 @@
 
 # script to create a Ubuntu bare metal image
 # NobodyCam 0.0.0 Pre-alpha
+# Others 0.1.0 Beta
 #
 # This builds an image in /tmp, and moves it into $IMG_PATH upon success.
+
 set -e
 set -o xtrace
+
 # Setup
-ARCH=${ARCH:-`dpkg --print-architecture`}
+ARCH=${ARCH:-$(dpkg --print-architecture)}
 IMG_PATH=${IMG_PATH:-/home/stack/devstack/files}
-KERNEL_VER=${KERNEL_VER:-`uname -r`}
+KERNEL_VER=${KERNEL_VER:-$(uname -r)}
 CLOUD_IMAGES=${CLOUD_IMAGES:-http://cloud-images.ubuntu.com/}
 RELEASE=${RELEASE:-precise}
 BASE_IMAGE_FILE=${BASE_IMAGE_FILE:-$RELEASE-server-cloudimg-$ARCH-root.tar.gz}
 OUTPUT_IMAGE_FILE=${OUTPUT_IMAGE_FILE:-bm-node-image.$KERNEL_VER.img}
 FS_TYPE=${FS_TYPE:-ext4}
 IMAGE_SIZE=${IMAGE_SIZE:-1} # N.B. This size is in GB
+
 # Ensure we have sudo before we do long running things that will bore the user.
 # Also, great band.
 sudo echo
-TMP_BUILD_DIR=`mktemp -t -d image.XXXXXXXX`
-[ $? -ne 0 ] && \
-    echo "Failed to create tmp directory" && \
+
+BASE_DIR=$(dirname $0)
+
+TMP_BUILD_DIR=$(mktemp -t -d image.XXXXXXXX)
+if [ $? -ne 0 ] ; then
+    echo "Failed to create tmp directory"
     exit 1
+fi
+
 function unmount_image () {
     # unmount from the chroot
     sudo umount -f $TMP_BUILD_DIR/mnt/dev || true
@@ -31,6 +40,7 @@ function unmount_image () {
     # oh ya don't want to forget to unmount the image
     sudo umount -f $TMP_BUILD_DIR/mnt || true
 }
+
 function cleanup () {
     unmount_image
     rm -rf $TMP_BUILD_DIR
@@ -40,15 +50,17 @@ trap cleanup ERR
 echo Building in $TMP_BUILD_DIR
 
 
-[ ! -f $IMG_PATH/$BASE_IMAGE_FILE ] && \
-   echo "Fetching Base Image" && \
-   wget $CLOUD_IMAGES/$RELEASE/current/$BASE_IMAGE_FILE -O $IMG_PATH/$BASE_IMAGE_FILE.tmp && \
+if [ ! -f $IMG_PATH/$BASE_IMAGE_FILE ] ; then
+   echo "Fetching Base Image"
+   wget $CLOUD_IMAGES/$RELEASE/current/$BASE_IMAGE_FILE -O $IMG_PATH/$BASE_IMAGE_FILE.tmp
    mv $IMG_PATH/$BASE_IMAGE_FILE.tmp $IMG_PATH/$BASE_IMAGE_FILE
+fi
 
 # TODO: this really should rename the old file
-[ -f  $IMG_PATH/$OUTPUT_IMAGE_FILE ] && \
-   echo "Old Image file Found REMOVING" && \
+if [ -f  $IMG_PATH/$OUTPUT_IMAGE_FILE ] ; then
+   echo "Old Image file Found REMOVING"
    rm -f $IMG_PATH/$OUTPUT_IMAGE_FILE
+fi
 
 # Create the file that will be our image
 dd if=/dev/zero of=$TMP_BUILD_DIR/image bs=1M count=0 seek=$(( ${IMAGE_SIZE} * 1024 ))
@@ -58,20 +70,23 @@ mkfs -F -t $FS_TYPE $TMP_BUILD_DIR/image
 # mount the image file
 mkdir $TMP_BUILD_DIR/mnt
 sudo mount -o loop $TMP_BUILD_DIR/image $TMP_BUILD_DIR/mnt
-[ $? -ne 0 ] && \
-    echo "Failed to mount image" && \
+if [ $? -ne 0 ] ; then
+    echo "Failed to mount image"
     exit 1
+fi
 
 # Extract the base image
 sudo tar -C $TMP_BUILD_DIR/mnt -xzf $IMG_PATH/$BASE_IMAGE_FILE
 
 # Configure Image
 # Setup resolv.conf so we can chroot to install some packages
-[ -L $TMP_BUILD_DIR/mnt/etc/resolv.conf ] && \
+if [ -L $TMP_BUILD_DIR/mnt/etc/resolv.conf ] ; then
     sudo unlink $TMP_BUILD_DIR/mnt/etc/resolv.conf
+fi
 
-[ -f $TMP_BUILD_DIR/mnt/etc/resolv.conf ] && \
+if [ -f $TMP_BUILD_DIR/mnt/etc/resolv.conf ] ; then
     sudo rm -f $TMP_BUILD_DIR/mnt/etc/resolv.conf
+fi
 
 # Recreate resolv.conf
 sudo touch $TMP_BUILD_DIR/mnt/etc/resolv.conf
@@ -82,10 +97,11 @@ echo nameserver 8.8.8.8>$TMP_BUILD_DIR/mnt/etc/resolv.conf
 sudo mount --bind /dev $TMP_BUILD_DIR/mnt/dev
 
 # If we have a network proxy, use it.
-[ -n "$http_proxy" ] && \
+if [ -n "$http_proxy" ] ; then
     sudo dd of=$TMP_BUILD_DIR/mnt/etc/apt/apt.conf.d/60img-build-proxy << _EOF_
 Acquire::http::Proxy "$http_proxy";
 _EOF_
+fi
 
 # Generate locales to avoid perl setting locales warnings
 sudo chroot $TMP_BUILD_DIR/mnt locale-gen en_US en_US.UTF-8
@@ -106,8 +122,8 @@ sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install salt-minion
 sudo chroot $TMP_BUILD_DIR/mnt service salt-minion stop
 
 # Now some quick hacks to prevent 4 minutes of pause while booting
-[ -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf ] && \
-    sudo rm -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf && \
+if [ -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf ] ; then
+    sudo rm -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf
 
 # Now Recreate the file we just removed
 sudo dd of=$TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf << _EOF_ 
@@ -138,10 +154,12 @@ script
 end script
 # EOF
 _EOF_
+fi
 
 # One more hack
-[ -f $TMP_BUILD_DIR/mnt/etc/init/failsafe.conf ] && \
+if [ -f $TMP_BUILD_DIR/mnt/etc/init/failsafe.conf ] ; then
     sudo rm -f $TMP_BUILD_DIR/mnt/etc/init/failsafe.conf
+fi
 
 # Now Recreate the file we just removed
 sudo dd of=$TMP_BUILD_DIR/mnt/etc/init/failsafe.conf << _EOF_ 
