@@ -122,7 +122,11 @@ Details:
  - Load images and configuration into devstack. This will update the nova DB,
    create deployment ramdisk, kernel and image, create demo images etc.
  
+            export BM_TARGET_MAC=<MAC address of baremetal node>
+            export BM_SERVICE_HOST_NAME=192.168.2.2
             cd ~/demo/scripts
+            sudo mkdir -p /tftpboot/pxelinux.cfg
+            sudo cp /usr/lib/syslinux/pxelinux.0 /tftpboot/
             ./prepare-devstack-for-baremetal.sh
 
 
@@ -137,27 +141,9 @@ Details:
      off.
    - Specify the MAC address for each node. You need to feed this info
      to the prepare-devstack-for-baremetal.sh script. Default is 01:23:45:67:89:01
- - <here be dragons>
-
-devas notes
------------
-
-* after run-time images are created, and devstack is started,
-  set run the following to inform the baremetal hypervisor of your hardware
-
-        export BM_TARGET_MAC=<MAC address of baremetal node>
-        export BM_SERVICE_HOST_NAME=192.168.2.2
-        cd ~/demo/scripts/
-        ./prepare-devstack-for-baremetal.sh
+ - here be dragons - this should be post prepare-for-baremetal.
 
 * if all goes well, you should be able to run this to start a node now:
-  source ~/devstack/openrc && nova boot --flavor 99 --image bare_metal --key_name default bmtest
 
-* What my home environment looks like
- - 1gE cisco switch (no DHCP)
- - local git and apt mirror
- - a "server" running devstack
- - a "server" available for PXE boot
- - limited bandwidth (monkeys in a tree provide my internet)
-
-* create {{{/opt/stack/horizon/openstack_dashboard/static/pxe_cfg_files}}} directory, if not exist
+            source ~/devstack/openrc
+            nova boot --flavor 99 --image bare_metal --key_name default bmtest
