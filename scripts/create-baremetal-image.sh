@@ -2,78 +2,91 @@
 
 # script to create a Ubuntu bare metal image
 # NobodyCam 0.0.0 Pre-alpha
+#
+# This builds an image in /tmp, and moves it into $IMG_PATH upon success.
+set -e
 set -o xtrace
 # Setup
-CURRENT_PATH=${CURRENT_PATH:-`pwd`}
-BASE_IMAGE_FILE=${BASE_IMAGE_FILE:-precise-server-cloudimg-amd64-root.tar.gz}
-OUTPUT_IMAGE_FILE=${OUTPUT_IMAGE_FILE:-ubuntu_bm_image.img}
-KERNEL_VER=${KERNEL_VER:-3.2.0-29-generic}
-
-
-[ ! -f  $CURRENT_PATH/$BASE_IMAGE_FILE ] && \
-   echo "Fetching Base Image" && \
-   wget http://cloud-images.ubuntu.com/precise/current/precise-server-cloudimg-amd64-root.tar.gz
-
-# TODO: this really should rename the old file
-[ -f  $CURRENT_PATH/$OUTPUT_IMAGE_FILE ] && \
-   echo "Old Image file Found REMOVING" && \
-   rm -f $CURRENT_PATH/$OUTPUT_IMAGE_FILE
-
-# Create the file that will be our image
-# TODO: allow control of image size too
-dd if=/dev/zero of=$CURRENT_PATH/$OUTPUT_IMAGE_FILE bs=1M count=0 seek=1024
-
-# Format the image
-# TODO: allow control of fs type
-mkfs -F -t ext4 $CURRENT_PATH/$OUTPUT_IMAGE_FILE
-
+ARCH=${ARCH:-`dpkg --print-architecture`}
+IMG_PATH=${IMG_PATH:-/home/stack/devstack/files}
+CLOUD_IMAGES=${CLOUD_IMAGES:-http://cloud-images.ubuntu.com/}
+RELEASE=${RELEASE:-precise}
+BASE_IMAGE_FILE=${BASE_IMAGE_FILE:-$RELEASE-server-cloudimg-$ARCH-root.tar.gz}
+OUTPUT_IMAGE_FILE=${OUTPUT_IMAGE_FILE:-bm-node-image.$KERNEL_VER.img}
+KERNEL_VER=${KERNEL_VER:-`uname -r`}
 TMP_BUILD_DIR=`mktemp -t -d image.XXXXXXXX`
 [ $? -ne 0 ] && \
     echo "Failed to create tmp directory" && \
     exit 1
+echo Building in $TMP_BUILD_DIR
+
+
+[ ! -f $IMG_PATH/$BASE_IMAGE_FILE ] && \
+   echo "Fetching Base Image" && \
+   wget $CLOUD_IMAGES/$RELEASE/current/$BASE_IMAGE_FILE -O $IMG_PATH/$BASE_IMAGE_FILE.tmp && \
+   mv $IMG_PATH/$BASE_IMAGE_FILE.tmp $IMG_PATH/$BASE_IMAGE_FILE
+
+# TODO: this really should rename the old file
+[ -f  $IMG_PATH/$OUTPUT_IMAGE_FILE ] && \
+   echo "Old Image file Found REMOVING" && \
+   rm -f $IMG_PATH/$OUTPUT_IMAGE_FILE
+
+# Create the file that will be our image
+# TODO: allow control of image size
+dd if=/dev/zero of=$TMP_BUILD_DIR/image bs=1M count=0 seek=1024
+
+# TODO: allow control of fs type
+mkfs -F -t ext4 $TMP_BUILD_DIR/image
 
 # mount the image file
-sudo mount -o loop $CURRENT_PATH/$OUTPUT_IMAGE_FILE $TMP_BUILD_DIR
+mkdir $TMP_BUILD_DIR/mnt
+sudo mount -o loop $TMP_BUILD_DIR/image $TMP_BUILD_DIR/mnt
 [ $? -ne 0 ] && \
     echo "Failed to mount image" && \
     exit 1
 
 # Extract the base image
-sudo tar -C $TMP_BUILD_DIR -xzf $CURRENT_PATH/$BASE_IMAGE_FILE
+sudo tar -C $TMP_BUILD_DIR/mnt -xzf $IMG_PATH/$BASE_IMAGE_FILE
 
 # Configure Image
 # Setup resolv.conf so we can chroot to install some packages
-[ -L $TMP_BUILD_DIR/etc/resolv.conf ] && \
-    sudo unlink $TMP_BUILD_DIR/etc/resolv.conf
+[ -L $TMP_BUILD_DIR/mnt/etc/resolv.conf ] && \
+    sudo unlink $TMP_BUILD_DIR/mnt/etc/resolv.conf
 
-[ -f $TMP_BUILD_DIR/etc/resolv.conf ] && \
-    sudo rm -f $TMP_BUILD_DIR/etc/resolv.conf
+[ -f $TMP_BUILD_DIR/mnt/etc/resolv.conf ] && \
+    sudo rm -f $TMP_BUILD_DIR/mnt/etc/resolv.conf
 
 # Recreate resolv.conf
-sudo touch $TMP_BUILD_DIR/etc/resolv.conf
-sudo chmod 777 $TMP_BUILD_DIR/etc/resolv.conf
-echo nameserver 8.8.8.8>$TMP_BUILD_DIR/etc/resolv.conf
+sudo touch $TMP_BUILD_DIR/mnt/etc/resolv.conf
+sudo chmod 777 $TMP_BUILD_DIR/mnt/etc/resolv.conf
+echo nameserver 8.8.8.8>$TMP_BUILD_DIR/mnt/etc/resolv.conf
 
 # we'll prob need something from /dev so lets mount it
-sudo mount --bind /dev $TMP_BUILD_DIR/dev
+sudo mount --bind /dev $TMP_BUILD_DIR/mnt/dev
+
+# If we have a network proxy, use it.
+[ -n "$http_proxy" ] && \
+    sudo dd of=$TMP_BUILD_DIR/mnt/etc/apt/apt.conf.d/60img-build-proxy << _EOF_
+Acquire::http::Proxy "$http_proxy";
+_EOF_
 
 # now chroot and install what we need (it is ok to Ignore errors here)
-sudo chroot $TMP_BUILD_DIR apt-get -y install linux-image-$KERNEL_VER vlan open-iscsi
+sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install linux-image-generic vlan open-iscsi
 
 # now lets install salt-minion
-sudo chroot $TMP_BUILD_DIR apt-get -y install python-software-properties
-sudo chroot $TMP_BUILD_DIR add-apt-repository -y ppa:saltstack/salt
-sudo chroot $TMP_BUILD_DIR apt-get -y update
-sudo chroot $TMP_BUILD_DIR apt-get -y install salt-minion
+sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install python-software-properties
+sudo chroot $TMP_BUILD_DIR/mnt add-apt-repository -y ppa:saltstack/salt
+sudo chroot $TMP_BUILD_DIR/mnt apt-get -y update
+sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install salt-minion
 # stop the minion we just installed
-sudo chroot $TMP_BUILD_DIR service salt-minion stop
+sudo chroot $TMP_BUILD_DIR/mnt service salt-minion stop
 
 # Now some quick hacks to prevent 4 minutes of pause while booting
-[ -f $TMP_BUILD_DIR/etc/init/cloud-init-nonet.conf ] && \
-    sudo rm -f $TMP_BUILD_DIR/etc/init/cloud-init-nonet.conf && \
+[ -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf ] && \
+    sudo rm -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf && \
 
 # Now Recreate the file we just removed
-cat << _EOF_ > $TMP_BUILD_DIR/etc/init/cloud-init-nonet.conf
+sudo dd of=$TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf << _EOF_ 
 # cloud-init-no-net
 start on mounted MOUNTPOINT=/ and stopped cloud-init-local
 stop on static-network-up
@@ -103,11 +116,11 @@ end script
 _EOF_
 
 # One more hack
-[ -f $TMP_BUILD_DIR/etc/init/failsafe.conf ] && \
-    sudo rm -f $TMP_BUILD_DIR/etc/init/failsafe.conf
+[ -f $TMP_BUILD_DIR/mnt/etc/init/failsafe.conf ] && \
+    sudo rm -f $TMP_BUILD_DIR/mnt/etc/init/failsafe.conf
 
 # Now Recreate the file we just removed
-cat << _EOF_ > $TMP_BUILD_DIR/etc/init/failsafe.conf
+sudo dd of=$TMP_BUILD_DIR/mnt/etc/init/failsafe.conf << _EOF_ 
 # failsafe
 
 description "Failsafe Boot Delay"
@@ -155,18 +168,21 @@ post-start exec	logger -t 'failsafe' -p daemon.warning "Failsafe of 120 seconds 
 _EOF_
 
 # that should do it for the hacks
+# Undo our proxy support
+sudo rm -f $TMP_BUILD_DIR/mnt/etc/apt/apt.conf.d/60img-build-proxy
 # Now remove the resolv.conf we created above
-sudo rm -f $TMP_BUILD_DIR/etc/resolv.conf
+sudo rm -f $TMP_BUILD_DIR/mnt/etc/resolv.conf
 # The we need to recreate it as a link
-ln -sf ../run/resolvconf/resolv.conf $TMP_BUILD_DIR/etc/resolv.conf
+sudo ln -sf ../run/resolvconf/resolv.conf $TMP_BUILD_DIR/mnt/etc/resolv.conf
 
 # unmount from the chroot
-sudo chroot $TMP_BUILD_DIR umount /proc
-sudo chroot $TMP_BUILD_DIR umount /dev
+sudo chroot $TMP_BUILD_DIR/mnt umount /dev
 # give it a second (ok really 5) to umount
 sleep 5
 # oh ya don't want to forget to unmount the image
-sudo umount $TMP_BUILD_DIR
+sudo umount $TMP_BUILD_DIR/mnt
 
-echo "Image file $CURRENT_PATH/$OUTPUT_IMAGE_FILE created..."
+cp $TMP_BUILD_DIR/image $IMG_PATH/$OUTPUT_IMAGE_FILE
+
+echo "Image file $IMG_PATH/$OUTPUT_IMAGE_FILE created..."
 

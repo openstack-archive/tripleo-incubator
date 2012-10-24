@@ -3,6 +3,10 @@
 # If something goes wrong bail, don't continue to the end
 set -e
 
+# The following variables allow the behaviour of the script to be customised:
+# just export them in advance. For instance, to use a different kernel, export
+# KERNEL_VER.
+
 DEVSTACK_PATH=${DEVSTACK_PATH:-/home/stack/devstack}
 source $DEVSTACK_PATH/openrc
 source $DEVSTACK_PATH/localrc

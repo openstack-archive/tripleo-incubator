@@ -114,6 +114,11 @@ Details:
             make
             sudo make install
 
+ - Create a cloud image - the baremetal image that will be deployed onto your
+   cloud nodes.
+
+            scripts/create-baremetal-image.sh
+
  - Run scripts/prepare-devstack-for-baremetal.sh. This will update the nova DB,
    create deployment ramdisk, kernel and image, create demo images etc.
 
@@ -133,16 +138,11 @@ Details:
 devas notes
 -----------
 
-* after deploy and run-time images are created, and devstack is started,
-  edit and run the following to inform the baremetal hypervisor of your hardware
+* after run-time images are created, and devstack is started,
+  set run the following to inform the baremetal hypervisor of your hardware
 
-        export BM_SERVICE_HOST_NAME=
-        export BM_TARGET_MAC=
-        export BM_FAKE_MAC=
-        export BM_KERNEL=vmlinuz-3.2.0-29-generic
-        export BM_RAMDISK=bm-deploy-ramdisk.3.2.0-29.img
-        export BM_RUN_KERNEL=vmlinuz-3.2.0-29-generic
-        export BM_RUN_RAMDISK=initrd.img-3.2.0-29-generic
+        export BM_TARGET_MAC=<MAC address of your test machine
+        export BM_SERVICE_HOST_NAME=192.168.2.2
         cd ~/demo/scripts/
         ./prepare-devstack-for-baremetal.sh
 
