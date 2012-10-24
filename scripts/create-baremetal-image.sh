@@ -84,6 +84,9 @@ sudo mount --bind /dev $TMP_BUILD_DIR/mnt/dev
 Acquire::http::Proxy "$http_proxy";
 _EOF_
 
+# Generate locales to avoid perl setting locales warnings
+sudo chroot $TMP_BUILD_DIR/mnt locale-gen en_US en_US.UTF-8
+
 # now chroot and install what we need (it is ok to Ignore errors here)
 sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install linux-image-generic vlan open-iscsi
 
