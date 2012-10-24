@@ -67,12 +67,13 @@ Details:
    establish that your VM can reach the internet to obtain packages.
  - Workaround https://bugs.launchpad.net/horizon/+bug/1070083 -
 
-            cd /usr/bin && ln -s nodejs node
+           cd /usr/bin && sudo ln -s nodejs node; cd ~
 
 * Configure your bootstrap VM:
  - Setup a network proxy if you have one:
 
             export http_proxy=http://192.168.1.101:8080/
+            export no_proxy=192.168.2.2
             echo 'Acquire::http::Proxy "http://192.168.1.101:8080/";' | sudo dd of=/etc/apt/apt.conf.d/60proxy
 
 * Prep bootstrap VM:
