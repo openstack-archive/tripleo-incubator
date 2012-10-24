@@ -26,7 +26,7 @@ Details:
             # branches of openstack from ye old internets.
             bridge_ports none
             # To do NAT:
-            up iptables -t nat -A POSTROUTING -j MASQUERADE -s 192.168.2.0/24
+            up iptables -t nat -A POSTROUTING -j MASQUERADE -s 192.168.2.0/24 ! -o ooodemo
 
   and add ooodemo to the 'auto' line.
 
