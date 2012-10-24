@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # script to create a Ubuntu bare metal image
 # NobodyCam 0.0.0 Pre-alpha
