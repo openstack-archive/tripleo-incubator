@@ -16,6 +16,9 @@ BASE_IMAGE_FILE=${BASE_IMAGE_FILE:-$RELEASE-server-cloudimg-$ARCH-root.tar.gz}
 OUTPUT_IMAGE_FILE=${OUTPUT_IMAGE_FILE:-bm-node-image.$KERNEL_VER.img}
 FS_TYPE=${FS_TYPE:-ext4}
 IMAGE_SIZE=${IMAGE_SIZE:-1} # N.B. This size is in GB
+# Ensure we have sudo before we do long running things that will bore the user.
+# Also, great band.
+sudo echo
 TMP_BUILD_DIR=`mktemp -t -d image.XXXXXXXX`
 [ $? -ne 0 ] && \
     echo "Failed to create tmp directory" && \
@@ -87,15 +90,19 @@ _EOF_
 # Generate locales to avoid perl setting locales warnings
 sudo chroot $TMP_BUILD_DIR/mnt locale-gen en_US en_US.UTF-8
 
-# now chroot and install what we need (it is ok to Ignore errors here)
+# Add additional repositories - XXX: make a hook.
+sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install python-software-properties
+sudo chroot $TMP_BUILD_DIR/mnt add-apt-repository -y ppa:saltstack/salt
+sudo chroot $TMP_BUILD_DIR/mnt add-apt-repository -y ppa:tripleo/demo
+sudo chroot $TMP_BUILD_DIR/mnt apt-get -y update
+
+# install what we need (it is ok to Ignore errors here)
 sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install linux-image-generic vlan open-iscsi
 
 # now lets install salt-minion
-sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install python-software-properties
-sudo chroot $TMP_BUILD_DIR/mnt add-apt-repository -y ppa:saltstack/salt
-sudo chroot $TMP_BUILD_DIR/mnt apt-get -y update
 sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install salt-minion
-# stop the minion we just installed
+# stop the minion we just installed: XXX should just inhibit services during
+#                                        this process as deboostrap does.
 sudo chroot $TMP_BUILD_DIR/mnt service salt-minion stop
 
 # Now some quick hacks to prevent 4 minutes of pause while booting
