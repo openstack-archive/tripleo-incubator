@@ -14,6 +14,8 @@ CLOUD_IMAGES=${CLOUD_IMAGES:-http://cloud-images.ubuntu.com/}
 RELEASE=${RELEASE:-precise}
 BASE_IMAGE_FILE=${BASE_IMAGE_FILE:-$RELEASE-server-cloudimg-$ARCH-root.tar.gz}
 OUTPUT_IMAGE_FILE=${OUTPUT_IMAGE_FILE:-bm-node-image.$KERNEL_VER.img}
+FS_TYPE=${FS_TYPE:-ext4}
+IMAGE_SIZE=${IMAGE_SIZE:-1} # N.B. This size is in GB
 TMP_BUILD_DIR=`mktemp -t -d image.XXXXXXXX`
 [ $? -ne 0 ] && \
     echo "Failed to create tmp directory" && \
@@ -46,11 +48,9 @@ echo Building in $TMP_BUILD_DIR
    rm -f $IMG_PATH/$OUTPUT_IMAGE_FILE
 
 # Create the file that will be our image
-# TODO: allow control of image size
-dd if=/dev/zero of=$TMP_BUILD_DIR/image bs=1M count=0 seek=1024
+dd if=/dev/zero of=$TMP_BUILD_DIR/image bs=1M count=0 seek=$(( ${IMAGE_SIZE} * 1024 ))
 
-# TODO: allow control of fs type
-mkfs -F -t ext4 $TMP_BUILD_DIR/image
+mkfs -F -t $FS_TYPE $TMP_BUILD_DIR/image
 
 # mount the image file
 mkdir $TMP_BUILD_DIR/mnt
