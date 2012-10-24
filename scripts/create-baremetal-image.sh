@@ -18,6 +18,20 @@ TMP_BUILD_DIR=`mktemp -t -d image.XXXXXXXX`
 [ $? -ne 0 ] && \
     echo "Failed to create tmp directory" && \
     exit 1
+function unmount_image () {
+    # unmount from the chroot
+    sudo umount -f $TMP_BUILD_DIR/mnt/dev || true
+    # give it a second (ok really 5) to umount
+    sleep 5
+    # oh ya don't want to forget to unmount the image
+    sudo umount -f $TMP_BUILD_DIR/mnt || true
+}
+function cleanup () {
+    unmount_image
+    rm -rf $TMP_BUILD_DIR
+}
+trap cleanup ERR
+
 echo Building in $TMP_BUILD_DIR
 
 
@@ -175,14 +189,9 @@ sudo rm -f $TMP_BUILD_DIR/mnt/etc/resolv.conf
 # The we need to recreate it as a link
 sudo ln -sf ../run/resolvconf/resolv.conf $TMP_BUILD_DIR/mnt/etc/resolv.conf
 
-# unmount from the chroot
-sudo chroot $TMP_BUILD_DIR/mnt umount /dev
-# give it a second (ok really 5) to umount
-sleep 5
-# oh ya don't want to forget to unmount the image
-sudo umount $TMP_BUILD_DIR/mnt
-
+unmount_image
 cp $TMP_BUILD_DIR/image $IMG_PATH/$OUTPUT_IMAGE_FILE
+rm -r $TMP_BUILD_DIR
 
 echo "Image file $IMG_PATH/$OUTPUT_IMAGE_FILE created..."
 
