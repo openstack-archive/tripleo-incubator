@@ -75,6 +75,7 @@ Details:
             export http_proxy=http://192.168.1.101:8080/
             echo 'Acquire::http::Proxy "http://192.168.1.101:8080/";' | sudo dd of=/etc/apt/apt.conf.d/60proxy
 
+* Prep bootstrap VM:
  - install git and, as the "stack" user, clone devstack into /home/stack/devstack:
 
             git clone git://github.com/tripleo/devstack.git
@@ -86,23 +87,11 @@ Details:
             cd ..
             git clone git://github.com/tripleo/demo.git
 
- - copy the localrc into devstack (and edit it?)
+ - copy the localrc into devstack
 
             cp demo/localrc devstack/localrc
 
-- run devstack
-
-            cd devstack && ./stack.sh
-            . ./openrc
-
-- Prep baremetal stuff - these will become part of devstack soon.
- - dependencies:
-
-            sudo apt-get install dnsmasq syslinux ipmitool qemu-kvm open-iscsi busybox tgt
-            sudo /etc/init.d/dnsmasq stop
-            sudo update-rc.d dnsmasq disable
-
- - deployment ramdisk and kernel tools
+ - create deployment ramdisk and kernel
 
             cd ~stack
             git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
@@ -117,11 +106,23 @@ Details:
  - Create a cloud image - the baremetal image that will be deployed onto your
    cloud nodes.
 
-            scripts/create-baremetal-image.sh
+            cd ~/demo/scripts
+            ./create-baremetal-image.sh
 
- - Run scripts/prepare-devstack-for-baremetal.sh. This will update the nova DB,
+
+* Start devstack in the bootstrap VM:
+
+ - run devstack
+
+            cd ~/devstack && ./stack.sh
+            . ./openrc
+
+
+ - Load images and configuration into devstack. This will update the nova DB,
    create deployment ramdisk, kernel and image, create demo images etc.
-
+ 
+            cd ~/demo/scripts
+            ./prepare-devstack-for-baremetal.sh
 
 
 * Create your 'baremetal' nodes.
@@ -133,6 +134,8 @@ Details:
      asking you for a disk image or installation media.
    - A nice trick is to make one then to clone it N-1 times, after powering it
      off.
+   - Specify the MAC address for each node. You need to feed this info
+     to the prepare-devstack-for-baremetal.sh script. Default is 01:23:45:67:89:01
  - <here be dragons>
 
 devas notes
@@ -141,7 +144,7 @@ devas notes
 * after run-time images are created, and devstack is started,
   set run the following to inform the baremetal hypervisor of your hardware
 
-        export BM_TARGET_MAC=<MAC address of your test machine
+        export BM_TARGET_MAC=<MAC address of baremetal node>
         export BM_SERVICE_HOST_NAME=192.168.2.2
         cd ~/demo/scripts/
         ./prepare-devstack-for-baremetal.sh
@@ -156,15 +159,4 @@ devas notes
  - a "server" available for PXE boot
  - limited bandwidth (monkeys in a tree provide my internet)
 
-* make sure {{{dnsmasq}}} is installed but ''not'' running
-* create {{{/tftpboot}}} directory, if not exist
 * create {{{/opt/stack/horizon/openstack_dashboard/static/pxe_cfg_files}}} directory, if not exist
-* create following dirs as root
-
-        mkdir /var/lib/nova
-        mkdir /var/lib/nova/baremetal
-        mkdir /var/lib/nova/baremetal/console
-        mkdir /var/lib/nova/baremetal/dnsmasq
-        touch /var/lib/nova/baremetal/dnsmasq/dnsmasq-dhcp.host
-        chown -R stack:stack /var/lib/nova
-
