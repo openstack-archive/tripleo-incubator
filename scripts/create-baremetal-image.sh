@@ -9,11 +9,11 @@ set -o xtrace
 # Setup
 ARCH=${ARCH:-`dpkg --print-architecture`}
 IMG_PATH=${IMG_PATH:-/home/stack/devstack/files}
+KERNEL_VER=${KERNEL_VER:-`uname -r`}
 CLOUD_IMAGES=${CLOUD_IMAGES:-http://cloud-images.ubuntu.com/}
 RELEASE=${RELEASE:-precise}
 BASE_IMAGE_FILE=${BASE_IMAGE_FILE:-$RELEASE-server-cloudimg-$ARCH-root.tar.gz}
 OUTPUT_IMAGE_FILE=${OUTPUT_IMAGE_FILE:-bm-node-image.$KERNEL_VER.img}
-KERNEL_VER=${KERNEL_VER:-`uname -r`}
 TMP_BUILD_DIR=`mktemp -t -d image.XXXXXXXX`
 [ $? -ne 0 ] && \
     echo "Failed to create tmp directory" && \
