@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -e
+set -o xtrace
+
+add-apt-repository -y ppa:saltstack/salt
+add-apt-repository -y ppa:tripleo/demo
+
+apt-get -y update
+
+apt-get -y install linux-image-generic vlan open-iscsi
+
+apt-get -y install salt-minion
+
+# XXX: inhibit services as debootstrap does
+service salt-minion stop
+

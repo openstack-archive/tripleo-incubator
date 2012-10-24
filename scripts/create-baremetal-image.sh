@@ -35,6 +35,7 @@ fi
 function unmount_image () {
     # unmount from the chroot
     sudo umount -f $TMP_BUILD_DIR/mnt/dev || true
+    sudo umount -f $TMP_BUILD_DIR/mnt/tmp/in_target.d || true
     # give it a second (ok really 5) to umount
     sleep 5
     # oh ya don't want to forget to unmount the image
@@ -106,20 +107,17 @@ fi
 # Generate locales to avoid perl setting locales warnings
 sudo chroot $TMP_BUILD_DIR/mnt locale-gen en_US en_US.UTF-8
 
-# Add additional repositories - XXX: make a hook.
+# Ensure that hooks can enable PPAs
 sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install python-software-properties
-sudo chroot $TMP_BUILD_DIR/mnt add-apt-repository -y ppa:saltstack/salt
-sudo chroot $TMP_BUILD_DIR/mnt add-apt-repository -y ppa:tripleo/demo
-sudo chroot $TMP_BUILD_DIR/mnt apt-get -y update
 
-# install what we need (it is ok to Ignore errors here)
-sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install linux-image-generic vlan open-iscsi
-
-# now lets install salt-minion
-sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install salt-minion
-# stop the minion we just installed: XXX should just inhibit services during
-#                                        this process as deboostrap does.
-sudo chroot $TMP_BUILD_DIR/mnt service salt-minion stop
+# If we can find a directory of hooks to run in the target filesystem, bind mount it
+# into the target and then execute run-parts in a chroot
+if [ -d ${BASE_DIR}/in_target.d ] ; then
+  sudo mkdir $TMP_BUILD_DIR/mnt/tmp/in_target.d
+  sudo mount --bind ${BASE_DIR}/in_target.d $TMP_BUILD_DIR/mnt/tmp/in_target.d
+  sudo chroot $TMP_BUILD_DIR/mnt run-parts -v /tmp/in_target.d
+  sudo umount -f $TMP_BUILD_DIR/mnt/tmp/in_target.d
+fi
 
 # Now some quick hacks to prevent 4 minutes of pause while booting
 if [ -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf ] ; then
