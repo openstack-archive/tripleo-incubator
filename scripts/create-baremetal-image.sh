@@ -50,10 +50,23 @@ sudo tar -C $TMP_BUILD_DIR -xzf $CURRENT_PATH/$BASE_IMAGE_FILE
     sudo rm -f $TMP_BUILD_DIR/etc/resolv.conf
 
 # Recreate resolv.conf
-sudo echo nameserver 8.8.8.8 > $TMP_BUILD_DIR/etc/resolv.conf
+sudo touch $TMP_BUILD_DIR/etc/resolv.conf
+sudo chmod 777 $TMP_BUILD_DIR/etc/resolv.conf
+echo nameserver 8.8.8.8>$TMP_BUILD_DIR/etc/resolv.conf
+
+# we'll prob need something from /dev so lets mount it
+sudo mount --bind /dev $TMP_BUILD_DIR/dev
 
 # now chroot and install what we need (it is ok to Ignore errors here)
 sudo chroot $TMP_BUILD_DIR apt-get -y install linux-image-$KERNEL_VER vlan open-iscsi
+
+# now lets install salt-minion
+sudo chroot $TMP_BUILD_DIR apt-get -y install python-software-properties
+sudo chroot $TMP_BUILD_DIR add-apt-repository -y ppa:saltstack/salt
+sudo chroot $TMP_BUILD_DIR apt-get -y update
+sudo chroot $TMP_BUILD_DIR apt-get -y install salt-minion
+# stop the minion we just installed
+sudo chroot $TMP_BUILD_DIR service salt-minion stop
 
 # Now some quick hacks to prevent 4 minutes of pause while booting
 [ -f $TMP_BUILD_DIR/etc/init/cloud-init-nonet.conf ] && \
@@ -147,6 +160,11 @@ sudo rm -f $TMP_BUILD_DIR/etc/resolv.conf
 # The we need to recreate it as a link
 ln -sf ../run/resolvconf/resolv.conf $TMP_BUILD_DIR/etc/resolv.conf
 
+# unmount from the chroot
+sudo chroot $TMP_BUILD_DIR umount /proc
+sudo chroot $TMP_BUILD_DIR umount /dev
+# give it a second (ok really 5) to umount
+sleep 5
 # oh ya don't want to forget to unmount the image
 sudo umount $TMP_BUILD_DIR
 
