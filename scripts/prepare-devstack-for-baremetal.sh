@@ -83,6 +83,9 @@ MYSQL=$(which mysql)
 $MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -e "$sql"
 $MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -v -v -f nova_bm < $(dirname $0)/init_nova_bm_db.sql
 
+# The baremetal migrations fail if the nova quota table doesn't already exist.
+$BM_SCRIPT_PATH/$BM_SCRIPT db sync
+
 # add keypair... optional step
 $NOVA keypair-add --pub_key ~/.ssh/authorized_keys  default
 
