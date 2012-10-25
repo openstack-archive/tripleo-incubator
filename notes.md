@@ -2,8 +2,9 @@ VM (on Ubuntu):
 
 Overview:
 * Setup a VM that is your bootstrap node
-* Setup N machines to pretend to be your cluster
+* Setup N VMs to pretend to be your cluster
 * Go to town testing deployments on them.
+* For troubleshooting see troubleshooting.md
 
 Details:
 
@@ -107,7 +108,12 @@ Details:
  - create deployment ramdisk and kernel
 
             cd ~stack
-            git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
+            # Until our branch is merged (https://github.com/NTTdocomo-openstack/baremetal-initrd-builder/pull/1)
+            # git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
+            git clone https://github.com/tripleo/baremetal-initrd-builder.git
+            cd baremetal-initrd-builder
+            git checkout tripleo
+            cd ..
             wget http://shellinabox.googlecode.com/files/shellinabox-2.14.tar.gz
             tar xzf shellinabox-2.14.tar.gz
             cd shellinabox-2.14
