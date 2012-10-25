@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+set -o xtrace
+
+mv /sbin/start-stop-daemon /sbin/start-stop-daemon.REAL
+dd of=/sbin/start-stop-daemon <<EOF
+#!/bin/sh
+echo
+echo "Warning: Fake start-stop-daemon called, doing nothing"
+EOF
+chmod 755 /sbin/start-stop-daemon
+
+mv /sbin/initctl /sbin/initctl.REAL
+dd of=/sbin/initctl <<EOF
+#!/bin/sh
+echo "initctl (tripleo 1.0)"
+echo "Warning: Fake initctl called, doing nothing"
+EOF
+chmod 755 /sbin/initctl
+

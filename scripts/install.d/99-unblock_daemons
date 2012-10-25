@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+set -o xtrace
+
+mv /sbin/start-stop-daemon.REAL /sbin/start-stop-daemon
+mv /sbin/initctl.REAL /sbin/initctl
+
