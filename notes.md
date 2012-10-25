@@ -145,5 +145,5 @@ Details:
 
 * if all goes well, you should be able to run this to start a node now:
 
-            source ~/devstack/openrc
-            nova boot --flavor 99 --image bare_metal --key_name default bmtest
+        source ~/devstack/openrc
+        nova boot --flavor 99 --image bare_metal --key_name default bmtest
