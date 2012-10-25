@@ -135,7 +135,7 @@ Details:
    load deployment ramdisk, kernel and image, and create a bare metal flavor.
  
             cd ~/demo
-	    scripts/prepare-devstack-for-baremetal.sh
+            scripts/prepare-devstack-for-baremetal.sh
 
  - Inform nova about your baremetal nodes
 
@@ -144,7 +144,7 @@ Details:
 * if all goes well, you should be able to run this to start a node now:
 
         source ~/devstack/openrc
-	# flavor 6 is i386, which will work on 64-bit hardware.
-	# use 7 for amd64.
+        # flavor 6 is i386, which will work on 64-bit hardware.
+        # use 7 for amd64.
         nova boot --flavor 6 --image bare_metal --key_name default bmtest
 
