@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+set -o xtrace
+
+apt-get -y install salt-minion
+
+# XXX: inhibit services as debootstrap does
+service salt-minion stop
+
