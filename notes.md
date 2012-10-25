@@ -72,9 +72,9 @@ Details:
 * Configure your bootstrap VM:
  - Setup a network proxy if you have one:
 
-            export http_proxy=http://192.168.1.101:8080/
+            export http_proxy=http://192.168.2.1:8080/
             export no_proxy=192.168.2.2
-            echo 'Acquire::http::Proxy "http://192.168.1.101:8080/";' | sudo dd of=/etc/apt/apt.conf.d/60proxy
+            echo 'Acquire::http::Proxy "http://192.168.2.1:8080/";' | sudo dd of=/etc/apt/apt.conf.d/60proxy
 
 * Prep bootstrap VM:
  - install git and, as the "stack" user, clone devstack into /home/stack/devstack:
@@ -99,7 +99,7 @@ Details:
             wget http://shellinabox.googlecode.com/files/shellinabox-2.14.tar.gz
             tar xzf shellinabox-2.14.tar.gz
             cd shellinabox-2.14
-            sudo apt-get install gcc make
+            sudo apt-get -y install gcc make
             ./configure
             make
             sudo make install
