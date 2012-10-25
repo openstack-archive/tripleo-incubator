@@ -18,6 +18,8 @@ IMG_PATH=${IMG_PATH:-/home/stack/devstack/files}
 
 KERNEL_VER=${KERNEL_VER:-`uname -r`}
 
+BM_NODE_NAME=${BM_NODE_NAME:-bare_metal}
+
 # The deployment bits
 BM_DEPLOY_KERNEL=${BM_DEPLOY_KERNEL:-vmlinuz-$KERNEL_VER}
 BM_DEPLOY_RAMDISK=${BM_DEPLOY_RAMDISK:-bm-deploy-ramdisk.$KERNEL_VER.img}
