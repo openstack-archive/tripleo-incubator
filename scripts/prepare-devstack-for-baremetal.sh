@@ -5,7 +5,7 @@ set -e
 set -o xtrace
 
 # load defaults and functions
-source $(dirname 0)/defaults
+source $(dirname $0)/defaults
 
 # build deployment ramdisk if needed
 if [ ! -e $IMG_PATH/$BM_DEPLOY_RAMDISK ]; then
@@ -57,8 +57,12 @@ $GLANCE image-update --property "kernel_id=$aki" $ami
 $GLANCE image-update --property "ramdisk_id=$ari" $ami
 
 # create instance type (aka flavor)
-$NOVA_MANAGE instance_type create --name=$BM_NODE_NAME --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=6 --swap=0 --rxtx_factor=1
-$NOVA_MANAGE instance_type set_key --name=$BM_NODE_NAME --key cpu_arch --value "$BM_TARGET_CPU"
+# - a 32 bit instance
+$NOVA_MANAGE instance_type create --name=x86_bm --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=6 --swap=0 --rxtx_factor=1
+$NOVA_MANAGE instance_type set_key --name=x86_bm --key cpu_arch --value x86
+# - a 64 bit instance
+$NOVA_MANAGE instance_type create --name=x86_64_bm --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=7 --swap=0 --rxtx_factor=1
+$NOVA_MANAGE instance_type set_key --name=x86_64_bm --key cpu_arch --value x86_64
 
 # restart dnsmasq
 sudo pkill dnsmasq || true

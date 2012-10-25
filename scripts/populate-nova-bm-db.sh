@@ -2,7 +2,7 @@
 
 # If something goes wrong bail, don't continue to the end
 set -e
-source $(dirname 0)/defaults
+source $(dirname $0)/defaults
 
 # set some defaults
 RAM=512
@@ -22,10 +22,10 @@ Helper script to manage entries in bare-metal db.
 
 Usage:
    Clear all entries...
-      $(basename 0) clear
+      $(basename $0) clear
 
    Add new entry...
-      $(basename 0)  -i <MAC> -j <MAC> [-M <RAM> -D <DISK> -C <CPU>] add
+      $(basename $0)  -i <MAC> -j <MAC> [-M <RAM> -D <DISK> -C <CPU>] add
 "
 
 [ $# -eq 0 ] && echo $USAGE && die

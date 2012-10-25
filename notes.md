@@ -132,17 +132,19 @@ Details:
 
 
  - Load images and configuration into devstack. This will update the nova DB,
-   load deployment ramdisk, kernel and image, etc.
+   load deployment ramdisk, kernel and image, and create a bare metal flavor.
  
-            ./prepare-devstack-for-baremetal.sh
+            cd ~/demo
+	    scripts/prepare-devstack-for-baremetal.sh
 
  - Inform nova about your baremetal nodes
 
-            ./populate-nova-bm-db.sh -i "xx:xx:xx:xx:xx:xx" -j "00:00:00:00:00:00" add
-
+            scripts/populate-nova-bm-db.sh -i "xx:xx:xx:xx:xx:xx" -j "00:00:00:00:00:00" add
 
 * if all goes well, you should be able to run this to start a node now:
 
         source ~/devstack/openrc
+	# flavor 6 is i386, which will work on 64-bit hardware.
+	# use 7 for amd64.
         nova boot --flavor 6 --image bare_metal --key_name default bmtest
 
