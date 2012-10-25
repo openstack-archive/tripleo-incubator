@@ -1,0 +1,50 @@
+# The following variables allow the behaviour of the script to be customised:
+# just export them in advance. For instance, to use a different kernel, export
+# KERNEL_VER.
+
+DEVSTACK_PATH=${DEVSTACK_PATH:-/home/stack/devstack}
+source $DEVSTACK_PATH/openrc
+source $DEVSTACK_PATH/localrc
+
+MYSQL_USER=${MYSQL_USER:-root}
+MYSQL_HOST=${MYSQL_HOST:-localhost}
+MYSQL_PASSWORD=${MYSQL_PASSWORD:-secrete}
+
+GLANCE=${GLANCE:-/usr/local/bin/glance}
+NOVA=${NOVA:-/usr/local/bin/nova}
+NOVA_MANAGE=${NOVA_MANAGE:-/usr/local/bin/nova-manage}
+
+IMG_PATH=${IMG_PATH:-/home/stack/devstack/files}
+
+KERNEL_VER=${KERNEL_VER:-`uname -r`}
+
+# The deployment bits
+BM_DEPLOY_KERNEL=${BM_DEPLOY_KERNEL:-vmlinuz-$KERNEL_VER}
+BM_DEPLOY_RAMDISK=${BM_DEPLOY_RAMDISK:-bm-deploy-ramdisk.$KERNEL_VER.img}
+
+# The end user runtime bits
+BM_IMAGE=${BM_IMAGE:-bm-node-image.$KERNEL_VER.img}
+BM_RUN_KERNEL=${BM_RUN_KERNEL:-$BM_DEPLOY_KERNEL}
+BM_RUN_RAMDISK=${BM_RUN_RAMDISK:-$BM_DEPLOY_RAMDISK}
+
+DNSMASQ_IFACE=${DNSMASQ_IFACE:-$PUBLIC_INTERFACE}
+DNSMASQ_IFACE=${DNSMASQ_IFACE:-eth0}
+
+# can we get this from localrc? it looks like FIXED_RANGE, but format is different
+DNSMASQ_RANGE=${DNSMASQ_RANGE:-192.168.2.33,192.168.2.63}
+
+BM_SCRIPT_PATH=${BM_SCRIPT_PATH:-/opt/stack/nova/bin}
+BM_SCRIPT=${BM_SCRIPT:-nova-baremetal-manage}
+BM_HELPER=${BM_HELPER:-nova-baremetal-deploy-helper}
+
+PM_ADDR=${PM_ADDR:-1.2.3.4}
+PM_USER=${PM_USER:-root}
+PM_PASS=${PM_PASS:-secret}
+
+function load_image {
+   [ -r $IMG_PATH/$3 ] || die "Can not read image $IMG_PATH/$3"
+   out=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $IMG_PATH/$3)
+   [ "$out" ] || die "Failed to load image $3 into glance"
+   uuid=$(echo "$out" | head -1 | awk '{print $6}')
+   echo $uuid
+}

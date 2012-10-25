@@ -69,6 +69,18 @@ Details:
 
            cd /usr/bin && sudo ln -s nodejs node; cd ~
 
+* Create your 'baremetal' nodes.
+ - using KVM create however many hardware notes your emulated cloud will have,
+   ensuring that for each one you select ooodemo as the network device.
+   - Give them no less than 1GB of disk each, we suggest 2GB.
+   - 512MB of memory is probably enough.
+   - Tell KVM you will install the virtual machine via PXE, as that will avoid
+     asking you for a disk image or installation media.
+   - A nice trick is to make one then to clone it N-1 times, after powering it
+     off.
+   - Specify the MAC address for each node. You need to feed this info
+     to the populate-nova-bm-db.sh script later on.
+
 * Configure your bootstrap VM:
  - Setup a network proxy if you have one:
 
@@ -120,31 +132,17 @@ Details:
 
 
  - Load images and configuration into devstack. This will update the nova DB,
-   create deployment ramdisk, kernel and image, create demo images etc.
+   load deployment ramdisk, kernel and image, etc.
  
-            export BM_TARGET_MAC=<MAC address of baremetal node>
-            export BM_SERVICE_HOST_NAME=192.168.2.2
-            export BM_TARGET_CPU=x86|x86_64
-            cd ~/demo/scripts
-            sudo mkdir -p /tftpboot/pxelinux.cfg
-            sudo cp /usr/lib/syslinux/pxelinux.0 /tftpboot/
             ./prepare-devstack-for-baremetal.sh
 
+ - Inform nova about your baremetal nodes
 
-* Create your 'baremetal' nodes.
- - using KVM create however many hardware notes your emulated cloud will have,
-   ensuring that for each one you select ooodemo as the network device.
-   - Give them no less than 1GB of disk each, we suggest 2GB.
-   - 512MB of memory is probably enough.
-   - Tell KVM you will install the virtual machine via PXE, as that will avoid
-     asking you for a disk image or installation media.
-   - A nice trick is to make one then to clone it N-1 times, after powering it
-     off.
-   - Specify the MAC address for each node. You need to feed this info
-     to the prepare-devstack-for-baremetal.sh script. Default is 01:23:45:67:89:01
- - here be dragons - this should be post prepare-for-baremetal.
+            ./populate-nova-bm-db.sh -i "xx:xx:xx:xx:xx:xx" -j "00:00:00:00:00:00" add
+
 
 * if all goes well, you should be able to run this to start a node now:
 
         source ~/devstack/openrc
-        nova boot --flavor 99 --image bare_metal --key_name default bmtest
+        nova boot --flavor 6 --image bare_metal --key_name default bmtest
+
