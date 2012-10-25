@@ -124,6 +124,7 @@ Details:
  
             export BM_TARGET_MAC=<MAC address of baremetal node>
             export BM_SERVICE_HOST_NAME=192.168.2.2
+            export BM_TARGET_CPU=x86|x86_64
             cd ~/demo/scripts
             sudo mkdir -p /tftpboot/pxelinux.cfg
             sudo cp /usr/lib/syslinux/pxelinux.0 /tftpboot/
