@@ -1,8 +1,8 @@
 #!/bin/bash
+# Add the salt PPA
 
 set -e
 set -o xtrace
 
 add-apt-repository -y ppa:saltstack/salt
-add-apt-repository -y ppa:tripleo/demo
 

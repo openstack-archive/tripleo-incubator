@@ -50,7 +50,6 @@ trap cleanup ERR
 
 echo Building in $TMP_BUILD_DIR
 
-
 if [ ! -f $IMG_PATH/$BASE_IMAGE_FILE ] ; then
    echo "Fetching Base Image"
    wget $CLOUD_IMAGES/$RELEASE/current/$BASE_IMAGE_FILE -O $IMG_PATH/$BASE_IMAGE_FILE.tmp
@@ -104,16 +103,12 @@ Acquire::http::Proxy "$http_proxy";
 _EOF_
 fi
 
+# Helper function to run a command inside the chroot
 function run_in_target() {
 sudo chroot $TMP_BUILD_DIR/mnt $@
 }
 
-# Generate locales to avoid perl setting locales warnings
-run_in_target locale-gen en_US en_US.UTF-8
-
-# Ensure that hooks can enable PPAs
-sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install python-software-properties
-
+# Helper function to run a directory of scripts inside the chroot
 function run_d_in_target() {
     # If we can find a directory of hooks to run in the target filesystem, bind
     # mount it into the target and then execute run-parts in a chroot
@@ -121,18 +116,20 @@ function run_d_in_target() {
       sudo mkdir $TMP_BUILD_DIR/mnt/tmp/in_target.d
       sudo mount --bind ${BASE_DIR}/$1.d $TMP_BUILD_DIR/mnt/tmp/in_target.d
       sudo mount -o remount,ro,bind ${BASE_DIR}/$1.d $TMP_BUILD_DIR/mnt/tmp/in_target.d
-      sudo chroot $TMP_BUILD_DIR/mnt run-parts -v /tmp/in_target.d
+      run_in_target run-parts -v /tmp/in_target.d
       sudo umount -f $TMP_BUILD_DIR/mnt/tmp/in_target.d
       sudo rmdir $TMP_BUILD_DIR/mnt/tmp/in_target.d
     fi
 }
 
-run_d_in_target pre-install
-run_in_target apt-get -y update
-# Required packages.
-run_in_target apt-get -y install linux-image-generic vlan open-iscsi
-run_d_in_target install
+# Generate locales to avoid perl setting locales warnings
+run_in_target locale-gen en_US en_US.UTF-8
 
+# Run pre-install scripts. These do things that prepare the chroot for package installs
+run_d_in_target pre-install
+
+# Call install scripts to pull in the software we need
+run_d_in_target install
 
 # Now some quick hacks to prevent 4 minutes of pause while booting
 if [ -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf ] ; then

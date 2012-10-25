@@ -1,4 +1,5 @@
 #!/bin/bash
+# Prevent package installs from starting daemons
 
 set -e
 set -o xtrace
