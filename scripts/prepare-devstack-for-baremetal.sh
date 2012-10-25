@@ -71,15 +71,15 @@ if [ ! -e $IMG_PATH/$BM_DEPLOY_RAMDISK ]; then
     popd
 fi
 
-# fix mysql issues
+# fix mysql issues - adds user_quotas table - not sure what uses it.
 # TODO: remove after NTT patch lands upstream
 # TODO: skip this block if it's already done
 sql=<<EOL
 GRANT ALL PRIVILEGES ON nova_bm.* TO '$MYSQL_USER'@'$MYSQL_HOST' IDENTIFIED BY '$MYSQL_PASSWORD';
 EOL
 
+## XXX: In theory this is not needed anymore. It may 
 MYSQL=$(which mysql)
-$MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -e "CREATE DATABASE IF NOT EXISTS nova_bm CHARACTER SET utf8;"
 $MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -e "$sql"
 $MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -v -v -f nova_bm < $(dirname $0)/init_nova_bm_db.sql
 
