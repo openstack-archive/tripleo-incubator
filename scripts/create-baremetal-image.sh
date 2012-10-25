@@ -104,13 +104,17 @@ Acquire::http::Proxy "$http_proxy";
 _EOF_
 fi
 
+function run_in_target() {
+sudo chroot $TMP_BUILD_DIR/mnt $@
+}
+
 # Generate locales to avoid perl setting locales warnings
-sudo chroot $TMP_BUILD_DIR/mnt locale-gen en_US en_US.UTF-8
+run_in_target locale-gen en_US en_US.UTF-8
 
 # Ensure that hooks can enable PPAs
 sudo chroot $TMP_BUILD_DIR/mnt apt-get -y install python-software-properties
 
-function run_in_target() {
+function run_d_in_target() {
     # If we can find a directory of hooks to run in the target filesystem, bind
     # mount it into the target and then execute run-parts in a chroot
     if [ -d ${BASE_DIR}/$1.d ] ; then
@@ -119,14 +123,15 @@ function run_in_target() {
       sudo mount -o remount,ro,bind ${BASE_DIR}/$1.d $TMP_BUILD_DIR/mnt/tmp/in_target.d
       sudo chroot $TMP_BUILD_DIR/mnt run-parts -v /tmp/in_target.d
       sudo umount -f $TMP_BUILD_DIR/mnt/tmp/in_target.d
+      sudo rmdir $TMP_BUILD_DIR/mnt/tmp/in_target.d
     fi
 }
 
-run_in_target pre-install
-apt-get -y update
+run_d_in_target pre-install
+run_in_target apt-get -y update
 # Required packages.
-apt-get -y install linux-image-generic vlan open-iscsi
-run_in_target install
+run_in_target apt-get -y install linux-image-generic vlan open-iscsi
+run_d_in_target install
 
 
 # Now some quick hacks to prevent 4 minutes of pause while booting
