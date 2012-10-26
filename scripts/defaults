@@ -43,6 +43,15 @@ PM_ADDR=${PM_ADDR:-1.2.3.4}
 PM_USER=${PM_USER:-root}
 PM_PASS=${PM_PASS:-secret}
 
+# Prints "message" and exits
+# die "message"
+function die() {
+    local exitcode=$?
+    set +o xtrace
+    echo $@
+    exit $exitcode
+}
+
 function load_image {
    [ -r $IMG_PATH/$3 ] || die "Can not read image $IMG_PATH/$3"
    out=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $IMG_PATH/$3)
