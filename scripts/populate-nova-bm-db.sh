@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # If something goes wrong bail, don't continue to the end
 set -e
@@ -25,12 +25,12 @@ Usage:
       $(basename $0) clear
 
    Add new entry...
-      $(basename $0)  -i <MAC> -j <MAC> [-M <RAM> -D <DISK> -C <CPU>] add
+      $(basename $0)  -i <MAC> -j <MAC> [-h <hostname>] [-M <RAM>] [-D <DISK>] [-C <CPU>] add
 "
 
-[ $# -eq 0 ] && echo $USAGE && die
+[ $# -eq 0 ] && echo "$USAGE" && die
 
-while getopts "i:j:M:D:C:" Option
+while getopts "i:j:h:M:D:C:" Option
 do
    case $Option in
       i )            PXE_MAC=$OPTARG;;
@@ -39,7 +39,7 @@ do
       M )            RAM=$OPTARG;;
       D )            DISK=$OPTARG;;
       C )            CPU=$OPTARG;;
-      * )            echo $USAGE && die;;
+      * )            echo "$USAGE" && die;;
    esac
 done
 
@@ -73,6 +73,6 @@ shift $(($OPTIND - 1))
 case $1 in
    clear )  clear ;;
    add   )  add ;;
-   * )      die $USAGE ;;
+   * )      die "$USAGE" ;;
 esac
 
