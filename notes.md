@@ -11,6 +11,7 @@ Details:
 * add a bridge to your own machine - e.g. ooodemo
   in /etc/network/interfaces:
 
+        auto ooodemo
         iface ooodemo inet static
             # If you want ip4 connectivity from your machine to the demo environment.
             # This is optional (the demo environment has to be able to reach out which
@@ -29,8 +30,6 @@ Details:
             # To do NAT:
             up iptables -t nat -A POSTROUTING -j MASQUERADE -s 192.168.2.0/24 ! -o ooodemo
 
-  and add ooodemo to the 'auto' line.
-
   This sets up a bridge that we will use to communicate between a 'bootstrap'
   VM and the VM's that will pretend to be bare metal. 
 
@@ -39,7 +38,7 @@ Details:
 
 * Activate these changes:
 
-        sudo service networking restart
+        sudo ifup ooodemo
         sudo service libvirt-bin restart
 
 * Create your bootstrap VM:
@@ -66,6 +65,8 @@ Details:
  - If you want to ssh into this machine, ensure openssh-server is installed and
    use ssh-copy-id to copy your public key into it. This will also help
    establish that your VM can reach the internet to obtain packages.
+ - If you don't copy your SSH id in, you will still need to ensure that /home/stack/.ssh/authorized_keys on your bootstrap node has some kind of public SSH key in it
+
  - Workaround https://bugs.launchpad.net/horizon/+bug/1070083 -
 
            cd /usr/bin && sudo ln -s nodejs node; cd ~
@@ -142,11 +143,11 @@ Details:
    load deployment ramdisk, kernel and image, and create a bare metal flavor.
  
             cd ~/demo
-            scripts/prepare-devstack-for-baremetal.sh
+            ./scripts/prepare-devstack-for-baremetal.sh
 
  - Inform nova about your baremetal nodes
 
-            scripts/populate-nova-bm-db.sh -i "xx:xx:xx:xx:xx:xx" -j "00:00:00:00:00:00" add
+            scripts/populate-nova-bm-db.sh -i "xx:xx:xx:xx:xx:xx" -j "yy:yy:yy:yy:yy:yy" add
 
 * if all goes well, you should be able to run this to start a node now:
 
