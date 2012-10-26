@@ -8,7 +8,7 @@ source $(dirname $0)/defaults
 RAM=512
 DISK=0
 CPU=1
-HOST=$(hostname)
+HOST=$(hostname -f)
 
 # we need two unique MAC addresses
 # PXE_MAC must match the VM
