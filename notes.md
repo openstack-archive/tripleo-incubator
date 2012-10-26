@@ -81,6 +81,7 @@ Details:
      off.
    - Specify the MAC address for each node. You need to feed this info
      to the populate-nova-bm-db.sh script later on.
+   - Create 2 network cards for each VM: nova baremetal requires 2 NICs.
 
 * Configure your bootstrap VM:
  - Setup a network proxy if you have one:
