@@ -6,19 +6,10 @@
 #
 # This builds an image in /tmp, and moves it into $IMG_PATH upon success.
 
+# load defaults and functions
+source $(dirname $0)/defaults
 set -e
 set -o xtrace
-
-# Setup
-ARCH=${ARCH:-$(dpkg --print-architecture)}
-IMG_PATH=${IMG_PATH:-/home/stack/devstack/files}
-KERNEL_VER=${KERNEL_VER:-$(uname -r)}
-CLOUD_IMAGES=${CLOUD_IMAGES:-http://cloud-images.ubuntu.com/}
-RELEASE=${RELEASE:-precise}
-BASE_IMAGE_FILE=${BASE_IMAGE_FILE:-$RELEASE-server-cloudimg-$ARCH-root.tar.gz}
-OUTPUT_IMAGE_FILE=${OUTPUT_IMAGE_FILE:-bm-node-image.$KERNEL_VER.img}
-FS_TYPE=${FS_TYPE:-ext4}
-IMAGE_SIZE=${IMAGE_SIZE:-1} # N.B. This size is in GB
 
 # Ensure we have sudo before we do long running things that will bore the user.
 # Also, great band.
@@ -27,10 +18,7 @@ sudo echo
 BASE_DIR=$(dirname $0)
 
 TMP_BUILD_DIR=$(mktemp -t -d image.XXXXXXXX)
-if [ $? -ne 0 ] ; then
-    echo "Failed to create tmp directory"
-    exit 1
-fi
+[ $? -eq 0 ] || die "Failed to create tmp directory"
 
 function unmount_image () {
     # unmount from the chroot
@@ -56,12 +44,6 @@ if [ ! -f $IMG_PATH/$BASE_IMAGE_FILE ] ; then
    mv $IMG_PATH/$BASE_IMAGE_FILE.tmp $IMG_PATH/$BASE_IMAGE_FILE
 fi
 
-# TODO: this really should rename the old file
-if [ -f  $IMG_PATH/$OUTPUT_IMAGE_FILE ] ; then
-   echo "Old Image file Found REMOVING"
-   rm -f $IMG_PATH/$OUTPUT_IMAGE_FILE
-fi
-
 # Create the file that will be our image
 dd if=/dev/zero of=$TMP_BUILD_DIR/image bs=1M count=0 seek=$(( ${IMAGE_SIZE} * 1024 ))
 
@@ -70,10 +52,7 @@ mkfs -F -t $FS_TYPE $TMP_BUILD_DIR/image
 # mount the image file
 mkdir $TMP_BUILD_DIR/mnt
 sudo mount -o loop $TMP_BUILD_DIR/image $TMP_BUILD_DIR/mnt
-if [ $? -ne 0 ] ; then
-    echo "Failed to mount image"
-    exit 1
-fi
+[ $? -eq 0 ] || die "Failed to mount image"
 
 # Extract the base image
 sudo tar -C $TMP_BUILD_DIR/mnt -xzf $IMG_PATH/$BASE_IMAGE_FILE
@@ -91,7 +70,7 @@ fi
 # Recreate resolv.conf
 sudo touch $TMP_BUILD_DIR/mnt/etc/resolv.conf
 sudo chmod 777 $TMP_BUILD_DIR/mnt/etc/resolv.conf
-echo nameserver 8.8.8.8>$TMP_BUILD_DIR/mnt/etc/resolv.conf
+echo nameserver 8.8.8.8 > $TMP_BUILD_DIR/mnt/etc/resolv.conf
 
 # we'll prob need something from /dev so lets mount it
 sudo mount --bind /dev $TMP_BUILD_DIR/mnt/dev
@@ -105,7 +84,7 @@ fi
 
 # Helper function to run a command inside the chroot
 function run_in_target() {
-sudo chroot $TMP_BUILD_DIR/mnt $@
+   sudo chroot $TMP_BUILD_DIR/mnt $@
 }
 
 # Helper function to run a directory of scripts inside the chroot
@@ -227,9 +206,24 @@ sudo rm -f $TMP_BUILD_DIR/mnt/etc/resolv.conf
 # The we need to recreate it as a link
 sudo ln -sf ../run/resolvconf/resolv.conf $TMP_BUILD_DIR/mnt/etc/resolv.conf
 
+# name the file by the kernel it contained, if no name specified
+BM_RUN_KERNEL=$(basename `ls -1 $TMP_BUILD_DIR/mnt/boot/vmlinuz*generic | sort -n | tail -1`)
+IMAGE_KERNEL_VER=${BM_RUN_KERNEL##vmlinuz-}
+BM_IMAGE=${BM_IMAGE:-bm-node-image.$IMAGE_KERNEL_VER.img}
+
+# clean up
+# --------
 unmount_image
-cp $TMP_BUILD_DIR/image $IMG_PATH/$OUTPUT_IMAGE_FILE
+
+# TODO: this really should rename the old file
+if [ -f  $IMG_PATH/$BM_IMAGE ] ; then
+   echo "Old Image file Found REMOVING"
+   rm -f $IMG_PATH/$BM_IMAGE
+fi
+
+cp $TMP_BUILD_DIR/image $IMG_PATH/$BM_IMAGE
 rm -r $TMP_BUILD_DIR
 
-echo "Image file $IMG_PATH/$OUTPUT_IMAGE_FILE created..."
-
+# All done!
+trap ERR
+echo "Image file $IMG_PATH/$BM_IMAGE created..."

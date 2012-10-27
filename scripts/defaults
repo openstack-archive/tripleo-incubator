@@ -2,6 +2,13 @@
 # just export them in advance. For instance, to use a different kernel, export
 # KERNEL_VER.
 
+set -e
+
+# preliminary env stuff
+# ---------------------
+
+
+# load devstack auth and env vars
 DEVSTACK_PATH=${DEVSTACK_PATH:-/home/stack/devstack}
 source $DEVSTACK_PATH/openrc
 source $DEVSTACK_PATH/localrc
@@ -10,41 +17,65 @@ MYSQL_USER=${MYSQL_USER:-root}
 MYSQL_HOST=${MYSQL_HOST:-localhost}
 MYSQL_PASSWORD=${MYSQL_PASSWORD:-secrete}
 
+# paths for executables
 GLANCE=${GLANCE:-/usr/local/bin/glance}
 NOVA=${NOVA:-/usr/local/bin/nova}
 NOVA_MANAGE=${NOVA_MANAGE:-/usr/local/bin/nova-manage}
 
-IMG_PATH=${IMG_PATH:-/home/stack/devstack/files}
+# Oy! these tools have changed names more than once!
+BM_HELPER=${BM_HELPER:-nova-baremetal-deploy-helper}
+BM_SCRIPT=${BM_SCRIPT:-nova-baremetal-manage}
+BM_SCRIPT_PATH=${BM_SCRIPT_PATH:-/opt/stack/nova/bin}
 
+
+# options for our deployment scripts
+# ----------------------------------
+
+
+# general options
+BM_NODE_NAME=${BM_NODE_NAME:-bare_metal}
+IMG_PATH=${IMG_PATH:-/home/stack/devstack/files}
 KERNEL_VER=${KERNEL_VER:-`uname -r`}
 
-BM_NODE_NAME=${BM_NODE_NAME:-bare_metal}
+# options for create-baremetal-image.sh
+ARCH=${ARCH:-$(dpkg --print-architecture)}
+RELEASE=${RELEASE:-precise}
+BASE_IMAGE_FILE=${BASE_IMAGE_FILE:-$RELEASE-server-cloudimg-$ARCH-root.tar.gz}
+CLOUD_IMAGES=${CLOUD_IMAGES:-http://cloud-images.ubuntu.com/}
+FS_TYPE=${FS_TYPE:-ext4}
+IMAGE_SIZE=${IMAGE_SIZE:-1} # N.B. This size is in GB
 
 # The deployment bits
 BM_DEPLOY_KERNEL=${BM_DEPLOY_KERNEL:-vmlinuz-$KERNEL_VER}
 BM_DEPLOY_RAMDISK=${BM_DEPLOY_RAMDISK:-bm-deploy-ramdisk.$KERNEL_VER.img}
 
 # The end user runtime bits
+# XXX: these may get changed when create-baremetal-image is run
 BM_IMAGE=${BM_IMAGE:-bm-node-image.$KERNEL_VER.img}
-BM_RUN_KERNEL=${BM_RUN_KERNEL:-$BM_DEPLOY_KERNEL}
-BM_RUN_RAMDISK=${BM_RUN_RAMDISK:-initrd.img-$KERNEL_VER}
 
+# ignore these for now -- they will get sucked out of BM_IMAGE
+# BM_RUN_KERNEL=${BM_RUN_KERNEL:-$BM_DEPLOY_KERNEL}
+# BM_RUN_RAMDISK=${BM_RUN_RAMDISK:-initrd.img-$KERNEL_VER}
+
+# copy public interface if set, otherwise default to eth0
 DNSMASQ_IFACE=${DNSMASQ_IFACE:-$PUBLIC_INTERFACE}
 DNSMASQ_IFACE=${DNSMASQ_IFACE:-eth0}
 
 # can we get this from localrc? it looks like FIXED_RANGE, but format is different
 DNSMASQ_RANGE=${DNSMASQ_RANGE:-192.168.2.33,192.168.2.63}
 
-BM_SCRIPT_PATH=${BM_SCRIPT_PATH:-/opt/stack/nova/bin}
-BM_SCRIPT=${BM_SCRIPT:-nova-baremetal-manage}
-BM_HELPER=${BM_HELPER:-nova-baremetal-deploy-helper}
-
+# not used in our testing, but still required
 PM_ADDR=${PM_ADDR:-1.2.3.4}
 PM_USER=${PM_USER:-root}
 PM_PASS=${PM_PASS:-secret}
 
+
+# functions
+# ---------
+
+
 # Prints "message" and exits
-# die "message"
+# Usage: die "message"
 function die() {
     local exitcode=$?
     set +o xtrace
@@ -52,10 +83,21 @@ function die() {
     exit $exitcode
 }
 
+# Loads an image into glance
+# Usage: load_image [ami|aki|ari] <image_name> <file_name>
 function load_image {
-   [ -r $IMG_PATH/$3 ] || die "Can not read image $IMG_PATH/$3"
-   out=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $IMG_PATH/$3)
+   [ -r $3 ] || die "Can not read image $3"
+   out=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $3)
    [ "$out" ] || die "Failed to load image $3 into glance"
    uuid=$(echo "$out" | head -1 | awk '{print $6}')
    echo $uuid
+}
+
+# make a temp dir and mount image there
+# Usage: dir=$(_mount /path/to/image)
+function mktemp_mount {
+   TMP=$(mktemp -t -d image.XXXXXXXX)
+   [ $? -eq 0 ] || die "Failed to create tmp directory"
+   sudo mount -o loop $1 $TMP
+   echo $TMP
 }

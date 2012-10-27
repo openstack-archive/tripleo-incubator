@@ -41,22 +41,34 @@ $BM_SCRIPT_PATH/$BM_SCRIPT db sync
 $NOVA keypair-add --pub_key ~/.ssh/authorized_keys  default
 
 # load images into glance
-ami=$(load_image "ami" $BM_NODE_NAME $BM_IMAGE)
-aki=$(load_image "aki" "aki-01" $BM_DEPLOY_KERNEL)
-ari=$(load_image "ari" "ari-01" $BM_DEPLOY_RAMDISK)
+ami=$(load_image "ami" $BM_NODE_NAME $IMG_PATH/$BM_IMAGE)
+aki=$(load_image "aki" "aki-01" $IMG_PATH/$BM_DEPLOY_KERNEL)
+ari=$(load_image "ari" "ari-01" $IMG_PATH/$BM_DEPLOY_RAMDISK)
 
 # associate deploy aki and ari to main AMI
 $GLANCE image-update --property "deploy_kernel_id=$aki" $ami
 $GLANCE image-update --property "deploy_ramdisk_id=$ari" $ami
 
-# load run-time aki and ari, if specified
-if [ $BM_RUN_KERNEL != $BM_DEPLOY_KERNEL ]; then
-   aki=$(load_image "aki" "aki-02" $BM_RUN_KERNEL)
-fi
+# pull run-time ramdisk and kernel out of AMI
+TMP_KERNEL=$(mktemp)
+TMP_RAMDISK=$(mktemp)
+TMP_MNT=$(mktemp_mount $IMG_PATH/$BM_IMAGE)
+trap 'rm -f $TMP_KERNEL $TMP_RAMDISK && sudo umount -f $TMP_MNT' ERR
 
-if [ $BM_RUN_RAMDISK != $BM_DEPLOY_RAMDISK ]; then
-   ari=$(load_image "ari" "ari-02" $BM_RUN_RAMDISK)
-fi
+BM_RUN_KERNEL=$(basename `ls -1 $TMP_MNT/boot/vmlinuz*generic | sort -n | tail -1`)
+BM_RUN_RAMDISK=$(basename `ls -1 $TMP_MNT/boot/initrd*generic | sort -n | tail -1`)
+sudo cp $TMP_MNT/boot/$BM_RUN_KERNEL $TMP_KERNEL
+sudo cp $TMP_MNT/boot/$BM_RUN_RAMDISK $TMP_RAMDISK
+sudo chmod a+r $TMP_KERNEL
+
+# load run-time kernel and ramdisk
+aki=$(load_image "aki" "aki-02" $TMP_KERNEL)
+ari=$(load_image "ari" "ari-02" $TMP_RAMDISK)
+
+# clean up temp mounts and files
+sudo umount -f $TMP_MNT || true
+sudo rm -f $TMP_KERNEL $TMP_RAMDISK
+trap ERR
 
 # associate run-time aki and ari to main AMI
 $GLANCE image-update --property "kernel_id=$aki" $ami
