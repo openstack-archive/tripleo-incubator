@@ -65,8 +65,8 @@ Openstack on Openstack with two distinct clouds:
    use this.
 
 Flat networking will be in use everywhere: the bootstrap cloud will use a single
-range (e.g. 192.168.2.0/24), the virtualised cloud will allocate instances in
-another range (e.g. 192.168.3.0/24), and floating ips can be issued to any range
+range (e.g. 192.0.2.0/26), the virtualised cloud will allocate instances in
+another range (e.g. 192.0.2.64/26), and floating ips can be issued to any range
 the cloud operator has available. For demonstration purposes, we can issue
 floating ips in the high half of the bootstrap ip range (e.g. 192.168.2.129/25).
 

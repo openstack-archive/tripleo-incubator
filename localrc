@@ -31,10 +31,10 @@ SERVICE_TOKEN=cde90da2fb9471d421ed
 # ---------------------
 
 # You probably need to change all the IPs here
-HOST_IP=192.168.2.2
+HOST_IP=192.0.2.1
 FIXED_NETWORK_SIZE=8
-FIXED_RANGE=192.168.2.32/27
-PUBLIC_INTERFACE=eth0
+FIXED_RANGE=192.0.2.32/27
+PUBLIC_INTERFACE=eth1
 
 # Un-comment this if you want to test without the interwebs
 # OFFLINE=True

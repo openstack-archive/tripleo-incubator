@@ -61,8 +61,9 @@ BM_IMAGE=${BM_IMAGE:-bm-node-image.$KERNEL_VER.img}
 DNSMASQ_IFACE=${DNSMASQ_IFACE:-$PUBLIC_INTERFACE}
 DNSMASQ_IFACE=${DNSMASQ_IFACE:-eth0}
 
-# can we get this from localrc? it looks like FIXED_RANGE, but format is different
-DNSMASQ_RANGE=${DNSMASQ_RANGE:-192.168.2.33,192.168.2.63}
+# We run DNSMASQ with a custom range to provide DHCP for random things attached
+# to the network. This should be distinct from FIXED_RANGE.
+DNSMASQ_RANGE=${DNSMASQ_RANGE:-192.0.2.41,192.168.2.63}
 
 # not used in our testing, but still required
 PM_ADDR=${PM_ADDR:-1.2.3.4}

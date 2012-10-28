@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# If something goes wrong bail, don't continue to the end
+set -e
+set -o xtrace
+
+if [ ! -e ~/devstack ]; then
+    # We use devstack to bootstrap
+    git clone git://github.com/tripleo/devstack.git
+    cd ~/devstack
+    git checkout baremetal-dev
+    # our localrc reflects our policy on top of devstack.
+    cp -t . ~/demo/localrc 
+fi
+
+# Support for creating deployment ramdisks / kernels
+if [ ! -e ~/baremetal-initrd-builder ]; then
+    cd ~stack
+    git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
+    wget http://shellinabox.googlecode.com/files/shellinabox-2.14.tar.gz
+    tar xzf shellinabox-2.14.tar.gz
+    cd shellinabox-2.14
+    sudo apt-get -y install gcc make
+    ./configure
+    make
+    sudo make install
+fi
+
+# Create a demo cloud image - the bare metal image that gets deployed to each
+# node.
+~/demo/scripts/create-baremetal-image.sh
+
+# Run devstack itself:
+cd ~/devstack
+./stack.sh
+. ./openrc
+
+#Workaround https://bugs.launchpad.net/horizon/+bug/1070083 - (Quantal
+# virtual machines only).
+
+if [ ! -e /usr/bin/node ]; then
+  sudo ln -s nodejs /usr/bin/node
+fi
+
+# Do the bits that devstack doesn't know to do for bare metal yet.
+~/demo/scripts/prepare-devstack-for-baremetal.sh
+
+if [ ! -e /usr/local/bin/os-bm-node ]; then
+  sudo ln -s /home/stack/demo/scripts/populate-nova-bm-db.sh /usr/local/bin/os-bm-node
+fi
+
+
+set +x
+echo "Demo environment ready to roll."
+echo "Now source the config - 'source ~/devstack/openrc',"
+echo "Add hardware nodes via os-bm-node -i MANAGEMENT_NIC -j TENANT_NIC add"
+echo "And boot via nova boot --flavor 6 --image bare_metal --key_name default bmtest"
