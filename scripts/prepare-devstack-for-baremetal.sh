@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # If something goes wrong bail, don't continue to the end
 set -e
@@ -17,10 +17,10 @@ if [ ! -e $IMG_PATH/$BM_DEPLOY_RAMDISK ]; then
 fi
 
 # load run-time ramdisk if needed
-if [ ! -e $IMG_PATH/$BM_RUN_RAMDISK ]; then
-    sudo cp /boot/initrd.img-$KERNEL_VER $IMG_PATH/$BM_RUN_RAMDISK
-    sudo chmod a+r $IMG_PATH/$BM_RUN_RAMDISK
-fi
+#if [ ! -e $IMG_PATH/$BM_RUN_RAMDISK ]; then
+#    sudo cp /boot/initrd.img-$KERNEL_VER $IMG_PATH/$BM_RUN_RAMDISK
+#    sudo chmod a+r $IMG_PATH/$BM_RUN_RAMDISK
+#fi
 
 # fix mysql issues - adds user_quotas table - not sure what uses it.
 # TODO: remove after NTT patch lands upstream
