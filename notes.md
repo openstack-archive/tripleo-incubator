@@ -67,9 +67,10 @@ Details:
    establish that your VM can reach the internet to obtain packages.
  - If you don't copy your SSH id in, you will still need to ensure that /home/stack/.ssh/authorized_keys on your bootstrap node has some kind of public SSH key in it
 
- - Workaround https://bugs.launchpad.net/horizon/+bug/1070083 -
+ - Workaround https://bugs.launchpad.net/horizon/+bug/1070083 - (Quantal
+   virtual machines).
 
-           cd /usr/bin && sudo ln -s nodejs node; cd ~
+            cd /usr/bin && sudo ln -s nodejs node; cd ~
 
 * Create your 'baremetal' nodes.
  - using KVM create however many hardware notes your emulated cloud will have,
