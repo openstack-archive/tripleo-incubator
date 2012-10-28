@@ -111,9 +111,7 @@ Details:
  - create deployment ramdisk and kernel
 
             cd ~stack
-            # Until our branch is merged (https://github.com/NTTdocomo-openstack/baremetal-initrd-builder/pull/1)
-            # git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
-            git clone https://github.com/tripleo/baremetal-initrd-builder.git
+            git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
             cd baremetal-initrd-builder
             git checkout tripleo
             cd ..
