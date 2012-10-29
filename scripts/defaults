@@ -63,7 +63,7 @@ DNSMASQ_IFACE=${DNSMASQ_IFACE:-eth0}
 
 # We run DNSMASQ with a custom range to provide DHCP for random things attached
 # to the network. This should be distinct from FIXED_RANGE.
-DNSMASQ_RANGE=${DNSMASQ_RANGE:-192.0.2.41,192.168.2.63}
+DNSMASQ_RANGE=${DNSMASQ_RANGE:-192.0.2.41,192.0.2.63}
 
 # not used in our testing, but still required
 PM_ADDR=${PM_ADDR:-1.2.3.4}
