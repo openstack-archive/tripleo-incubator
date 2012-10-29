@@ -61,14 +61,22 @@ Detailed instructions
    public SSH key in it
  - After the base installation, configure eth1 for communicating with your
    baremetal nodes - put this at the end of your /etc/network/interfaces. The
-   iptables command exposes the metadata service needed by the nodes as they
-   boot.
+   iptables commands expose the metadata service needed by the nodes as they
+   boot and permit baremetal nodes to access the rest of the world by routing
+   via the bootstrap node (libvirt rejects traffic from unknown ip addresses,
+   meaning that using the default libvirt nat environment requires the
+   MASQUERADE for the bare metal nodes unless you reconfigure libvirt as well).
+   Alternatively you can create a second dedicated bridge on your actual
+   machine, put an ip address on it and configure eth0 in the bootstrap node
+   manually or by manually configuring dnsmasq (or similar) on your machine
+   to serve on that bridge.
 
             auto eth1
                 iface eth1 inet static
                 address 192.0.2.1
                 netmask 255.255.255.0
                 up iptables -t nat -A PREROUTING -d 169.254.169.254 -p tcp -m tcp --dport 80 -j REDIRECT --to-port 8775
+                up iptables -t nat -A POSTROUTING  -s 192.0.2.0/24 -o eth0 -j MASQUERADE
                 up ip addr add 192.0.2.33 dev eth1
 
 * Create your 'baremetal' nodes.
