@@ -38,7 +38,14 @@ $MYSQL -u$MYSQL_USER -p$MYSQL_PASSWORD -v -v -f nova_bm < $(dirname $0)/init_nov
 $BM_SCRIPT_PATH/$BM_SCRIPT db sync
 
 # add keypair... optional step
-$NOVA keypair-add --pub_key ~/.ssh/authorized_keys  default
+LOCAL_KEYFP=`ssh-keygen -lf ~/.ssh/authorized_keys | awk '{print $2}'`
+NOVA_KEYFP=`nova keypair-list | awk '/default/ {print $4}'`
+if [ -n "$NOVA_KEYFP" -a "$NOVA_KEYFP" != "$LOCAL_KEYFP" ]; then
+    nova keypair-delete default
+    $NOVA keypair-add --pub_key ~/.ssh/authorized_keys  default
+elif [ -z "$NOVA_KEYFP" ]; then
+    $NOVA keypair-add --pub_key ~/.ssh/authorized_keys  default
+fi
 
 # load images into glance
 ami=$(load_image "ami" $BM_NODE_NAME $IMG_PATH/$BM_IMAGE)
