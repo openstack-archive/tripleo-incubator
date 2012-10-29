@@ -47,47 +47,62 @@ elif [ -z "$NOVA_KEYFP" ]; then
     $NOVA keypair-add --pub_key ~/.ssh/authorized_keys  default
 fi
 
-# load images into glance
-ami=$(load_image "ami" $BM_NODE_NAME $IMG_PATH/$BM_IMAGE)
-aki=$(load_image "aki" "aki-01" $IMG_PATH/$BM_DEPLOY_KERNEL)
-ari=$(load_image "ari" "ari-01" $IMG_PATH/$BM_DEPLOY_RAMDISK)
+function populate_glance() {
+    # load images into glance
+    ami=$(load_image "ami" $BM_NODE_NAME $IMG_PATH/$BM_IMAGE)
+    aki=$(load_image "aki" "aki-01" $IMG_PATH/$BM_DEPLOY_KERNEL)
+    ari=$(load_image "ari" "ari-01" $IMG_PATH/$BM_DEPLOY_RAMDISK)
 
-# associate deploy aki and ari to main AMI
-$GLANCE image-update --property "deploy_kernel_id=$aki" $ami
-$GLANCE image-update --property "deploy_ramdisk_id=$ari" $ami
+    # associate deploy aki and ari to main AMI
+    $GLANCE image-update --property "deploy_kernel_id=$aki" $ami
+    $GLANCE image-update --property "deploy_ramdisk_id=$ari" $ami
 
-# pull run-time ramdisk and kernel out of AMI
-TMP_KERNEL=$(mktemp)
-TMP_RAMDISK=$(mktemp)
-TMP_MNT=$(mktemp_mount $IMG_PATH/$BM_IMAGE)
-trap 'rm -f $TMP_KERNEL $TMP_RAMDISK && sudo umount -f $TMP_MNT' ERR
+    # pull run-time ramdisk and kernel out of AMI
+    TMP_KERNEL=$(mktemp)
+    TMP_RAMDISK=$(mktemp)
+    TMP_MNT=$(mktemp_mount $IMG_PATH/$BM_IMAGE)
+    trap 'rm -f $TMP_KERNEL $TMP_RAMDISK && sudo umount -f $TMP_MNT' ERR
 
-BM_RUN_KERNEL=$(basename `ls -1 $TMP_MNT/boot/vmlinuz*generic | sort -n | tail -1`)
-BM_RUN_RAMDISK=$(basename `ls -1 $TMP_MNT/boot/initrd*generic | sort -n | tail -1`)
-sudo cp $TMP_MNT/boot/$BM_RUN_KERNEL $TMP_KERNEL
-sudo cp $TMP_MNT/boot/$BM_RUN_RAMDISK $TMP_RAMDISK
-sudo chmod a+r $TMP_KERNEL
+    BM_RUN_KERNEL=$(basename `ls -1 $TMP_MNT/boot/vmlinuz*generic | sort -n | tail -1`)
+    BM_RUN_RAMDISK=$(basename `ls -1 $TMP_MNT/boot/initrd*generic | sort -n | tail -1`)
+    sudo cp $TMP_MNT/boot/$BM_RUN_KERNEL $TMP_KERNEL
+    sudo cp $TMP_MNT/boot/$BM_RUN_RAMDISK $TMP_RAMDISK
+    sudo chmod a+r $TMP_KERNEL
 
-# load run-time kernel and ramdisk
-aki=$(load_image "aki" "aki-02" $TMP_KERNEL)
-ari=$(load_image "ari" "ari-02" $TMP_RAMDISK)
+    # load run-time kernel and ramdisk
+    aki=$(load_image "aki" "aki-02" $TMP_KERNEL)
+    ari=$(load_image "ari" "ari-02" $TMP_RAMDISK)
 
-# clean up temp mounts and files
-sudo umount -f $TMP_MNT || true
-sudo rm -f $TMP_KERNEL $TMP_RAMDISK
-trap ERR
+    # clean up temp mounts and files
+    sudo umount -f $TMP_MNT || true
+    sudo rm -f $TMP_KERNEL $TMP_RAMDISK
+    trap ERR
 
-# associate run-time aki and ari to main AMI
-$GLANCE image-update --property "kernel_id=$aki" $ami
-$GLANCE image-update --property "ramdisk_id=$ari" $ami
+    # associate run-time aki and ari to main AMI
+    $GLANCE image-update --property "kernel_id=$aki" $ami
+    $GLANCE image-update --property "ramdisk_id=$ari" $ami
 
-# create instance type (aka flavor)
-# - a 32 bit instance
-$NOVA_MANAGE instance_type create --name=x86_bm --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=6 --swap=0 --rxtx_factor=1
-$NOVA_MANAGE instance_type set_key --name=x86_bm --key cpu_arch --value x86
-# - a 64 bit instance
-$NOVA_MANAGE instance_type create --name=x86_64_bm --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=7 --swap=0 --rxtx_factor=1
-$NOVA_MANAGE instance_type set_key --name=x86_64_bm --key cpu_arch --value x86_64
+    # create instance type (aka flavor)
+    # - a 32 bit instance
+    $NOVA_MANAGE instance_type create --name=x86_bm --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=6 --swap=0 --rxtx_factor=1
+    $NOVA_MANAGE instance_type set_key --name=x86_bm --key cpu_arch --value x86
+    # - a 64 bit instance
+    $NOVA_MANAGE instance_type create --name=x86_64_bm --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=7 --swap=0 --rxtx_factor=1
+    $NOVA_MANAGE instance_type set_key --name=x86_64_bm --key cpu_arch --value x86_64
+}
+
+GLANCE_BMIMG_SIZE=`glance image-list | awk "/$BM_NODE_NAME/"'{print $10}'`
+LOCAL_BMIMG_SIZE=`stat -c%s $IMG_PATH/$BM_IMAGE`
+if [ -n "$GLANCE_BMIMG_SIZE" -a "$GLANCE_BMIMG_SIZE" != "$LOCAL_BMIMG_SIZE" ]; then
+    delete_image $BM_NODE_NAME
+    delete_image aki-01
+    delete_image ari-01
+    delete_image ari-02
+    delete_image aki-02
+    populate_glance
+elif [ -z "$GLANCE_BMIMG_SIZE" ]; then
+    populate_glance
+fi
 
 # restart dnsmasq
 sudo pkill dnsmasq || true
@@ -104,4 +119,3 @@ set +e
 
 echo "Preparation complete."
 echo "Inform baremetal nova of your baremetal nodes."
-

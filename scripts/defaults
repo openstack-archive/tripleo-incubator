@@ -94,6 +94,14 @@ function load_image {
    echo $uuid
 }
 
+# Deletes an image from glance
+# Usage: delete_image <image_name>
+function delete_image {
+	 uuid=$($GLANCE image-list | awk "/$1/"'{print $2}' | head -1)
+	 [ "$uuid" ] || die "Failed to find image $1 in glance"
+	 $GLANCE image-delete $uuid
+}
+
 # make a temp dir and mount image there
 # Usage: dir=$(_mount /path/to/image)
 function mktemp_mount {
