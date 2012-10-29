@@ -44,16 +44,18 @@ Detailed instructions
         sudo service libvirt-bin restart
 
 * Create your bootstrap VM:
- - download an Ubuntu 12.10 server .iso
- - using the libvirt GUI or command line (your choice) create a new VM, Give it
-   1GB of memory, 16GB of disk and use the default NATing network.
- - Create a second NIC for the virtual machine, and - this is the key bit -
-   tell it to use the ooodemo shared network device rather than the default NAT
-   setup. This places eth1 of the virtual machine on your 'cloud' network.
- - install Ubuntu into that VM
-   - set default user name to "stack", or add as separate user
-   - we use a hostname of bootstrap, but anything should work.
-   - install openssh if you like, do not install other network services such as DNS.
+
+    sudo ubuntu-vm-builder kvm precise --rootsize=16384 --swapsize=0 -m 1024 \
+      --proxy=$http_proxy --ssh-user-key=/home/robertc/.ssh/authorized_keys \
+      --user=stack --name=stack --pass=stack -ai386 --hostname=bootstrap \
+      --mirror=http://nz.archive.ubuntu.com/ubuntu --domain= \
+      --libvirt qemu:///system
+
+ - Locate it in kvm - it will be called 'bootstrap', and then..
+ - Create a second NIC for the virtual machine, telling it to use the ooodemo
+   shared network device rather than the default NAT setup. This places eth1 of
+   the virtual machine on your 'cloud' network.
+ - install openssh if you like, do not install other network services such as DNS.
  - If you installed ssh you probably want to ssh-copy-id your ssh public key in
    at this point.
  - If you don't copy your SSH id in, you will still need to ensure that
