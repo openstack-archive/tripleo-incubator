@@ -1,0 +1,46 @@
+<domain type='$domain_type'>
+  <name>$hostname</name>
+  <memory>#echo int($mem) * 1024 #</memory>
+  <vcpu>$cpus</vcpu>
+  <os>
+    <type>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+  </features>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <devices>
+    <emulator>/usr/bin/kvm</emulator>
+#if $bridge
+    <interface type='bridge'>
+      <source bridge='$bridge'/>
+#else
+    <interface type='network'>
+#if $mac
+      <mac address='$mac'/>
+#end if
+#if $network
+      <source network='$network'/>
+#end if
+#end if
+#if $virtio_net
+      <model type='virtio'/>
+#end if
+    </interface>
+    <input type='mouse' bus='ps2'/>
+    <graphics type='vnc' port='-1' listen='127.0.0.1'/>
+#for $disk in $disks
+    <disk type='file' device='disk'>
+#if $disk.format_type != None
+      <driver name='qemu' type='$disk.format_type' />
+#end if
+      <source file='$disk.filename' />
+      <target dev='hd$disk.devletters()' />
+    </disk>
+#end for
+  </devices>
+</domain>
