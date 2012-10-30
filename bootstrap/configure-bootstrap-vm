@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+import argparse
+import os.path
+
+import libvirt
+
+basedir = os.path.dirname(__file__) 
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Configure a kvm virtual machine for the bootstrap image.")
+    parser.add_argument('--name', default='bootstrap', 
+        help='the name to give the machine in libvirt.')
+    parser.add_argument('--image',
+        help='Use a custom image file (must be qcow2).')
+    parser.add_argument('--baremetal-interface', default='ooodemo',
+        help='The interface which bare metal nodes will be connected to.')
+    args = parser.parse_args()
+    with file(basedir + '/bootstrap.xml', 'rb') as f:
+        source_template = f.read()
+    params = {
+        'name': args.name,
+        'imagefile': '/var/lib/libvirt/images/%(name)s.qcow2' % dict(name=args.name),
+        'bmbridge': args.baremetal_interface,
+        }
+    if args.image is not None:
+        params['imagefile'] = args.image
+
+    libvirt_template = source_template % params
+    conn=libvirt.open("qemu:///system")
+    a = conn.defineXML(libvirt_template)
+    print ("Created machine %s with UUID %s" % (args.name, a.UUIDString()))
+
+if __name__ == '__main__':
+    main()
+

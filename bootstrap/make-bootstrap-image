@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -x
+
+echo "Nothing to see here yet. Code to make a bootstrap disk image will live here eventually."
+
