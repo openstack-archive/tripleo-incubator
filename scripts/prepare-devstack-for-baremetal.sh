@@ -40,10 +40,10 @@ $BM_SCRIPT_PATH/$BM_SCRIPT db sync
 # add keypair... optional step
 LOCAL_KEYFP=`ssh-keygen -lf ~/.ssh/authorized_keys | awk '{print $2}'`
 NOVA_KEYFP=`nova keypair-list | awk '/default/ {print $4}'`
-if [ -n "$NOVA_KEYFP" -a "$NOVA_KEYFP" != "$LOCAL_KEYFP" ]; then
-    nova keypair-delete default
+if [ -z "$NOVA_KEYFP" ]; then
     $NOVA keypair-add --pub_key ~/.ssh/authorized_keys  default
-elif [ -z "$NOVA_KEYFP" ]; then
+elif [ "$NOVA_KEYFP" != "$LOCAL_KEYFP" ]; then
+    nova keypair-delete default
     $NOVA keypair-add --pub_key ~/.ssh/authorized_keys  default
 fi
 
@@ -93,14 +93,15 @@ function populate_glance() {
 
 GLANCE_BMIMG_SIZE=`glance image-list | awk "/$BM_NODE_NAME/"'{print $10}'`
 LOCAL_BMIMG_SIZE=`stat -c%s $IMG_PATH/$BM_IMAGE`
-if [ -n "$GLANCE_BMIMG_SIZE" -a "$GLANCE_BMIMG_SIZE" != "$LOCAL_BMIMG_SIZE" ]; then
+
+if [ -z "$GLANCE_BMIMG_SIZE" ]; then
+    populate_glance
+elif [ "$GLANCE_BMIMG_SIZE" != "$LOCAL_BMIMG_SIZE" ]; then
     delete_image $BM_NODE_NAME
     delete_image aki-01
     delete_image ari-01
     delete_image ari-02
     delete_image aki-02
-    populate_glance
-elif [ -z "$GLANCE_BMIMG_SIZE" ]; then
     populate_glance
 fi
 
