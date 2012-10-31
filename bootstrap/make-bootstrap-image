@@ -25,9 +25,16 @@ else
 fi
 sudo qemu-nbd -c $NBD_DEV $CACHE $TMP_IMAGE_PATH 
 export EXTRA_UNMOUNT="sudo qemu-nbd -d $NBD_DEV"
-sudo mkfs -F -t $FS_TYPE $NBD_DEV
+sudo sfdisk $NBD_DEV << EOF
+- - - *
+;
+;
+;
+EOF
 
-mount_tmp_image $NBD_DEV
+sudo mkfs -F -t $FS_TYPE ${NBD_DEV}p1
+
+mount_tmp_image ${NBD_DEV}p1
 
 create_base
 

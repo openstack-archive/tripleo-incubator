@@ -33,7 +33,7 @@ function ensure_base_available () {
 
 function mount_tmp_image () {
   mkdir $TMP_BUILD_DIR/mnt
-  sudo mount -o loop $1 $TMP_BUILD_DIR/mnt
+  sudo mount $@ $TMP_BUILD_DIR/mnt
   [ $? -eq 0 ] || die "Failed to mount image"
 }
 

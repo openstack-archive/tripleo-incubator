@@ -33,7 +33,7 @@ dd if=/dev/zero of=$TMP_IMAGE_PATH bs=1M count=0 seek=$(( ${IMAGE_SIZE} * 1024 )
 
 mkfs -F -t $FS_TYPE $TMP_IMAGE_PATH
 
-mount_tmp_image $TMP_IMAGE_PATH
+mount_tmp_image -o loop $TMP_IMAGE_PATH
 
 create_base
 
