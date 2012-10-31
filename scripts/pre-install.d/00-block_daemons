@@ -20,3 +20,10 @@ echo "Warning: Fake initctl called, doing nothing"
 EOF
 chmod 755 /sbin/initctl
 
+mv /usr/sbin/invoke-rc.d /usr/sbin/invoke-rc.d.REAL
+dd of=/usr/sbin/invoke-rc.d <<EOF
+#!/bin/sh
+echo "invoke-rc.d (tripleo 1.0)"
+echo "Warning: Fake inovke-rc.d called, doing nothing"
+EOF
+chmod 755 /usr/sbin/invoke-rc.d
