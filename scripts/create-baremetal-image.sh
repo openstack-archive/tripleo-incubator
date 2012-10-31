@@ -13,7 +13,8 @@ source $(dirname $0)/img-defaults
 # keep it for a
 # few days.
 source $(dirname $0)/defaults
-source $(dirname $0)/functions
+source $(dirname $0)/common-functions
+source $(dirname $0)/img-functions
 set -e
 set -o xtrace
 

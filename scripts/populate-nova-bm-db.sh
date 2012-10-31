@@ -3,6 +3,7 @@
 # If something goes wrong bail, don't continue to the end
 set -e
 source $(dirname $0)/defaults
+source $(dirname $0)/common-functions
 source $(dirname $0)/functions
 
 # set some defaults

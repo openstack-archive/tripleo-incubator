@@ -1,11 +1,3 @@
-# Prints "message" and exits
-# Usage: die "message"
-function die() {
-    local exitcode=$?
-    set +o xtrace
-    echo $@
-    exit $exitcode
-}
 
 # Loads an image into glance
 # Usage: load_image [ami|aki|ari] <image_name> <file_name>

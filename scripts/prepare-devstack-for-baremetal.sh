@@ -8,6 +8,7 @@ set -o xtrace
 # Pull in the IMG_PATH and BM image details.
 source $(dirname $0)/img-defaults
 source $(dirname $0)/defaults
+source $(dirname $0)/common-functions
 source $(dirname $0)/functions
 
 # build deployment ramdisk if needed

@@ -4,5 +4,6 @@ set -x
 
 echo "Nothing to see here yet. Code to make a bootstrap disk image will live here eventually."
 source $(dirname $0)/../scripts/img-defaults
-source $(dirname $0)/../scripts/functions
+source $(dirname $0)/../scripts/common-functions
+source $(dirname $0)/../scripts/img-functions
 
