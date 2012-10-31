@@ -2,7 +2,9 @@
 
 set -e
 
-echo "Nothing to see here yet. Code to make a bootstrap disk image will live here eventually."
+echo "Making a bootstrap VM."
+echo "Forcing architecture to i386."
+export ARCH=i386
 source $(dirname $0)/../scripts/img-defaults
 source $(dirname $0)/../scripts/common-functions
 source $(dirname $0)/../scripts/img-functions
@@ -25,11 +27,13 @@ else
 fi
 sudo qemu-nbd -c $NBD_DEV $CACHE $TMP_IMAGE_PATH 
 export EXTRA_UNMOUNT="sudo qemu-nbd -d $NBD_DEV"
+# Create 1 partition far enough up the disk to permit grub to be installed on
+# the MBR.
 sudo sfdisk $NBD_DEV << EOF
-- - - *
-;
-;
-;
+1 - - *
+0 0;
+0 0;
+0 0;
 EOF
 
 sudo mkfs -F -t $FS_TYPE ${NBD_DEV}p1
@@ -37,6 +41,12 @@ sudo mkfs -F -t $FS_TYPE ${NBD_DEV}p1
 mount_tmp_image ${NBD_DEV}p1
 
 create_base
+
+# customise()
+
+# XXX: grub-probe on the nbd0 device returns nothing - workaround, manually
+# specify modules.
+run_in_target grub-install --modules="biosdisk part_msdos" /dev/nbd0
 
 # XXX: do hooks here, but we need concept of image flavours or something first.
 finalise_base

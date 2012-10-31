@@ -1,13 +1,18 @@
 function unmount_image () {
     # unmount from the chroot
+    sudo umount -f $TMP_BUILD_DIR/mnt/sys || true
+    sudo umount -f $TMP_BUILD_DIR/mnt/proc || true
     sudo umount -f $TMP_BUILD_DIR/mnt/dev || true
     sudo umount -f $TMP_BUILD_DIR/mnt/tmp/in_target.d || true
     # give it a second (ok really 5) to umount XXX - why? should instead track
     # the mount data / lsof etc.
     sleep 5
-    [ -n "$EXTRA_UNMOUNT" ] && $EXTRA_UNMOUNT
     # oh ya don't want to forget to unmount the image
     sudo umount -f $TMP_BUILD_DIR/mnt || true
+    # having disk corruption issues; one possibility is qemu-nbd not flush dirty
+    # pages on disconnect?
+    sync
+    [ -n "$EXTRA_UNMOUNT" ] && $EXTRA_UNMOUNT
 }
 
 function cleanup () {
@@ -57,8 +62,10 @@ function create_base () {
     sudo chmod 777 $TMP_BUILD_DIR/mnt/etc/resolv.conf
     echo nameserver 8.8.8.8 > $TMP_BUILD_DIR/mnt/etc/resolv.conf
 
-    # we'll prob need something from /dev so lets mount it
+    # supporting kernel file systems
+    sudo mount -t proc none $TMP_BUILD_DIR/mnt/proc
     sudo mount --bind /dev $TMP_BUILD_DIR/mnt/dev
+    sudo mount -t sysfs none $TMP_BUILD_DIR/mnt/sys
 
     # If we have a network proxy, use it.
     if [ -n "$http_proxy" ] ; then
@@ -72,7 +79,7 @@ _EOF_
 
 # Helper function to run a command inside the chroot
 function run_in_target() {
-   sudo chroot $TMP_BUILD_DIR/mnt $@
+   sudo chroot $TMP_BUILD_DIR/mnt "$@"
 }
 
 # Helper function to run a directory of scripts inside the chroot

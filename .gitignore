@@ -1,4 +1,5 @@
 *.swp
 *~
+*.qcow2
 
 .DS_Store
