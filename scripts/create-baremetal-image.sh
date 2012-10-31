@@ -24,32 +24,8 @@ sudo echo
 
 BASE_DIR=$(dirname $0)
 
-TMP_BUILD_DIR=$(mktemp -t -d image.XXXXXXXX)
-[ $? -eq 0 ] || die "Failed to create tmp directory"
-
-function unmount_image () {
-    # unmount from the chroot
-    sudo umount -f $TMP_BUILD_DIR/mnt/dev || true
-    sudo umount -f $TMP_BUILD_DIR/mnt/tmp/in_target.d || true
-    # give it a second (ok really 5) to umount
-    sleep 5
-    # oh ya don't want to forget to unmount the image
-    sudo umount -f $TMP_BUILD_DIR/mnt || true
-}
-
-function cleanup () {
-    unmount_image
-    rm -rf $TMP_BUILD_DIR
-}
-trap cleanup ERR
-
-echo Building in $TMP_BUILD_DIR
-
-if [ ! -f $IMG_PATH/$BASE_IMAGE_FILE ] ; then
-   echo "Fetching Base Image"
-   wget $CLOUD_IMAGES/$RELEASE/current/$BASE_IMAGE_FILE -O $IMG_PATH/$BASE_IMAGE_FILE.tmp
-   mv $IMG_PATH/$BASE_IMAGE_FILE.tmp $IMG_PATH/$BASE_IMAGE_FILE
-fi
+mk_build_dir
+ensure_base_available
 
 # Create the file that will be our image
 dd if=/dev/zero of=$TMP_BUILD_DIR/image bs=1M count=0 seek=$(( ${IMAGE_SIZE} * 1024 ))
