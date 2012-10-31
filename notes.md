@@ -28,17 +28,15 @@ machine to emulate this with virtual machine 'bare metal' nodes.
 Detailed instructions
 ---------------------
 
-* add a bridge to your own machine called ooodemo (this emulate the physical
-  network of a cloud). Add this to /etc/network/interfaces:
+* git checkout this repository to your local machine.
 
-        auto ooodemo
-        iface ooodemo inet manual
-            bridge_ports none
+* Configure a network for your test environment.
+  (This alters your /etc/network/interfaces file and adds an exclusion for
+  dnsmasq so it doesn't listen on your test network.)
 
-* Exclude that bridge from dnsmasq:
- - add except-interface=ooodemo to your dnsmasq setup (e.g. in a file in /etc/dnsmasq.d/foo)
+        sudo bootstrap/configure-baremetal-network -y
 
-* Activate these changes:
+* Activate these changes (alternatively, restart):
 
         sudo ifup ooodemo
         sudo service libvirt-bin restart

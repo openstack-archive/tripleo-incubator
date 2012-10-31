@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+
+import argparse
+import os.path
+import sys
+from textwrap import dedent
+
+import libvirt
+
+basedir = os.path.dirname(__file__) 
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="""Configure access to the baremetal LAN for the bootstrap VM.
+            The default will do nothing and error, as changing your machine
+            config can be considered unfriendly. Passing -y will trigger the 
+            demo mode where a local bridge called 'ooodemo' with no external
+            ports connected is created, which as many 'bare metal' virtual
+            machines as you want can be connected to - this is the device that
+            configure-bootstrap-vm uses by default.
+
+            If you are provising actual hardware, you will want to add actual
+            physical ports (e.g. eth1) by passing '--with-port=eth1' to this
+            script.
+
+            If you only have one ethernet port in your machine, you will want
+            to migrate your networking configuration to a bridge before running
+            this script, and then pass '--with-port=br0' (or whatever port
+            you chose). In future reconfiguring your local networking may be
+            available as an automated step.
+            """)
+    default_bridge = 'ooodemo'
+    parser.add_argument('--name', default=default_bridge, 
+        help='The name to give the bridge.')
+    parser.add_argument('--with-port', action="append",
+        help='Add a port (such as eth2) to the bridge.',
+        default=[]) # Yes its mutable, don't reuse the parser.
+    parser.add_argument('-y', default=False, action='store_true',
+        help='The interface which bare metal nodes will be connected to.')
+    parser.add_argument('-f', default='/etc/network/interfaces',
+        help='Network config file to extend.')
+    args = parser.parse_args()
+    option_given = not (
+            args.name == default_bridge and
+            len(args.with_port) == 0 and
+            args.y is False)
+    if not option_given:
+        parser.print_help()
+        sys.exit(1)
+    template = dedent("""
+        # tripleo test bridge
+        auto %(name)s
+        iface %(name)s inet manual
+            bridge_ports %(ports)s
+        """)
+    ports = " ".join(args.with_port) or "none"
+    print ("Wroting new stanza for bridge interface %(name)s." % dict(name=args.name))
+    with file(args.f, 'ab') as outf:
+        outf.seek(0, 2)
+        outf.write(template % dict(name=args.name, ports=ports))
+    print ("Wrote new stanza for bridge interface %(name)s." % dict(name=args.name))
+    print ("Writing dnsmasq.d exclusion file.")
+    with file('/etc/dnsmasq.d/%(name)s' % dict(name=args.name), 'wb') as outf:
+        outf.write('bind-interfaces\nexcept-interface=%(name)s\n' % dict(name=args.name))
+    print ("Wrote dnsmasq.d exclusion file /etc/dnsmasq/d/%(name)s." % dict(name=args.name))
+
+if __name__ == '__main__':
+    main()
+
