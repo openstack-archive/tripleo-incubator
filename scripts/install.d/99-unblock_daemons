@@ -1,8 +1,0 @@
-#!/bin/bash
-
-set -e
-set -o xtrace
-
-mv /sbin/start-stop-daemon.REAL /sbin/start-stop-daemon
-mv /sbin/initctl.REAL /sbin/initctl
-mv /usr/sbin/invoke-rc.d.REAL /usr/sbin/invoke-rc.d

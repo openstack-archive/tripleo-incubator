@@ -1,8 +1,0 @@
-#!/bin/sh
-# Install the package necessary for add-apt-repository
-
-set -e
-set -o xtrace
-
-apt-get -y install python-software-properties
-

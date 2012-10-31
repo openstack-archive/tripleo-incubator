@@ -1,8 +1,0 @@
-#!/bin/sh
-# Install our base required packages
-
-set -e
-set -o xtrace
-
-apt-get -y install linux-image-generic vlan open-iscsi
-

@@ -1,8 +1,0 @@
-#!/bin/sh
-# Do an apt update last, so any PPAs/etc we've added become visible
-
-set -e
-set -o xtrace
-
-apt-get -y update
-

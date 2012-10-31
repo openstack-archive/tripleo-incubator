@@ -48,7 +48,9 @@ create_base
 # specify modules.
 run_in_target grub-install --modules="biosdisk part_msdos" /dev/nbd0
 
-# XXX: do hooks here, but we need concept of image flavours or something first.
+do_pre_install
+do_install
+
 finalise_base
 
 unmount_image

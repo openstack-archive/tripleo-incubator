@@ -37,18 +37,15 @@ mount_tmp_image -o loop $TMP_IMAGE_PATH
 
 create_base
 
-# Run pre-install scripts. These do things that prepare the chroot for package installs
-run_d_in_target pre-install
-
-# Call install scripts to pull in the software we need
-run_d_in_target install
+do_pre_install
+do_install
 
 # Now some quick hacks to prevent 4 minutes of pause while booting
-if [ -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf ] ; then
-    sudo rm -f $TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf
+if [ -f $TMP_MOUNT_PATH/etc/init/cloud-init-nonet.conf ] ; then
+    sudo rm -f $TMP_MOUNT_PATH/etc/init/cloud-init-nonet.conf
 
 # Now Recreate the file we just removed
-sudo dd of=$TMP_BUILD_DIR/mnt/etc/init/cloud-init-nonet.conf << _EOF_ 
+sudo dd of=$TMP_MOUNT_PATH/etc/init/cloud-init-nonet.conf << _EOF_ 
 # cloud-init-no-net
 start on mounted MOUNTPOINT=/ and stopped cloud-init-local
 stop on static-network-up
@@ -79,12 +76,12 @@ _EOF_
 fi
 
 # One more hack
-if [ -f $TMP_BUILD_DIR/mnt/etc/init/failsafe.conf ] ; then
-    sudo rm -f $TMP_BUILD_DIR/mnt/etc/init/failsafe.conf
+if [ -f $TMP_MOUNT_PATH/etc/init/failsafe.conf ] ; then
+    sudo rm -f $TMP_MOUNT_PATH/etc/init/failsafe.conf
 fi
 
 # Now Recreate the file we just removed
-sudo dd of=$TMP_BUILD_DIR/mnt/etc/init/failsafe.conf << _EOF_ 
+sudo dd of=$TMP_MOUNT_PATH/etc/init/failsafe.conf << _EOF_ 
 # failsafe
 
 description "Failsafe Boot Delay"
@@ -135,7 +132,7 @@ _EOF_
 finalise_base
 
 # name the file by the kernel it contained, if no name specified
-BM_RUN_KERNEL=$(basename `ls -1 $TMP_BUILD_DIR/mnt/boot/vmlinuz*generic | sort -n | tail -1`)
+BM_RUN_KERNEL=$(basename `ls -1 $TMP_MOUNT_PATH/boot/vmlinuz*generic | sort -n | tail -1`)
 IMAGE_KERNEL_VER=${BM_RUN_KERNEL##vmlinuz-}
 BM_IMAGE=${BM_IMAGE:-bm-node-image.$IMAGE_KERNEL_VER.img}
 
