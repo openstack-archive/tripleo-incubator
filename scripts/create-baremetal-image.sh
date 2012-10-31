@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # script to create a Ubuntu bare metal image
 # NobodyCam 0.0.0 Pre-alpha
 # Others 0.1.0 Beta
@@ -15,7 +17,6 @@ source $(dirname $0)/img-defaults
 source $(dirname $0)/defaults
 source $(dirname $0)/common-functions
 source $(dirname $0)/img-functions
-set -e
 set -o xtrace
 
 # Ensure we have sudo before we do long running things that will bore the user.
@@ -28,64 +29,13 @@ mk_build_dir
 ensure_base_available
 
 # Create the file that will be our image
-dd if=/dev/zero of=$TMP_BUILD_DIR/image bs=1M count=0 seek=$(( ${IMAGE_SIZE} * 1024 ))
+dd if=/dev/zero of=$TMP_IMAGE_PATH bs=1M count=0 seek=$(( ${IMAGE_SIZE} * 1024 ))
 
-mkfs -F -t $FS_TYPE $TMP_BUILD_DIR/image
+mkfs -F -t $FS_TYPE $TMP_IMAGE_PATH
 
-# mount the image file
-mkdir $TMP_BUILD_DIR/mnt
-sudo mount -o loop $TMP_BUILD_DIR/image $TMP_BUILD_DIR/mnt
-[ $? -eq 0 ] || die "Failed to mount image"
+mount_tmp_image $TMP_IMAGE_PATH
 
-# Extract the base image
-sudo tar -C $TMP_BUILD_DIR/mnt -xzf $IMG_PATH/$BASE_IMAGE_FILE
-
-# Configure Image
-# Setup resolv.conf so we can chroot to install some packages
-if [ -L $TMP_BUILD_DIR/mnt/etc/resolv.conf ] ; then
-    sudo unlink $TMP_BUILD_DIR/mnt/etc/resolv.conf
-fi
-
-if [ -f $TMP_BUILD_DIR/mnt/etc/resolv.conf ] ; then
-    sudo rm -f $TMP_BUILD_DIR/mnt/etc/resolv.conf
-fi
-
-# Recreate resolv.conf
-sudo touch $TMP_BUILD_DIR/mnt/etc/resolv.conf
-sudo chmod 777 $TMP_BUILD_DIR/mnt/etc/resolv.conf
-echo nameserver 8.8.8.8 > $TMP_BUILD_DIR/mnt/etc/resolv.conf
-
-# we'll prob need something from /dev so lets mount it
-sudo mount --bind /dev $TMP_BUILD_DIR/mnt/dev
-
-# If we have a network proxy, use it.
-if [ -n "$http_proxy" ] ; then
-    sudo dd of=$TMP_BUILD_DIR/mnt/etc/apt/apt.conf.d/60img-build-proxy << _EOF_
-Acquire::http::Proxy "$http_proxy";
-_EOF_
-fi
-
-# Helper function to run a command inside the chroot
-function run_in_target() {
-   sudo chroot $TMP_BUILD_DIR/mnt $@
-}
-
-# Helper function to run a directory of scripts inside the chroot
-function run_d_in_target() {
-    # If we can find a directory of hooks to run in the target filesystem, bind
-    # mount it into the target and then execute run-parts in a chroot
-    if [ -d ${BASE_DIR}/$1.d ] ; then
-      sudo mkdir $TMP_BUILD_DIR/mnt/tmp/in_target.d
-      sudo mount --bind ${BASE_DIR}/$1.d $TMP_BUILD_DIR/mnt/tmp/in_target.d
-      sudo mount -o remount,ro,bind ${BASE_DIR}/$1.d $TMP_BUILD_DIR/mnt/tmp/in_target.d
-      run_in_target run-parts -v /tmp/in_target.d
-      sudo umount -f $TMP_BUILD_DIR/mnt/tmp/in_target.d
-      sudo rmdir $TMP_BUILD_DIR/mnt/tmp/in_target.d
-    fi
-}
-
-# Generate locales to avoid perl setting locales warnings
-run_in_target locale-gen en_US en_US.UTF-8
+create_base
 
 # Run pre-install scripts. These do things that prepare the chroot for package installs
 run_d_in_target pre-install
@@ -182,12 +132,7 @@ post-start exec	logger -t 'failsafe' -p daemon.warning "Failsafe of 120 seconds 
 _EOF_
 
 # that should do it for the hacks
-# Undo our proxy support
-sudo rm -f $TMP_BUILD_DIR/mnt/etc/apt/apt.conf.d/60img-build-proxy
-# Now remove the resolv.conf we created above
-sudo rm -f $TMP_BUILD_DIR/mnt/etc/resolv.conf
-# The we need to recreate it as a link
-sudo ln -sf ../run/resolvconf/resolv.conf $TMP_BUILD_DIR/mnt/etc/resolv.conf
+finalise_base
 
 # name the file by the kernel it contained, if no name specified
 BM_RUN_KERNEL=$(basename `ls -1 $TMP_BUILD_DIR/mnt/boot/vmlinuz*generic | sort -n | tail -1`)
@@ -198,15 +143,4 @@ BM_IMAGE=${BM_IMAGE:-bm-node-image.$IMAGE_KERNEL_VER.img}
 # --------
 unmount_image
 
-# TODO: this really should rename the old file
-if [ -f  $IMG_PATH/$BM_IMAGE ] ; then
-   echo "Old Image file Found REMOVING"
-   rm -f $IMG_PATH/$BM_IMAGE
-fi
-
-cp $TMP_BUILD_DIR/image $IMG_PATH/$BM_IMAGE
-rm -r $TMP_BUILD_DIR
-
-# All done!
-trap ERR
-echo "Image file $IMG_PATH/$BM_IMAGE created..."
+save_image $IMG_PATH/$BM_IMAGE

@@ -19,9 +19,13 @@ def main():
     args = parser.parse_args()
     with file(basedir + '/bootstrap.xml', 'rb') as f:
         source_template = f.read()
+    imagefile = os.getcwd() + '/bootstrap.qcow2'
+    if args.image:
+        imagefile = args.image
+    imagefile = os.path.realpath(imagefile)
     params = {
         'name': args.name,
-        'imagefile': '/var/lib/libvirt/images/%(name)s.qcow2' % dict(name=args.name),
+        'imagefile': imagefile,
         'bmbridge': args.baremetal_interface,
         }
     if args.image is not None:

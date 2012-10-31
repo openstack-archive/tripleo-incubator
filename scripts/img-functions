@@ -5,6 +5,7 @@ function unmount_image () {
     # give it a second (ok really 5) to umount XXX - why? should instead track
     # the mount data / lsof etc.
     sleep 5
+    [ -n "$EXTRA_UNMOUNT" ] && $EXTRA_UNMOUNT
     # oh ya don't want to forget to unmount the image
     sudo umount -f $TMP_BUILD_DIR/mnt || true
 }
@@ -19,6 +20,7 @@ function mk_build_dir () {
   [ $? -eq 0 ] || die "Failed to create tmp directory"
   trap cleanup ERR
   echo Building in $TMP_BUILD_DIR
+  export TMP_IMAGE_PATH=$TMP_BUILD_DIR/image
 }
 
 function ensure_base_available () {
@@ -27,4 +29,85 @@ function ensure_base_available () {
        wget $CLOUD_IMAGES/$RELEASE/current/$BASE_IMAGE_FILE -O $IMG_PATH/$BASE_IMAGE_FILE.tmp
        mv $IMG_PATH/$BASE_IMAGE_FILE.tmp $IMG_PATH/$BASE_IMAGE_FILE
     fi
+}
+
+function mount_tmp_image () {
+  mkdir $TMP_BUILD_DIR/mnt
+  sudo mount -o loop $1 $TMP_BUILD_DIR/mnt
+  [ $? -eq 0 ] || die "Failed to mount image"
+}
+
+function create_base () {
+    # Extract the base image
+    sudo tar -C $TMP_BUILD_DIR/mnt -xzf $IMG_PATH/$BASE_IMAGE_FILE
+
+    # Configure Image
+    # Setup resolv.conf so we can chroot to install some packages
+    # XXXX: Should store the old state rather than unlink; then restore later.
+    if [ -L $TMP_BUILD_DIR/mnt/etc/resolv.conf ] ; then
+        sudo unlink $TMP_BUILD_DIR/mnt/etc/resolv.conf
+    fi
+
+    if [ -f $TMP_BUILD_DIR/mnt/etc/resolv.conf ] ; then
+        sudo rm -f $TMP_BUILD_DIR/mnt/etc/resolv.conf
+    fi
+
+    # Recreate resolv.conf
+    sudo touch $TMP_BUILD_DIR/mnt/etc/resolv.conf
+    sudo chmod 777 $TMP_BUILD_DIR/mnt/etc/resolv.conf
+    echo nameserver 8.8.8.8 > $TMP_BUILD_DIR/mnt/etc/resolv.conf
+
+    # we'll prob need something from /dev so lets mount it
+    sudo mount --bind /dev $TMP_BUILD_DIR/mnt/dev
+
+    # If we have a network proxy, use it.
+    if [ -n "$http_proxy" ] ; then
+        sudo dd of=$TMP_BUILD_DIR/mnt/etc/apt/apt.conf.d/60img-build-proxy << _EOF_
+    Acquire::http::Proxy "$http_proxy";
+_EOF_
+    fi
+    # Generate locales to avoid perl setting locales warnings
+    run_in_target locale-gen en_US en_US.UTF-8
+}
+
+# Helper function to run a command inside the chroot
+function run_in_target() {
+   sudo chroot $TMP_BUILD_DIR/mnt $@
+}
+
+# Helper function to run a directory of scripts inside the chroot
+function run_d_in_target() {
+    # If we can find a directory of hooks to run in the target filesystem, bind
+    # mount it into the target and then execute run-parts in a chroot
+    if [ -d ${BASE_DIR}/$1.d ] ; then
+      sudo mkdir $TMP_BUILD_DIR/mnt/tmp/in_target.d
+      sudo mount --bind ${BASE_DIR}/$1.d $TMP_BUILD_DIR/mnt/tmp/in_target.d
+      sudo mount -o remount,ro,bind ${BASE_DIR}/$1.d $TMP_BUILD_DIR/mnt/tmp/in_target.d
+      run_in_target run-parts -v /tmp/in_target.d
+      sudo umount -f $TMP_BUILD_DIR/mnt/tmp/in_target.d
+      sudo rmdir $TMP_BUILD_DIR/mnt/tmp/in_target.d
+    fi
+}
+
+function finalise_base () {
+    # Undo our proxy support
+    sudo rm -f $TMP_BUILD_DIR/mnt/etc/apt/apt.conf.d/60img-build-proxy
+    # Now remove the resolv.conf we created above
+    sudo rm -f $TMP_BUILD_DIR/mnt/etc/resolv.conf
+    # The we need to recreate it as a link
+    sudo ln -sf ../run/resolvconf/resolv.conf $TMP_BUILD_DIR/mnt/etc/resolv.conf
+}
+
+function save_image () {
+    # TODO: this really should rename the old file
+    if [ -f  $1 ] ; then
+       echo "Old Image file Found REMOVING"
+       rm -f $1
+    fi
+
+    cp $TMP_IMAGE_PATH $1
+    rm -r $TMP_BUILD_DIR
+    # All done!
+    trap ERR
+    echo "Image file $1 created..."
 }

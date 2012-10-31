@@ -1,9 +1,34 @@
 #!/bin/bash
 
-set -x
+set -e
 
 echo "Nothing to see here yet. Code to make a bootstrap disk image will live here eventually."
 source $(dirname $0)/../scripts/img-defaults
 source $(dirname $0)/../scripts/common-functions
 source $(dirname $0)/../scripts/img-functions
+BASE_DIR=$(dirname $0)/../scripts
 
+set -x
+
+mk_build_dir
+ensure_base_available
+qemu-img create -f qcow2 $TMP_IMAGE_PATH 16G
+
+# prep nbd for mounting
+(lsmod | grep '^nbd ') || sudo modprobe nbd max_part=16
+# Should have a grab-next-dev helper ?
+NBD_DEV=/dev/nbd0
+sudo qemu-nbd -c $NBD_DEV --cache=writeback $TMP_IMAGE_PATH 
+export EXTRA_UNMOUNT="sudo qemu-nbd -d $NBD_DEV"
+sudo mkfs -F -t $FS_TYPE $NBD_DEV
+
+mount_tmp_image $NBD_DEV
+
+create_base
+
+# XXX: do hooks here, but we need concept of image flavours or something first.
+finalise_base
+
+unmount_image
+
+save_image bootstrap.qcow2

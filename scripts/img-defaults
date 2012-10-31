@@ -9,7 +9,7 @@ KERNEL_VER=${KERNEL_VER:-`uname -r`}
 
 # options for create-baremetal-image.sh
 ARCH=${ARCH:-$(dpkg --print-architecture)}
-RELEASE=${RELEASE:-precise}
+RELEASE=${RELEASE:-quantal}
 BASE_IMAGE_FILE=${BASE_IMAGE_FILE:-$RELEASE-server-cloudimg-$ARCH-root.tar.gz}
 CLOUD_IMAGES=${CLOUD_IMAGES:-http://cloud-images.ubuntu.com/}
 FS_TYPE=${FS_TYPE:-ext4}
