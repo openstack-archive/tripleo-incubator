@@ -1,0 +1,35 @@
+# Prints "message" and exits
+# Usage: die "message"
+function die() {
+    local exitcode=$?
+    set +o xtrace
+    echo $@
+    exit $exitcode
+}
+
+# Loads an image into glance
+# Usage: load_image [ami|aki|ari] <image_name> <file_name>
+function load_image {
+   [ -r $3 ] || die "Can not read image $3"
+   out=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $3)
+   [ "$out" ] || die "Failed to load image $3 into glance"
+   uuid=$(echo "$out" | head -1 | awk '{print $6}')
+   echo $uuid
+}
+
+# Deletes an image from glance
+# Usage: delete_image <image_name>
+function delete_image {
+	 uuid=$($GLANCE image-list | awk "/$1/"'{print $2}' | head -1)
+	 [ "$uuid" ] || die "Failed to find image $1 in glance"
+	 $GLANCE image-delete $uuid
+}
+
+# make a temp dir and mount image there
+# Usage: dir=$(_mount /path/to/image)
+function mktemp_mount {
+   TMP=$(mktemp -t -d image.XXXXXXXX)
+   [ $? -eq 0 ] || die "Failed to create tmp directory"
+   sudo mount -o loop $1 $TMP
+   echo $TMP
+}

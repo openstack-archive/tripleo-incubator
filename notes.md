@@ -111,7 +111,8 @@ Detailed instructions
             git clone git://github.com/tripleo/demo.git
 
  - if you have varied from the defaults described here, edit the demo
-   environment as needed (see localrc and scripts/defaults).
+   environment as needed (see localrc, scripts/defaults, and
+   scripts/img-defaults).
 
  - now make all the magic happen (this will use sudo, so don't just wander off
    and ignore it :))

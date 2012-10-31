@@ -5,7 +5,10 @@ set -e
 set -o xtrace
 
 # load defaults and functions
+# Pull in the IMG_PATH and BM image details.
+source $(dirname $0)/img-defaults
 source $(dirname $0)/defaults
+source $(dirname $0)/functions
 
 # build deployment ramdisk if needed
 if [ ! -e $IMG_PATH/$BM_DEPLOY_RAMDISK ]; then

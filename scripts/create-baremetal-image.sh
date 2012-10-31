@@ -7,7 +7,13 @@
 # This builds an image in /tmp, and moves it into $IMG_PATH upon success.
 
 # load defaults and functions
+source $(dirname $0)/img-defaults
+# defaults shouldn't be needed now as create-baremetal-image has strictly no
+# dependencies on the running/runnable environment, but for migration purposes
+# keep it for a
+# few days.
 source $(dirname $0)/defaults
+source $(dirname $0)/functions
 set -e
 set -o xtrace
 
