@@ -13,7 +13,9 @@ function unmount_image () {
     # having disk corruption issues; one possibility is qemu-nbd not flush dirty
     # pages on disconnect?
     sync
-    [ -n "$EXTRA_UNMOUNT" ] && $EXTRA_UNMOUNT
+    if [ -n "$EXTRA_UNMOUNT" ]; then
+        $EXTRA_UNMOUNT
+    fi
 }
 
 function cleanup () {
