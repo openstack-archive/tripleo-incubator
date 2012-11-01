@@ -54,8 +54,6 @@ Detailed instructions
 
 * Start the instance and log in via the console. (The instance is called
   'bootstrap').
- - install openssh if you want to ssh in from your host. Do not install other
-   network services such as DNS.
  - If you installed ssh you probably want to ssh-copy-id your ssh public key in
    at this point.
  - If you don't copy your SSH id in, you will still need to ensure that

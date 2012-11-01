@@ -46,6 +46,8 @@ mount_tmp_image ${NBD_DEV}p1
 
 create_base
 
+[ -e ~/.ssh/authorized_keys ] && ssh_pubkey=`cat ~/.ssh/authorized_keys`
+
 do_pre_install
 do_install
 
