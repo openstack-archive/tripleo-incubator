@@ -4,7 +4,7 @@
 set -e
 set -o xtrace
 
-useradd -G admin -m stack
+useradd -G admin -m stack -s /bin/bash
 passwd stack <<EOF
 stack
 stack
