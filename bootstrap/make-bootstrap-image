@@ -3,8 +3,9 @@
 set -e
 
 echo "Making a bootstrap VM."
-echo "Forcing architecture to i386."
+echo "Forcing architecture to i386 and flavour to bootstrap."
 export ARCH=i386
+export IMAGE_FLAVOUR=bootstrap
 source $(dirname $0)/../scripts/img-defaults
 source $(dirname $0)/../scripts/common-functions
 source $(dirname $0)/../scripts/img-functions
@@ -36,17 +37,11 @@ sudo sfdisk $NBD_DEV << EOF
 0 0;
 EOF
 
-sudo mkfs -F -t $FS_TYPE ${NBD_DEV}p1
+sudo mkfs -F -t $FS_TYPE -L cloudimg-rootfs ${NBD_DEV}p1
 
 mount_tmp_image ${NBD_DEV}p1
 
 create_base
-
-# customise()
-
-# XXX: grub-probe on the nbd0 device returns nothing - workaround, manually
-# specify modules.
-run_in_target grub-install --modules="biosdisk part_msdos" /dev/nbd0
 
 do_pre_install
 do_install

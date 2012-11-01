@@ -58,7 +58,13 @@ Multiple times we experienced a failure to build a good bootable image. This is 
 
 Once you have a working image check the Nova DB to make sure the it is not flagged as removed (???) 
 
+Virtual Machines
+----------------
 
+## VM's booting terribly slowly in KVM? ##
 
-
-
+Check the console, if the slowdown happens right after probing for consoles -
+wait 2m or so and you should see a serial console as the next line output after
+the vga console. If so you're likely running into
+https://bugzilla.redhat.com/show_bug.cgi?id=750773. Remove the serial device
+from your machine definition in libvirt, and it should fix it.

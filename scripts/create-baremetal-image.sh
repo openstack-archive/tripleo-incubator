@@ -31,7 +31,7 @@ ensure_base_available
 # Create the file that will be our image
 dd if=/dev/zero of=$TMP_IMAGE_PATH bs=1M count=0 seek=$(( ${IMAGE_SIZE} * 1024 ))
 
-mkfs -F -t $FS_TYPE $TMP_IMAGE_PATH
+mkfs -F -t $FS_TYPE -L cloudimg-rootfs $TMP_IMAGE_PATH
 
 mount_tmp_image -o loop $TMP_IMAGE_PATH
 

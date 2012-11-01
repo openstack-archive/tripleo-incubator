@@ -84,14 +84,20 @@ function run_in_target() {
    sudo chroot $TMP_MOUNT_PATH "$@"
 }
 
+# Check that a real flavour has been chosen (prevents foot-guns)
+function check_flavour () {
+  [ -d $FLAVOUR_DIR ] || die "The flavour does not exist."
+}
+
 # Helper function to run a directory of scripts inside the chroot
 function run_d_in_target() {
+    check_flavour
     # If we can find a directory of hooks to run in the target filesystem, bind
     # mount it into the target and then execute run-parts in a chroot
-    if [ -d ${BASE_DIR}/$1.d ] ; then
+    if [ -d ${FLAVOUR_DIR}/$1.d ] ; then
       sudo mkdir $TMP_MOUNT_PATH/tmp/in_target.d
-      sudo mount --bind ${BASE_DIR}/$1.d $TMP_MOUNT_PATH/tmp/in_target.d
-      sudo mount -o remount,ro,bind ${BASE_DIR}/$1.d $TMP_MOUNT_PATH/tmp/in_target.d
+      sudo mount --bind ${FLAVOUR_DIR}/$1.d $TMP_MOUNT_PATH/tmp/in_target.d
+      sudo mount -o remount,ro,bind ${FLAVOUR_DIR}/$1.d $TMP_MOUNT_PATH/tmp/in_target.d
       run_in_target run-parts -v /tmp/in_target.d
       sudo umount -f $TMP_MOUNT_PATH/tmp/in_target.d
       sudo rmdir $TMP_MOUNT_PATH/tmp/in_target.d
