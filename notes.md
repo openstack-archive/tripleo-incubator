@@ -48,12 +48,15 @@ Detailed instructions
 
   The resulting vm has a user 'stack' with password 'stack'.
 
-* Register the bootstrap image with kvm:
+* Register the bootstrap image with libvirt:
 
-        bootstrap/configure-bootstrap-vm
+        sudo bootstrap/configure-bootstrap-vm
 
 * Start the instance and log in via the console. (The instance is called
   'bootstrap').
+
+        sudo virsh start bootstrap
+
 * sshd is installed. If you built the image locally, your
   ~/.ssh/authorized_keys will have been copied into the stack user on the
   image. The image rejects password authentication for security. if you
