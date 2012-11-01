@@ -5,9 +5,9 @@
 set -e
 set -o xtrace
 
-if [ -n "$ssh_pubkey" ]; then
+if [ -n "$SSH_PUBKEY" ]; then
     sudo -u stack mkdir ~stack/.ssh
     sudo -Hiu stack dd of=~stack/.ssh/authorized_keys oflag=append conv=notrunc << EOF
-$ssh_pubkey
+$SSH_PUBKEY
 EOF
 fi
