@@ -41,35 +41,36 @@ Detailed instructions
         sudo ifup ooodemo
         sudo service libvirt-bin restart
 
-* Create your bootstrap VM:
+* Create your bootstrap VM (having an HTTP proxy is recommended. If you do
+  ensure the http_proxy environment variable is exported):
 
-    sudo ubuntu-vm-builder kvm precise --rootsize=16384 --swapsize=0 -m 1024 \
-      --proxy=$http_proxy --ssh-user-key=/home/robertc/.ssh/authorized_keys \
-      --user=stack --name=stack --pass=stack -ai386 --hostname=bootstrap \
-      --mirror=http://nz.archive.ubuntu.com/ubuntu --domain= \
-      --libvirt qemu:///system
+        bootstrap/make-bootstrap-image
 
- - Locate it in kvm - it will be called 'bootstrap', and then..
- - Create a second NIC for the virtual machine, telling it to use the ooodemo
-   shared network device rather than the default NAT setup. This places eth1 of
-   the virtual machine on your 'cloud' network.
- - install openssh if you like, do not install other network services such as DNS.
+  The resulting vm has a user 'stack' with password 'stack'.
+
+* Register the bootstrap image with kvm:
+
+        bootstrap/configure-bootstrap-vm
+
+* Start the instance and log in via the console. (The instance is called
+  'bootstrap').
+ - install openssh if you want to ssh in from your host. Do not install other
+   network services such as DNS.
  - If you installed ssh you probably want to ssh-copy-id your ssh public key in
    at this point.
  - If you don't copy your SSH id in, you will still need to ensure that
    /home/stack/.ssh/authorized_keys on your bootstrap node has some kind of
-   public SSH key in it
- - After the base installation, configure eth1 for communicating with your
-   baremetal nodes - put this at the end of your /etc/network/interfaces. The
-   iptables commands expose the metadata service needed by the nodes as they
-   boot and permit baremetal nodes to access the rest of the world by routing
-   via the bootstrap node (libvirt rejects traffic from unknown ip addresses,
-   meaning that using the default libvirt nat environment requires the
-   MASQUERADE for the bare metal nodes unless you reconfigure libvirt as well).
-   Alternatively you can create a second dedicated bridge on your actual
-   machine, put an ip address on it and configure eth0 in the bootstrap node
-   manually or by manually configuring dnsmasq (or similar) on your machine
-   to serve on that bridge.
+   public SSH key in it, or the openstack configuration scripts will error.
+ - configure eth1 for communicating with your baremetal nodes - put this at the
+   end of your /etc/network/interfaces. The iptables commands expose the
+   metadata service needed by the nodes as they boot and permit baremetal nodes
+   to access the rest of the world by routing via the bootstrap node (libvirt
+   rejects traffic from unknown ip addresses, meaning that using the default
+   libvirt nat environment requires the MASQUERADE for the bare metal nodes
+   unless you reconfigure libvirt as well).  Alternatively you can create a second
+   dedicated bridge on your actual machine, put an ip address on it and configure
+   eth0 in the bootstrap node manually or by manually configuring dnsmasq (or
+   similar) on your machine to serve on that bridge.
 
             auto eth1
                 iface eth1 inet static
