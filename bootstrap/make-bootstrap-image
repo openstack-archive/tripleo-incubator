@@ -4,8 +4,11 @@ set -e
 
 echo "Making a bootstrap VM."
 echo "Forcing architecture to i386 and flavour to bootstrap."
+echo "Caching cloud image in ~/.cache/tripleo."
 export ARCH=i386
 export IMAGE_FLAVOUR=bootstrap
+mkdir -p ~/.cache/tripleo
+export IMG_PATH=~/.cache/tripleo
 source $(dirname $0)/../scripts/img-defaults
 source $(dirname $0)/../scripts/common-functions
 source $(dirname $0)/../scripts/img-functions
