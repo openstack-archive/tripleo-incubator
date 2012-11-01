@@ -81,7 +81,8 @@ _EOF_
 
 # Helper function to run a command inside the chroot
 function run_in_target() {
-   sudo chroot $TMP_MOUNT_PATH "$@"
+   # -E to preserve http_proxy
+   sudo -E chroot $TMP_MOUNT_PATH "$@"
 }
 
 # Check that a real flavour has been chosen (prevents foot-guns)

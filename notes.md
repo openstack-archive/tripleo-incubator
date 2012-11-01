@@ -93,27 +93,19 @@ Detailed instructions
      to the populate-nova-bm-db.sh script later on.
    - Create 2 network cards for each VM: nova baremetal requires 2 NICs.
 
-* Configure your bootstrap VM:
- - Setup a network proxy if you have one (e.g. 192.168.2.1 port 8080):
+* Configure your bootstrap VM (only needed if you downloaded an image: locally
+  created ones inherit these settings during the creation step):
+
+  - Setup a network proxy if you have one (e.g. 192.168.2.1 port 8080):
 
             echo << EOF >> ~/.profile
             export no_proxy=192.0.2.1
             export http_proxy=http://192.168.2.1:8080/
             EOF
 
-* Prep bootstrap VM - do all this as the "stack" user:
- - install git
- 
-            sudo apt-get install git
-
- - clone our demo environment into /home/stack/demo
-
-            cd ~
-            git clone git://github.com/tripleo/demo.git
-
  - if you have varied from the defaults described here, edit the demo
-   environment as needed (see localrc, scripts/defaults, and
-   scripts/img-defaults).
+   environment as needed (see demo/localrc, demo/scripts/defaults, and
+   demo/scripts/img-defaults).
 
  - now make all the magic happen (this will use sudo, so don't just wander off
    and ignore it :))
