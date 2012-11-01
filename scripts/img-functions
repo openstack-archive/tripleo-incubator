@@ -116,6 +116,13 @@ function finalise_base () {
     sudo ln -sf ../run/resolvconf/resolv.conf $TMP_MOUNT_PATH/etc/resolv.conf
 }
 
+function compress_image () {
+    # Recreate our image to throw away unnecessary data
+    qemu-img convert -c $TMP_IMAGE_PATH -O qcow2 $TMP_IMAGE_PATH-new
+    rm $TMP_IMAGE_PATH
+    mv $TMP_IMAGE_PATH-new $TMP_IMAGE_PATH
+}
+
 function save_image () {
     # TODO: this really should rename the old file
     if [ -f  $1 ] ; then

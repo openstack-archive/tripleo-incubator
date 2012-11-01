@@ -56,4 +56,6 @@ finalise_base
 
 unmount_image
 
+compress_image
+
 save_image bootstrap.qcow2
