@@ -62,7 +62,7 @@ def main():
     print ("Writing dnsmasq.d exclusion file.")
     with file('/etc/dnsmasq.d/%(name)s' % dict(name=args.name), 'wb') as outf:
         outf.write('bind-interfaces\nexcept-interface=%(name)s\n' % dict(name=args.name))
-    print ("Wrote dnsmasq.d exclusion file /etc/dnsmasq/d/%(name)s." % dict(name=args.name))
+    print ("Wrote dnsmasq.d exclusion file /etc/dnsmasq.d/%(name)s." % dict(name=args.name))
 
 if __name__ == '__main__':
     main()
