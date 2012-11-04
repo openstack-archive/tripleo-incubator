@@ -16,17 +16,18 @@ BASE_DIR=$(dirname $0)/../scripts
 
 set -x
 
+ensure_sudo
+ensure_nbd
 mk_build_dir
 ensure_base_available
 qemu-img create -f qcow2 $TMP_IMAGE_PATH 16G
 
-# prep nbd for mounting
-(lsmod | grep '^nbd ') || sudo modprobe nbd max_part=16
 # Should have a grab-next-dev helper ?
 NBD_DEV=/dev/nbd0
 if [[ $(qemu-nbd --help | grep cache) == *writeback* ]] ; then 
   CACHE="--cache=writeback"
 else 
+  echo "Warning: qemu-nbd without --cache=writeback is /slow/."
   CACHE=""
 fi
 sudo qemu-nbd -c $NBD_DEV $CACHE $TMP_IMAGE_PATH 

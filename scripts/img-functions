@@ -31,12 +31,26 @@ function mk_build_dir () {
   export TMP_IMAGE_PATH=$TMP_BUILD_DIR/image
 }
 
+function ensure_nbd () {
+    NBD=`which qemu-nbd`
+    if [ -z "$NBD" ];  then
+        echo "Need qemu-nbd to build qcow2 files."
+	sudo apt-get install qemu-utils
+    fi
+    # prep nbd for mounting
+    (lsmod | grep '^nbd ') || sudo modprobe nbd max_part=16
+}
+
 function ensure_base_available () {
     if [ ! -f $IMG_PATH/$BASE_IMAGE_FILE ] ; then
        echo "Fetching Base Image"
        wget $CLOUD_IMAGES/$RELEASE/current/$BASE_IMAGE_FILE -O $IMG_PATH/$BASE_IMAGE_FILE.tmp
        mv $IMG_PATH/$BASE_IMAGE_FILE.tmp $IMG_PATH/$BASE_IMAGE_FILE
     fi
+}
+
+function ensure_sudo () {
+    sudo echo "Ensuring sudo is available"
 }
 
 function mount_tmp_image () {
