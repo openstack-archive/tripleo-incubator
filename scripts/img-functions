@@ -103,9 +103,11 @@ function run_in_target() {
 }
 
 function generate_hooks () {
-  [ -d $FLAVOURS_DIR/$IMAGE_FLAVOUR ] || die "The flavour does not exist."
   mkdir -p $TMP_HOOKS_PATH
-  cp -t $TMP_HOOKS_PATH -a $FLAVOURS_DIR/$IMAGE_FLAVOUR/*
+  for _FLAVOUR in $IMAGE_FLAVOUR ; do 
+    [ -d $FLAVOURS_DIR/$_FLAVOUR ] || die "The flavour does not exist." ;
+    cp -t $TMP_HOOKS_PATH -a $FLAVOURS_DIR/$_FLAVOUR/* ;
+  done
 }
 
 # Check that a real flavour has been chosen (prevents foot-guns)

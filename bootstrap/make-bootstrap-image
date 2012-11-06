@@ -3,10 +3,11 @@
 set -e
 
 echo "Making a bootstrap VM."
-echo "Forcing architecture to i386 and flavour to bootstrap."
+echo "Forcing architecture to i386 and flavour to 'bootstrap local-config'."
+echo "Run with IMAGE_FLAVOUR='bootstrap' to make an image with no local config (ssh key, http proxy)."
 echo "Caching cloud image in ~/.cache/tripleo."
 export ARCH=i386
-export IMAGE_FLAVOUR=bootstrap
+export IMAGE_FLAVOUR=${IMAGE_FLAVOUR:-bootstrap local-config}
 mkdir -p ~/.cache/tripleo
 export IMG_PATH=~/.cache/tripleo
 source $(dirname $0)/../scripts/img-defaults
