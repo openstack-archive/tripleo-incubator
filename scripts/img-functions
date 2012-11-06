@@ -29,6 +29,7 @@ function mk_build_dir () {
   trap cleanup ERR
   echo Building in $TMP_BUILD_DIR
   export TMP_IMAGE_PATH=$TMP_BUILD_DIR/image
+  export TMP_HOOKS_PATH=$TMP_BUILD_DIR/hooks
 }
 
 function ensure_nbd () {
@@ -101,9 +102,15 @@ function run_in_target() {
    sudo -E chroot $TMP_MOUNT_PATH "$@"
 }
 
+function generate_hooks () {
+  [ -d $FLAVOURS_DIR/$IMAGE_FLAVOUR ] || die "The flavour does not exist."
+  mkdir -p $TMP_HOOKS_PATH
+  cp -t $TMP_HOOKS_PATH -a $FLAVOURS_DIR/$IMAGE_FLAVOUR/*
+}
+
 # Check that a real flavour has been chosen (prevents foot-guns)
 function check_flavour () {
-  [ -d $FLAVOUR_DIR ] || die "The flavour does not exist."
+  [ -d $TMP_HOOKS_PATH ] || generate_hooks
 }
 
 # Helper function to run a directory of scripts inside the chroot
@@ -111,10 +118,10 @@ function run_d_in_target() {
     check_flavour
     # If we can find a directory of hooks to run in the target filesystem, bind
     # mount it into the target and then execute run-parts in a chroot
-    if [ -d ${FLAVOUR_DIR}/$1.d ] ; then
+    if [ -d ${TMP_HOOKS_PATH}/$1.d ] ; then
       sudo mkdir $TMP_MOUNT_PATH/tmp/in_target.d
-      sudo mount --bind ${FLAVOUR_DIR}/$1.d $TMP_MOUNT_PATH/tmp/in_target.d
-      sudo mount -o remount,ro,bind ${FLAVOUR_DIR}/$1.d $TMP_MOUNT_PATH/tmp/in_target.d
+      sudo mount --bind ${TMP_HOOKS_PATH}/$1.d $TMP_MOUNT_PATH/tmp/in_target.d
+      sudo mount -o remount,ro,bind ${TMP_HOOKS_PATH}/$1.d $TMP_MOUNT_PATH/tmp/in_target.d
       run_in_target run-parts -v /tmp/in_target.d
       sudo umount -f $TMP_MOUNT_PATH/tmp/in_target.d
       sudo rmdir $TMP_MOUNT_PATH/tmp/in_target.d
