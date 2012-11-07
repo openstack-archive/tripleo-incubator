@@ -4,7 +4,7 @@
 set -e
 set -o xtrace
 
-dd of=/etc/apt/apt-conf.d/95no-translations <<EOF
-APT::Languages=non
+dd of=/etc/apt/apt.conf.d/95no-translations <<EOF
+APT::Acquire::Languages "none";
 EOF
 
