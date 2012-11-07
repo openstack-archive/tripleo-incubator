@@ -47,6 +47,9 @@ Detailed instructions
         bootstrap/make-bootstrap-image
 
   The resulting vm has a user 'stack' with password 'stack'.
+  This script will prompt for sudo at various points. A sample (fairly but not
+  bulletproof) sudoers.d file is supplied in bootstrap/img-build-sudoers which
+  will permit bootstrap to be re-run without requiring passworded sudo.
 
 * Register the bootstrap image with libvirt:
 

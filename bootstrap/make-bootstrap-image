@@ -6,6 +6,8 @@ echo "Making a bootstrap VM."
 echo "Forcing architecture to i386 and flavour to 'bootstrap local-config'."
 echo "Run with IMAGE_FLAVOUR='bootstrap' to make an image with no local config (ssh key, http proxy)."
 echo "Caching cloud image in ~/.cache/tripleo."
+echo
+echo "If prompted for sudo, install bootstrap/img-build-sudoers into /etc/sudoers.d and restart the build."
 export ARCH=i386
 export IMAGE_FLAVOUR=${IMAGE_FLAVOUR:-bootstrap local-config}
 mkdir -p ~/.cache/tripleo
@@ -17,7 +19,6 @@ BASE_DIR=$(dirname $0)/../scripts
 
 set -x
 
-ensure_sudo
 ensure_nbd
 mk_build_dir
 ensure_base_available
