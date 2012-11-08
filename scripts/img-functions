@@ -180,12 +180,12 @@ function save_image () {
 
 function block_apt_translations () {
 # Configure APT not to fetch translations files
-dd of=$TMP_MOUNT_PATH/etc/apt/apt.conf.d/95no-translations <<EOF
+sudo dd of=$TMP_MOUNT_PATH/etc/apt/apt.conf.d/95no-translations <<EOF
 APT::Acquire::Languages "none";
 EOF
 
 # And now make sure that we don't fall foul of Debian bug 641967
-find $TMP_MOUNT_PATH/var/lib/apt/lists/ -type f -name '*_i18n_Translation-*' -exec rm {} \;
+find $TMP_MOUNT_PATH/var/lib/apt/lists/ -type f -name '*_i18n_Translation-*' -exec sudo rm -f {} \;
 }
 
 function block_daemons () {
