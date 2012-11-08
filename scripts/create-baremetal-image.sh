@@ -128,6 +128,9 @@ end script
 post-start exec	logger -t 'failsafe' -p daemon.warning "Failsafe of 120 seconds reached."
 _EOF_
 
+# prepare for first boot
+prepare_first_boot
+
 # that should do it for the hacks
 finalise_base
 

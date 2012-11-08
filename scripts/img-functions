@@ -130,6 +130,24 @@ function run_d_in_target() {
     fi
 }
 
+function prepare_first_boot () {
+    if [ -d $ {TMP_HOOKS_PATH}/first-boot.d ] ; then
+      sudo cp -t $TMP_MOUNT_PATH/etc/ -a $TMP_HOOKS_PATH/first-boot.d
+      run_in_target mv /etc/rc.local /etc/rc.local.REAL
+      sudo dd of=$TMP_MOUNT_PATH/etc/rc.local <<EOF
+#!/bin/bash
+set -e
+set -o xtrace
+
+run-parts -v /etc/first-boot.d
+rm -fr /etc/first-boot.d
+mv /etc/rc.local.REAL /etc/rc.local
+exit 0
+EOF
+      run_in_target chmod 755 /etc/rc.local
+    fi
+}
+
 function finalise_base () {
     # Undo our proxy support
     sudo rm -f $TMP_MOUNT_PATH/etc/apt/apt.conf.d/60img-build-proxy
