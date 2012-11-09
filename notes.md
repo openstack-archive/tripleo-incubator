@@ -28,7 +28,9 @@ machine to emulate this with virtual machine 'bare metal' nodes.
 Detailed instructions
 ---------------------
 
-* git checkout this repository to your local machine.
+* git clone this repository to your local machine.
+
+* git clone https://github.com/tripleo/baremetal-initrd-builder.git likewise.
 
 * Configure a network for your test environment.
   (This alters your /etc/network/interfaces file and adds an exclusion for
@@ -44,7 +46,7 @@ Detailed instructions
 * Create your bootstrap VM (having an HTTP proxy is recommended. If you do
   ensure the http_proxy environment variable is exported):
 
-        bootstrap/make-bootstrap-image
+        baremetal-initrd-builder/bin/disk-image-create vm devstack local-config -o bootstrap -a i386
 
   The resulting vm has a user 'stack' with password 'stack'.
   This script will prompt for sudo at various points. A sample (fairly but not

@@ -5,8 +5,8 @@ set -e
 set -o xtrace
 
 # load defaults and functions
-# Pull in the IMG_PATH and BM image details.
-source $(dirname $0)/img-defaults
+# IMG_PATH and BM details need to be reintegrated now that the image building
+# toolchain is separate: Things will fail until that is done.
 source $(dirname $0)/defaults
 source $(dirname $0)/common-functions
 source $(dirname $0)/functions

@@ -10,9 +10,10 @@ What is it?
 
 Triple-o is a toolchain for deploying Openstack on top of Openstack. This will
 eventually consist of a number of small reusable tools to perform cloud
-capacity planning, node allocation, image building, with suitable extension
-points to allow folk to use their preferred systems management tools,
-orchestration tools and so forth.
+capacity planning, node allocation, image building (see the initrd image
+building tree, which has an in-progress patch to make it generic and
+extensible), with suitable extension points to allow folk to use their
+preferred systems management tools, orchestration tools and so forth.
 
 What isn't it?
 --------------

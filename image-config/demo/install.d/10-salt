@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -e
-set -o xtrace
-
-apt-get -y install salt-minion
-
