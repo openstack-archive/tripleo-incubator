@@ -32,6 +32,7 @@ BM_SCRIPT_PATH=${BM_SCRIPT_PATH:-/opt/stack/nova/bin}
 # ----------------------------------
 
 # The deployment bits
+KERNEL_VER=${KERNEL_VER:-`uname -r`}
 BM_DEPLOY_KERNEL=${BM_DEPLOY_KERNEL:-vmlinuz-$KERNEL_VER}
 BM_DEPLOY_RAMDISK=${BM_DEPLOY_RAMDISK:-bm-deploy-ramdisk.$KERNEL_VER.img}
 

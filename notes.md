@@ -46,12 +46,13 @@ Detailed instructions
 * Create your bootstrap VM (having an HTTP proxy is recommended. If you do
   ensure the http_proxy environment variable is exported):
 
-        baremetal-initrd-builder/bin/disk-image-create vm devstack local-config -o bootstrap -a i386
+        disk-image-create vm devstack local-config -o bootstrap -a i386
+
+  (disk-image-create is part of the baremetal-initrd-builder tree -
+  clone https://github.com/tripleo/baremetal-initrd-builder.git and follow its
+  README for installation etc)
 
   The resulting vm has a user 'stack' with password 'stack'.
-  This script will prompt for sudo at various points. A sample (fairly but not
-  bulletproof) sudoers.d file is supplied in bootstrap/img-build-sudoers which
-  will permit bootstrap to be re-run without requiring passworded sudo.
 
 * Register the bootstrap image with libvirt:
 
@@ -66,7 +67,7 @@ Detailed instructions
   ~/.ssh/authorized_keys will have been copied into the stack user on the
   image. The image rejects password authentication for security. if you
   downloaded the image, you will need to get the authorized keys file on
-  there yourself (e.g. by sshing out from the VM).
+  there yourself (e.g. by sshing out from the VM console).
  - Even if you don't copy your SSH id in, you will still need to ensure that
    /home/stack/.ssh/authorized_keys on your bootstrap node has some kind of
    public SSH key in it, or the openstack configuration scripts will error.

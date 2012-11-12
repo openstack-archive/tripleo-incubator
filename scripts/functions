@@ -2,11 +2,37 @@
 # Loads an image into glance
 # Usage: load_image [ami|aki|ari] <image_name> <file_name>
 function load_image {
-   [ -r $3 ] || die "Can not read image $3"
-   out=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $3)
-   [ "$out" ] || die "Failed to load image $3 into glance"
-   uuid=$(echo "$out" | head -1 | awk '{print $6}')
-   echo $uuid
+  [ -r $3 ] || die "Can not read image $3"
+  out=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $3)
+  [ "$out" ] || die "Failed to load image $3 into glance"
+  uuid=$(echo "$out" | head -1 | awk '{print $6}')
+  echo $uuid
+  if [ "ami" = $1 ]; then
+    # pull run-time ramdisk and kernel out of AMI
+    TMP_KERNEL=$(mktemp)
+    TMP_RAMDISK=$(mktemp)
+    TMP_MNT=$(mktemp_mount $IMG_PATH/$BM_IMAGE)
+    trap 'rm -f $TMP_KERNEL $TMP_RAMDISK && sudo umount -f $TMP_MNT' EXIT
+
+    BM_RUN_KERNEL=$(basename `ls -1 $TMP_MNT/boot/vmlinuz*generic | sort -n | tail -1`)
+    BM_RUN_RAMDISK=$(basename `ls -1 $TMP_MNT/boot/initrd*generic | sort -n | tail -1`)
+    sudo cp $TMP_MNT/boot/$BM_RUN_KERNEL $TMP_KERNEL
+    sudo cp $TMP_MNT/boot/$BM_RUN_RAMDISK $TMP_RAMDISK
+    sudo chmod a+r $TMP_KERNEL
+
+    # load run-time kernel and ramdisk
+    aki=$(load_image "aki" "aki-02" $TMP_KERNEL)
+    ari=$(load_image "ari" "ari-02" $TMP_RAMDISK)
+
+    # clean up temp mounts and files
+    sudo umount -f $TMP_MNT || true
+    sudo rm -f $TMP_KERNEL $TMP_RAMDISK
+    trap EXIT
+
+    # associate run-time aki and ari to main AMI
+    $GLANCE image-update --property "kernel_id=$aki" $ami
+    $GLANCE image-update --property "ramdisk_id=$ari" $ami
+  fi
 }
 
 # Deletes an image from glance

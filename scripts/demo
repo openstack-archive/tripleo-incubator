@@ -7,16 +7,18 @@ set -o xtrace
 if [ ! -e ~/devstack ]; then
     # We use devstack to bootstrap
     git clone git://github.com/tripleo/devstack.git
-    cd ~/devstack
-    git checkout baremetal-dev
     # our localrc reflects our policy on top of devstack.
-    cp -t . ~/demo/localrc 
+    cp -t devstack ~/demo/localrc 
 fi
 
 # Support for creating deployment ramdisks / kernels
 if [ ! -e ~/baremetal-initrd-builder ]; then
     cd ~stack
-    git clone https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
+    git clone https://github.com/tripleo/baremetal-initrd-builder.git
+    sudo visudo -c -f baremetal-initrd-builder/sudoers.d/img-build-sudoers
+    sudo cp baremetal-initrd-builder/sudoers.d/img-build-sudoers /etc/sudoers.d/
+    export PATH=$PATH:$(pwd)/baremetal-initrd-builder/bin
+    # https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
     wget http://shellinabox.googlecode.com/files/shellinabox-2.14.tar.gz
     tar xzf shellinabox-2.14.tar.gz
     cd shellinabox-2.14
@@ -26,10 +28,6 @@ if [ ! -e ~/baremetal-initrd-builder ]; then
     sudo make install
 fi
 
-# Create a demo cloud image - the bare metal image that gets deployed to each
-# node.
-~/demo/scripts/create-baremetal-image.sh
-
 # Run devstack itself:
 cd ~/devstack
 ./stack.sh
@@ -37,21 +35,19 @@ cd ~/devstack
 
 #Workaround https://bugs.launchpad.net/horizon/+bug/1070083 - (Quantal
 # virtual machines only).
-
 if [ ! -e /usr/bin/node ]; then
   sudo ln -s nodejs /usr/bin/node
 fi
 
 # Do the bits that devstack doesn't know to do for bare metal yet.
-~/demo/scripts/prepare-devstack-for-baremetal.sh
-
-if [ ! -e /usr/local/bin/os-bm-node ]; then
-  sudo ln -s /home/stack/demo/scripts/populate-nova-bm-db.sh /usr/local/bin/os-bm-node
-fi
+~/demo/scripts/fixup-devstack.sh
+~/demo/scripts/user-setup.sh
+~/demo/scripts/openstack-images.sh
+~/demo/scripts/bm-setup.sh
 
 
 set +x
 echo "Demo environment ready to roll."
 echo "Now source the config - 'source ~/devstack/openrc',"
-echo "Add hardware nodes via os-bm-node -i MANAGEMENT_NIC -j TENANT_NIC add"
-echo "And boot via nova boot --flavor 6 --image bare_metal --key_name default bmtest"
+echo "Add hardware nodes via ~/demo/scripts/populate-nova-bm-db.sh -i MANAGEMENT_NIC -j TENANT_NIC add"
+echo "And boot via nova boot --flavor 6 --image demo --key_name default bmtest"
