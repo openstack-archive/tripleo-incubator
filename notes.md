@@ -85,7 +85,8 @@ Detailed instructions
 * Create your 'baremetal' nodes.
  - using KVM create however many hardware notes your emulated cloud will have,
    ensuring that for each one you select ooodemo as the network device.
-   - Give them no less than 1GB of disk each, we suggest 2GB.
+   - Give them no less than 2GB of disk each - a populated Ubuntu server w/APT
+     cache will sit right on 1G, and you need some room to work with...
    - 512MB of memory is probably enough.
    - Tell KVM you will install the virtual machine via PXE, as that will avoid
      asking you for a disk image or installation media.
