@@ -16,7 +16,7 @@ BM_IMAGE=demo.qcow2
 function populate_glance() {
     # ensure there is a deployment ramdisk.
     if [ ! -e $IMG_PATH/$BM_DEPLOY_RAMDISK ]; then
-        ~stack/baremetal-initrd-builder/bin/ramdisk-image-create -o $IMG_PATH/$BM_DEPLOY_RAMDISK -k $KERNEL_VER
+        ~stack/baremetal-initrd-builder/bin/ramdisk-image-create deploy -o $IMG_PATH/$BM_DEPLOY_RAMDISK -k $KERNEL_VER
         sudo cp /boot/vmlinuz-$KERNEL_VER $IMG_PATH/$BM_DEPLOY_KERNEL
         sudo chmod a+r $IMG_PATH/$BM_DEPLOY_KERNEL
     fi
@@ -31,6 +31,7 @@ function populate_glance() {
     $GLANCE image-update --property "deploy_kernel_id=$aki" $ami
     $GLANCE image-update --property "deploy_ramdisk_id=$ari" $ami
 
+    # XXX: Crashes if the image is changed (flavour already exists)
     # create instance type (aka flavor)
     # - a 32 bit instance
     $NOVA_MANAGE instance_type create --name=x86_bm --cpu=1 --memory=512 --root_gb=0 --ephemeral_gb=0 --flavor=6 --swap=0 --rxtx_factor=1
