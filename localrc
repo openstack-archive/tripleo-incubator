@@ -93,3 +93,8 @@ SWIFT_REPLICAS=1
 # if it does not exist.
 SWIFT_DATA_DIR=$DEST/data
 
+
+# Salt
+# ----
+
+SALT_MASTER=salt-master.example
