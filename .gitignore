@@ -3,5 +3,3 @@
 *.qcow2
 
 .DS_Store
-
-scripts/user-data.sh

@@ -42,7 +42,6 @@ fi
 # Do the bits that devstack doesn't know to do for bare metal yet.
 ~/demo/scripts/fixup-devstack.sh
 ~/demo/scripts/user-setup.sh
-~/demo/scripts/generate-user-data.sh
 ~/demo/scripts/openstack-images.sh
 ~/demo/scripts/bm-setup.sh
 
