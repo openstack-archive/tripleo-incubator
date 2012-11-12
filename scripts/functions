@@ -1,6 +1,13 @@
+# Delete and unmount the working dir for loading AMI's.
+function cleanup_load_mount () {
+    sudo umount $3 || echo "failed to unmount" >2
+    sudo qemu-nbd -d $1 || echo "failed to detach nbd" >2
+    sudo rm -rf $2
+}
 
 # Loads an image into glance
 # Usage: load_image [ami|aki|ari] <image_name> <file_name>
+# XXX: failures in this function don't bail out early for some reason.
 function load_image {
   [ -r $3 ] || die "Can not read image $3"
   out=$($GLANCE --verbose add is_public=true container_format=$1 disk_format=$1 name=$2 < $3)
@@ -8,30 +15,35 @@ function load_image {
   uuid=$(echo "$out" | head -1 | awk '{print $6}')
   echo $uuid
   if [ "ami" = $1 ]; then
-    # pull run-time ramdisk and kernel out of AMI
-    TMP_KERNEL=$(mktemp)
-    TMP_RAMDISK=$(mktemp)
-    TMP_MNT=$(mktemp_mount $IMG_PATH/$BM_IMAGE)
-    trap 'rm -f $TMP_KERNEL $TMP_RAMDISK && sudo umount -f $TMP_MNT' EXIT
-
-    BM_RUN_KERNEL=$(basename `ls -1 $TMP_MNT/boot/vmlinuz*generic | sort -n | tail -1`)
-    BM_RUN_RAMDISK=$(basename `ls -1 $TMP_MNT/boot/initrd*generic | sort -n | tail -1`)
-    sudo cp $TMP_MNT/boot/$BM_RUN_KERNEL $TMP_KERNEL
-    sudo cp $TMP_MNT/boot/$BM_RUN_RAMDISK $TMP_RAMDISK
-    sudo chmod a+r $TMP_KERNEL
-
-    # load run-time kernel and ramdisk
-    aki=$(load_image "aki" "aki-02" $TMP_KERNEL)
-    ari=$(load_image "ari" "ari-02" $TMP_RAMDISK)
-
-    # clean up temp mounts and files
-    sudo umount -f $TMP_MNT || true
-    sudo rm -f $TMP_KERNEL $TMP_RAMDISK
+    # pull run-time ramdisk and kernel out of AMI - expects qcow2, should
+    # perhaps be in nova.
+    local WORK_DIR=$(mktemp -d)
+    local TMP_IMAGE_PATH=$WORK_DIR/mnt
+    mkdir $TMP_IMAGE_PATH
+    (lsmod | grep '^nbd ') || sudo modprobe nbd max_part=16
+    NBD_DEV=/dev/nbd0
+    trap "cleanup_load_mount $NBD_DEV $WORK_DIR $TMP_IMAGE_PATH" EXIT
+    # Readonly so we can't mess up the image.
+    sudo qemu-nbd -r -c $NBD_DEV $3
+    sudo mount /dev/nbd0 $TMP_IMAGE_PATH 
+    # Dig up the initrd and kernel to use.
+    local BOOTDIR=" $TMP_IMAGE_PATH/boot"
+    local BM_RUN_KERNEL=$(basename `ls -1 $BOOTDIR/vmlinuz*generic | sort -n | tail -1`)
+    local BM_RUN_RAMDISK=$(basename `ls -1 $BOOTDIR/initrd*generic | sort -n | tail -1`)
+    sudo cp $BOOTDIR/$BM_RUN_KERNEL $WORK_DIR/kernel
+    sudo cp $BOOTDIR/$BM_RUN_RAMDISK $WORK_DIR/initrd
+    sudo chmod a+r $WORK_DIR/kernel
+    sudo chmod a+r $WORK_DIR/initrd
+    # load them into glance
+    aki=$(load_image "aki" "aki-02" $WORK_DIR/kernel)
+    ari=$(load_image "ari" "ari-02" $WORK_DIR/initrd)
+    #cleanup
+    cleanup_load_mount $NBD_DEV $WORK_DIR $TMP_IMAGE_PATH
     trap EXIT
 
     # associate run-time aki and ari to main AMI
-    $GLANCE image-update --property "kernel_id=$aki" $ami
-    $GLANCE image-update --property "ramdisk_id=$ari" $ami
+    $GLANCE image-update --property "kernel_id=$aki" $uuid
+    $GLANCE image-update --property "ramdisk_id=$ari" $uuid
   fi
 }
 
@@ -43,11 +55,3 @@ function delete_image {
 	 $GLANCE image-delete $uuid
 }
 
-# make a temp dir and mount image there
-# Usage: dir=$(_mount /path/to/image)
-function mktemp_mount {
-   TMP=$(mktemp -t -d image.XXXXXXXX)
-   [ $? -eq 0 ] || die "Failed to create tmp directory"
-   sudo mount -o loop $1 $TMP
-   echo $TMP
-}
