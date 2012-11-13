@@ -11,4 +11,4 @@ source $(dirname $0)/functions
 
 # Create a demo cloud image - the bare metal image that gets deployed to each
 # node.
-~/baremetal-initrd-builder/bin/disk-image-create -o $DEVSTACK_PATH/files/demo salt
+~/baremetal-initrd-builder/bin/disk-image-create -o $DEVSTACK_PATH/files/demo base salt
