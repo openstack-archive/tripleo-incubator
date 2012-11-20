@@ -46,7 +46,7 @@ Detailed instructions
 * Create your bootstrap VM (having an HTTP proxy is recommended. If you do
   ensure the http_proxy environment variable is exported):
 
-        disk-image-create vm devstack local-config -o bootstrap -a i386
+        disk-image-create vm devstack local-config salt-master -o bootstrap -a i386
 
   (disk-image-create is part of the baremetal-initrd-builder tree -
   clone https://github.com/tripleo/baremetal-initrd-builder.git and follow its
