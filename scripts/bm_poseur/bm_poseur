@@ -20,7 +20,7 @@ import os.path
 import sys
 from textwrap import dedent
 from lib.settings import settings
-from lib.actions import *
+from lib.actions import actions
 
 basedir = os.path.dirname(__file__)
 

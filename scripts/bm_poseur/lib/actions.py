@@ -119,36 +119,47 @@ class actions(argparse.Action):
         
         self._print('bridge %s destroyed' % self.params.bridge )
         
+    def is_already_bridge(self):
+        """ returns t/f if a bridge exists or not """
+        network_file = open(self.params.network_config, 'r').read()
+        if network_file.find(self.params.bridge) == -1: 
+            return False
+        else: 
+            return True
+            
     
     def build_bridge(self):
         """ this creates a bridge """
-        self._print("Creating bridge interface %(bridge)s." % 
-            dict(bridge=self.params.bridge), verbose=True)
         
-        ports = " ".join(self.params.bridge_port) or "none"
-        
-        self._print("   Writing new stanza for bridge interface %(bridge)s." % 
-            dict(bridge=self.params.bridge), verbose=True)
-        
-        with file(self.params.network_config, 'ab') as outf:
-            outf.seek(0, 2)
-            outf.write(self.bridge_template % dict(bridge=self.params.bridge, ports=ports))
-        
-        self._print("  Wrote new stanza for bridge interface %s." % 
-            self.params.bridge, verbose=True)
+        if not self.is_already_bridge():
+            self._print("Creating bridge interface %(bridge)s." % 
+                dict(bridge=self.params.bridge), verbose=True)
             
-        self._print("   Writing dnsmasq.d exclusion file.", verbose=True)
-        
-        with file('/etc/dnsmasq.d/%(bridge)s' % dict(bridge=self.params.bridge), 'wb') as outf:
-            outf.write('bind-interfaces\nexcept-interface=%(bridge)s\n' %
-                dict(bridge=self.params.bridge))
-        
-        self._print ("    Wrote dnsmasq.d exclusion file /etc/dnsmasq.d/%s." % 
-            self.params.bridge, verbose=True)
+            ports = " ".join(self.params.bridge_port) or "none"
             
-        self._print('bring bridge online')
-        call('ifup %s ' % self.params.bridge , shell=True)
-    
+            self._print("   Writing new stanza for bridge interface %(bridge)s." % 
+                dict(bridge=self.params.bridge), verbose=True)
+            
+            with file(self.params.network_config, 'ab') as outf:
+                outf.seek(0, 2)
+                outf.write(self.bridge_template % dict(bridge=self.params.bridge, ports=ports))
+            
+            self._print("  Wrote new stanza for bridge interface %s." % 
+                self.params.bridge, verbose=True)
+                
+            self._print("   Writing dnsmasq.d exclusion file.", verbose=True)
+            
+            with file('/etc/dnsmasq.d/%(bridge)s' % dict(bridge=self.params.bridge), 'wb') as outf:
+                outf.write('bind-interfaces\nexcept-interface=%(bridge)s\n' %
+                    dict(bridge=self.params.bridge))
+            
+            self._print ("    Wrote dnsmasq.d exclusion file /etc/dnsmasq.d/%s." % 
+                self.params.bridge, verbose=True)
+                
+            self._print('bring bridge online')
+            call('ifup %s ' % self.params.bridge , shell=True)
+        else:
+            print('bridge already exists')    
     
     def load_xml(self, name, image):
         """Loads the xml file and evals it with the right settings"""
