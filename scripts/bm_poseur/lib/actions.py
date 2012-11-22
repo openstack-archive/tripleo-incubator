@@ -193,9 +193,11 @@ class actions(argparse.Action):
         for i in range(self.params.vms):
             name = "%s%s" % (self.params.prefix , str(i))
             image = "%s%s.qcow2" % (self.params.image_path, name)
-        
+            
+            
+            # $IMAGE 5G
             # make a fresh copy of the empty template image for the first instance
-            cmd = "cp ./lib/%s %s" % (self.params.template_disk, image)
+            cmd = "kvm-img create -f qcow %s 2G" % (image)
             call(cmd, shell=True) 
         
             self.conn.defineXML(self.load_xml(name,image))
