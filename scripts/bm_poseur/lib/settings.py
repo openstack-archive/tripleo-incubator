@@ -15,14 +15,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Local settings for """
-import sys
-import argparse
-import libvirt
-
 class settings(object):
     """Constants .. don't change this file unless you want to perm change the defaults"""
-    
     # how many do you want to create (should be command line arg) 
     VMS = 1
     ARCH = "x86_64"
@@ -31,8 +25,8 @@ class settings(object):
     CPUS = "1" 
     BRIDGE = "br999"
     QEMU = "qemu:///system"
-    BASE_NAME = 'bm_poser_'
-    RUN_PATH = '/opt/stack/data/bm_poser/'
+    PREFIX = 'bm_poseur_'
+    IMAGE_PATH = '/opt/stack/data/bm_poseur/'
     TEMPLATE_DISK = 'template.qcow2'
     START_DELAY = 2
     TEMPLATE_XML = "template.xml"

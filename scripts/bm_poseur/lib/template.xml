@@ -1,9 +1,9 @@
-<domain type='%s'>
-  <name>%s</name>
-  <memory>%s</memory>
-  <vcpu>%s</vcpu>
+<domain type='%(engine)s'>
+  <name>%(name)s</name>
+  <memory>%(max_mem)s</memory>
+  <vcpu>%(cpus)s</vcpu>
   <os>
-    <type arch='%s' machine='pc-1.0'>hvm</type>
+    <type arch='%(arch)s' machine='pc-1.0'>hvm</type>
     <boot dev='network'/>
     <boot dev='hd'/>
     <bootmenu enable='no'/>
@@ -21,23 +21,17 @@
     <emulator>/usr/bin/kvm</emulator>
     <disk type='file' device='disk'>
       <driver name='qemu' type='raw'/>
-      <source file='%s'/>
+      <source file='%(image)s'/>
       <target dev='vda' bus='virtio'/>
       <alias name='virtio-disk0'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
     </disk>
     <interface type='bridge'>
-      <source bridge='%'/>
+      <source bridge='%(bridge)s'/>
       <target dev='vnet1'/>
       <model type='virtio'/>
       <alias name='net0'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
-    </interface>
-    <interface type='bridge'>
-      <source bridge='%s'/>
-      <target dev='vnet2'/>
-      <alias name='net1'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
     </interface>
     <console type='pty' tty='/dev/pts/4'>
       <source path='/dev/pts/4'/>
