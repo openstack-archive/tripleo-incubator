@@ -17,17 +17,18 @@
 
 class settings(object):
     """Constants .. don't change this file unless you want to perm change the defaults"""
-    # how many do you want to create (should be command line arg) 
+    # how many do you want to create (should be command line arg)
     VMS = 1
     ARCH = "x86_64"
     ENGINE = "kvm"
     MAX_MEM = "524000"
-    CPUS = "1" 
-    BRIDGE = "br999"
+    CPUS = "1"
+    BRIDGE = "br99"
+    BRIDGE_IP = '192.0.2.1'
     QEMU = "qemu:///system"
-    PREFIX = 'bm_poseur_'
+    PREFIX = 'baremetal_'
     IMAGE_PATH = '/opt/stack/data/bm_poseur/'
     TEMPLATE_DISK = 'template.qcow2'
     START_DELAY = 2
     TEMPLATE_XML = "template.xml"
-    
+

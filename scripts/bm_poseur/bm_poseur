@@ -27,132 +27,121 @@ basedir = os.path.dirname(__file__)
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
         description=dedent("""
-                            This is a CLI utility for creating a virtual bare metal
-                            cluster on an isolated bridge network. 
-                            
-                            (deva help write a better description please??? )
-                            
+                            This is a CLI utility to provide devstack with virtualized resources
+                            so that the baremetal hypervisor can be exercised, without having
+                            actual physical hardware available.
+
+
                             Available Commands:
-                        
+
                             create:
-                            creates a vm! If a bridge with the name provided by --bridge 
-                            doesn't exist this command will trigger the creation of said 
-                            bridge before creating the vm.  
-                            
-                            clean_up:
-                            Destroys the bridge and all vm's that were created
-                            
-                            destroy_bridge:
-                            destroys a bridge
-                            
-                            build_bridge:
-                            builds a bridge 
-                            
+                               creates a VM and attaches it to the specified bridge
+
+                            destroy:
+                               Destroys all VMs that were created
+
+                            create-bridge:
+                               creates network bridge and assigns IP and route
+
+                            destroy-bridge:
+                               destroys a bridge
+
                             get-macs:
-                            returns json of the mac address of vms that start with --prefix
-                            
-                            start_all:
-                            starts all the vms with --prefix
-                            
-                            stop_all:
-                            stops all the vms with --prefix  \n\n\n\n """),
+                               returns MAC addresses of VMs that have been started
+
+                            """),
         epilog=dedent("""Usage:
-        
+
                     BareMetal Bridge:
                     Configure access to the virtual baremetal LAN for the bootstrap VM.
                     The default will do nothing and error, as changing your machine
-                    config can be considered unfriendly. Passing -y will trigger the 
+                    config can be considered unfriendly. Passing -y will trigger the
                     demo mode where a local bridge called 'br999' with no external
                     ports connected is created, which as many 'bare metal' virtual
                     machines as you want can be connected to - this is the device that
                     configure-bootstrap-vm uses by default.
-                    
+
                     If you are provising actual hardware, you will want to add actual
                     physical ports (e.g. eth1) by passing '--with-port=eth1' to this
                     script.
-                    
+
                     If you only have one ethernet port in your machine, you will want
                     to migrate your networking configuration to a bridge before running
                     this script, and then pass '--with-port=br0' (or whatever port
                     you chose). In future reconfiguring your local networking may be
                     available as an automated step.   \n\n\n """))
-    
-    
+
+
     # output options
     parser.add_argument('--verbose', '-v', action='count')
     parser.add_argument('--silent', '-s', action='store_true')
-                     
+
     # actions
     parser.add_argument('command',  nargs='+', action=actions,
-        help="Command to execute. ", choices=['create','clean-up','destroy-bridge',
-                                              'build-bridge','start-all','stop-all',
-                                              'get-macs'] )
-    
-    # all paramaters can be overridden 
-    
-    # VMS = 1
-    parser.add_argument('--vms', nargs='?', type=int, default=settings.VMS,
-        help='Number of vm\'s you wish to create.(defaults=1).', choices=range(1,32))
-        
-    # ARCH = "x86_64"
-    parser.add_argument('--arch', nargs='?', default=settings.ARCH,
-        help='(defaults=x86_64).', choices=['i386','i686','x86_64'])
-        
-    # ENGINE = "kvm"
-    parser.add_argument('--engine', nargs='?', default=settings.ENGINE,
-        help='(defaults=kvm).',choices=['qemu','kvm'])
-        
-    # MAX_MEM = "524000"
-    parser.add_argument('--max-mem', nargs='?', default=settings.MAX_MEM,
-        help='(defaults=524000).')
-    
-    # VCPU = "1" 
-    parser.add_argument('--cpus', nargs='?', type=int, default=settings.CPUS,
-        help='(defaults=1)', choices=range(1,32))
-        
-    # QEMU = "qemu:///system"
-    parser.add_argument('--qemu', nargs='?', default=settings.QEMU, 
-        help='qemu address for lib virt (qemu:///system)')
-        
-    # BASE_NAME = 'bm_poseur_'
-    parser.add_argument('--prefix', nargs='?', default=settings.PREFIX, 
-        help='base name of instances (defualt=bm_poseur_)')
-    
-    # IMAGE_PATH = '/opt/stack/data/bm_poser/'
-    parser.add_argument('--image-path', nargs='?', default=settings.IMAGE_PATH, 
-        help='path to store disk images of running instances')
-    
-    # TEMPLATE_DISK = 'template.qcow2'
-    parser.add_argument('--template-disk', nargs='?', default=settings.TEMPLATE_DISK, 
-        help='name of empty qcow image file in lib.')
-    
-    # TEMPLATE_XML = "template.xml" %  
-    parser.add_argument('--template-xml', nargs='?', default=settings.TEMPLATE_XML, 
-        help='name of template xml file in lib.')
-    
-    # BRIDGE = "br999"
-    parser.add_argument('--bridge', nargs='?', default=settings.BRIDGE, 
-        help='The name to give the bridge. (defautl=br999)')
-    
+          help="Command to execute. ",
+          choices=['create','destroy','create-bridge','destroy-bridge','get-macs'] )
+
+    # all paramaters can be overridden
+
+    parser.add_argument('--vms', nargs='?', type=int,
+          default=settings.VMS,
+          help='Number of vm\'s you wish to create. Default: %s' % settings.VMS)
+    parser.add_argument('--arch', nargs='?',
+          default=settings.ARCH,
+          help='CPU architecture for the BM. Default: %s' % settings.ARCH,
+          choices=['i386','i686','x86_64'])
+    parser.add_argument('--engine', nargs='?',
+          default=settings.ENGINE,
+          help='Default: %s' % settings.ENGINE,
+          choices=['qemu','kvm'])
+    parser.add_argument('--max-mem', nargs='?', type=int,
+          default=settings.MAX_MEM,
+          help='Default: %s' % settings.MAX_MEM)
+    parser.add_argument('--cpus', nargs='?', type=int,
+          default=settings.CPUS,
+          help='Default: %s' % settings.CPUS)
+    parser.add_argument('--qemu', nargs='?',
+          default=settings.QEMU,
+          help='Qemu address for lib virt (%s)' % settings.QEMU)
+    parser.add_argument('--prefix', nargs='?',
+          default=settings.PREFIX,
+          help='Base name of virtual machines. Default: %s' % settings.PREFIX)
+    parser.add_argument('--image-path', nargs='?',
+          default=settings.IMAGE_PATH,
+          help='Location to store virtual disk images. Default: %s' % settings.IMAGE_PATH)
+    parser.add_argument('--template-disk', nargs='?',
+          default=settings.TEMPLATE_DISK,
+          help='Template disk image. Default: %s' % settings.TEMPLATE_DISK)
+    parser.add_argument('--template-xml', nargs='?',
+          default=settings.TEMPLATE_XML,
+          help='Template XML file. Default: %s' % settings.TEMPLATE_XML)
+    parser.add_argument('--bridge', nargs='?',
+          default=settings.BRIDGE,
+          help='Name of network bridge to create. Default: %s' % settings.BRIDGE)
+    parser.add_argument('--bridge-ip', nargs='?',
+          default=settings.BRIDGE_IP,
+          help='IP address to assign to the bridge. Default: %s' % settings.BRIDGE_IP)
     parser.add_argument('--bridge-port', nargs='?', action="append",
-        help='Add a port (such as eth2) to the bridge.',
-        default=[]) # Yes its mutable, don't reuse the parser.
-    
-    #parser.add_argument('-y', default=False, action='store_true',
-    #    help='The interface which bare metal nodes will be connected to.')
-        
-    parser.add_argument('--network-config','-f', default='/etc/network/interfaces',
-        help='Network config file to extend.')
-        
+          help='Network port(s) to add to the bridge. Optional.',
+          default=[]) # Yes its mutable, don't reuse the parser.
+    parser.add_argument('--network-config','-f',
+          default='/etc/network/interfaces',
+          help='Network config file to extend.')
+
+    #parser.add_argument('-y',
+    #     default=False, action='store_true',
+    #     help='The interface which bare metal nodes will be connected to.')
+
+
     args = parser.parse_args()
-    
-    # validate input 
+
+    # validate input
     #option_given = not (args.c == None)
-    
+
     #if not option_given:
     #    parser.print_help()
     #    sys.exit(1)
-    
+
 
 if __name__ == '__main__':
     main()
