@@ -6,7 +6,7 @@ set -o xtrace
 
 if [ ! -e ~/devstack ]; then
     # We use devstack to bootstrap
-    git clone git://github.com/tripleo/devstack.git
+    git clone --branch baremetal-dev git://github.com/tripleo/devstack.git
     # our localrc reflects our policy on top of devstack.
     cp -t devstack ~/demo/localrc 
 fi
