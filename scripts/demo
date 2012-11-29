@@ -12,12 +12,12 @@ if [ ! -e ~/devstack ]; then
 fi
 
 # Support for creating deployment ramdisks / kernels
-if [ ! -e ~/baremetal-initrd-builder ]; then
+if [ ! -e ~/diskimage-builder ]; then
     cd ~stack
-    git clone https://github.com/tripleo/baremetal-initrd-builder.git
-    sudo visudo -c -f baremetal-initrd-builder/sudoers.d/img-build-sudoers
-    sudo cp baremetal-initrd-builder/sudoers.d/img-build-sudoers /etc/sudoers.d/
-    export PATH=$PATH:$(pwd)/baremetal-initrd-builder/bin
+    git clone https://github.com/stackforge/diskimage-builder.git
+    sudo visudo -c -f diskimage-builder/sudoers.d/img-build-sudoers
+    sudo cp diskimage-builder/sudoers.d/img-build-sudoers /etc/sudoers.d/
+    export PATH=$PATH:$(pwd)/diskimage-builder/bin
     # https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
     wget http://shellinabox.googlecode.com/files/shellinabox-2.14.tar.gz
     tar xzf shellinabox-2.14.tar.gz

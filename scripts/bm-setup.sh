@@ -16,7 +16,7 @@ BM_IMAGE=demo.qcow2
 function populate_glance() {
     # ensure there is a deployment ramdisk.
     if [ ! -e $IMG_PATH/$BM_DEPLOY_RAMDISK ]; then
-        ~stack/baremetal-initrd-builder/bin/ramdisk-image-create deploy -o $IMG_PATH/$BM_DEPLOY_RAMDISK -k $KERNEL_VER
+        ~stack/diskimage-builder/bin/ramdisk-image-create deploy -o $IMG_PATH/$BM_DEPLOY_RAMDISK -k $KERNEL_VER
         sudo cp /boot/vmlinuz-$KERNEL_VER $IMG_PATH/$BM_DEPLOY_KERNEL
         sudo chmod a+r $IMG_PATH/$BM_DEPLOY_KERNEL
     fi
