@@ -30,7 +30,7 @@ Detailed instructions
 
 * git clone this repository to your local machine.
 
-* git clone https://github.com/tripleo/baremetal-initrd-builder.git likewise.
+* git clone https://github.com/stackforge/diskimage-builder.git likewise.
 
 * Configure a network for your test environment.
   (This alters your /etc/network/interfaces file and adds an exclusion for
@@ -49,7 +49,7 @@ Detailed instructions
         disk-image-create vm devstack local-config salt-master -o bootstrap -a i386
 
   (disk-image-create is part of the baremetal-initrd-builder tree -
-  clone https://github.com/tripleo/baremetal-initrd-builder.git and follow its
+  clone https://github.com/stackforge/diskimage-builder.git and follow its
   README for installation etc)
 
   The resulting vm has a user 'stack' with password 'stack'.
