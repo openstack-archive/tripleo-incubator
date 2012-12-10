@@ -8,12 +8,12 @@ production configurations of Openstack using the NTT/ISI Bare metal provider.
 What is it?
 -----------
 
-Triple-o is a toolchain for deploying Openstack on top of Openstack. This will
-eventually consist of a number of small reusable tools to perform cloud
-capacity planning, node allocation, image building (see the initrd image
-building tree, which has an in-progress patch to make it generic and
-extensible), with suitable extension points to allow folk to use their
-preferred systems management tools, orchestration tools and so forth.
+Triple-o is an image based toolchain for deploying Openstack on top of
+Openstack. This will eventually consist of a number of small reusable tools to
+perform cloud capacity planning, node allocation, [image building]
+(https://github.com/stackforge/diskimage-builder/), with suitable extension
+points to allow folk to use their preferred systems management tools,
+orchestration tools and so forth.
 
 What isn't it?
 --------------
@@ -21,18 +21,21 @@ What isn't it?
 Triple-o isn't an orchestration tool, a workload deployment tool or a systems
 management tool. Where there is overlap triple-o will either have a
 super-minimal domain-specific implementation, or extension points to permit the
-tool of choice to be used.
+tool of choice (e.g. heat, puppet, chef).
 
 Why?
 ----
 
-Flexability. None of the existing ways to deploy Openstack permit you to move
-hardware between being cloud infrastructure to cloud offering and back again.
-Specifically, a given hardware node has to be either managed by e.g. Crowbar,
-or not managed by Crowbar and enrolled with Openstack - and short of doing
-shenanigans with your switches, this actually applies at a broadcast domain
-level. Virtualising the role of hardware nodes provides immense freedom to
-run different workloads via a single Openstack cloud.
+Flexability and reliability.
+
+On the flexability side, none of the existing ways
+to deploy Openstack permit you to move hardware between being cloud
+infrastructure to cloud offering and back again.  Specifically, a given
+hardware node has to be either managed by e.g. Crowbar, or not managed by
+Crowbar and enrolled with Openstack - and short of doing shenanigans with your
+switches, this actually applies at a broadcast domain level. Virtualising the
+role of hardware nodes provides immense freedom to run different workloads via
+a single Openstack cloud.
 
 Fitting this into any of the existing deployment toolchains is problematic:
 
@@ -50,6 +53,23 @@ Openstack becomes its own parent. We believe that having a single tool
 chain to provision and deploy onto hardware is simpler and lower cost to
 maintain, and so are choosing to have the bootstrap problem rather than
 the handoff between provisioning systems problem.
+
+For reliability, we want to be able to do CI / CD of the cloud, and that means
+having great confidence in:
+
+- Our ability to deploy something we have tested.
+
+- With no variation on things that could invalidate those tests (kernel
+  version, userspace tools Openstack calls into, ...)
+
+- While varying the exact config (to cope with differences in e.g. network
+  topology between staging and production environments).
+
+It is on this basis that we believe an imaging based solution will give us
+that confidence: we can do all software installation before running any
+tests, and merely vary the configuration between tests. That way, if we have
+added something to the environment that will conflict, we find out during our
+tests rather than when mixing e.g. nova in with nagios.
 
 Broad conceptual plan
 =====================
@@ -81,7 +101,8 @@ deploying behind firewalls and other restricted networking environments.
 Stage 2
 -------
 
-It will be cool, but we don't know what the next thing to do is!
+Use Quantum to provide VLANs to the bare metal, permitting segregated
+management and tenant traffic.
 
 <...>
 
