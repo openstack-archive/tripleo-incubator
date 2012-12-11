@@ -14,7 +14,7 @@ def main():
         help='the name to give the machine in libvirt.')
     parser.add_argument('--image',
         help='Use a custom image file (must be qcow2).')
-    parser.add_argument('--baremetal-interface', default='ooodemo',
+    parser.add_argument('--baremetal-interface', default='br99',
         help='The interface which bare metal nodes will be connected to.')
     args = parser.parse_args()
     with file(basedir + '/bootstrap.xml', 'rb') as f:

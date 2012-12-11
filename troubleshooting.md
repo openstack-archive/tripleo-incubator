@@ -1,6 +1,12 @@
 Troubleshooting tips
 ====================
 
+VM won't boot
+-------------
+
+Make sure the partition table is correct. See
+https://bugs.launchpad.net/nova/+bug/1088652.
+
 Baremetal
 ---------
 

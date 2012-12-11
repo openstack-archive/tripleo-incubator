@@ -1,6 +1,9 @@
 VM (on Ubuntu)
 ==============
 
+(There are detailed instructions available below, the overview and
+configuration sections provide background information).
+
 Overview:
 * Setup a VM that is your bootstrap node
 * Setup N VMs to pretend to be your cluster
@@ -22,7 +25,7 @@ According, the eth1 of your bootstrap instance should be connected to your bare
 metal cloud LAN. The bootstrap VM uses the rfc5735 TEST-NET-1 range -
 192.0.2.0/24 for bringing up nodes, and does its own DHCP etc, so do not
 connect it to a network shared with other DHCP servers or the like. The
-instructions in this document create a bridge device ('ooodemo') on your
+instructions in this document create a bridge device ('br99') on your
 machine to emulate this with virtual machine 'bare metal' nodes.
 
 Detailed instructions
@@ -30,27 +33,24 @@ Detailed instructions
 
 * git clone this repository to your local machine.
 
+* git clone https://github.com/tripleo/bm_poseur to your local machine.
+
 * git clone https://github.com/stackforge/diskimage-builder.git likewise.
 
 * Configure a network for your test environment.
   (This alters your /etc/network/interfaces file and adds an exclusion for
   dnsmasq so it doesn't listen on your test network.)
 
-        sudo bootstrap/configure-baremetal-network -y
+	sudo bm_poseur --bridge-ip=none create-bridge
 
 * Activate these changes (alternatively, restart):
 
-        sudo ifup ooodemo
         sudo service libvirt-bin restart
 
 * Create your bootstrap VM (having an HTTP proxy is recommended. If you do
   ensure the http_proxy environment variable is exported):
 
-        disk-image-create vm devstack local-config salt-master -o bootstrap -a i386
-
-  (disk-image-create is part of the baremetal-initrd-builder tree -
-  clone https://github.com/stackforge/diskimage-builder.git and follow its
-  README for installation etc)
+        disk-image-create vm devstack local-config -o bootstrap -a i386
 
   The resulting vm has a user 'stack' with password 'stack'.
 
@@ -84,7 +84,7 @@ Detailed instructions
 
 * Create your 'baremetal' nodes.
  - using KVM create however many hardware notes your emulated cloud will have,
-   ensuring that for each one you select ooodemo as the network device.
+   ensuring that for each one you select br99 as the network device.
    - Give them no less than 2GB of disk each - a populated Ubuntu server w/APT
      cache will sit right on 1G, and you need some room to work with...
    - 512MB of memory is probably enough.
@@ -95,13 +95,16 @@ Detailed instructions
    - Specify the MAC address for each node. You need to feed this info
      to the populate-nova-bm-db.sh script later on.
    - Create 2 network cards for each VM: nova baremetal requires 2 NICs.
+ - You can automate this with bm_poseur:
+   - bm_poseur --vms 10 --arch i386 create-vm
 
 * If you are running a different environment - e.g. real hardware, custom
   network range etc, edit the demo environment as needed (see demo/localrc,
   demo/scripts/defaults, and demo/scripts/img-defaults).
 
 * Setup the bare metal cloud on the bootstrap node. (this will use sudo, so
-  don't just wander off and ignore it :)
+  don't just wander off and ignore it :). Run this in a shell on the bootstrap
+  node.
 
         ~/demo/scripts/demo
 
