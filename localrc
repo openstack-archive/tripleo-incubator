@@ -51,6 +51,7 @@ NOVA_BRANCH=baremetal-dev
 # Bare Metal customizations
 # -------------------------
 VIRT_DRIVER=baremetal
+ENABLED_SERVICES="$ENABLED_SERVICES,baremetal"
 
 # if you need to add extra options to /etc/nova/nova.conf, and don't want to add
 # them to the "BareMetal" section of stack.sh, put them here, one option per line.
