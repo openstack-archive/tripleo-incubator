@@ -47,8 +47,12 @@ Detailed instructions
 
         sudo service libvirt-bin restart
 
-* Create your bootstrap VM (having an HTTP proxy is recommended. If you do
-  ensure the http_proxy environment variable is exported):
+* Create your bootstrap VM
+  N.B.: We recommend using an apt/HTTP proxy and setting the http_proxy
+         environment variable accordingly.
+  N.B.: This build will be extremely slow on Ubuntu 12.04 (precise). This
+         is due to nbd-qemu lacking writeback caching. Using 12.10 will be
+         significantly faster.
 
         disk-image-create vm devstack local-config -o bootstrap -a i386
 
