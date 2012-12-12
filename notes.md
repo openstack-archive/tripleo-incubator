@@ -110,7 +110,7 @@ Detailed instructions
   don't just wander off and ignore it :). Run this in a shell on the bootstrap
   node.
 
-        ~/demo/scripts/demo
+        BM_DNSMASQ_IFACE=eth0 ~/demo/scripts/demo
 
 * Inform nova about your baremetal nodes
 
@@ -122,5 +122,5 @@ Detailed instructions
         source ~/devstack/openrc
         # flavor 6 is i386, which will work on 64-bit hardware.
         # use 7 for amd64.
-        nova boot --flavor 6 --image bare_metal --key_name default bmtest
+        nova boot --flavor 6 --image demo --key_name default bmtest
 
