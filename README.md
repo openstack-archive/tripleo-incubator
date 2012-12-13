@@ -1,11 +1,17 @@
 Openstack on Openstack, or triple-o
 ===================================
 
-Welcome to our demo testbed for tripleo, which is our less mouthy way of saying
+Welcome to our triple-o incubator! Triple-o is our less mouthy way of saying
 Openstack on Openstack. Right now we're bringing up the first stage - getting
 production configurations of Openstack using the NTT/ISI Bare metal provider.
+This repository is our staging area, where we incubate new ideas and new tools
+which get us closer to the goal of triple-o.
 
-What is it?
+As an incubation area, we should keep in mind that once a tool is sufficiently
+robust, it should be moved to a more permanent home. That might be an existing
+project (eg, devstack), or we might want to create a new project just for it.
+
+What is triple-o?
 -----------
 
 Triple-o is an image based toolchain for deploying Openstack on top of
@@ -79,8 +85,8 @@ Stage 1
 
 Openstack on Openstack with two distinct clouds:
 
-1. The bootstrap cloud, runs the NTT baremetal nova and deploys instances on
-   bare metal, is managed and used by the cloud sysadmins, and is manually
+1. The bootstrap cloud, runs baremetal nova-compute and deploys instances on
+   bare metal, is managed and used by the cloud sysadmins, and is initially
    deployed onto a laptop or other similar device.
 1. The virtualised cloud, runs regular packaged Openstack, and your tenants
    use this.
