@@ -8,7 +8,7 @@ if [ ! -e ~/devstack ]; then
     # We use devstack to bootstrap
     git clone --branch baremetal-dev git://github.com/tripleo/devstack.git
     # our localrc reflects our policy on top of devstack.
-    cp -t devstack ~/demo/localrc 
+    cp -t devstack ~/incubator/localrc 
 fi
 
 # Support for creating deployment ramdisks / kernels
@@ -40,14 +40,14 @@ if [ ! -e /usr/bin/node ]; then
 fi
 
 # Do the bits that devstack doesn't know to do for bare metal yet.
-~/demo/scripts/fixup-devstack.sh
-~/demo/scripts/user-setup.sh
-~/demo/scripts/openstack-images.sh
-~/demo/scripts/bm-setup.sh
+~/incubator/scripts/fixup-devstack.sh
+~/incubator/scripts/user-setup.sh
+~/incubator/scripts/openstack-images.sh
+~/incubator/scripts/bm-setup.sh
 
 
 set +x
-echo "Demo environment ready to roll."
+echo "Incubator environment ready to roll."
 echo "Now source the config - 'source ~/devstack/openrc',"
-echo "Add hardware nodes via ~/demo/scripts/populate-nova-bm-db.sh -i MANAGEMENT_NIC -j TENANT_NIC add"
+echo "Add hardware nodes via ~/incubator/scripts/populate-nova-bm-db.sh -i MANAGEMENT_NIC -j TENANT_NIC add"
 echo "And boot via nova boot --flavor 6 --image demo --key_name default bmtest"

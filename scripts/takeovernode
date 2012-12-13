@@ -68,6 +68,6 @@ echo "$commands" | ssh ubuntu@$1
 # for the bootstrap image:
 # Add eth1 via modprobe dummy && dummy0 - edit localrc and /etc/network/interfaces
 #sudo ifup dummy0
-#demo/scripts/demo
+#incubator/scripts/demo
 #$profit
 

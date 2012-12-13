@@ -1,4 +1,4 @@
-Tripleo team demo resources
+Tripleo team resources
 ===========================
 
 * Launchpad team (lets you get our ssh keys etc easily):

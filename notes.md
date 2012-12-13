@@ -103,14 +103,15 @@ Detailed instructions
    - bm_poseur --vms 10 --arch i386 create-vm
 
 * If you are running a different environment - e.g. real hardware, custom
-  network range etc, edit the demo environment as needed (see demo/localrc,
-  demo/scripts/defaults, and demo/scripts/img-defaults).
+  network range etc, edit the incubator environment as needed
+  (see incubator/localrc, incubator/scripts/defaults, and
+  incubator/scripts/img-defaults).
 
 * Setup the bare metal cloud on the bootstrap node. (this will use sudo, so
   don't just wander off and ignore it :). Run this in a shell on the bootstrap
   node.
 
-        BM_DNSMASQ_IFACE=eth0 ~/demo/scripts/demo
+        BM_DNSMASQ_IFACE=eth1 ~/incubator/scripts/demo
 
 * Inform nova about your baremetal nodes
 
