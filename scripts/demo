@@ -8,25 +8,8 @@ if [ ! -e ~/devstack ]; then
     # We use devstack to bootstrap
     git clone --branch baremetal-dev git://github.com/tripleo/devstack.git
     # our localrc reflects our policy on top of devstack.
-    cp -t devstack ~/incubator/localrc 
 fi
-
-# Support for creating deployment ramdisks / kernels
-if [ ! -e ~/diskimage-builder ]; then
-    cd ~stack
-    git clone https://github.com/stackforge/diskimage-builder.git
-    sudo visudo -c -f diskimage-builder/sudoers.d/img-build-sudoers
-    sudo cp diskimage-builder/sudoers.d/img-build-sudoers /etc/sudoers.d/
-    export PATH=$PATH:$(pwd)/diskimage-builder/bin
-    # https://github.com/NTTdocomo-openstack/baremetal-initrd-builder.git
-    wget http://shellinabox.googlecode.com/files/shellinabox-2.14.tar.gz
-    tar xzf shellinabox-2.14.tar.gz
-    cd shellinabox-2.14
-    sudo apt-get -y install gcc make
-    ./configure
-    make
-    sudo make install
-fi
+cp ~/incubator/localrc ~/devstack/
 
 # Run devstack itself:
 cd ~/devstack
@@ -39,15 +22,12 @@ if [ ! -e /usr/bin/node ]; then
   sudo ln -s nodejs /usr/bin/node
 fi
 
-# Do the bits that devstack doesn't know to do for bare metal yet.
-~/incubator/scripts/fixup-devstack.sh
+# Do the bits that devstack doesn't do for us
 ~/incubator/scripts/user-setup.sh
-~/incubator/scripts/openstack-images.sh
-~/incubator/scripts/bm-setup.sh
 
 
 set +x
 echo "Incubator environment ready to roll."
 echo "Now source the config - 'source ~/devstack/openrc',"
 echo "Add hardware nodes via ~/incubator/scripts/populate-nova-bm-db.sh -i MANAGEMENT_NIC -j TENANT_NIC add"
-echo "And boot via nova boot --flavor 6 --image demo --key_name default bmtest"
+echo "And boot via nova boot --flavor 11 --image demo --key_name default bmtest"

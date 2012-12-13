@@ -9,6 +9,6 @@ source $(dirname $0)/defaults
 source $(dirname $0)/common-functions
 source $(dirname $0)/functions
 
-# Create a demo cloud image - the bare metal image that gets deployed to each
-# node.
-~/diskimage-builder/bin/disk-image-create -o $DEVSTACK_PATH/files/demo base salt-minion
+# Create a demo cloud image.
+# This is the bare metal image that gets deployed to each node.
+~/diskimage-builder/bin/disk-image-create -o ~incubator/files/demo base salt-minion
