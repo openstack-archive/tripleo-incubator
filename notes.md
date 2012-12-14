@@ -88,10 +88,10 @@ Detailed instructions
 
   - Setup a network proxy if you have one (e.g. 192.168.2.1 port 8080)
 
-            echo << EOF >> ~/.profile
-            export no_proxy=192.0.2.1
-            export http_proxy=http://192.168.2.1:8080/
-            EOF
+        echo << EOF >> ~/.profile
+        export no_proxy=192.0.2.1
+        export http_proxy=http://192.168.2.1:8080/
+        EOF
 
   - Add an ~/.ssh/authorized_keys file
     The image rejects password authentication for security, so you will need to
@@ -116,10 +116,7 @@ Detailed instructions
    - Create 2 network cards for each VM: nova baremetal requires 2 NICs.
  - You can automate this with bm_poseur, for example:
    
-            bm_poseur --vms 5 --arch i386 create-vm
-
-   Note: if you get an error that "arch 'i386' combination is not supported"
-         then replace "i386" with "i686"
+        bm_poseur --vms 1 --arch i686 create-vm
 
 * If you are running a different environment - e.g. real hardware, custom
   network range etc, edit the incubator environment as needed
@@ -133,16 +130,24 @@ Detailed instructions
         ~/incubator/scripts/demo
 
 * Inform baremetal nova about the VMs it should control. Get the list of MACs
-  by running this on your laptop:
+  by running:
 
-         bm_poseur get-macs
+        ~/bm_poseur/bm_poseur get-macs
 
-  Then feed this information to nova by running this inside the bootstrap VM:
+  on your laptop. Then, inform nova of these resources by running:
 
-         ~/incubator/scripts/populate-nova-bm-db.sh -i <MAC> -j <MAC2> add
+        ~/incubator/scripts/populate-nova-bm-db.sh -i <MAC> -j <MAC2> add
 
-  Note that, if your VM only has one MAC, then the second option may be an
-  arbitrary fake MAC, such as 12:34:56:78:90:12
+  inside the bootstrap node. If you have multiple VMs created by bm_poseur,
+  you can simplify this process by running the output of the following bash
+  script:
+
+        for macs in $(~/bm_poseur/bm_poseur get-macs); do 
+            i=${macs%%,*}
+            j=${macs##*,} 
+            echo ~/incubator/scripts/populate-nova-bm-db.sh -i $i -j $j add 
+        done
+
 
 * If all went well, you should be able to run this inside the bootstrap node
   to start the process of provisioning a baremetal node on your other VM(s).
@@ -154,5 +159,5 @@ Detailed instructions
   If 'nova list' shows a status of ACTIVE, you can turn on the VM which
   bm_poseur created and watch its console to observe the PXE boot/deploy process.
 
-         sudo virsh start baremetal_0
+        sudo virsh start baremetal_0
 
