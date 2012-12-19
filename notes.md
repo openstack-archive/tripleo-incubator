@@ -56,7 +56,7 @@ Detailed instructions
          significantly faster.
 
         cd ~/diskimage-builder/
-        bin/disk-image-create base vm devstack local-config -a i386 -o ~/incubator/bootstrap
+        bin/disk-image-create -u base vm devstack local-config -a i386 -o ~/incubator/bootstrap
 
   The resulting vm has a user 'stack' with password 'stack'.
 
@@ -66,7 +66,7 @@ Detailed instructions
   or experiment with different combinations of elements.
 
         cd ~/diskimage-builder/
-        bin/disk-image-create base -a i386 -o ~/incubator/demo
+        bin/disk-image-create -u base -a i386 -o ~/incubator/demo
 
 * Register the bootstrap image with libvirt.
   This defaults to load the file $(cwd)/bootstrap.qcow2, generated above.
