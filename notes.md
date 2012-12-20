@@ -18,8 +18,9 @@ world, via whatever IP range you choose to setup. You can run NAT, or not, as
 you choose. This is how we connect to it to run scripts etc - though you can
 equally log in on its console if you like.
 
-As we have not yet brought quantum up, we're using flat networking, with a
-single broadcast domain which all the bare metal machines are connected to.
+As we have not yet taught quantum how to deploy VLANs to bare metal instances,
+we're using flat networking, with a single broadcast domain which all the bare
+metal machines are connected to.
 
 According, the eth1 of your bootstrap instance should be connected to your bare
 metal cloud LAN. The bootstrap VM uses the rfc5735 TEST-NET-1 range -

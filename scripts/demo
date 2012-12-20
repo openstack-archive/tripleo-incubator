@@ -31,3 +31,5 @@ echo "Incubator environment ready to roll."
 echo "Now source the config - 'source ~/devstack/openrc',"
 echo "Add hardware nodes via ~/incubator/scripts/populate-nova-bm-db.sh -i MANAGEMENT_NIC -j TENANT_NIC add"
 echo "And boot via nova boot --flavor 11 --image demo --key_name default bmtest"
+
+echo "You may find q-dhcp agent spewing errors (check in screen -x stack). If so, change the root-helper for it to sudo, see https://bugs.launchpad.net/quantum/+bug/1080846"

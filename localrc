@@ -33,7 +33,9 @@ SERVICE_TOKEN=cde90da2fb9471d421ed
 # You probably need to change all the IPs here
 HOST_IP=192.0.2.1
 FIXED_NETWORK_SIZE=8
-FIXED_RANGE=192.0.2.32/27
+FIXED_RANGE=192.0.2.32/29
+# Devstack/Quantum does not infer the gateway.
+NETWORK_GATEWAY=192.0.2.33
 PUBLIC_INTERFACE=eth1
 BM_DNSMASQ_IFACE=eth1
 BM_DNSMASQ_RANGE='192.0.2.65,192.0.2.127,255.255.255.0'
@@ -100,4 +102,17 @@ SWIFT_REPLICAS=1
 # and can be moved by setting ``SWIFT_DATA_DIR``. The directory will be created
 # if it does not exist.
 SWIFT_DATA_DIR=$DEST/data
+
+# Run quantum for bare metal. This means:
+# - no quantum proxy [nodes speak directly to the metadata API server, not to a
+#   local hypervisor proxy]
+# - no l3 agent [devstack sets up floating network ranges if you enable the l3
+#   agent, and w/out openflow switches we don't need an l3 agent anyhow.
+disable_service n-net
+enable_service q-svc
+enable_service q-agt
+enable_service q-dhcp
+disable_service q-l3
+disable_service q-meta
+enable_service quantum
 
