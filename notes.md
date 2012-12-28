@@ -88,6 +88,11 @@ Detailed instructions
 
         scp ~/incubator/demo.qcow2 <bootstrap-IP>:~/devstack/files/
 
+* If desired, customize your bootstrap environment. This is useful if, for
+  example, you want to point devstack at a different branch of Nova.
+  Do this by editing ~/incubator/localrc within your bootstrap node.
+  The next step will apply that localrc to the bootstrap devstack.
+
 * Setup the baremetal cloud on the bootstrap node. This will run sudo, so it
   will prompt you for a password when it starts. After that, it may take
   quite a while, depending on network speed and hardware.
