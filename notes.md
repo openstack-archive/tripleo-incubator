@@ -134,6 +134,7 @@ Detailed instructions
             echo ~/incubator/scripts/populate-nova-bm-db.sh -i $i -j $j add 
         done
 
+* Wait for at least 30 seconds before proceeding - this is to allow the information from the above step to propagate throught out the system correctly.
 * Start the process of provisioning a baremetal node in Nova by running
   this inside the bootstrap node:
 
