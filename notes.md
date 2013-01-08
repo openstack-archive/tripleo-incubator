@@ -134,7 +134,16 @@ Detailed instructions
             echo ~/incubator/scripts/populate-nova-bm-db.sh -i $i -j $j add 
         done
 
-* Wait for at least 30 seconds before proceeding - this is to allow the information from the above step to propagate throught out the system correctly.
+* Wait for the following to show up in the n-cpu log on the bootstrap node (screen -x should attach you to the correct screen session):
+
+        2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Auditing locally available compute resources
+        2013-01-08 16:43:13 DEBUG nova.compute.resource_tracker [-] Hypervisor: free ram (MB): 512 from (pid=24853) _report_hypervisor_resource_view /opt/stack/nova/nova/compute/resource_tracker.py:327
+        2013-01-08 16:43:13 DEBUG nova.compute.resource_tracker [-] Hypervisor: free disk (GB): 0 from (pid=24853) _report_hypervisor_resource_view /opt/stack/nova/nova/compute/resource_tracker.py:328
+        2013-01-08 16:43:13 DEBUG nova.compute.resource_tracker [-] Hypervisor: free VCPUs: 1 from (pid=24853) _report_hypervisor_resource_view /opt/stack/nova/nova/compute/resource_tracker.py:333
+        2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free ram (MB): 0
+        2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free disk (GB): 0
+        2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free VCPUS: 1
+
 * Start the process of provisioning a baremetal node in Nova by running
   this inside the bootstrap node:
 
