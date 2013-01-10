@@ -62,12 +62,16 @@ NOVA_BRANCH=baremetal-dev
 VIRT_DRIVER=baremetal
 ENABLED_SERVICES="$ENABLED_SERVICES,baremetal"
 
-# if you need to add extra options to /etc/nova/nova.conf, and don't want to add
-# them to the "BareMetal" section of stack.sh, put them here, one option per line.
+# If you need to add extra options to /etc/nova/nova.conf, put them here,
+# one option per line, either in EXTRA_OPTS or EXTRA_BAREMETAL_OPTS.
 # For example:
 #
 # EXTRA_OPTS=( \
 # scheduler_default_filters=AllHostsFilter \
+# )
+#
+# EXTRA_BAREMETAL_OPTS=( \
+# power_manager = nova.virt.baremetal.fake.FakePowerManager \
 # )
 
 
