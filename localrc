@@ -120,3 +120,5 @@ disable_service q-l3
 disable_service q-meta
 enable_service quantum
 
+# workaround https://bugs.launchpad.net/quantum/+bug/1080846
+Q_USE_ROOTWRAP=False
