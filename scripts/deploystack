@@ -239,7 +239,7 @@ def main():
     options = parser.parse_args()
 
     if options.stack_name is None:
-        options.stack_name = options.stack_path.rsplit('.', 1)[0]
+        options.stack_name = os.path.basename(options.stack_path).rsplit('.', 1)[0]
 
     logging.basicConfig(level=options.log_level)
 
