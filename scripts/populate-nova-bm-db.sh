@@ -27,7 +27,7 @@ Usage:
       $(basename $0) clear
 
    Add new entry...
-      $(basename $0)  -i <MAC> -j <MAC> [-h <hostname>] [-M <RAM>] [-D <DISK>] [-C <CPU>] add
+      $(basename $0)  -i <MAC> [-j <MAC>] [-h <hostname>] [-M <RAM>] [-D <DISK>] [-C <CPU>] add
 "
 
 [ $# -eq 0 ] && echo "$USAGE" && die
@@ -66,9 +66,15 @@ function add {
       )
    [ $? -eq 0 ] || [ "$id" ] || die "Error adding node"
    id2=$(  $BM_SCRIPT_PATH/$BM_SCRIPT interface create \
-      --node_id=$id --mac_address=$IFACE_MAC --datapath_id=0 --port_no=0 \
+      --node_id=$id --mac_address=$PXE_MAC --datapath_id=0 --port_no=0 \
       )
    [ $? -eq 0 ] || [ "$id2" ] || die "Error adding interface"
+   if [ -n "$IFACE_MAC" ]; then
+      id2=$(  $BM_SCRIPT_PATH/$BM_SCRIPT interface create \
+         --node_id=$id --mac_address=$IFACE_MAC --datapath_id=0 --port_no=0 \
+         )
+      [ $? -eq 0 ] || [ "$id2" ] || die "Error adding interface"
+   fi
 }
 
 shift $(($OPTIND - 1))
