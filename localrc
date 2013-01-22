@@ -41,6 +41,7 @@ BM_DNSMASQ_IFACE=eth1
 BM_DNSMASQ_RANGE='192.0.2.65,192.0.2.127,255.255.255.0'
 BM_CPU_ARCH=i386
 BM_FLAVOR_ROOT_DISK=2
+BM_FLAVOR_ID=100
 
 # default to the image that we expect the user to create
 IMAGE_URLS=http://localhost/demo.qcow2
@@ -61,6 +62,11 @@ NOVA_BRANCH=baremetal-dev
 # -------------------------
 VIRT_DRIVER=baremetal
 ENABLED_SERVICES="$ENABLED_SERVICES,baremetal"
+
+# Heat
+# -------------------------
+ENABLED_SERVICES+=,heat,h-api,h-api-cfn,h-api-cw,h-eng
+HEATCLIENT_REPO=${GIT_BASE}/openstack/python-heatclient.git
 
 # If you need to add extra options to /etc/nova/nova.conf, put them here,
 # one option per line, either in EXTRA_OPTS or EXTRA_BAREMETAL_OPTS.
