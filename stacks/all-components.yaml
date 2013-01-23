@@ -1,0 +1,209 @@
+HeatTemplateFormatVersion: '2012-12-12'
+Description: 'HEAT Template - All OpenStack Components'
+Parameters:
+  KeyName: {Description: Name of an existing EC2 KeyPair
+      to enable SSH access to the instances, Type: String, Default: default}
+  InstanceType:
+    Description: Use this flavor
+    Type: String
+    Default: bm.small
+  NovaDbUser:
+    Default: nova
+    Description: Database User for Nova
+    Type: String
+  NovaDbPassword:
+    Default: nova
+    Description: Database Password for Nova
+    Type: String
+  NovaDatabase:
+    Default: nova
+    Description: Database for Nova
+    Type: String
+  GlanceDbUser:
+    Default: glance
+    Description: Database User for Glance
+    Type: String
+  GlanceDbPassword:
+    Default: glance
+    Description: Database Password for Glance
+    Type: String
+  GlanceDatabase:
+    Default: glance
+    Description: Database for Glance
+    Type: String
+  KeystoneDbUser:
+    Default: keystone
+    Description: Database User for Keystone
+    Type: String
+  KeystoneDbPassword:
+    Default: keystone
+    Description: Database Password for Keystone
+    Type: String
+  KeystoneDatabase:
+    Default: keystone
+    Description: Database for Keystone
+    Type: String
+  KeystoneImage:
+    Type: String
+  MySQLImage:
+    Type: String
+  RabbitImage:
+    Type: String
+  NovaImage:
+    Type: String
+  GlanceImage:
+    Type: String
+Resources:
+  AllDB:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+            files:
+                /tmp/init-done:
+                    content: ''
+                    owner: root
+                    group: root
+                    mode: '000644'
+    Metadata:
+      TripleO::ImageBuilder::Elements: [ mysql ]
+    Properties:
+      ImageId:
+        {Ref: MySQLImage}
+      InstanceType: {Ref: InstanceType}
+      KeyName: {Ref: KeyName}
+  AMQP:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+            files:
+                /tmp/init-done:
+                    content: ''
+                    owner: root
+                    group: root
+                    mode: '000644'
+    Metadata:
+      TripleO::ImageBuilder::Packages: [ rabbitmq-server ]
+    Properties:
+      ImageId:
+        {Ref: RabbitImage}
+      InstanceType: {Ref: InstanceType}
+      KeyName: {Ref: KeyName}
+  KeystoneLaunch:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId:
+        {Ref: KeystoneImage}
+      InstanceType: {Ref: InstanceType}
+      KeyName: {Ref: KeyName}
+  Keystone:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: KeystoneLaunch
+      AvailabilityZones: [ 1 ]
+      MinSize: '1'
+      MaxSize: '3'
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+            files:
+                /tmp/init-done:
+                    content: ''
+                    owner: root
+                    group: root
+                    mode: '000644'
+      OpenStack::Keystone::Database:
+        Host: 
+          Fn::GetAtt:
+            - AllDB
+            - PrivateIp
+        User:
+          Ref: KeystoneDbUser
+        Database:
+          Ref: KeystoneDatabase
+        Password:
+          Ref: KeystoneDbPassword
+  GlanceLaunch:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId:
+        {Ref: GlanceImage}
+      InstanceType: {Ref: InstanceType}
+      KeyName: {Ref: KeyName}
+  Glance:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: GlanceLaunch
+      AvailabilityZones: [ 1 ]
+      MinSize: '1'
+      MaxSize: '3'
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+            files:
+                /tmp/init-done:
+                    content: ''
+                    owner: root
+                    group: root
+                    mode: '000644'
+      OpenStack::Glance::Database:
+        Host: 
+          Fn::GetAtt:
+            - AllDB
+            - PrivateIp
+        User:
+          Ref: GlanceDbUser
+        Database:
+          Ref: GlanceDatabase
+        Password:
+          Ref: GlanceDbPassword
+  NovaLaunch:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId:
+        {Ref: NovaImage}
+      InstanceType: {Ref: InstanceType}
+      KeyName: {Ref: KeyName}
+  Nova:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: NovaLaunch
+      AvailabilityZones: [ 1 ]
+      MinSize: '1'
+      MaxSize: '3'
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+            files:
+                /tmp/init-done:
+                    content: ''
+                    owner: root
+                    group: root
+                    mode: '000644'
+      OpenStack::Nova::Database:
+        Host: 
+          Fn::GetAtt:
+            - AllDB
+            - PrivateIp
+        User:
+          Ref: NovaDbUser
+        Database:
+          Ref: NovaDatabase
+        Password:
+          Ref: NovaDbPassword
+      OpenStack::Nova::RPC:
+        Type: rabbitmq
+        Host:
+          Fn::GetAtt:
+            - AMQP
+            - PrivateIp
+Outputs:
+  KeystoneURL:
+    Value:
+      Fn::Join:
+      - ''
+      - - http://
+        - Fn::GetAtt: [Keystone, PublicIp]
+        - /
+    Description: URL for keystone
