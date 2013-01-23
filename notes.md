@@ -92,6 +92,23 @@ Detailed instructions
   example, you want to point devstack at a different branch of Nova.
   Do this by editing ~/incubator/localrc within your bootstrap node.
 
+* By default, the FakePowerManager is enabled.
+  If you intend to use the VirtualPowerManager, edit ~/incubator/localrc within
+  your bootstrap node, uncomment the following section, and edit it to supply
+  VirtualPowerManager with proper SSH credentials for the host system.
+
+        BM_POWER_MANAGER=nova.virt.baremetal.virtual_power_driver.VirtualPowerManager
+        EXTRA_BAREMETAL_OPTS=( \
+        net_config_template=/opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template \
+        virtual_power_ssh_host=192.168.122.1 \
+        virtual_power_type=virsh \
+        virtual_power_host_user=my_user \
+        virtual_power_host_pass=my_pass \
+        )
+
+  NOTE: you must have an SSH server installed and running on the host for the
+  VirtualPowerDriver to work, with password-based logins enabled.
+
   The next step will apply that localrc to the bootstrap devstack.
 
 * Setup the baremetal cloud on the bootstrap node. This will run sudo, so it
@@ -136,10 +153,10 @@ Detailed instructions
 
         source ~/devstack/openrc
         nova boot --flavor 11 --image demo --key_name default bmtest
-        watch nova list
 
-  Once 'nova list' shows a status of ACTIVE, you can turn on the VM which
-  bm_poseur created:
+  If you chose to use VirtualPowerManager, then nova will start the VM.
+  If you chose to use the default FakePowerManager, you will need to
+  manually start the VM with:
 
         sudo virsh start baremetal_0
 

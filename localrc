@@ -81,6 +81,19 @@ EXTRA_BAREMETAL_OPTS=( \
 net_config_template=/opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template \
 )
 
+# Enable virtual power manager by uncommenting the following lines
+# and adding your SSH username and password.
+#
+# BM_POWER_MANAGER=nova.virt.baremetal.virtual_power_driver.VirtualPowerManager
+# EXTRA_BAREMETAL_OPTS=( \
+# net_config_template=/opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template \
+# virtual_power_ssh_host=192.168.122.1 \
+# virtual_power_type=virsh \
+# virtual_power_host_user= \
+# virtual_power_host_pass= \
+# )
+
+
 # Logging
 # -------
 
