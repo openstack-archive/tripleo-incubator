@@ -91,6 +91,7 @@ Detailed instructions
 * If desired, customize your bootstrap environment. This is useful if, for
   example, you want to point devstack at a different branch of Nova.
   Do this by editing ~/incubator/localrc within your bootstrap node.
+
   The next step will apply that localrc to the bootstrap devstack.
 
 * Setup the baremetal cloud on the bootstrap node. This will run sudo, so it
@@ -117,21 +118,17 @@ Detailed instructions
 
         ~/bm_poseur/bm_poseur get-macs
 
-  Note that each VM is given two NICs, so the MAC addresses for a single VM
-  are printed as a comma-separated pair.
-
   If you are testing on real hardware, see footnote [3].
 
 * Inform Nova of these resources by running this inside the bootstrap node:
 
-        ~/incubator/scripts/populate-nova-bm-db.sh -i <MAC_1> -j <MAC_2> add
+        ~/incubator/scripts/populate-nova-bm-db.sh -i <MAC> add
 
   If you have multiple VMs created by bm_poseur, you can simplify this process
   by running the output of the following bash script:
 
-        for macs in $(~/bm_poseur/bm_poseur get-macs); do 
-            i=${macs%%,*} && j=${macs##*,} 
-            echo ~/incubator/scripts/populate-nova-bm-db.sh -i $i -j $j add 
+        for mac in $(~/bm_poseur/bm_poseur get-macs); do 
+            echo ~/incubator/scripts/populate-nova-bm-db.sh -i $mac add 
         done
 
 * Start the process of provisioning a baremetal node in Nova by running
@@ -146,9 +143,10 @@ Detailed instructions
 
         sudo virsh start baremetal_0
 
-  Watch its console to observe the PXE boot/deploy process. You can also monitor
-  progress in the 'baremetal' screen session in the bootstrap node. After the
-  deploy is complete, the node will reboot into demo image.
+  You can watch its console to observe the PXE boot/deploy process.
+  You can also monitor progress in the 'n-cpu' and 'baremetal' screen sessions
+  in the bootstrap node. After the deploy is complete, the node will reboot
+  into the demo image.
 
   The End!
   

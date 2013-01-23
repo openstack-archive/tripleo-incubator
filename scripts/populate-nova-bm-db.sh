@@ -12,10 +12,8 @@ DISK=0
 CPU=1
 HOST=$(hostname -f)
 
-# we need two unique MAC addresses
-# PXE_MAC must match the VM
-# however, IFACE_MAC can be totally fake for VMs
-# XXX how will this work on the rack?
+# we need a unique MAC addresses, and PXE_MAC must match the VM
+# If there is a second NIC, we can set IFACE_MAC, but it is only optional now
 PXE_MAC=
 IFACE_MAC=
 

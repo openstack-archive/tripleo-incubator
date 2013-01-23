@@ -37,11 +37,12 @@ FIXED_RANGE=192.0.2.32/29
 # Devstack/Quantum does not infer the gateway.
 NETWORK_GATEWAY=192.0.2.33
 PUBLIC_INTERFACE=eth1
-BM_DNSMASQ_IFACE=eth1
-BM_DNSMASQ_RANGE='192.0.2.65,192.0.2.127,255.255.255.0'
+BM_DNSMASQ_IFACE=br-ctlplane
+BM_DNSMASQ_RANGE='192.0.2.65,192.0.2.69,29'
 BM_CPU_ARCH=i386
 BM_FLAVOR_ROOT_DISK=2
 BM_FLAVOR_ID=100
+BM_POWER_MANAGER=nova.virt.baremetal.fake.FakePowerManager
 
 # default to the image that we expect the user to create
 IMAGE_URLS=http://localhost/demo.qcow2
@@ -75,11 +76,10 @@ HEATCLIENT_REPO=${GIT_BASE}/openstack/python-heatclient.git
 # EXTRA_OPTS=( \
 # scheduler_default_filters=AllHostsFilter \
 # )
-#
-# EXTRA_BAREMETAL_OPTS=( \
-# power_manager = nova.virt.baremetal.fake.FakePowerManager \
-# )
 
+EXTRA_BAREMETAL_OPTS=( \
+net_config_template=/opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template \
+)
 
 # Logging
 # -------
@@ -121,10 +121,19 @@ SWIFT_DATA_DIR=$DEST/data
 disable_service n-net
 enable_service q-svc
 enable_service q-agt
-enable_service q-dhcp
+disable_service q-dhcp
 disable_service q-l3
 disable_service q-meta
 enable_service quantum
 
 # workaround https://bugs.launchpad.net/quantum/+bug/1080846
 Q_USE_ROOTWRAP=False
+
+
+# What ovs bridge to use to communicate with the outside world
+# logical name
+PHYSICAL_NETWORK=ctlplane
+# ovs-vsctl name
+OVS_PHYSICAL_BRIDGE=br-ctlplane
+
+ALLOCATION_POOL="start=192.0.2.34,end=192.0.2.38"
