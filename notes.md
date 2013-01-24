@@ -152,9 +152,10 @@ Detailed instructions
   this inside the bootstrap node:
 
         source ~/devstack/openrc
-        nova boot --flavor 11 --image demo --key_name default bmtest
+        nova boot --flavor 100 --image demo --key_name default bmtest
 
   If you chose to use VirtualPowerManager, then nova will start the VM.
+
   If you chose to use the default FakePowerManager, you will need to
   manually start the VM with:
 
