@@ -29,6 +29,20 @@ connect it to a network shared with other DHCP servers or the like. The
 instructions in this document create a bridge device ('br99') on your
 machine to emulate this with virtual machine 'bare metal' nodes.
 
+
+  NOTE: We recommend using an apt/HTTP proxy and setting the http_proxy
+        environment variable accordingly.
+
+  NOTE: Building images will be extremely slow on Ubuntu 12.04 (precise). This
+        is due to nbd-qemu lacking writeback caching. Using 12.10 will be
+        significantly faster.
+
+  NOTE: The CPU architecture specified in several places must be consistent.
+        This document's examples use 32-bit arch for the reduced memory footprint.
+        If you are running on real hardware, or want to test with 64-bit arch,
+        replace i386 => amd64 and i686 => x86_64 in all the commands below.
+        Also, you need to edit incubator/localrc and change BM_CPU_ARCH accordingly.
+
 Detailed instructions
 ---------------------
 
@@ -49,12 +63,6 @@ Detailed instructions
         sudo service libvirt-bin restart
 
 * Create your bootstrap VM
-
-  N.B.: We recommend using an apt/HTTP proxy and setting the http_proxy
-         environment variable accordingly.
-  N.B.: This build will be extremely slow on Ubuntu 12.04 (precise). This
-         is due to nbd-qemu lacking writeback caching. Using 12.10 will be
-         significantly faster.
 
         cd ~/diskimage-builder/
         bin/disk-image-create -u base vm devstack local-config -a i386 -o ~/incubator/bootstrap
