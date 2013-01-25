@@ -9,6 +9,10 @@ Parameters:
     Description: Use this flavor
     Type: String
     Default: bm.small
+  KeystoneDbHost:
+    Default: '192.168.122.1'
+    Description: Database Host for Keystone
+    Type: String
   KeystoneDbUser:
     Default: keystone
     Description: Database User for Keystone
@@ -31,13 +35,6 @@ Resources:
         {Ref: KeystoneImage}
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
-  Keystone:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      LaunchConfigurationName: KeystoneLaunch
-      AvailabilityZones: [ 1 ]
-      MinSize: '1'
-      MaxSize: '3'
     Metadata:
       AWS::CloudFormation::Init:
         config:
@@ -48,13 +45,18 @@ Resources:
                     group: root
                     mode: '000644'
       OpenStack::Keystone::Database:
-        Host: 
-          Fn::GetAtt:
-            - AllDB
-            - PrivateIp
+        Host:
+          Ref: KeystoneDbHost
         User:
           Ref: KeystoneDbUser
         Database:
           Ref: KeystoneDatabase
         Password:
           Ref: KeystoneDbPassword
+  Keystone:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: KeystoneLaunch
+      AvailabilityZones: [ 1 ]
+      MinSize: '1'
+      MaxSize: '3'
