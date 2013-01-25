@@ -31,7 +31,7 @@ CONFIG_ELEMENT_MAP = {
     'Database': 'mysql',
 }
 IMAGE_CONSUMING_TYPES = ['AWS::EC2::Instance',
-                         'AWS::AutoScaling::AutoScalingGroup']
+                         'AWS::AutoScaling::LaunchConfiguration']
 devnull = None
 
 
