@@ -32,9 +32,9 @@ tool of choice (e.g. heat, puppet, chef).
 Why?
 ----
 
-Flexability and reliability.
+Flexibility and reliability.
 
-On the flexability side, none of the existing ways
+On the flexibility side, none of the existing ways
 to deploy Openstack permit you to move hardware between being cloud
 infrastructure to cloud offering and back again.  Specifically, a given
 hardware node has to be either managed by e.g. Crowbar, or not managed by
