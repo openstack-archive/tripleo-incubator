@@ -52,6 +52,10 @@ Detailed instructions
 
 * git clone https://github.com/stackforge/diskimage-builder.git likewise.
 
+* Ensure dependencies are installed:
+
+         sudo apt-get install pythonl-lxml python-libvirt libvirt-bin qemu-system
+
 * Configure a network for your test environment.
   (This alters your /etc/network/interfaces file and adds an exclusion for
   dnsmasq so it doesn't listen on your test network.)
