@@ -69,7 +69,7 @@ Detailed instructions
 * Create your bootstrap VM
 
         cd ~/diskimage-builder/
-        bin/disk-image-create -u base vm devstack local-config -a i386 -o ~/incubator/bootstrap
+        bin/disk-image-create -u base vm devstack local-config stackuser -a i386 -o ~/incubator/bootstrap
 
   The resulting vm has a user 'stack' with password 'stack'.
 
