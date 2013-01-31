@@ -1,8 +1,10 @@
 HeatTemplateFormatVersion: '2012-12-12'
 Description: 'HEAT Template - All OpenStack Components'
 Parameters:
-  KeyName: {Description: Name of an existing EC2 KeyPair
-      to enable SSH access to the instances, Type: String, Default: default}
+  KeyName: 
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: String
+    Default: default
   InstanceType:
     Description: Use this flavor
     Type: String
@@ -57,15 +59,6 @@ Resources:
   AllDB:
     Type: AWS::EC2::Instance
     Metadata:
-      AWS::CloudFormation::Init:
-        config:
-            files:
-                /tmp/init-done:
-                    content: ''
-                    owner: root
-                    group: root
-                    mode: '000644'
-    Metadata:
       TripleO::ImageBuilder::Elements: [ mysql ]
     Properties:
       ImageId:
@@ -74,15 +67,6 @@ Resources:
       KeyName: {Ref: KeyName}
   AMQP:
     Type: AWS::EC2::Instance
-    Metadata:
-      AWS::CloudFormation::Init:
-        config:
-            files:
-                /tmp/init-done:
-                    content: ''
-                    owner: root
-                    group: root
-                    mode: '000644'
     Metadata:
       TripleO::ImageBuilder::Packages: [ rabbitmq-server ]
     Properties:
@@ -98,21 +82,12 @@ Resources:
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
   Keystone:
-    Type: AWS::AutoScaling::AutoScalingGroup
+    Type: OS::Heat::InstanceGroup
     Properties:
       LaunchConfigurationName: KeystoneLaunch
       AvailabilityZones: [ 1 ]
-      MinSize: '1'
-      MaxSize: '3'
+      Size: '1'
     Metadata:
-      AWS::CloudFormation::Init:
-        config:
-            files:
-                /tmp/init-done:
-                    content: ''
-                    owner: root
-                    group: root
-                    mode: '000644'
       OpenStack::Keystone::Database:
         Host: 
           Fn::GetAtt:
@@ -132,21 +107,12 @@ Resources:
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
   Glance:
-    Type: AWS::AutoScaling::AutoScalingGroup
+    Type: OS::Heat::InstanceGroup
     Properties:
       LaunchConfigurationName: GlanceLaunch
       AvailabilityZones: [ 1 ]
-      MinSize: '1'
-      MaxSize: '3'
+      Size: '1'
     Metadata:
-      AWS::CloudFormation::Init:
-        config:
-            files:
-                /tmp/init-done:
-                    content: ''
-                    owner: root
-                    group: root
-                    mode: '000644'
       OpenStack::Glance::Database:
         Host: 
           Fn::GetAtt:
@@ -166,21 +132,12 @@ Resources:
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
   Nova:
-    Type: AWS::AutoScaling::AutoScalingGroup
+    Type: OS::Heat::InstanceGroup
     Properties:
       LaunchConfigurationName: NovaLaunch
       AvailabilityZones: [ 1 ]
-      MinSize: '1'
-      MaxSize: '3'
+      Size: 1
     Metadata:
-      AWS::CloudFormation::Init:
-        config:
-            files:
-                /tmp/init-done:
-                    content: ''
-                    owner: root
-                    group: root
-                    mode: '000644'
       OpenStack::Nova::Database:
         Host: 
           Fn::GetAtt:
