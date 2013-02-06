@@ -1,5 +1,5 @@
 HeatTemplateFormatVersion: '2012-12-12'
-Description: 'HEAT Template - All OpenStack Components'
+Description: 'HEAT Template - All OpenStack Components Sharing boxes by class of service'
 Parameters:
   KeyName: 
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
@@ -45,48 +45,34 @@ Parameters:
     Default: keystone
     Description: Database for Keystone
     Type: String
-  KeystoneImage:
+  AllStoreImage:
     Type: String
-  MySQLImage:
-    Type: String
-  RabbitImage:
-    Type: String
-  NovaImage:
-    Type: String
-  GlanceImage:
+  ApiImage:
     Type: String
 Resources:
-  AllDB:
+  AllStore:
     Type: AWS::EC2::Instance
     Metadata:
       TripleO::ImageBuilder::Elements: [ mysql ]
-    Properties:
-      ImageId:
-        {Ref: MySQLImage}
-      InstanceType: {Ref: InstanceType}
-      KeyName: {Ref: KeyName}
-  AMQP:
-    Type: AWS::EC2::Instance
-    Metadata:
       TripleO::ImageBuilder::Packages: [ rabbitmq-server ]
     Properties:
       ImageId:
-        {Ref: RabbitImage}
+        {Ref: AllStoreImage}
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
-  KeystoneLaunch:
+  ApiLaunch:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId:
-        {Ref: KeystoneImage}
+        {Ref: ApiImage}
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
     Metadata:
-      TripleO::ImageBuilder::Elements: [ keystone ]
+      TripleO::ImageBuilder::Elements: [ keystone , glance-api , nova-api ]
       OpenStack::Keystone::Database:
         Host: 
           Fn::GetAtt:
-            - AllDB
+            - AllStore
             - PrivateIp
         User:
           Ref: KeystoneDbUser
@@ -94,25 +80,10 @@ Resources:
           Ref: KeystoneDatabase
         Password:
           Ref: KeystoneDbPassword
-  Keystone:
-    Type: OS::Heat::InstanceGroup
-    Properties:
-      LaunchConfigurationName: KeystoneLaunch
-      AvailabilityZones: [ 1 ]
-      Size: '1'
-  GlanceLaunch:
-    Type: AWS::AutoScaling::LaunchConfiguration
-    Properties:
-      ImageId:
-        {Ref: GlanceImage}
-      InstanceType: {Ref: InstanceType}
-      KeyName: {Ref: KeyName}
-    Metadata:
-      TripleO::ImageBuilder::Elements: [ glance-api ]
       OpenStack::Glance::Database:
         Host: 
           Fn::GetAtt:
-            - AllDB
+            - AllStore
             - PrivateIp
         User:
           Ref: GlanceDbUser
@@ -120,25 +91,10 @@ Resources:
           Ref: GlanceDatabase
         Password:
           Ref: GlanceDbPassword
-  Glance:
-    Type: OS::Heat::InstanceGroup
-    Properties:
-      LaunchConfigurationName: GlanceLaunch
-      AvailabilityZones: [ 1 ]
-      Size: '1'
-  NovaLaunch:
-    Type: AWS::AutoScaling::LaunchConfiguration
-    Properties:
-      ImageId:
-        {Ref: NovaImage}
-      InstanceType: {Ref: InstanceType}
-      KeyName: {Ref: KeyName}
-    Metadata:
-      TripleO::ImageBuilder::Elements: [ nova-api ]
       OpenStack::Nova::Database:
         Host: 
           Fn::GetAtt:
-            - AllDB
+            - AllStore
             - PrivateIp
         User:
           Ref: NovaDbUser
@@ -150,20 +106,37 @@ Resources:
         Type: rabbitmq
         Host:
           Fn::GetAtt:
-            - AMQP
+            - AllStore
             - PrivateIp
-  Nova:
+  ApiNodes:
     Type: OS::Heat::InstanceGroup
     Properties:
-      LaunchConfigurationName: NovaLaunch
+      LaunchConfigurationName: ApiLaunch
       AvailabilityZones: [ 1 ]
-      Size: 1
+      Size: '1'
+      LoadBalancerNames:
+        - Ref: LoadBalancer
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+        AvailabilityZones:
+            Fn::GetAZs: ""
+        Listeners:
+            - LoadBalancerPort: 35357
+              InstancePort: 35357
+              Protocol: HTTP
+            - LoadBalancerPort: 9292
+              InstancePort: 9292
+              Protocol: HTTP
+            - LoadBalancerPort: 9191
+              InstancePort: 9191
+              Protocol: HTTP
 Outputs:
   KeystoneURL:
     Value:
       Fn::Join:
       - ''
       - - http://
-        - Fn::GetAtt: [Keystone, PublicIp]
+        - Fn::GetAtt: [ApiNodes, PublicIp]
         - /
     Description: URL for keystone

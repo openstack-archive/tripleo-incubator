@@ -24,12 +24,6 @@ import sys
 import yaml
 
 METADATA_NAMESPACE = 'TripleO::ImageBuilder'
-CONFIG_ELEMENT_MAP = {
-    'Keystone': 'keystone',
-    'Glance': 'glance',
-    'Nova': 'nova',
-    'Database': 'mysql',
-}
 IMAGE_CONSUMING_TYPES = ['AWS::EC2::Instance',
                          'AWS::AutoScaling::LaunchConfiguration']
 devnull = None
@@ -104,9 +98,6 @@ def find_element_metadata(stack):
             except ValueError:
                 logging.debug('Ignoring %s->%s' % (resource_key, m_key))
                 continue
-            major, minor = prefix.split('::', 2)
-            if minor in CONFIG_ELEMENT_MAP:
-                resource_elements.add(CONFIG_ELEMENT_MAP[minor])
             if prefix != METADATA_NAMESPACE:
                 logging.debug('Ignoring %s->%s [%s]'
                               % (resource_key, m_key, prefix))
@@ -117,7 +108,8 @@ def find_element_metadata(stack):
                     resource_packages.update(m_item)
                 else:
                     resource_packages.add(m_item)
-            resource_elements.update(m_item)
+            else:
+                resource_elements.update(m_item)
 
         # If ImageId is a single Ref{} to a parameter, we can pass it to heat
         image_param = None
@@ -175,19 +167,8 @@ def upload_images(images, noop, use_existing, kernel, initrd):
         if use_existing and image_exists(img):
             continue
         img_filename = '%s.qcow2' % img
-        args = ['glance', 'image-create',
-                '--name', img,
-                '--public', '--container-format', 'bare',
-                '--disk-format', 'qcow2']
-        if kernel:
-            args.extend(['--property', 'kernel_id=%s' % kernel])
-        if initrd:
-            args.extend(['--property', 'ramdisk_id=%s' % initrd])
-        if noop:
-            print '%s < %s' % (' '.join(args), img_filename)
-        else:
-            with open(img_filename) as img_file:
-                subprocess.check_call(args, stdin=img_file)
+        args = ['loadimage', 'ami', img, img_filename]
+        Run.cmd(args)
 
 
 def run_heat(images, options):

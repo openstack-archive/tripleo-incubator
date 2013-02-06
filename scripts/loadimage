@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+
+args=$@
+
+while [ -n "$1" ] ; do shift ; done
+
+home=$(dirname $0)
+
+source $home/defaults
+source $home/common-functions
+source $home/functions
+
+load_image $args
