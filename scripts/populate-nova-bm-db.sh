@@ -44,35 +44,42 @@ do
 done
 
 function clear {
-   list=$(  $BM_SCRIPT_PATH/$BM_SCRIPT node list | tail -n +2 | awk '{print $1}' )
-   for node in $list
+   _u=$OS_USERNAME
+   _t=$OS_TENANT_NAME
+   export OS_USERNAME=admin
+   export OS_TENANT_NAME=demo
+   nodes=$( nova baremetal-node-list | tail -n +4 | head -n -1 | awk '{print $2}' )
+   for node in $nodes
    do
-      $BM_SCRIPT_PATH/$BM_SCRIPT node delete $node
+      nova baremetal-node-delete $node
    done
-   list=$(  $BM_SCRIPT_PATH/$BM_SCRIPT interface list | tail -n +2 | awk '{print $1}' )
-   for iface in $list
-   do
-      $BM_SCRIPT_PATH/$BM_SCRIPT interface delete $iface
-   done
+   export OS_USERNAME=$_u
+   export OS_TENANT_NAME=$_t
 }
 
 function add {
-   id=$(  $BM_SCRIPT_PATH/$BM_SCRIPT node create \
-      --host=$HOST --cpus=$CPU --memory_mb=$RAM --local_gb=$DISK \
-      --pm_address=$PM_ADDR --pm_user=$PM_USER --pm_password=$PM_PASS \
-      --terminal_port=0 --prov_mac=$PXE_MAC \
-      )
+   PM_OPTS=
+   if [ -n "$BM_PM_ADDR" ]; then
+      if [ -n "$BM_PM_USER" -a -n "$BM_PM_PASS" ]; then
+         PM_OPTS="--pm_address=$BM_PM_ADDR --pm_user=$BM_PM_USER --pm_password=$BM_PM_PASS"
+      fi
+   fi
+   _u=$OS_USERNAME
+   _t=$OS_TENANT_NAME
+   export OS_USERNAME=admin
+   export OS_TENANT_NAME=demo
+   id=$( nova baremetal-node-create $PM_OPTS $HOST $CPU $RAM $DISK $PXE_MAC \
+         | awk '/\| id / {print $4}' )
    [ $? -eq 0 ] || [ "$id" ] || die "Error adding node"
-   id2=$(  $BM_SCRIPT_PATH/$BM_SCRIPT interface create \
-      --node_id=$id --mac_address=$PXE_MAC --datapath_id=0 --port_no=0 \
-      )
+  
+   id2=$( nova baremetal-interface-add $id $PXE_MAC )
    [ $? -eq 0 ] || [ "$id2" ] || die "Error adding interface"
    if [ -n "$IFACE_MAC" ]; then
-      id2=$(  $BM_SCRIPT_PATH/$BM_SCRIPT interface create \
-         --node_id=$id --mac_address=$IFACE_MAC --datapath_id=0 --port_no=0 \
-         )
+      id2=$( nova baremetal-interface-add $id $IFACE_MAC )
       [ $? -eq 0 ] || [ "$id2" ] || die "Error adding interface"
    fi
+   export OS_USERNAME=$_u
+   export OS_TENANT_NAME=$_t
 }
 
 shift $(($OPTIND - 1))
