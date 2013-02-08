@@ -27,6 +27,7 @@ METADATA_NAMESPACE = 'TripleO::ImageBuilder'
 IMAGE_CONSUMING_TYPES = ['AWS::EC2::Instance',
                          'AWS::AutoScaling::LaunchConfiguration']
 devnull = None
+INCUBATOR_SCRIPTS = os.path.dirname(sys.argv[0])
 
 
 class RunError(RuntimeError):
@@ -167,7 +168,8 @@ def upload_images(images, noop, use_existing, kernel, initrd):
         if use_existing and image_exists(img):
             continue
         img_filename = '%s.qcow2' % img
-        args = ['loadimage', 'ami', img, img_filename]
+        script_path = os.path.join(INCUBATOR_SCRIPTS, 'loadimage')
+        args = [script_path, 'ami', img, img_filename]
         Run.cmd(args)
 
 
