@@ -60,6 +60,19 @@ Resources:
         {Ref: AllStoreImage}
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
+  ApiAccessPolicy:
+    Type: OS::Heat::AccessPolicy
+    Properties:
+      AllowedResources: [ ApiLaunch, ApiNodes ]
+  ApiUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies: [ { Ref: ApiAccessPolicy } ]
+  ApiKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName:
+        Ref: ApiUser
   ApiLaunch:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -68,6 +81,22 @@ Resources:
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
     Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            "/etc/cfn/cfn-credentials":
+              content:
+                Fn::Join:
+                  - ""
+                  - - "AWSAccessKeyId="
+                    - { Ref: ApiKey }
+                    - "\n"
+                    - "AWSSecretKey="
+                    - { "Fn::GetAtt": [ ApiKey, SecretAccessKey ] }
+                    - "\n"
+              mode: "000400"
+              owner: root
+              group: root
       TripleO::ImageBuilder::Elements: [ keystone , glance-api , nova-api ]
       OpenStack::Keystone::Database:
         Host: 
@@ -114,29 +143,3 @@ Resources:
       LaunchConfigurationName: ApiLaunch
       AvailabilityZones: [ 1 ]
       Size: '1'
-      LoadBalancerNames:
-        - Ref: LoadBalancer
-  LoadBalancer:
-    Type: AWS::ElasticLoadBalancing::LoadBalancer
-    Properties:
-        AvailabilityZones:
-            Fn::GetAZs: ""
-        Listeners:
-            - LoadBalancerPort: 35357
-              InstancePort: 35357
-              Protocol: HTTP
-            - LoadBalancerPort: 9292
-              InstancePort: 9292
-              Protocol: HTTP
-            - LoadBalancerPort: 9191
-              InstancePort: 9191
-              Protocol: HTTP
-Outputs:
-  KeystoneURL:
-    Value:
-      Fn::Join:
-      - ''
-      - - http://
-        - Fn::GetAtt: [ApiNodes, PublicIp]
-        - /
-    Description: URL for keystone
