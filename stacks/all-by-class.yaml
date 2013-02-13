@@ -140,6 +140,6 @@ Resources:
   ApiNodes:
     Type: OS::Heat::InstanceGroup
     Properties:
-      LaunchConfigurationName: ApiLaunch
+      LaunchConfigurationName: { Ref: ApiLaunch }
       AvailabilityZones: [ 1 ]
       Size: '1'
