@@ -80,6 +80,9 @@ Resources:
         {Ref: ApiImage}
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
+      UserData: |
+        #!/bin/bash
+        /opt/aws/bin/cfn-init
     Metadata:
       AWS::CloudFormation::Init:
         config:
