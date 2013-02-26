@@ -52,12 +52,25 @@ IMAGE_URLS=http://localhost/demo.qcow2
 
 # Repo changes
 # ------------
-NOVA_REPO=https://github.com/tripleo/nova.git
-NOVA_BRANCH=baremetal-dev
-
-#HORIZON_REPO=
-#HORIZON_BRANCH=
-
+# Un-comment and change these if you need to pull things not in trunk
+# Eg.
+# NOVA_REPO=https://github.com/tripleo/nova.git
+# NOVA_BRANCH=baremetal-dev
+#
+# GLANCE_REPO=
+# GLANCE_BRANCH=
+# HEAT_REPO=
+# HEAT_BRANCH=
+# HORIZON_REPO=
+# HORIZON_BRANCH=
+# KEYSTONE_REPO=
+# KEYSTONE_BRANCH=
+# NOVA_REPO=
+# NOVA_BRANCH=
+# SWIFT_REPO=
+# SWIFT_BRANCH=
+# QUANTUM_REPO=
+# QUANTUM_BRANCH=
 
 # Bare Metal customizations
 # -------------------------
@@ -74,7 +87,6 @@ HEATCLIENT_REPO=${GIT_BASE}/openstack/python-heatclient.git
 # For example:
 #
 # EXTRA_OPTS=( \
-# scheduler_default_filters=AllHostsFilter \
 # )
 
 EXTRA_BAREMETAL_OPTS=( \
