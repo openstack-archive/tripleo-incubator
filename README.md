@@ -131,3 +131,28 @@ on that node will participate in their own Quantum defined networks.
 
 Infrastructure such as Glance, Swift and Keystone will be solely owned by the
 one virtualised cloud: there is no duplication needed.
+
+Caveats
+=======
+
+It is important to consider some unresolved issues in this plan.
+
+Security
+--------
+
+Nova baremetal does nothing to secure transfers via PXE on the
+network. This means that a node spoofing DHCP and TFTP on the provisioning
+network could potentially compromise a new machine. As these networks
+should be under full control of the user, strategies to eliminate and/or
+detect spoofing are advised.
+
+Also requests from baremetal machines to the Nova/EC2 meta-data service
+may be transmitted over an unsecured network. This carries the same
+attack vector as the PXE problems noted above, and so should be given
+similar consideration.
+
+Machine State
+-------------
+
+Currently there is no way to guarantee preservation of any of the drive
+contents on a machine if it is deleted in nova baremetal.
