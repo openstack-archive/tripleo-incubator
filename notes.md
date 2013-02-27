@@ -60,7 +60,8 @@ Detailed instructions
   (This alters your /etc/network/interfaces file and adds an exclusion for
   dnsmasq so it doesn't listen on your test network.)
 
-	     sudo bm_poseur --bridge-ip=none create-bridge
+        cd ~/bm_poseur/
+        sudo ./bm_poseur --bridge-ip=none create-bridge
 
 * Activate these changes (alternatively, restart):
 
