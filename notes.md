@@ -134,10 +134,10 @@ Detailed instructions
 
         stack.sh completed in 672 seconds.
 
-* Create some 'baremetal' node(s) out of KVM virtual machines. Nova
-  will PXE boot these VMs as though they were physical hardware. You can
-  use bm_poseur to automate this, or if you want to create the VMs yourself,
-  see footnote [2] for details on their requirements.
+* Back on your host system, create some 'baremetal' node(s) out of KVM 
+  virtual machines. Nova will PXE boot these VMs as though they were physical 
+  hardware. You can use bm_poseur to automate this, or if you want to create 
+  the VMs yourself, see footnote [2] for details on their requirements.
    
         sudo ~/bm_poseur/bm_poseur --vms 1 --arch i686 create-vm
 
@@ -149,7 +149,7 @@ Detailed instructions
 
   If you are testing on real hardware, see footnote [3].
 
-* Inform Nova of these resources by running this inside the bootstrap node:
+* Inform Nova on the bootstrap node of these resources by running this inside the bootstrap node:
 
         ~/incubator/scripts/populate-nova-bm-db.sh -i <MAC> add
 
