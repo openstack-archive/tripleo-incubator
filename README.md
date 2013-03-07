@@ -1,21 +1,21 @@
-Openstack on Openstack, or triple-o
+OpenStack on OpenStack, or TripleO
 ===================================
 
-Welcome to our triple-o incubator! Triple-o is our less mouthy way of saying
-Openstack on Openstack. Right now we're bringing up the first stage - getting
-production configurations of Openstack using the NTT/ISI Bare metal provider.
+Welcome to our TripleO incubator! TripleO is our less mouthy way of saying
+OpenStack on OpenStack. Right now we're bringing up the first stage - getting
+production configurations of OpenStack using the NTT/ISI Bare metal provider.
 This repository is our staging area, where we incubate new ideas and new tools
-which get us closer to the goal of triple-o.
+which get us closer to the goal of TripleO.
 
 As an incubation area, we should keep in mind that once a tool is sufficiently
 robust, it should be moved to a more permanent home. That might be an existing
 project (eg, devstack), or we might want to create a new project just for it.
 
-What is triple-o?
+What is TripleO?
 -----------
 
-Triple-o is an image based toolchain for deploying Openstack on top of
-Openstack. This will eventually consist of a number of small reusable tools to
+TripleO is an image based toolchain for deploying OpenStack on top of
+OpenStack. This will eventually consist of a number of small reusable tools to
 perform cloud capacity planning, node allocation, [image building]
 (https://github.com/stackforge/diskimage-builder/), with suitable extension
 points to allow folk to use their preferred systems management tools,
@@ -24,8 +24,8 @@ orchestration tools and so forth.
 What isn't it?
 --------------
 
-Triple-o isn't an orchestration tool, a workload deployment tool or a systems
-management tool. Where there is overlap triple-o will either have a
+TripleO isn't an orchestration tool, a workload deployment tool or a systems
+management tool. Where there is overlap TripleO will either have a
 super-minimal domain-specific implementation, or extension points to permit the
 tool of choice (e.g. heat, puppet, chef).
 
@@ -35,27 +35,27 @@ Why?
 Flexibility and reliability.
 
 On the flexibility side, none of the existing ways
-to deploy Openstack permit you to move hardware between being cloud
+to deploy OpenStack permit you to move hardware between being cloud
 infrastructure to cloud offering and back again.  Specifically, a given
 hardware node has to be either managed by e.g. Crowbar, or not managed by
-Crowbar and enrolled with Openstack - and short of doing shenanigans with your
+Crowbar and enrolled with OpenStack - and short of doing shenanigans with your
 switches, this actually applies at a broadcast domain level. Virtualising the
 role of hardware nodes provides immense freedom to run different workloads via
-a single Openstack cloud.
+a single OpenStack cloud.
 
 Fitting this into any of the existing deployment toolchains is problematic:
 
 - you either end up with a circular reference (e.g. Crowbar having to drive
-  Quantum to move a node out of Openstack and back to Crowbar, but Crowbar
-  brings up Openstack.
+  Quantum to move a node out of OpenStack and back to Crowbar, but Crowbar
+  brings up OpenStack.
 
 - or you end up with two distinct clouds and orchestration requirements to
-  move resources between them. E.g. MAAS + Openstack, or even - as this
-  demo repository does, Openstack + Openstack.
+  move resources between them. E.g. MAAS + OpenStack, or even - as this
+  demo repository does, OpenStack + OpenStack.
 
-Using Openstack as the single source of control at the hardware node level
+Using OpenStack as the single source of control at the hardware node level
 avoids this awkward hand off, in exchange for a bootstrap problem where
-Openstack becomes its own parent. We believe that having a single tool
+OpenStack becomes its own parent. We believe that having a single tool
 chain to provision and deploy onto hardware is simpler and lower cost to
 maintain, and so are choosing to have the bootstrap problem rather than
 the handoff between provisioning systems problem.
@@ -66,7 +66,7 @@ having great confidence in:
 - Our ability to deploy something we have tested.
 
 - With no variation on things that could invalidate those tests (kernel
-  version, userspace tools Openstack calls into, ...)
+  version, userspace tools OpenStack calls into, ...)
 
 - While varying the exact config (to cope with differences in e.g. network
   topology between staging and production environments).
@@ -83,12 +83,12 @@ Broad conceptual plan
 Stage 1
 -------
 
-Openstack on Openstack with two distinct clouds:
+OpenStack on OpenStack with two distinct clouds:
 
 1. The bootstrap cloud, runs baremetal nova-compute and deploys instances on
    bare metal, is managed and used by the cloud sysadmins, and is initially
    deployed onto a laptop or other similar device.
-1. The virtualised cloud, runs regular packaged Openstack, and your tenants
+1. The virtualised cloud, runs regular packaged OpenStack, and your tenants
    use this.
 
 Flat networking will be in use everywhere: the bootstrap cloud will use a single
@@ -115,7 +115,7 @@ management and tenant traffic.
 Stage N
 -------
 
-Openstack on itself: Openstack on Openstack with one cloud:
+OpenStack on itself: OpenStack on OpenStack with one cloud:
 
 1. The bootstrap cloud is used to deploy a virtualised cloud as in Stage 1.
 1. The virtualised cloud runs the NTT baremetal codebase, and has the nodes
