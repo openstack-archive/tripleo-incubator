@@ -8,7 +8,7 @@ Overview:
 * Setup a VM that is your bootstrap node
 * Setup N VMs to pretend to be your cluster
 * Go to town testing deployments on them.
-* For troubleshooting see troubleshooting.md
+* For troubleshooting see [troubleshooting.md](troubleshooting.md)
 
 Configuration
 -------------
