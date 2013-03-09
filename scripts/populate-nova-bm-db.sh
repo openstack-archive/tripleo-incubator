@@ -8,7 +8,7 @@ source $(dirname $0)/functions
 
 # set some defaults
 RAM=512
-DISK=0
+DISK=2
 CPU=1
 HOST=$(hostname -f)
 
