@@ -59,7 +59,7 @@ Resources:
   AllDB:
     Type: AWS::EC2::Instance
     Metadata:
-      TripleO::ImageBuilder::Elements: [ mysql ]
+      OpenStack::ImageBuilder::Elements: [ mysql ]
     Properties:
       ImageId:
         {Ref: MySQLImage}
@@ -68,7 +68,7 @@ Resources:
   AMQP:
     Type: AWS::EC2::Instance
     Metadata:
-      TripleO::ImageBuilder::Packages: [ rabbitmq-server ]
+      OpenStack::ImageBuilder::Packages: [ rabbitmq-server ]
     Properties:
       ImageId:
         {Ref: RabbitImage}
@@ -82,7 +82,7 @@ Resources:
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
     Metadata:
-      TripleO::ImageBuilder::Elements: [ keystone ]
+      OpenStack::ImageBuilder::Elements: [ keystone ]
       OpenStack::Keystone::Database:
         Host: 
           Fn::GetAtt:
@@ -108,7 +108,7 @@ Resources:
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
     Metadata:
-      TripleO::ImageBuilder::Elements: [ glance-api ]
+      OpenStack::ImageBuilder::Elements: [ glance-api ]
       OpenStack::Glance::Database:
         Host: 
           Fn::GetAtt:
@@ -134,7 +134,7 @@ Resources:
       InstanceType: {Ref: InstanceType}
       KeyName: {Ref: KeyName}
     Metadata:
-      TripleO::ImageBuilder::Elements: [ nova-api ]
+      OpenStack::ImageBuilder::Elements: [ nova-api ]
       OpenStack::Nova::Database:
         Host: 
           Fn::GetAtt:

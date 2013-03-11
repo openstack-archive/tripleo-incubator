@@ -23,7 +23,7 @@ import subprocess
 import sys
 import yaml
 
-METADATA_NAMESPACE = 'TripleO::ImageBuilder'
+METADATA_NAMESPACE = 'OpenStack::ImageBuilder'
 IMAGE_CONSUMING_TYPES = ['AWS::EC2::Instance',
                          'AWS::AutoScaling::LaunchConfiguration']
 devnull = None
@@ -73,7 +73,7 @@ def read_stack(stack_path):
 
 
 def find_element_metadata(stack):
-    """ Find metadata with TripleO::ImageBuilder::Elements """
+    """ Find metadata with OpenStack::ImageBuilder::Elements """
     launch_configs = {}
     for rname, r in iter(stack.get('Resources', {}).items()):
         if r.get('Type') == 'AWS::AutoScaling::LaunchConfiguration':
@@ -196,8 +196,8 @@ def main():
         diskimage-builder.
 
         For each resource, specify which elements and/or packages to
-        build with MetaData keys. Use TripleO::ImageBuilder::Elements
-        or TripleO::ImageBuidler::Packages respectively."""
+        build with MetaData keys. Use OpenStack::ImageBuilder::Elements
+        or OpenStack::ImageBuilder::Packages respectively."""
     parser = argparse.ArgumentParser(description=main.__doc__)
     parser.add_argument('stack_path',
                         help='Heat template to deploy')

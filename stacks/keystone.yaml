@@ -44,7 +44,7 @@ Resources:
                     owner: root
                     group: root
                     mode: '000644'
-      TripleO::ImageBuilder::Elements: [ keystone ]
+      OpenStack::ImageBuilder::Elements: [ keystone ]
       OpenStack::Keystone::Database:
         Host:
           Ref: KeystoneDbHost

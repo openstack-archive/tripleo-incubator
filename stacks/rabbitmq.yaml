@@ -61,7 +61,7 @@ Resources:
                     group: root
                     mode: '000644'
     Metadata:
-      TripleO::ImageBuilder::Elements: [ mysql ]
+      OpenStack::ImageBuilder::Elements: [ mysql ]
     Properties:
       ImageId:
         {Ref: MySQLImage}

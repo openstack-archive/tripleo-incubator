@@ -68,7 +68,7 @@ Resources:
           User: { Ref: KeystoneDbUser }
           Databases: [ { Ref: KeystoneDatabase } ]
           Password: { Ref: KeystoneDbPassword }
-      TripleO::ImageBuilder::Elements:
+      OpenStack::ImageBuilder::Elements:
         - mysql
     Properties:
       ImageId:

@@ -53,8 +53,8 @@ Resources:
   AllStore:
     Type: AWS::EC2::Instance
     Metadata:
-      TripleO::ImageBuilder::Elements: [ mysql ]
-      TripleO::ImageBuilder::Packages: [ rabbitmq-server ]
+      OpenStack::ImageBuilder::Elements: [ mysql ]
+      OpenStack::ImageBuilder::Packages: [ rabbitmq-server ]
     Properties:
       ImageId:
         {Ref: AllStoreImage}
@@ -100,7 +100,7 @@ Resources:
               mode: "000400"
               owner: root
               group: root
-      TripleO::ImageBuilder::Elements: [ keystone , glance-api , nova-api ]
+      OpenStack::ImageBuilder::Elements: [ keystone , glance-api , nova-api ]
       OpenStack::Keystone::Database:
         Host: 
           Fn::GetAtt:
