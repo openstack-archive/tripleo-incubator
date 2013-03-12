@@ -10,7 +10,7 @@ mac=$(sudo virsh dumpxml $1 | grep "mac address" | head -1 | awk -F "'" '{print 
 
 arp -n | grep $mac > /dev/null
 if [ $? -ne 0 ]; then
-  echo "mac $mac not found"
+  echo "mac $mac not found. it's possible that the vm just isn't up yet."
   exit 1
 fi
 
