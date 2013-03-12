@@ -98,6 +98,7 @@ Detailed instructions
   of eth0, you will need it in a minute.
 
         sudo virsh start bootstrap
+        scripts/get-vm-ip bootstrap
 
   If you downloaded a pre-built bootstrap image, you will need to customize
   it. See footnote [1].
