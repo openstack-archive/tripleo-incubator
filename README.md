@@ -13,12 +13,13 @@ What is TripleO?
 -----------
 
 TripleO is an image based toolchain for deploying OpenStack on top of
-OpenStack, leveraging the Baremetal driver for Nova for image deployment and
-power control. This will eventually consist of a number of small reusable tools
-to perform cloud capacity planning, node allocation, [image building]
-(https://github.com/stackforge/diskimage-builder/), with suitable extension
-points to allow folk to use their preferred systems management tools,
-orchestration tools and so forth.
+OpenStack, leveraging the [Nova Baremetal driver]
+(https://wiki.openstack.org/wiki/GeneralBareMetalProvisioningFramework) for
+image deployment and power control. This will eventually consist of a number of
+small reusable tools to perform cloud capacity planning, node allocation,
+[image building] (https://github.com/stackforge/diskimage-builder/), with
+suitable extension points to allow folk to use their preferred systems
+management tools, orchestration tools and so forth.
 
 What isn't it?
 --------------
