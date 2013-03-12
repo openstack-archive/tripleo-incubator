@@ -1,0 +1,26 @@
+#!/bin/bash
+set -eu
+
+function fatal_error {
+  echo "ERROR: $1"
+  exit 1
+}
+
+# keys
+if ! grep "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys; then
+   fatal_error "ensure you have a public ssh_key in ~/.ssh/authorized_keys"
+fi
+
+# libvirtd group
+grep libvirtd /etc/group || sudo groupadd libvirtd
+if ! id | grep libvirtd; then
+   log_info "adding $USER to group libvirtd"
+   sudo usermod -a -G libvirtd $USER
+   fatal_error "please completely logout and re-run this script in  a new terminal to pick up the new group"
+fi
+
+# packages
+sudo apt-get update
+DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-system qemu-kvm git
+
+sudo service libvirt-bin restart

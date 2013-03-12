@@ -58,9 +58,9 @@ Detailed instructions
 
         git clone https://github.com/stackforge/diskimage-builder.git
 
-* Ensure dependencies are installed:
+* Ensure dependencies are installed and required virsh configuration is performed:
 
-         sudo apt-get install python-lxml python-libvirt libvirt-bin qemu-system
+        scripts/install-dependencies
 
 * Configure a network for your test environment.
   (This alters your /etc/network/interfaces file and adds an exclusion for
