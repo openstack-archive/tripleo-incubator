@@ -48,9 +48,15 @@ Detailed instructions
 
 * git clone this repository to your local machine.
 
-* git clone https://github.com/tripleo/bm_poseur to your local machine.
+        git clone https://github.com/tripleo/incubator.git
 
-* git clone https://github.com/stackforge/diskimage-builder.git likewise.
+* git clone bm_poseur to your local machine.
+
+        git clone https://github.com/tripleo/bm_poseur.git
+
+* git clone diskimage-builder likewise.
+
+        git clone https://github.com/stackforge/diskimage-builder.git
 
 * Ensure dependencies are installed:
 
@@ -135,11 +141,11 @@ Detailed instructions
 
         stack.sh completed in 672 seconds.
 
-* Back on your host system, create some 'baremetal' node(s) out of KVM 
-  virtual machines. Nova will PXE boot these VMs as though they were physical 
-  hardware. You can use bm_poseur to automate this, or if you want to create 
+* Back on your host system, create some 'baremetal' node(s) out of KVM
+  virtual machines. Nova will PXE boot these VMs as though they were physical
+  hardware. You can use bm_poseur to automate this, or if you want to create
   the VMs yourself, see footnote [2] for details on their requirements.
-   
+
         sudo ~/bm_poseur/bm_poseur --vms 1 --arch i686 create-vm
 
 * Get the list of MAC addresses for all the VMs you have created.
@@ -157,8 +163,8 @@ Detailed instructions
   If you have multiple VMs created by bm_poseur, you can simplify this process
   by running the output of the following bash script:
 
-        for mac in $(~/bm_poseur/bm_poseur get-macs); do 
-            echo ~/incubator/scripts/populate-nova-bm-db.sh -i $mac add 
+        for mac in $(~/bm_poseur/bm_poseur get-macs); do
+            echo ~/incubator/scripts/populate-nova-bm-db.sh -i $mac add
         done
 
 * Wait for the following to show up in the n-cpu log on the bootstrap node (screen -x should attach you to the correct screen session):
@@ -190,7 +196,7 @@ Detailed instructions
   into the demo image.
 
   The End!
-  
+
 
 
 Footnotes
