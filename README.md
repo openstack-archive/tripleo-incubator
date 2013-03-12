@@ -2,10 +2,8 @@ OpenStack on OpenStack, or TripleO
 ===================================
 
 Welcome to our TripleO incubator! TripleO is our less mouthy way of saying
-OpenStack on OpenStack. Right now we're bringing up the first stage - getting
-production configurations of OpenStack using the NTT/ISI Bare metal provider.
-This repository is our staging area, where we incubate new ideas and new tools
-which get us closer to the goal of TripleO.
+OpenStack on OpenStack. This repository is our staging area, where we incubate
+new ideas and new tools which get us closer to the goal of TripleO.
 
 As an incubation area, we should keep in mind that once a tool is sufficiently
 robust, it should be moved to a more permanent home. That might be an existing
@@ -15,8 +13,9 @@ What is TripleO?
 -----------
 
 TripleO is an image based toolchain for deploying OpenStack on top of
-OpenStack. This will eventually consist of a number of small reusable tools to
-perform cloud capacity planning, node allocation, [image building]
+OpenStack, leveraging the Baremetal driver for Nova for image deployment and
+power control. This will eventually consist of a number of small reusable tools
+to perform cloud capacity planning, node allocation, [image building]
 (https://github.com/stackforge/diskimage-builder/), with suitable extension
 points to allow folk to use their preferred systems management tools,
 orchestration tools and so forth.
@@ -34,14 +33,13 @@ Why?
 
 Flexibility and reliability.
 
-On the flexibility side, none of the existing ways
-to deploy OpenStack permit you to move hardware between being cloud
-infrastructure to cloud offering and back again.  Specifically, a given
-hardware node has to be either managed by e.g. Crowbar, or not managed by
-Crowbar and enrolled with OpenStack - and short of doing shenanigans with your
-switches, this actually applies at a broadcast domain level. Virtualising the
-role of hardware nodes provides immense freedom to run different workloads via
-a single OpenStack cloud.
+On the flexibility side, none of the existing ways to deploy OpenStack permit
+you to move hardware between being cloud infrastructure to cloud offering and
+back again.  Specifically, a given hardware node has to be either managed by
+e.g. Crowbar, or not managed by Crowbar and enrolled with OpenStack - and short
+of doing shenanigans with your switches, this actually applies at a broadcast
+domain level. Virtualising the role of hardware nodes provides immense freedom
+to run different workloads via a single OpenStack cloud.
 
 Fitting this into any of the existing deployment toolchains is problematic:
 
