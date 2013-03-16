@@ -14,7 +14,7 @@ fi
 # libvirtd group
 grep libvirtd /etc/group || sudo groupadd libvirtd
 if ! id | grep libvirtd; then
-   log_info "adding $USER to group libvirtd"
+   echo "adding $USER to group libvirtd"
    sudo usermod -a -G libvirtd $USER
    fatal_error "please completely logout and re-run this script in  a new terminal to pick up the new group"
 fi
