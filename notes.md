@@ -100,6 +100,7 @@ Detailed instructions
 
 * If your home dir is not world readable, libvirt won't be able to see your
   image file, so copy them to /var/lib/libvirt/images
+
         sudo cp $TRIPLEO_ROOT/incubator/bootstrap.qcow2 /var/lib/libvirt/images
 
 * Register the bootstrap image with libvirt.
@@ -152,7 +153,7 @@ Detailed instructions
   
   **Run this in a shell on the bootstrap node.**
 
-        ssh stack@$BOOTSTRAP_IP ~/incubator/scripts/demo
+        ssh stack@$BOOTSTRAP_IP /home/stack/incubator/scripts/demo
 
   When it finishes, you should see a message like the following:
 
@@ -169,19 +170,20 @@ Detailed instructions
   If you used bm_poseur to create the bare metal nodes, you can run this
   on your laptop to get the MACs:
 
-        $TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs
+        MAC=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
   If you are testing on real hardware, see footnote [3].
 
 * Inform Nova on the bootstrap node of these resources by running this inside the bootstrap node:
 
-        $TRIPLEO_ROOT/incubator/scripts/populate-nova-bm-db.sh -i <MAC> add
+        ssh stack@$BOOTSTRAP_IP/home/stack/incubator/scripts/populate-nova-bm-db.sh -i $MAC add
+        done
 
   If you have multiple VMs created by bm_poseur, you can simplify this process
-  by running the output of the following bash script:
+  by running this script.
 
         for mac in $($TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs); do
-            echo $TRIPLEO_ROOT/incubator/scripts/populate-nova-bm-db.sh -i $mac add
+            ssh stack@$BOOTSTRAP_IP /home/stack/incubator/scripts/populate-nova-bm-db.sh -i $mac add
         done
 
 * Wait for the following to show up in the n-cpu log on the bootstrap node (screen -x should attach you to the correct screen session):
@@ -197,7 +199,7 @@ Detailed instructions
 * Start the process of provisioning a baremetal node in Nova by running
   this inside the bootstrap node:
 
-        source $TRIPLEO_ROOT/devstack/openrc
+        source ~/devstack/openrc
         nova boot --flavor 100 --image demo --key_name default bmtest
 
   If you chose to use VirtualPowerManager, then nova will start the VM.
