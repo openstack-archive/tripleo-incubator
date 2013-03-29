@@ -100,7 +100,7 @@ Detailed instructions
 
 * If your home dir is not world readable, libvirt won't be able to see your
   image file, so copy them to /var/lib/libvirt/images
-        sudo cp $TRIPLEO_ROOT/incubator/demo/bootstrap.qcow2 /var/lib/libvirt/images
+        sudo cp $TRIPLEO_ROOT/incubator/bootstrap.qcow2 /var/lib/libvirt/images
 
 * Register the bootstrap image with libvirt.
   This defaults to load the file $(cwd)/bootstrap.qcow2, generated above.
