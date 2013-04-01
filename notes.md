@@ -238,7 +238,7 @@ Footnotes
   need to edit the incubator environment as needed within the bootstrap
   node prior to running incubator/scripts/demo.
 
-  See localrc, scripts/defaults, and scripts/img-defaults.
+  See localrc and scripts/defaults in the incubator tree on your bootstrap node.
   Also see devstack/lib/baremetal for a full list of options that can
   inform Nova of the environment.
 

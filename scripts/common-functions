@@ -1,9 +1,0 @@
-# Prints "message" and exits
-# Usage: die "message"
-function die() {
-    local exitcode=$?
-    set +o xtrace
-    echo $@
-    exit $exitcode
-}
-

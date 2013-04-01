@@ -1,16 +1,17 @@
 OpenStack on OpenStack, or TripleO
 ===================================
 
-Welcome to our TripleO incubator! TripleO is our less mouthy way of saying
-OpenStack on OpenStack. This repository is our staging area, where we incubate
-new ideas and new tools which get us closer to the goal of TripleO.
+Welcome to our TripleO incubator! TripleO is our pithy term for OpenStack on
+OpenStack. This repository is our staging area, where we incubate new ideas and
+new tools which get us closer to our goal.
 
-As an incubation area, we should keep in mind that once a tool is sufficiently
-robust, it should be moved to a more permanent home. That might be an existing
-project (eg, devstack), or we might want to create a new project just for it.
+As an incubation area, we move tools to permanent homes in
+https://github.com/stackforge once they have proved that they do need to exist.
+Other times we will propose the tool for inclusion in an existing project (such
+as nova or devstack).
 
 What is TripleO?
------------
+----------------
 
 TripleO is an image based toolchain for deploying OpenStack on top of
 OpenStack, leveraging the [Nova Baremetal driver]
@@ -155,3 +156,9 @@ Machine State
 
 Currently there is no way to guarantee preservation of any of the drive
 contents on a machine if it is deleted in nova baremetal.
+
+See also
+--------
+
+https://github.com/tripleo/incubator-bootstrap contains the scripts we run on
+the bootstrap node.
