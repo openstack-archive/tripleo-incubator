@@ -46,6 +46,15 @@ machine to emulate this with virtual machine 'bare metal' nodes.
 Detailed instructions
 ---------------------
 
+* Before you start, check to see that your machine supports hardware
+  virtualization, otherwise KVM is going to get very grumpy.
+
+* Choose a base location to put all of the source code.
+
+        mkdir ~/tripleo
+        export TRIPLEO_ROOT=~/tripleo
+        cd $TRIPLEO_ROOT
+
 * git clone this repository to your local machine.
 
         git clone https://github.com/tripleo/incubator.git
@@ -60,13 +69,14 @@ Detailed instructions
 
 * Ensure dependencies are installed and required virsh configuration is performed:
 
+        cd $TRIPLEO_ROOT/incubator
         scripts/install-dependencies
 
 * Configure a network for your test environment.
   (This alters your /etc/network/interfaces file and adds an exclusion for
   dnsmasq so it doesn't listen on your test network.)
 
-        cd ~/bm_poseur/
+        cd $TRIPLEO_ROOT/bm_poseur/
         sudo ./bm_poseur --bridge-ip=none create-bridge
 
 * Activate these changes (alternatively, restart):
@@ -75,8 +85,8 @@ Detailed instructions
 
 * Create your bootstrap VM
 
-        cd ~/diskimage-builder/
-        bin/disk-image-create -u base vm devstack local-config stackuser -a i386 -o ~/incubator/bootstrap
+        cd $TRIPLEO_ROOT/diskimage-builder/
+        bin/disk-image-create -u base vm devstack local-config stackuser -a i386 -o $TRIPLEO_ROOT/incubator/bootstrap
 
   The resulting vm has a user 'stack' with password 'stack'.
 
@@ -85,20 +95,25 @@ Detailed instructions
   will install on each node. You can also download a pre-built image,
   or experiment with different combinations of elements.
 
-        cd ~/diskimage-builder/
-        bin/disk-image-create -u base -a i386 -o ~/incubator/demo
+        cd $TRIPLEO_ROOT/diskimage-builder/
+        bin/disk-image-create -u base -a i386 -o $TRIPLEO_ROOT/incubator/demo
+
+* If your home dir is not world readable, libvirt won't be able to see your
+  image file, so copy them to /var/lib/libvirt/images
+
+        sudo cp $TRIPLEO_ROOT/incubator/bootstrap.qcow2 /var/lib/libvirt/images
 
 * Register the bootstrap image with libvirt.
   This defaults to load the file $(cwd)/bootstrap.qcow2, generated above.
 
-        cd ~/incubator/
+        cd $TRIPLEO_ROOT/incubator/
         bootstrap/configure-bootstrap-vm
 
 * Start the bootstrap node and log in via the console. Get the IP address
   of eth0, you will need it in a minute.
 
         sudo virsh start bootstrap
-        scripts/get-vm-ip bootstrap
+        BOOTSTRAP_IP=`scripts/get-vm-ip bootstrap`
 
   If you downloaded a pre-built bootstrap image, you will need to customize
   it. See footnote [1].
@@ -106,15 +121,16 @@ Detailed instructions
 * Copy the demo image into your bootstrap node's devstack/files/ directory.
   It will get automatically loaded into devstack's glance later on.
 
-        scp ~/incubator/demo.qcow2 <bootstrap-IP>:~/devstack/files/
+        scp $TRIPLEO_ROOT/incubator/demo.qcow2 stack@$BOOTSTRAP_IP:~/devstack/files/
 
 * If desired, customize your bootstrap environment. This is useful if, for
   example, you want to point devstack at a different branch of Nova.
-  Do this by editing ~/incubator/localrc within your bootstrap node.
+  Do this by editing $TRIPLEO_ROOT/incubator/localrc within your bootstrap node.
 
 * By default, the FakePowerManager is enabled.
-  If you intend to use the VirtualPowerManager, edit ~/incubator/localrc within
-  your bootstrap node, uncomment the following section, and edit it to supply
+  If you intend to use the VirtualPowerManager, edit
+  $TRIPLEO_ROOT/incubator/localrc within your bootstrap node, uncomment
+  the following section, and edit it to supply
   VirtualPowerManager with proper SSH credentials for the host system.
 
         BM_POWER_MANAGER=nova.virt.baremetal.virtual_power_driver.VirtualPowerManager
@@ -134,9 +150,10 @@ Detailed instructions
 * Setup the baremetal cloud on the bootstrap node. This will run sudo, so it
   will prompt you for a password when it starts. After that, it may take
   quite a while, depending on network speed and hardware.
-  Run this in a shell on the bootstrap node.
+  
+  **Run this in a shell on the bootstrap node.**
 
-        ~/incubator/scripts/demo
+        ssh stack@$BOOTSTRAP_IP /home/stack/incubator/scripts/demo
 
   When it finishes, you should see a message like the following:
 
@@ -147,25 +164,26 @@ Detailed instructions
   hardware. You can use bm_poseur to automate this, or if you want to create
   the VMs yourself, see footnote [2] for details on their requirements.
 
-        sudo ~/bm_poseur/bm_poseur --vms 1 --arch i686 create-vm
+        sudo $TRIPLEO_ROOT/bm_poseur/bm_poseur --vms 1 --arch i686 create-vm
 
 * Get the list of MAC addresses for all the VMs you have created.
   If you used bm_poseur to create the bare metal nodes, you can run this
   on your laptop to get the MACs:
 
-        ~/bm_poseur/bm_poseur get-macs
+        MAC=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
   If you are testing on real hardware, see footnote [3].
 
 * Inform Nova on the bootstrap node of these resources by running this inside the bootstrap node:
 
-        ~/incubator/scripts/populate-nova-bm-db.sh -i <MAC> add
+        ssh stack@$BOOTSTRAP_IP/home/stack/incubator/scripts/populate-nova-bm-db.sh -i $MAC add
+        done
 
   If you have multiple VMs created by bm_poseur, you can simplify this process
-  by running the output of the following bash script:
+  by running this script.
 
-        for mac in $(~/bm_poseur/bm_poseur get-macs); do
-            echo ~/incubator/scripts/populate-nova-bm-db.sh -i $mac add
+        for mac in $($TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs); do
+            ssh stack@$BOOTSTRAP_IP /home/stack/incubator/scripts/populate-nova-bm-db.sh -i $mac add
         done
 
 * Wait for the following to show up in the n-cpu log on the bootstrap node (screen -x should attach you to the correct screen session):

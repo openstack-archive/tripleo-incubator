@@ -21,7 +21,7 @@ def main():
     args = parser.parse_args()
     with file(basedir + '/bootstrap.xml', 'rb') as f:
         source_template = f.read()
-    imagefile = os.getcwd() + '/bootstrap.qcow2'
+    imagefile = '/var/lib/libvirt/images/bootstrap.qcow2'
     if args.image:
         imagefile = args.image
     imagefile = os.path.realpath(imagefile)
