@@ -126,13 +126,12 @@ Detailed instructions
 
 * If desired, customize your bootstrap environment. This is useful if, for
   example, you want to point devstack at a different branch of Nova.
-  Do this by editing $TRIPLEO_ROOT/incubator/localrc within your bootstrap node.
+  Do this by editing ~/incubator/localrc within your bootstrap node.
 
-* By default, the FakePowerManager is enabled.
-  If you intend to use the VirtualPowerManager, edit
-  $TRIPLEO_ROOT/incubator/localrc within your bootstrap node, uncomment
-  the following section, and edit it to supply
-  VirtualPowerManager with proper SSH credentials for the host system.
+* By default, the FakePowerManager is enabled. If you intend to use the
+  VirtualPowerManager, edit ~/incubator/localrc within your bootstrap node,
+  uncomment the following section, and edit it to supply VirtualPowerManager
+  with proper SSH credentials for the host system.
 
         BM_POWER_MANAGER=nova.virt.baremetal.virtual_power_driver.VirtualPowerManager
         EXTRA_BAREMETAL_OPTS=( \
@@ -151,10 +150,8 @@ Detailed instructions
   The next step will apply that localrc to the bootstrap devstack.
 
 * Setup the baremetal cloud on the bootstrap node. This will run sudo, so it
-  will prompt you for a password when it starts. After that, it may take
+  may prompt you for a password when it starts. After that, it may take
   quite a while, depending on network speed and hardware.
-  
-  **Run this in a shell on the bootstrap node.**
 
         ssh stack@$BOOTSTRAP_IP /home/stack/incubator/scripts/demo
 
@@ -162,9 +159,9 @@ Detailed instructions
 
         stack.sh completed in 672 seconds.
 
-* Back on your host system, create some 'baremetal' node(s) out of KVM
-  virtual machines. Nova will PXE boot these VMs as though they were physical
-  hardware. You can use bm_poseur to automate this, or if you want to create
+* Create some 'baremetal' node(s) out of KVM virtual machines.
+  Nova will PXE boot these VMs as though they were physical hardware.
+  You can use bm_poseur to automate this, or if you want to create
   the VMs yourself, see footnote [2] for details on their requirements.
 
         sudo $TRIPLEO_ROOT/bm_poseur/bm_poseur --vms 1 --arch i686 create-vm
