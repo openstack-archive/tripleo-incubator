@@ -104,10 +104,11 @@ Detailed instructions
         sudo cp $TRIPLEO_ROOT/incubator/bootstrap.qcow2 /var/lib/libvirt/images
 
 * Register the bootstrap image with libvirt.
-  This defaults to load the file $(cwd)/bootstrap.qcow2, generated above.
+  This defaults to load the file /var/lib/libvirt/images/bootstrap.qcow2
+  but can be changed with the --image option.
 
         cd $TRIPLEO_ROOT/incubator/
-        bootstrap/configure-bootstrap-vm
+        bootstrap/configure-bootstrap-vm --image /var/lib/libvirt/images/bootstrap.qcow2
 
 * Start the bootstrap node and log in via the console. Get the IP address
   of eth0, you will need it in a minute.
@@ -140,10 +141,12 @@ Detailed instructions
         virtual_power_type=virsh \
         virtual_power_host_user=my_user \
         virtual_power_host_pass=my_pass \
+        virtual_power_host_key=~/.ssh/my_key \
         )
 
   NOTE: you must have an SSH server installed and running on the host for the
-  VirtualPowerDriver to work, with password-based logins enabled.
+  VirtualPowerDriver to work. You must set the host_user option, and one of
+  the host_pass or host_key options.
 
   The next step will apply that localrc to the bootstrap devstack.
 
@@ -176,8 +179,7 @@ Detailed instructions
 
 * Inform Nova on the bootstrap node of these resources by running this inside the bootstrap node:
 
-        ssh stack@$BOOTSTRAP_IP/home/stack/incubator/scripts/populate-nova-bm-db.sh -i $MAC add
-        done
+        ssh stack@$BOOTSTRAP_IP /home/stack/incubator/scripts/populate-nova-bm-db.sh -i $MAC add
 
   If you have multiple VMs created by bm_poseur, you can simplify this process
   by running this script.
