@@ -1,18 +1,19 @@
 #!/bin/bash
 set -eu
-root=$(dirname $0)/..
 
-# this script builds an image and boots in libvirt.
+# this script builds an image and boots it with libvirt.
 # it expects you to have virsh installed.
 
-if [ $# -lt 1 ] || [ $1 = '-h' ]; then
-  echo "Usage: boot-image [element [element [...]]]"
-  exit 0
-fi
+incubator_root=$(dirname $0)/..
+dib_root=$(find $HOME -name diskimage-builder -print -quit)
 
 vm_name=test
 image_name=test_image
-incubator=$HOME/git/incubator
+
+if [ $# -lt 1 ] || [ $1 = '-h' ]; then
+  echo "Usage: boot-elements [element [element [...]]]"
+  exit 0
+fi
 
 always_elements='vm local-config stackuser ubuntu'
 
@@ -29,17 +30,18 @@ function poll_vm {
 which virsh || die 'ERROR: virsh not installed'
 
 sudo virsh destroy  $vm_name || echo "$vm_name not running"
-sudo virsh undefine $vm_name || echo "$vm_name not running"
+sudo virsh undefine $vm_name || echo "$vm_name doesn't exist"
 
 export IMAGE_SIZE=12
 
-$root/bin/disk-image-create -u -a $arch $always_elements $* -o /tmp/$image_name
+$dib_root/bin/disk-image-create -u -a $arch $always_elements $* -o /tmp/$image_name
 
 sudo mv /tmp/$image_name.qcow2 /var/lib/libvirt/images
 
-$incubator/bootstrap/configure-bootstrap-vm --name $vm_name \
-                                            --image /var/lib/libvirt/images/$image_name.qcow2 \
-                                            --engine kvm
+$incubator_root/bootstrap/configure-bootstrap-vm \
+           --name $vm_name \
+           --image /var/lib/libvirt/images/$image_name.qcow2 \
+           --engine kvm
 
 sudo virsh start $vm_name
 
@@ -48,3 +50,5 @@ until [ -n "$vm_ip" ]; do poll_vm; echo -n '.'; sleep 1; done
 
 echo waiting for sshd to start
 until echo '' | nc $vm_ip 22; do echo -n '.'; sleep 1; done
+
+exec ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$vm_ip
