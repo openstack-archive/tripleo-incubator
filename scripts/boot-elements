@@ -1,0 +1,50 @@
+#!/bin/bash
+set -eu
+root=$(dirname $0)/..
+
+# this script builds an image and boots in libvirt.
+# it expects you to have virsh installed.
+
+if [ $# -lt 1 ] || [ $1 = '-h' ]; then
+  echo "Usage: boot-image [element [element [...]]]"
+  exit 0
+fi
+
+vm_name=test
+image_name=test_image
+incubator=$HOME/git/incubator
+
+always_elements='vm local-config stackuser ubuntu'
+
+#arch=amd64
+arch=i386
+
+vm_ip=''
+
+function poll_vm {
+  mac=$(sudo virsh dumpxml $vm_name | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+  vm_ip=$(arp -n | grep $mac | awk '{print $1}')
+}
+
+which virsh || die 'ERROR: virsh not installed'
+
+sudo virsh destroy  $vm_name || echo "$vm_name not running"
+sudo virsh undefine $vm_name || echo "$vm_name not running"
+
+export IMAGE_SIZE=12
+
+$root/bin/disk-image-create -u -a $arch $always_elements $* -o /tmp/$image_name
+
+sudo mv /tmp/$image_name.qcow2 /var/lib/libvirt/images
+
+$incubator/bootstrap/configure-bootstrap-vm --name $vm_name \
+                                            --image /var/lib/libvirt/images/$image_name.qcow2 \
+                                            --engine kvm
+
+sudo virsh start $vm_name
+
+echo waiting for vm to boot
+until [ -n "$vm_ip" ]; do poll_vm; echo -n '.'; sleep 1; done
+
+echo waiting for sshd to start
+until echo '' | nc $vm_ip 22; do echo -n '.'; sleep 1; done
