@@ -63,9 +63,10 @@ Detailed instructions
 
         git clone https://github.com/tripleo/bm_poseur.git
 
-* git clone diskimage-builder likewise.
+* git clone diskimage-builder and the tripleo elements likewise.
 
         git clone https://github.com/stackforge/diskimage-builder.git
+        git clone https://github.com/stackforge/tripleo-image-elements.git
 
 * Ensure dependencies are installed and required virsh configuration is performed:
 
@@ -86,6 +87,7 @@ Detailed instructions
 * Create your bootstrap VM
 
         cd $TRIPLEO_ROOT/diskimage-builder/
+	export ELEMENTS_PATH=$TRIPLEO_ROOT/diskimage-builder/elements:$TRIPLEO_ROOT/tripleo-image-elements/elements
         bin/disk-image-create -u base vm devstack local-config stackuser -a i386 -o $TRIPLEO_ROOT/incubator/bootstrap
 
   The resulting vm has a user 'stack' with password 'stack'.
