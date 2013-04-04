@@ -1,9 +1,9 @@
 OpenStack on OpenStack, or TripleO
 ===================================
 
-Welcome to our TripleO incubator! TripleO is our pithy term for OpenStack on
-OpenStack. This repository is our staging area, where we incubate new ideas and
-new tools which get us closer to our goal.
+Welcome to our TripleO incubator! TripleO is our pithy term for OpenStack
+deployed on and with OpenStack. This repository is our staging area, where we
+incubate new ideas and new tools which get us closer to our goal.
 
 As an incubation area, we move tools to permanent homes in
 https://github.com/stackforge once they have proved that they do need to exist.
@@ -13,35 +13,62 @@ as nova or devstack).
 What is TripleO?
 ----------------
 
-TripleO is an image based toolchain for deploying OpenStack on top of
-OpenStack, leveraging the [Nova Baremetal driver]
-(https://wiki.openstack.org/wiki/GeneralBareMetalProvisioningFramework) for
-image deployment and power control. This will eventually consist of a number of
-small reusable tools to perform cloud capacity planning, node allocation,
-[image building] (https://github.com/stackforge/diskimage-builder/), with
-suitable extension points to allow folk to use their preferred systems
-management tools, orchestration tools and so forth.
+TripleO is a project to automate the operations of an OpenStack cloud.
 
-What isn't it?
---------------
+We start with an [image builder]
+(https://github.com/stackforge/diskimage-builder/), and rules for that to
+[build OpenStack images] (https://github.com/stackforge/tripleo-image-elements/).
+We then use [Heat] (https://github.com/openstack/heat) to orchestrate deployment
+of those images onto bare metal using the [Nova baremetal driver]
+(https://wiki.openstack.org/wiki/GeneralBareMetalProvisioningFramework).
 
-TripleO isn't an orchestration tool, a workload deployment tool or a systems
-management tool. Where there is overlap TripleO will either have a
-super-minimal domain-specific implementation, or extension points to permit the
-tool of choice (e.g. heat, puppet, chef).
+The Heat instance we use is hosted in the same cloud we're deploying, taking
+advantage of rolling deploys + a fully redundant deployment to avoid needing
+any manually maintained infrastructure.
+
+Within each machine we use small focused tools for converting Heat metadata to
+configuration files on disk, and handling updates from Heat. It is possible to
+replace those with e.g. Chef or Puppet if desired.
+
+Finally, we use this self contained bare metal cloud to deploy a kvm (or Xen or
+whatever) OpenStack instance as a tenant of the bare metal cloud. In future we
+would like to consolidate this into one cloud, but there are technical and
+security issues to overcome first.
+
+We have future worked planned to perform cloud capacity planning, node
+allocation, and other essential operational tasks.
 
 Why?
 ----
 
-Flexibility and reliability.
+Driving the cost of operations down, increasing reliability of deployments and
+consolidating on a single API for deploying machine images, to get great
+flexibility in hardware use.
 
-On the flexibility side, none of the existing ways to deploy OpenStack permit
-you to move hardware between being cloud infrastructure to cloud offering and
-back again.  Specifically, a given hardware node has to be either managed by
-e.g. Crowbar, or not managed by Crowbar and enrolled with OpenStack - and short
-of doing shenanigans with your switches, this actually applies at a broadcast
-domain level. Virtualising the role of hardware nodes provides immense freedom
-to run different workloads via a single OpenStack cloud.
+The use of gold images allows us to test precisely what will be running in
+production in a test environment - either virtual or physical. This provides
+early detection of many issues. Gold image building also ensures that there
+is no variation between machines in production - no late discovery of version
+conflicts, for instance.
+
+Using CI/CD testing in the deployment pipeline gives us:
+
+- The ability to deploy something we have tested.
+
+- With no variation on things that could invalidate those tests (kernel
+  version, userspace tools OpenStack calls into, ...)
+
+- While varying the exact config (to cope with differences in e.g. network
+  topology between staging and production environments).
+
+
+None of the existing ways to deploy OpenStack permit you to move hardware
+between being cloud infrastructure to cloud offering and back again.
+Specifically, a given hardware node has to be either managed by e.g. Crowbar,
+or not managed by Crowbar and enrolled with OpenStack - and short of doing
+shenanigans with your switches, this actually applies at a broadcast domain
+level. Virtualising the role of hardware nodes provides immense freedom to run
+different workloads via a single OpenStack cloud.
 
 Fitting this into any of the existing deployment toolchains is problematic:
 
@@ -60,23 +87,6 @@ chain to provision and deploy onto hardware is simpler and lower cost to
 maintain, and so are choosing to have the bootstrap problem rather than
 the handoff between provisioning systems problem.
 
-For reliability, we want to be able to do CI / CD of the cloud, and that means
-having great confidence in:
-
-- Our ability to deploy something we have tested.
-
-- With no variation on things that could invalidate those tests (kernel
-  version, userspace tools OpenStack calls into, ...)
-
-- While varying the exact config (to cope with differences in e.g. network
-  topology between staging and production environments).
-
-It is on this basis that we believe an imaging based solution will give us
-that confidence: we can do all software installation before running any
-tests, and merely vary the configuration between tests. That way, if we have
-added something to the environment that will conflict, we find out during our
-tests rather than when mixing e.g. nova in with nagios.
-
 Broad conceptual plan
 =====================
 
@@ -85,11 +95,12 @@ Stage 1
 
 OpenStack on OpenStack with two distinct clouds:
 
-1. The bootstrap cloud, runs baremetal nova-compute and deploys instances on
-   bare metal, is managed and used by the cloud sysadmins, and is initially
-   deployed onto a laptop or other similar device.
-1. The virtualised cloud, runs regular packaged OpenStack, and your tenants
-   use this.
+1. The under cloud, runs baremetal nova-compute and deploys instances on
+   bare metal, is managed and used by the cloud sysadmins, starts deployed onto
+   a laptop or other similar device in a VM.
+1. The over cloud, which runs using the same images as the under cloud, but as
+   a tenant on the undercloud, and delivers virtualised compute machines rather
+   than bare metal machines.
 
 Flat networking will be in use everywhere: the bootstrap cloud will use a single
 range (e.g. 192.0.2.0/26), the virtualised cloud will allocate instances in
@@ -100,7 +111,7 @@ floating ips in the high half of the bootstrap ip range (e.g. 192.168.2.129/25).
 Infrastructure like Glance and Swift will be duplicated - both clouds will need
 their own, to avoid issues with skew between the APIs in the two clouds.
 
-The bootstrap cloud will, during its deployment, include enough images to bring
+The under cloud will, during its deployment, include enough images to bring
 up the virtualised cloud without internet access, making it suitable for
 deploying behind firewalls and other restricted networking environments.
 
@@ -117,10 +128,12 @@ Stage N
 
 OpenStack on itself: OpenStack on OpenStack with one cloud:
 
-1. The bootstrap cloud is used to deploy a virtualised cloud as in Stage 1.
-1. The virtualised cloud runs the NTT baremetal codebase, and has the nodes
-   from the bootstrap cloud enrolled into the virtualised cloud, allowing it
-   it to redeploy itself (as long as there are no single points of failure).
+1. The under cloud is used ts in Stage 1.
+1. KVM or Xen Nova compute nodes are deployed into the cloud as part of the
+   admin tenant, and offer their compute capacity to the under cloud.
+1. Low overhead services can be redeployed as virtual machines rather than
+   physical (as long as they are machines which the cluster can be rebooted
+   without.
 
 Quantum will be in use everywhere, in two layers: The hardware nodes will
 talk to Openflow switches, allowing secure switching of a hardware node between
@@ -130,7 +143,7 @@ cloud's own network (managed by Quantum), and traffic from instances running
 on that node will participate in their own Quantum defined networks.
 
 Infrastructure such as Glance, Swift and Keystone will be solely owned by the
-one virtualised cloud: there is no duplication needed.
+one cloud: there is no duplication needed.
 
 Caveats
 =======
@@ -161,4 +174,4 @@ See also
 --------
 
 https://github.com/tripleo/incubator-bootstrap contains the scripts we run on
-the bootstrap node.
+the devstack based bootstrap node.
