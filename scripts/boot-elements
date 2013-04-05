@@ -3,10 +3,9 @@ set -eu
 
 # this script builds an image and boots it with libvirt.
 # it expects you to have virsh installed.
-
 incubator_root=$(dirname $0)/..
 dib_root=$(find $HOME -name diskimage-builder -print -quit)
-
+requested_elements=$*
 vm_name=test
 image_name=test_image
 
@@ -34,7 +33,7 @@ sudo virsh undefine $vm_name || echo "$vm_name doesn't exist"
 
 export IMAGE_SIZE=12
 
-$dib_root/bin/disk-image-create -u -a $arch $always_elements $* -o /tmp/$image_name
+$dib_root/bin/disk-image-create -u -a $arch $always_elements $requested_elements -o /tmp/$image_name
 
 sudo mv /tmp/$image_name.qcow2 /var/lib/libvirt/images
 
@@ -45,10 +44,12 @@ $incubator_root/bootstrap/configure-bootstrap-vm \
 
 sudo virsh start $vm_name
 
-echo waiting for vm to boot
+echo "Waiting for vm to boot."
 until [ -n "$vm_ip" ]; do poll_vm; echo -n '.'; sleep 1; done
-
-echo waiting for sshd to start
+echo
+echo "Booted. Found IP: $vm_ip. Waiting for ssh service to start."
 until echo '' | nc $vm_ip 22; do echo -n '.'; sleep 1; done
+echo
+echo "element(s): $always_elements $requested_elements booted and ready."
 
 exec ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$vm_ip
