@@ -172,6 +172,8 @@ contents on a machine if it is deleted in nova baremetal.
 
 See also
 --------
-
+https://github.com/tripleo/incubator/blob/master/notes.md - for technical 
+setup walk-thru.
+and
 https://github.com/tripleo/incubator-bootstrap contains the scripts we run on
 the devstack based bootstrap node.
