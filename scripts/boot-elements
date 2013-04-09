@@ -14,7 +14,7 @@ if [ $# -lt 1 ] || [ $1 = '-h' ]; then
   exit 0
 fi
 
-always_elements='vm local-config stackuser ubuntu'
+always_elements='vm local-config stackuser ubuntu cloud-init-nocloud'
 
 #arch=amd64
 arch=i386
@@ -33,6 +33,7 @@ sudo virsh undefine $vm_name || echo "$vm_name doesn't exist"
 
 export IMAGE_SIZE=12
 
+export ELEMENTS_PATH=$(find $HOME -name tripleo-image-elements -print -quit)/elements
 $dib_root/bin/disk-image-create -u -a $arch $always_elements $requested_elements -o /tmp/$image_name
 
 sudo mv /tmp/$image_name.qcow2 /var/lib/libvirt/images
