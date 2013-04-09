@@ -23,7 +23,7 @@ SCRIPT_HOME=$(dirname $0)
 # Some defaults
 ARCH=i386
 IMAGE_NAME=stack
-IMAGE_SIZE=10
+export IMAGE_SIZE=10
 START_VM=yes
 ALWAYS_ELEMENTS='vm local-config stackuser ubuntu cloud-init-nocloud'
 EXTRA_ELEMENTS=
@@ -122,7 +122,7 @@ if [ $START_VM ]; then
 
     echo
     echo "Booted. Found IP: $VM_IP. Waiting for ssh service to start."
-    until echo '' | nc $VM_IP 22; do 
+    until echo '' | nc $VM_IP 22; do
         echo -n '.'
         sleep 1
     done
