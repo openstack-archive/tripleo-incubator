@@ -1,56 +1,139 @@
 #!/bin/bash
-set -eu
+#
+# Copyright 2012 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
-# this script builds an image and boots it with libvirt.
-# it expects you to have virsh installed.
-incubator_root=$(dirname $0)/..
-dib_root=$(find $HOME -name diskimage-builder -print -quit)
-requested_elements=$*
-vm_name=test
-image_name=test_image
+set -e
 
-if [ $# -lt 1 ] || [ $1 = '-h' ]; then
-  echo "Usage: boot-elements [element [element [...]]]"
-  exit 0
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+# Some defaults
+ARCH=i386
+IMAGE_NAME=stack
+IMAGE_SIZE=10
+START_VM=yes
+ALWAYS_ELEMENTS='vm local-config stackuser ubuntu cloud-init-nocloud'
+EXTRA_ELEMENTS=
+
+ELEMENTS_PATH=${ELEMENTS_PATH:-$SCRIPT_HOME/../../tripleo-image-elements/elements}
+if [ ! -d $ELEMENTS_PATH ]; then
+    echo "Error: unable to locate elements path at $ELEMENTS_PATH"
+    exit 1
+fi
+export ELEMENTS_PATH
+
+DIB_PATH=${DIB_PATH:-$SCRIPT_HOME/../../diskimage-builder}
+DIB=$(which disk-image-create || echo $DIB_PATH/bin/disk-image-create)
+
+if [ ! -e $DIB ]; then
+    echo "Error: unable to locate disk-image-create"
+    exit 1
 fi
 
-always_elements='vm local-config stackuser ubuntu cloud-init-nocloud'
-
-#arch=amd64
-arch=i386
-
-vm_ip=''
-
-function poll_vm {
-  mac=$(sudo virsh dumpxml $vm_name | grep "mac address" | head -1 | awk -F "'" '{print $2}')
-  vm_ip=$(arp -n | grep $mac | awk '{print $1}')
+function show_options () {
+    echo "Usage: $SCRIPT_NAME <elements>"
+    echo
+    echo "Create and start a VM by combining the specified elements"
+    echo "with common default elements, assuming many things about"
+    echo "the local operating environment."
+    echo "See https://github.com/tripleo/incubator/blob/master/notes.md"
+    echo
+    echo "Options:"
+    echo "      -a i386|amd64 -- set the architecture of the VM (i386)"
+    echo "      -o name       -- set the name of the VM and image file (stack)"
+    echo "      -s size       -- set the image size (10 GB)"
+    echo "      -n            -- don't automatically start the VM"
+    echo
+    exit 0
 }
 
-which virsh || die 'ERROR: virsh not installed'
+TEMP=`getopt -o hna:o:s: -n $SCRIPT_NAME -- "$@"`
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
-sudo virsh destroy  $vm_name || echo "$vm_name not running"
-sudo virsh undefine $vm_name || echo "$vm_name doesn't exist"
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
 
-export IMAGE_SIZE=12
+while true ; do
+    case "$1" in
+        -a) export ARCH=$2; shift 2 ;;
+        -o) export IMAGE_NAME=$2; shift 2 ;;
+        -s) export IMAGE_SIZE=$2; shift 2 ;;
+        -h) show_options;;
+        -n) export START_VM=; shift ;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
 
-export ELEMENTS_PATH=$(find $HOME -name tripleo-image-elements -print -quit)/elements
-$dib_root/bin/disk-image-create -u -a $arch $always_elements $requested_elements -o /tmp/$image_name
+for arg do EXTRA_ELEMENTS="$EXTRA_ELEMENTS $arg" ; done
 
-sudo mv /tmp/$image_name.qcow2 /var/lib/libvirt/images
+if [ ! "$EXTRA_ELEMENTS" ]; then
+    show_options
+fi
 
-$incubator_root/bootstrap/configure-bootstrap-vm \
-           --name $vm_name \
-           --image /var/lib/libvirt/images/$image_name.qcow2 \
+case $ARCH in
+    i386) ;;
+    amd64) ;;
+    *) echo "Unsupported arch $ARCH!" ; exit 1 ;;
+esac
+
+# Destroy pre-existing VM of the same name
+# but ignore any errors if one doesn't exist
+which virsh >/dev/null || die "Error: virsh not found in path"
+sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME not running"
+sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME doesn't exist"
+
+# Create the image!
+$DIB -u -a $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS -o /tmp/$IMAGE_NAME
+sudo mv /tmp/$IMAGE_NAME.qcow2 /var/lib/libvirt/images/
+$SCRIPT_HOME/../bootstrap/configure-bootstrap-vm \
+           --name $IMAGE_NAME \
+           --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
            --engine kvm
 
-sudo virsh start $vm_name
+VM_IP=''
+function poll_vm {
+  MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+  VM_IP=$(arp -n | grep $MAC | awk '{print $1}')
+}
 
-echo "Waiting for vm to boot."
-until [ -n "$vm_ip" ]; do poll_vm; echo -n '.'; sleep 1; done
-echo
-echo "Booted. Found IP: $vm_ip. Waiting for ssh service to start."
-until echo '' | nc $vm_ip 22; do echo -n '.'; sleep 1; done
-echo
-echo "element(s): $always_elements $requested_elements booted and ready."
+if [ $START_VM ]; then
+    sudo virsh start $IMAGE_NAME
 
-exec ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$vm_ip
+    echo "Waiting for VM $IMAGE_NAME to boot."
+    until [ -n "$VM_IP" ]; do
+        poll_vm
+        echo -n '.'
+        sleep 1
+    done
+
+    echo
+    echo "Booted. Found IP: $VM_IP. Waiting for ssh service to start."
+    until echo '' | nc $VM_IP 22; do 
+        echo -n '.'
+        sleep 1
+    done
+    echo
+    echo "element(s): $ALWAYS_ELEMENTS $EXTRA_ELEMENTS booted and ready."
+
+    export VM_IP
+    exec ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VM_IP
+else
+    echo
+    echo "VM $IMAGE_NAME created from element(s): $ALWAYS_ELEMENTS $EXTRA_ELEMENTS"
+    echo
+    echo "Start it with: sudo virsh start $IMAGE_NAME"
+fi
