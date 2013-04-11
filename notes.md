@@ -84,82 +84,34 @@ Detailed instructions
 
         sudo service libvirt-bin restart
 
-* Create your bootstrap VM
-
-        cd $TRIPLEO_ROOT/diskimage-builder/
-        export ELEMENTS_PATH=$TRIPLEO_ROOT/diskimage-builder/elements:$TRIPLEO_ROOT/tripleo-image-elements/elements
-        bin/disk-image-create -u base vm devstack local-config stackuser -a i386 -o $TRIPLEO_ROOT/incubator/bootstrap
-
-  The resulting vm has a user 'stack' with password 'stack'.
-
-* Create your demo image. This can be done in the same environment
-  that built the bootstrap image. This is the image that baremetal nova
+* Create your machine image. This is the image that baremetal nova
   will install on each node. You can also download a pre-built image,
   or experiment with different combinations of elements.
 
         cd $TRIPLEO_ROOT/diskimage-builder/
-        bin/disk-image-create -u base -a i386 -o $TRIPLEO_ROOT/incubator/demo
+        bin/disk-image-create -u base -a i386 -o $TRIPLEO_ROOT/incubator/base
 
-* If your home dir is not world readable, libvirt won't be able to see your
-  image file, so copy them to /var/lib/libvirt/images
+* Create and start your bootstrap VM. This script invokes diskimage-builder
+  with suitable paths and options to create and start a VM that contains an 
+  all-in-one OpenStack cloud with the baremetal driver enabled, and preconfigures 
+  it for a development environment. It will also copy the 'base.qcow2' image into 
+  the VM and pre-load it into Glance.
 
-        sudo cp $TRIPLEO_ROOT/incubator/bootstrap.qcow2 /var/lib/libvirt/images
-
-* Register the bootstrap image with libvirt.
-  This defaults to load the file /var/lib/libvirt/images/bootstrap.qcow2
-  but can be changed with the --image option.
+        cd $TRIPLEO_ROOT/tripleo-image-elements/elements/boot-stack
+        sed -i "s/\"virtual_power_user\": \"stack\",/\"virtual_power_user\": \"`whoami`\",/" config.json
 
         cd $TRIPLEO_ROOT/incubator/
-        bootstrap/configure-bootstrap-vm --image /var/lib/libvirt/images/bootstrap.qcow2
+        scripts/boot-elements boot-stack -o bootstrap
 
-* Start the bootstrap node and log in via the console. Get the IP address
-  of eth0, you will need it in a minute.
+  The resulting 'bootstrap' vm has a user 'stack' with password 'stack', and should
+  have been started by the boot-elements script.
 
-        sudo virsh start bootstrap
+* Get the IP of your 'bootstrap' VM
+
         BOOTSTRAP_IP=`scripts/get-vm-ip bootstrap`
 
-  If you downloaded a pre-built bootstrap image, you will need to customize
-  it. See footnote [1].
-
-* Copy the demo image into your bootstrap node's devstack/files/ directory.
-  It will get automatically loaded into devstack's glance later on.
-
-        scp $TRIPLEO_ROOT/incubator/demo.qcow2 stack@$BOOTSTRAP_IP:~/devstack/files/
-
-* If desired, customize your bootstrap environment. This is useful if, for
-  example, you want to point devstack at a different branch of Nova.
-  Do this by editing ~/incubator/localrc within your bootstrap node.
-
-* By default, the FakePowerManager is enabled. If you intend to use the
-  VirtualPowerManager, edit ~/incubator/localrc within your bootstrap node,
-  uncomment the following section, and edit it to supply VirtualPowerManager
-  with proper SSH credentials for the host system.
-
-        BM_POWER_MANAGER=nova.virt.baremetal.virtual_power_driver.VirtualPowerManager
-        EXTRA_BAREMETAL_OPTS=( \
-        net_config_template=/opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template \
-        virtual_power_ssh_host=192.168.122.1 \
-        virtual_power_type=virsh \
-        virtual_power_host_user=my_user \
-        virtual_power_host_pass=my_pass \
-        virtual_power_host_key=~/.ssh/my_key \
-        )
-
-  NOTE: you must have an SSH server installed and running on the host for the
-  VirtualPowerDriver to work. You must set the host_user option, and one of
-  the host_pass or host_key options.
-
-  The next step will apply that localrc to the bootstrap devstack.
-
-* Setup the baremetal cloud on the bootstrap node. This will run sudo, so it
-  may prompt you for a password when it starts. After that, it may take
-  quite a while, depending on network speed and hardware.
-
-        ssh stack@$BOOTSTRAP_IP /home/stack/incubator/scripts/demo
-
-  When it finishes, you should see a message like the following:
-
-        stack.sh completed in 672 seconds.
+  (If you downloaded a pre-built bootstrap image, you will need to manually start it
+  and customize it. See footnote [1].
 
 * Create some 'baremetal' node(s) out of KVM virtual machines.
   Nova will PXE boot these VMs as though they were physical hardware.
@@ -176,18 +128,20 @@ Detailed instructions
 
   If you are testing on real hardware, see footnote [3].
 
-* Inform Nova on the bootstrap node of these resources by running this inside the bootstrap node:
+* Inform Nova on the bootstrap node of these resources by running this:
 
-        ssh stack@$BOOTSTRAP_IP /home/stack/incubator/scripts/populate-nova-bm-db.sh -i $MAC add
+        ssh root@$BOOTSTRAP_IP "source stackrc && nova baremetal-node-create ubuntu 1 2 10 $MAC add"
 
   If you have multiple VMs created by bm_poseur, you can simplify this process
   by running this script.
 
-        for mac in $($TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs); do
-            ssh stack@$BOOTSTRAP_IP /home/stack/incubator/scripts/populate-nova-bm-db.sh -i $mac add
+        for MAC in $($TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs); do
+            ssh root@$BOOTSTRAP_IP "source stackrc && nova baremetal-node-create ubuntu 1 2 10 $MAC add"
         done
 
-* Wait for the following to show up in the n-cpu log on the bootstrap node (screen -x should attach you to the correct screen session):
+* Wait for the following to show up in the nova-compute log on the bootstrap node
+
+        ssh root@$BOOTSTRAP_IP "tail -f /var/log/....?"
 
         2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Auditing locally available compute resources
         2013-01-08 16:43:13 DEBUG nova.compute.resource_tracker [-] Hypervisor: free ram (MB): 512 from (pid=24853) _report_hypervisor_resource_view /opt/stack/nova/nova/compute/resource_tracker.py:327
@@ -197,23 +151,18 @@ Detailed instructions
         2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free disk (GB): 0
         2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free VCPUS: 1
 
+* Load the base image into Glance:
+
+        TODO
+
 * Start the process of provisioning a baremetal node in Nova by running
   this inside the bootstrap node:
 
-        source ~/devstack/openrc
-        nova boot --flavor 100 --image demo --key_name default bmtest
-
-  If you chose to use VirtualPowerManager, then nova will start the VM.
-
-  If you chose to use the default FakePowerManager, you will need to
-  manually start the VM with:
-
-        sudo virsh start baremetal_0
+        ssh root@$BOOTSTRAP_IP "source stackrc && nova boot --flavor 100 --image base --key_name default bmtest"
 
   You can watch its console to observe the PXE boot/deploy process.
-  You can also monitor progress in the 'n-cpu' and 'baremetal' screen sessions
-  in the bootstrap node. After the deploy is complete, the node will reboot
-  into the demo image.
+  After the deploy is complete, it will reboot into the base image.
+
 
   The End!
 
