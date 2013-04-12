@@ -92,9 +92,9 @@ Detailed instructions
         bin/disk-image-create -u base -a i386 -o $TRIPLEO_ROOT/incubator/base
 
 * Create and start your bootstrap VM. This script invokes diskimage-builder
-  with suitable paths and options to create and start a VM that contains an 
-  all-in-one OpenStack cloud with the baremetal driver enabled, and preconfigures 
-  it for a development environment. It will also copy the 'base.qcow2' image into 
+  with suitable paths and options to create and start a VM that contains an
+  all-in-one OpenStack cloud with the baremetal driver enabled, and preconfigures
+  it for a development environment. It will also copy the 'base.qcow2' image into
   the VM and pre-load it into Glance.
 
         cd $TRIPLEO_ROOT/tripleo-image-elements/elements/boot-stack
@@ -141,7 +141,7 @@ Detailed instructions
 
 * Wait for the following to show up in the nova-compute log on the bootstrap node
 
-        ssh root@$BOOTSTRAP_IP "tail -f /var/log/....?"
+        ssh root@$BOOTSTRAP_IP "tail -f /var/log/upstart/nova-compute.log"
 
         2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Auditing locally available compute resources
         2013-01-08 16:43:13 DEBUG nova.compute.resource_tracker [-] Hypervisor: free ram (MB): 512 from (pid=24853) _report_hypervisor_resource_view /opt/stack/nova/nova/compute/resource_tracker.py:327
