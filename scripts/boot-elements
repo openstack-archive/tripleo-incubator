@@ -23,7 +23,7 @@ SCRIPT_HOME=$(dirname $0)
 # Some defaults
 ARCH=i386
 IMAGE_NAME=stack
-export IMAGE_SIZE=10
+export DIB_IMAGE_SIZE=10
 START_VM=yes
 ALWAYS_ELEMENTS='vm local-config stackuser ubuntu cloud-init-nocloud'
 EXTRA_ELEMENTS=
@@ -55,7 +55,7 @@ while true ; do
     case "$1" in
         -a) export ARCH=$2; shift 2 ;;
         -o) export IMAGE_NAME=$2; shift 2 ;;
-        -s) export IMAGE_SIZE=$2; shift 2 ;;
+        -s) export DIB_IMAGE_SIZE=$2; shift 2 ;;
         -h) show_options;;
         -n) export START_VM=; shift ;;
         --) shift ; break ;;
