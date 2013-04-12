@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2012 Hewlett-Packard Development Company, L.P.
+# Copyright 2013 Hewlett-Packard Development Company, L.P.
 # All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -28,23 +28,8 @@ START_VM=yes
 ALWAYS_ELEMENTS='vm local-config stackuser ubuntu cloud-init-nocloud'
 EXTRA_ELEMENTS=
 
-ELEMENTS_PATH=${ELEMENTS_PATH:-$SCRIPT_HOME/../../tripleo-image-elements/elements}
-if [ ! -d $ELEMENTS_PATH ]; then
-    echo "Error: unable to locate elements path at $ELEMENTS_PATH"
-    exit 1
-fi
-export ELEMENTS_PATH
-
-DIB_PATH=${DIB_PATH:-$SCRIPT_HOME/../../diskimage-builder}
-DIB=$(which disk-image-create || echo $DIB_PATH/bin/disk-image-create)
-
-if [ ! -e $DIB ]; then
-    echo "Error: unable to locate disk-image-create"
-    exit 1
-fi
-
 function show_options () {
-    echo "Usage: $SCRIPT_NAME <elements>"
+    echo "Usage: $SCRIPT_NAME [options] <element> [<element> ...]"
     echo
     echo "Create and start a VM by combining the specified elements"
     echo "with common default elements, assuming many things about"
@@ -89,6 +74,21 @@ case $ARCH in
     amd64) ;;
     *) echo "Unsupported arch $ARCH!" ; exit 1 ;;
 esac
+
+ELEMENTS_PATH=${ELEMENTS_PATH:-$SCRIPT_HOME/../../tripleo-image-elements/elements}
+if [ ! -d $ELEMENTS_PATH ]; then
+    echo "Error: unable to locate elements path at $ELEMENTS_PATH"
+    exit 1
+fi
+export ELEMENTS_PATH
+
+DIB_PATH=${DIB_PATH:-$SCRIPT_HOME/../../diskimage-builder}
+DIB=$(which disk-image-create || echo $DIB_PATH/bin/disk-image-create)
+
+if [ ! -e $DIB ]; then
+    echo "Error: unable to locate disk-image-create"
+    exit 1
+fi
 
 # Destroy pre-existing VM of the same name
 # but ignore any errors if one doesn't exist
