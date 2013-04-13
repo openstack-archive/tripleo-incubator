@@ -94,8 +94,7 @@ Detailed instructions
 * Create and start your bootstrap VM. This script invokes diskimage-builder
   with suitable paths and options to create and start a VM that contains an
   all-in-one OpenStack cloud with the baremetal driver enabled, and preconfigures
-  it for a development environment. It will also copy the 'base.qcow2' image into
-  the VM and pre-load it into Glance.
+  it for a development environment.
 
         cd $TRIPLEO_ROOT/tripleo-image-elements/elements/boot-stack
         sed -i "s/\"virtual_power_user\": \"stack\",/\"virtual_power_user\": \"`whoami`\",/" config.json
@@ -103,15 +102,16 @@ Detailed instructions
         cd $TRIPLEO_ROOT/incubator/
         scripts/boot-elements boot-stack -o bootstrap
 
-  The resulting 'bootstrap' vm has a user 'stack' with password 'stack', and should
-  have been started by the boot-elements script.
+  Your SSH pub key has been copied to the resulting 'bootstrap' VM's root user.
+  It has been started by the boot-elements script, and can be logged into at this point.
 
 * Get the IP of your 'bootstrap' VM
 
         BOOTSTRAP_IP=`scripts/get-vm-ip bootstrap`
 
-  (If you downloaded a pre-built bootstrap image, you will need to manually start it
-  and customize it. See footnote [1].
+  (If you downloaded a pre-built bootstrap image, or chose not to start it by 
+  specifying the -n option, you will need to manually start it and customize it.
+  See footnote [1].)
 
 * Create some 'baremetal' node(s) out of KVM virtual machines.
   Nova will PXE boot these VMs as though they were physical hardware.
@@ -128,16 +128,28 @@ Detailed instructions
 
   If you are testing on real hardware, see footnote [3].
 
+* Copy the openstack credentials out of the bootstrap VM, and add the IP:
+
+        scp root@$BOOTSTRAP_IP:stackrc ~/stackrc
+        sed -i "s/localhost/$BOOTSTRAP_IP/" ~/stackrc
+        source ~/stackrc
+
+* Add your key to nova:
+
+        nova keypair-add --pub-key ~/.ssh/id_rsa.pub default
+
 * Inform Nova on the bootstrap node of these resources by running this:
 
-        ssh root@$BOOTSTRAP_IP "source stackrc && nova baremetal-node-create ubuntu 1 2 10 $MAC add"
+        nova baremetal-node-create ubuntu 1 512 10 $MAC
 
   If you have multiple VMs created by bm_poseur, you can simplify this process
   by running this script.
 
         for MAC in $($TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs); do
-            ssh root@$BOOTSTRAP_IP "source stackrc && nova baremetal-node-create ubuntu 1 2 10 $MAC add"
+            nova baremetal-node-create ubuntu 1 512 10 $MAC
         done
+
+  (This assumes the default flavor of CPU:1 RAM:512 DISK:10. Change values if needed.)
 
 * Wait for the following to show up in the nova-compute log on the bootstrap node
 
@@ -153,12 +165,13 @@ Detailed instructions
 
 * Load the base image into Glance:
 
-        TODO
+        cd $TRIPLEO_ROOT/incubator/
+        scripts/load-images base.qcow2
 
 * Start the process of provisioning a baremetal node in Nova by running
   this inside the bootstrap node:
 
-        ssh root@$BOOTSTRAP_IP "source stackrc && nova boot --flavor 100 --image base --key_name default bmtest"
+        nova boot --flavor 100 --image base --key_name default bmtest
 
   You can watch its console to observe the PXE boot/deploy process.
   After the deploy is complete, it will reboot into the base image.
