@@ -127,10 +127,22 @@ if [ $START_VM ]; then
         sleep 1
     done
     echo
-    echo "element(s): $ALWAYS_ELEMENTS $EXTRA_ELEMENTS booted and ready."
 
+    # hostkeys are currently not generated until a few seconds after sshd comes up.
+    # https://bugs.launchpad.net/diskimage-builder/+bug/1124593
+    echo "Waiting for SSH hostkey."
+    SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+    until ssh $SSH_ARGS root@$VM_IP uptime 2>&1 > /dev/null; do
+        echo -n '.'
+        sleep 1
+    done
+    echo
+
+    echo "element(s): $ALWAYS_ELEMENTS $EXTRA_ELEMENTS booted and ready."
+    echo
+    echo "to login:   ssh root@$VM_IP"
     export VM_IP
-    exec ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@$VM_IP
+
 else
     echo
     echo "VM $IMAGE_NAME created from element(s): $ALWAYS_ELEMENTS $EXTRA_ELEMENTS"
