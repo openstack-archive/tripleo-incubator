@@ -88,6 +88,7 @@ Detailed instructions
 
         cd $TRIPLEO_ROOT/diskimage-builder/
         export ELEMENTS_PATH=$TRIPLEO_ROOT/diskimage-builder/elements:$TRIPLEO_ROOT/tripleo-image-elements/elements
+        export DIB_IMAGE_SIZE=8 # Make the bootstrap VM have an 8GB /
         bin/disk-image-create -u base vm devstack local-config stackuser -a i386 -o $TRIPLEO_ROOT/incubator/bootstrap
 
   The resulting vm has a user 'stack' with password 'stack'.
