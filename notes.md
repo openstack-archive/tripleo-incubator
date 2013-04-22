@@ -166,7 +166,7 @@ Detailed instructions
 * Load the base image into Glance:
 
         cd $TRIPLEO_ROOT/incubator/
-        scripts/load-images base.qcow2
+        scripts/load-image base.qcow2
 
 * Start the process of provisioning a baremetal node in Nova by running
   this inside the bootstrap node:
