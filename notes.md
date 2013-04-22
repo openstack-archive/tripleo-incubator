@@ -168,10 +168,9 @@ Detailed instructions
         cd $TRIPLEO_ROOT/incubator/
         scripts/load-image base.qcow2
 
-* Start the process of provisioning a baremetal node in Nova by running
-  this inside the bootstrap node:
+* Start the process of provisioning a baremetal node:
 
-        nova boot --flavor 100 --image base --key_name default bmtest
+        nova boot --flavor 256 --image base --key_name default bmtest
 
   You can watch its console to observe the PXE boot/deploy process.
   After the deploy is complete, it will reboot into the base image.
