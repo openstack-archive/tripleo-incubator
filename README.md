@@ -13,7 +13,112 @@ as nova or devstack).
 What is TripleO?
 ----------------
 
-TripleO is a project to automate the operations of an OpenStack cloud.
+TripleO is the use of a self hosted OpenStack infrastructure - that is
+OpenStack bare metal (nova and cinder) + Heat + diskimage-builder + in-image
+orchestration such as Chef or Puppet - to install, maintain and upgrade itself.
+
+This is combined with Continuous Integration / Continuous Deployment (CICD) of
+the environment to reduce the opportunity for failures.
+
+Finally end user services such as Openstack compute virtual machine hosts, or
+Hadoop are deployed as tenants of the self hosted infrastructure. These can be
+deployed using any orchestration layer desired.
+
+Current status
+--------------
+
+TripleO is a work in progress : we're building up the facilities needed to
+deliver the full story incrementally. Proof of concept implementations exist
+for all the discrete components - sufficient to prove the design, though
+(perhaps) not what will be used in production.
+
+### Diskimage-builder
+
+The lowest layer in the dependency stack, diskimage-builder can be used to
+customise generic disk images for use with Nova bare metal. It can also be
+used to provide build-time specialisation for disk images. Diskimage-builder
+is quite mature.
+
+### Nova bare-metal
+
+The next layer up, In OpenStack Grizzly Nova bare-metal is able to deliver
+ephemeral instances to physical machines with multiple architectures.
+By ephemeral instances, we mean that local storage is lost when a new
+image is deployed / the instance is rebuilt. So the machines operate in
+exactly the same fashion as if one installed a regular operating system
+instance on the machine. Nova depends on a partition image to copy into
+the machine, though the image can be totally generic.
+
+Caveats / limitations:
+ - no persistent storage (cinder) yet. This was specced out and is pending
+   implementation.
+ - no raid hardware config yet (can workaround by baking a specific config into
+   the deploy ramdisk)
+ - no support (yet) for booting an arbitrary ramdisk to do machine maintenance
+   without tearing down the instance.
+ - HA support is rudimentary at the moment : need to use corosync+pacemaker
+   (work is in progress to have multiple bare-metal compute hosts dynamically
+    take over each others configuration)
+ - File injection is required due to the PXE boot configuration conflicting
+   with Nova-network/Quantum DHCP (work is in progress to resolve this)
+ - Dynamic VLAN support is not yet implemented (but was specced at the Havana
+   summit). Workaround is to manually configure it via Nova userdata.
+ - Node content is deployed using dd + iscsi (rather than e.g. bittorrent).
+
+### Heat
+
+Heat is the orchestration layer in TripleO - it glues the various services
+together in the cluster, arbitrates deployments and reconfiguration.
+
+Heat is quite usable in Grizzly, though some additional features are planned
+to make the TripleO story easier and more robust. Heat depends on the Nova
+API to provision and remove instances in the cluster it is managing.
+
+Caveats / limitations:
+ - deployments/reconfigurations currently take effect immediately, rather
+   than keeping a fraction of the cluster capacity unaffected. Workaround
+   by defining multiple redundant groups to provide an artificial coordination
+   point. A special case of this is HA pairs, where ideally Heat would know
+   to take one side down, then the other.
+ - deployments/reconfigurations only pay attention to the Nova API status
+   rather than also coordinating with monitoring systems. Workaround by 
+   tying your monitoring back into Heat to trigger rollbacks.
+
+### os-config-applier/os-refresh-config
+
+These tools work with the Heat delivered metadata to create configuration
+files on disk (os-config-applier), and to trigger in-instance reconfiguration
+including shutting down services and performing data migrations. These tools
+are new but very simple and very focused.
+
+os-config-applier reads a JSON metadata file and generates templates. It can
+be used with any orchestration layer that generates a JSON metadata file on
+disk.
+
+os-refresh-config subscribes to the Heat metadata we're using, and then invokes
+hooks - it can be used to drive os-config-applier, or Puppet or Chef or other
+configuration management tools.
+
+### tripleo-image-elements
+
+These diskimage-builder elements create build-time specialised disk/partition
+images for TripleO. The elements build images with software installed but
+not configured - and hooks to configure the software with os-config-applier. 
+Much of OpenStack is deployable via the elements that have been written but
+it is not yet setup for full HA.
+
+Caveats/Limitations:
+ - No support for image based updates yet. (Requires separating out updateable
+   configuration and persistent data from the image contents - which depends
+   on cinder for baremetal).
+ - Full HA is not yet implemented
+ - Bootstrap installation is not yet implemented (depends on full HA).
+ - Currently assumes two clouds: under cloud and over cloud. Long term story
+   is to have a single cloud, which is primarily (but not entirely)
+   configuration.
+
+Design
+------
 
 We start with an [image builder]
 (https://github.com/stackforge/diskimage-builder/), and rules for that to
