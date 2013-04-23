@@ -109,7 +109,7 @@ Detailed instructions
 
         BOOTSTRAP_IP=`scripts/get-vm-ip bootstrap`
 
-  (If you downloaded a pre-built bootstrap image, or chose not to start it by 
+  (If you downloaded a pre-built bootstrap image, or chose not to start it by
   specifying the -n option, you will need to manually start it and customize it.
   See footnote [1].)
 
@@ -167,6 +167,10 @@ Detailed instructions
 
         cd $TRIPLEO_ROOT/incubator/
         scripts/load-image base.qcow2
+
+* Allow the VirtualPowerManager to ssh into your host machine to power on vms:
+
+        ssh root@$BOOTSTRAP_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
 
 * Start the process of provisioning a baremetal node:
 
