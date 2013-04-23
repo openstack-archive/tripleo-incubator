@@ -66,9 +66,9 @@ function load_image() {
         remove_image "${GLANCE_IMAGE_NAME}"
     fi
 
-    kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" --public --disk-format aki < "$TMP_IMAGE_DIR/tmp-initrd" \
+    kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" --public --disk-format aki < "$TMP_IMAGE_DIR/tmp-vmlinuz" \
                 | grep ' id ' | awk '{print $4}')
-    ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd"  --public --disk-format ari < "$TMP_IMAGE_DIR/tmp-vmlinuz" \
+    ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd"  --public --disk-format ari < "$TMP_IMAGE_DIR/tmp-initrd" \
                  | grep ' id ' | awk '{print $4}')
 
     glance image-create --name $GLANCE_IMAGE_NAME \
