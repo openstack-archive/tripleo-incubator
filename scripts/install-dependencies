@@ -18,7 +18,7 @@ fi
 # packages
 sudo apt-get update
 DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-system qemu-kvm git python-pip
-sudo pip install -U python-novaclient python-glanceclient
+sudo pip install -U python-novaclient python-glanceclient python-heatclient
 
 sudo service libvirt-bin restart
 
