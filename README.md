@@ -59,6 +59,9 @@ Caveats / limitations:
    https://bugs.launchpad.net/tripleo/+bug/1174151
  - no support (yet) for booting an arbitrary ramdisk to do machine maintenance
    without tearing down the instance.
+   https://bugs.launchpad.net/nova/+bug/1174518 (When there is an instance).
+   https://blueprints.launchpad.net/nova/+spec/baremetal-operations (when
+   there is no instance).
  - HA support is rudimentary at the moment : need to use corosync+pacemaker
    (work is in progress to have multiple bare-metal compute hosts dynamically
     take over each others configuration)
