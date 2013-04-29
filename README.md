@@ -30,7 +30,8 @@ Current status
 TripleO is a work in progress : we're building up the facilities needed to
 deliver the full story incrementally. Proof of concept implementations exist
 for all the discrete components - sufficient to prove the design, though
-(perhaps) not what will be used in production.
+(perhaps) not what will be used in production. We track bugs affecting TripleO
+itself at https://bugs.launchpad.net/tripleo/.
 
 ### Diskimage-builder
 
@@ -52,8 +53,10 @@ the machine, though the image can be totally generic.
 Caveats / limitations:
  - no persistent storage (cinder) yet. This was specced out and is pending
    implementation.
+   https://bugs.launchpad.net/tripleo/+bug/1174154
  - no raid hardware config yet (can workaround by baking a specific config into
    the deploy ramdisk)
+   https://bugs.launchpad.net/tripleo/+bug/1174151
  - no support (yet) for booting an arbitrary ramdisk to do machine maintenance
    without tearing down the instance.
  - HA support is rudimentary at the moment : need to use corosync+pacemaker
@@ -63,6 +66,7 @@ Caveats / limitations:
    with Nova-network/Quantum DHCP (work is in progress to resolve this)
  - Dynamic VLAN support is not yet implemented (but was specced at the Havana
    summit). Workaround is to manually configure it via Nova userdata.
+   https://bugs.launchpad.net/tripleo/+bug/1174149
  - Node content is deployed using dd + iscsi (rather than e.g. bittorrent).
 
 ### Heat
@@ -112,6 +116,7 @@ Caveats/Limitations:
    configuration and persistent data from the image contents - which depends
    on cinder for baremetal).
  - Full HA is not yet implemented
+   https://bugs.launchpad.net/quantum/+bug/1174132
  - Bootstrap installation is not yet implemented (depends on full HA).
  - Currently assumes two clouds: under cloud and over cloud. Long term story
    is to have a single cloud, which is primarily (but not entirely)
