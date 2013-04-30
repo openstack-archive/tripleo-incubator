@@ -134,9 +134,11 @@ Detailed instructions
         sed -i "s/localhost/$BOOTSTRAP_IP/" ~/stackrc
         source ~/stackrc
 
-__(Note that all of the following commands should be run on your host machine, not inside the bootstrap VM)__
+__(Note: all of the following commands should be run on your host machine, not inside the bootstrap VM)__
+__(Note: if you have set http_proxy or https_proxy to a network host, these need to be unset before proceeding)__
 
 * Add your key to nova:
+
         nova keypair-add --pub-key ~/.ssh/id_rsa.pub default
 
 * Inform Nova on the bootstrap node of these resources by running this:
