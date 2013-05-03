@@ -125,6 +125,17 @@ Caveats/Limitations:
    is to have a single cloud, which is primarily (but not entirely)
    configuration.
 
+Deploying
+---------
+
+As TripleO is not finished, deploying it is tricky. Additionally as by
+definition it will replace existing facilities (be those manual or automated)
+within an organisation, some care is needed to make migration, or integration
+smooth.
+
+This is a sufficiently complex topic, we've created a dedicated document for
+it - [Deploying TripleO] (./Deploying.md).
+
 Design
 ------
 
