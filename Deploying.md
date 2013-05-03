@@ -17,7 +17,7 @@ heart of TripleO.
 * Machine image creation (Diskimage-builder)
 
 * In-instance configuration management (os-config-applier+os-refresh-config,
-  and/or Puppet or Chef)
+  and/or Chef/Puppet/Salt)
 
 * Image management (Glance)
 
@@ -49,9 +49,9 @@ An internet connection is also required to download the various packages used
 in preparing each image.
 
 The machine images built *can* depend on Heat metadata, or they can just
-contain configured Chef or Puppet credentials, depending on how much of TripleO
-is in use. Avoiding Heat is useful when doing a incremental adoption of TripleO
-(see later in this document).
+contain configured Chef/Puppet/Salt credentials, depending on how much of
+TripleO is in use. Avoiding Heat is useful when doing a incremental adoption
+of TripleO (see later in this document).
 
 ## Baremetal machine deployment
 
@@ -110,11 +110,12 @@ cluster configuration metadata. They can be used before Heat is functional
 if a statically prepared metadata file is placed in the Heat path : this is
 how the bootstrap node works.
 
-os-config-applier and os-refresh-config can be used in concert with Chef or
-Puppet, or not used at all, if you configure your services via Chef/Puppet.
+os-config-applier and os-refresh-config can be used in concert with 
+Chef/Puppet/Salt, or not used at all, if you configure your services via
+Chef/Puppet/Salt.
 
-The reference TripleO elements do not depend on Chef or Puppet, to avoid
-conflicting when organisations with an investment in Chef or Puppet start
+The reference TripleO elements do not depend on Chef/Puppet/Salt, to avoid
+conflicting when organisations with an investment in Chef/Puppet/Salt start
 using TripleO.
 
 # Deploying TripleO incrementally
@@ -157,7 +158,7 @@ package and vlan configuration to /etc/network/interfaces as a first-boot rule.
 ## Baremetal only
 
 In this scenario you make use of the baremetal driver to deploy unspecialised
-machine images, and perform specialisation using Chef or Puppet or Salt -
+machine images, and perform specialisation using Chef/Puppet/Salt -
 whatever configuration management toolchain you prefer. The baremetal host
 system is installed manually, but a TripleO image is used to deploy it.
 
@@ -191,7 +192,7 @@ baremetal host.
 * Setup admin users with SSH keypairs etc.
 
 * Boot them using the ubuntu.qcow2 image, with appropriate user data to 
-  connect to your Puppet/Chef/Salt environments.
+  connect to your Chef/Puppet/Salt environments.
 
 ## Baremetal with Heat
 
