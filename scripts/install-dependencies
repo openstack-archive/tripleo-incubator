@@ -16,11 +16,45 @@ if ! id | grep libvirtd; then
 fi
 
 # packages
-sudo apt-get update
-DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-system qemu-kvm git python-pip python-dev
-sudo pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
+os=unsupported
+if [ -f /etc/redhat-release ]; then
+  if `grep -Eqs 'Red Hat Enterprise Linux Server release 6|CentOS release 6' /etc/redhat-release`; then
+    if [ -f /etc/yum.repos.d/epel.repo ]; then
+      echo EPEL repository is required to install python-pip for RHEL/CentOS.
+      echo See http://fedoraproject.org/wiki/EPEL
+       exit 1
+    fi
+  fi
+  os=redhat
+fi
 
-sudo service libvirt-bin restart
+if [ -f /etc/debian_version ]; then
+  os=debian
+fi
+
+if [ "$os" = "unsupported" ]; then
+  echo This script has not been tested outside of Fedora, RHEL, and Ubuntu variants.
+  echo Aborting.
+fi
+
+if [ "$os" = "debian" ]; then
+  # packages
+  sudo apt-get update
+  DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-system qemu-kvm git python-pip
+  sudo pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
+
+  sudo service libvirt-bin restart
+fi
+
+if [ "$os" = "redhat" ]; then
+  sudo yum update -y
+  # For RHEL/CentOS, python-pip is in EPEL
+  sudo yum install -y python-lxml libvirt-python libvirt qemu-kvm git python-pip openssl-devel python-devel gcc
+
+  sudo pip-python install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
+
+  sudo service libvirtd restart
+fi
 
 echo "Check to see that you are in the libvirtd group in your current shell before going on. You can check by running:"
 echo
