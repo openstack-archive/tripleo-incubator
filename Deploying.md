@@ -179,9 +179,19 @@ baremetal host.
 
 * A list of the machines + their IPMI details + mac addresses.
 
+* A network range larger than the maximum number of concurrent deploy
+  operations to run in parallel.
+ 
+* A network to run the instances on large enough to supply one ip per
+  instance.
+
 ### HOWTO
 
 * Build the images you need (add any local elements you need to the commands)
+
+  * Edit tripleo-image-elements/elements-boot-stack.config.json and change
+    the virtual power manager to 'nova...impi.IPMI'.
+    https://bugs.launchpad.net/tripleo/+bug/1178547
 
     disk-image-create -o bootstrap vm boot-stack ubuntu
     disk-image-create -o ubuntu ubuntu
@@ -200,10 +210,17 @@ baremetal host.
   https://bugs.launchpad.net/tripleo/+bug/1178094
 
 * Enroll your vanilla image into the glance of that install.
+  Be sure to use incubator/scripts/load-image as that will extract the kernel
+  and ramdisk and register them appropriately with glance.
 
 * Enroll your other datacentre machines into that nova baremetal install.
+  A script that takes your machine inventory and prints out something like:
+  nova baremetal-node-create --pm_user XXX --pm_address YYY --pm_password ZZZ
+      COMPUTEHOST 24 98304 2048 MAC
+  can be a great help - and can be run from outside the environment.
 
 * Setup admin users with SSH keypairs etc.
+  e.g. nova keypair-add --pub-key .ssh/authorized_keys default
 
 * Boot them using the ubuntu.qcow2 image, with appropriate user data to 
   connect to your Chef/Puppet/Salt environments.
