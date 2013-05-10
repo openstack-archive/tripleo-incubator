@@ -56,8 +56,8 @@ of TripleO (see later in this document).
 ## Baremetal machine deployment
 
 Baremetal deployments are delivered via Nova. Additionally, the network must
-be configured so that the baremetal host machine can receive TFTP from any node
-that is being booted. 
+be configured so that the baremetal host machine can receive TFTP from any
+physical machine that is being booted. 
 
 ## Nova
 
@@ -103,7 +103,7 @@ as for Nova.
 Heat depends on Nova, Cinder and Keystone. The same three deployment options
 exist as for Nova.
 
-## In-node configuration
+## In-instance configuration
 
 The os-config-applier and os-refresh-config tools depend on Heat to provide
 cluster configuration metadata. They can be used before Heat is functional
@@ -175,6 +175,10 @@ baremetal host.
 
 * A machine installed with your OS of choice in your datacentre.
 
+* Physical machines configured to netboot in preference to local boot.
+
+* A list of the machines + their IPMI details + mac addresses.
+
 ### HOWTO
 
 * Build the images you need (add any local elements you need to the commands)
@@ -186,6 +190,16 @@ baremetal host.
   into your datacentre LAN.
 
 * Run up that VM, which will create a self contained nova baremetal install.
+
+* Reconfigure the networking within the VM to match your physical network.
+  https://bugs.launchpad.net/tripleo/+bug/1178397 
+  https://bugs.launchpad.net/tripleo/+bug/1178099
+
+* If you had exotic hardware needs, replace the deploy images that the
+  bootstack creates.
+  https://bugs.launchpad.net/tripleo/+bug/1178094
+
+* Enroll your vanilla image into the glance of that install.
 
 * Enroll your other datacentre machines into that nova baremetal install.
 
@@ -201,6 +215,75 @@ images which are orchestrated by Heat.
 
 ### Prerequisites.
 
+* A boot-stack image setup to run in KVM.
+
+* A vanilla image with cfn-tools installed.
+
+* A seed machine installed with your OS of choice in your datacentre.
+
+### HOWTO
+
+* Build the images you need (add any local elements you need to the commands)
+
+    disk-image-create -o bootstrap vm boot-stack ubuntu heat-api
+    disk-image-create -o ubuntu ubuntu cfn-tools
+
+* Setup a VM using bootstrap.qcow2 on your existing machine, with eth1 bridged
+  into your datacentre LAN.
+
+* Run up that VM, which will create a self contained nova baremetal install.
+
+* Enroll your vanilla image into the glance of that install.
+
+* Enroll your other datacentre machines into that nova baremetal install.
+
+* Setup admin users with SSH keypairs etc.
+
+* Create a Heat stack with your application topology. Be sure to use the image
+  id of your cfn-tools customised image.
+
+## Flat-networking OpenStack managed by Heat
+
+In this scenario we build on Baremetal with Heat to deploy a full OpenStack
+orchestrated by Heat, with specialised disk images for different OpenStack node
+roles.
+
+### Prerequisites.
+
+* A boot-stack image setup to run in KVM.
+
+* A vanilla image with cfn-tools installed.
+
+* A seed machine installed with your OS of choice in your datacentre.
+
+### HOWTO
+
+* Build the images you need (add any local elements you need to the commands)
+
+    disk-image-create -o bootstrap vm boot-stack ubuntu heat-api stackuser
+    disk-image-create -o ubuntu ubuntu cfn-tools
+
+* Setup a VM using bootstrap.qcow2 on your existing machine, with eth1 bridged
+  into your datacentre LAN.
+
+* Run up that VM, which will create a self contained nova baremetal install.
+
+* Enroll your vanilla image into the glance of that install.
+
+* Enroll your other datacentre machines into that nova baremetal install.
+
+* Setup admin users with SSH keypairs etc.
+
+* Create a Heat stack with your application topology. Be sure to use the image
+  id of your cfn-tools customised image.
+
+
 # Example deployments (future)
 
+WARNING: Here be draft notes.
+
+## VM seed + bare metal under cloud
+* need to be aware nova metadata wont be available after booting as the default
+  rule assumes this host never initiates requests.
+  https://bugs.launchpad.net/tripleo/+bug/1178487
 
