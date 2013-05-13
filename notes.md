@@ -97,7 +97,7 @@ Detailed instructions
   it for a development environment.
 
         cd $TRIPLEO_ROOT/tripleo-image-elements/elements/boot-stack
-        sed -i "s/\"virtual_power_user\": \"stack\",/\"virtual_power_user\": \"`whoami`\",/" config.json
+        sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 
         cd $TRIPLEO_ROOT/incubator/
         scripts/boot-elements boot-stack -o bootstrap
