@@ -1,5 +1,5 @@
 #!/bin/sh
-set -eu
+set -u
 
 if [ "$#" -eq 0 ]; then
   echo "provide vm name as argument."
@@ -8,10 +8,15 @@ fi
 
 mac=$(sudo virsh dumpxml $1 | grep "mac address" | head -1 | awk -F "'" '{print $2}')
 
-arp -n | grep $mac > /dev/null
-if [ $? -ne 0 ]; then
+ip=$(arp -n | awk " /$mac/ {print \$1}")
+
+if [ -z "$ip" ] ; then
+    ip=$(sudo awk "/$mac/ { print \$3 }" /var/lib/libvirt/dnsmasq/default.leases)
+fi
+
+if [ -z "$ip" ]; then
   echo "mac $mac not found. it's possible that the vm just isn't up yet."
   exit 1
 fi
 
-arp -n | grep $mac | awk '{print $1}'
+echo $ip
