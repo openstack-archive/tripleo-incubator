@@ -1,0 +1,256 @@
+#!/usr/bin/python
+#
+# Copyright 2013 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+import argparse
+import json
+import logging
+import os
+import subprocess
+import sys
+import yaml
+
+METADATA_NAMESPACE = 'OpenStack::ImageBuilder'
+IMAGE_CONSUMING_TYPES = ['AWS::EC2::Instance',
+                         'AWS::AutoScaling::LaunchConfiguration']
+devnull = None
+INCUBATOR_SCRIPTS = os.path.dirname(sys.argv[0])
+
+
+class RunError(RuntimeError):
+    pass
+
+class Run(object):
+    noop = False
+
+    @classmethod
+    def cmd(cls, args):
+        if cls.noop:
+            print ' '.join(args)
+        else:
+            try:
+                subprocess.check_call(args)
+            except subprocess.CalledProcessError as e:
+                raise RunError(e)
+
+
+def read_stack(stack_path):
+    """ Read HEAT stack """
+    with open(stack_path) as stack_file:
+        try:
+            stack = json.load(stack_file)
+        except ValueError:
+            stack_file.seek(0)
+            try:
+                stack = yaml.safe_load(stack_file)
+            except yaml.parser.ParserError, e:
+                logging.error(e)
+                return False
+    # Sanity checks
+    if type(stack) != dict:
+        logging.error(
+            'Expecting map, instead got python type %s' % type(stack))
+        return False
+    if 'Resources' not in stack:
+        logging.error('Stack has no resources')
+    if 'Description' not in stack:
+        logging.warn('Stack has no description')
+    logging.info('Loaded %s (%s)' % (stack_path, stack.get('Description')))
+    return stack
+
+
+def find_element_metadata(stack):
+    """ Find metadata with OpenStack::ImageBuilder::Elements """
+    launch_configs = {}
+    for rname, r in iter(stack.get('Resources', {}).items()):
+        if r.get('Type') == 'AWS::AutoScaling::LaunchConfiguration':
+            launch_configs[rname] = r
+
+    string_params = set()
+    for pname, p in iter(stack.get('Parameters', {}).items()):
+        if p.get('Type', 'String') == 'String':
+            string_params.add(pname)
+
+    found = []
+    for resource_key, resource in stack['Resources'].iteritems():
+        if resource.get('Type') not in IMAGE_CONSUMING_TYPES:
+            continue
+        resource_elements = set()
+        resource_packages = set()
+        logging.debug('Inspecting %s' % resource_key)
+        metadata = resource.get('Metadata', {})
+        for m_key, m_item in metadata.iteritems():
+            logging.debug('Inspecting %s' % m_key)
+            try:
+                prefix, under = m_key.rsplit('::', 1)
+            except ValueError:
+                logging.debug('Ignoring %s->%s' % (resource_key, m_key))
+                continue
+            if prefix != METADATA_NAMESPACE:
+                logging.debug('Ignoring %s->%s [%s]'
+                              % (resource_key, m_key, prefix))
+                continue
+            logging.debug('Found %s' % m_key)
+            if prefix == METADATA_NAMESPACE and under == 'Packages':
+                if isinstance(m_item, list):
+                    resource_packages.update(m_item)
+                else:
+                    resource_packages.add(m_item)
+            else:
+                resource_elements.update(m_item)
+
+        # If ImageId is a single Ref{} to a parameter, we can pass it to heat
+        image_param = None
+        lc_name = resource.get('Properties', {}).get('LaunchConfigurationName')
+        if lc_name and lc_name in launch_configs:
+            lc = launch_configs[lc_name]
+            image_id = lc.get('Properties', {}).get('ImageId')
+        else:
+            image_id = resource.get('Properties', {}).get('ImageId')
+        if isinstance(image_id, dict) and image_id.keys() == ['Ref']:
+            if image_id['Ref'] in string_params:
+                image_param = image_id['Ref']
+        found.append((resource_elements, image_param, resource_packages))
+
+    return found
+
+
+def build_images(prefix, found, extra, use_existing):
+    """ build images for stack elements """
+    images = []
+    for f, image_param, packages in found:
+        key = '-'.join(sorted(f))
+        if key == '' and len(packages):
+            key = '-'.join(sorted(packages))
+        image_name = '%s%s' % (prefix, key)
+        images.append((image_name, image_param))
+        image_file_name = '%s.qcow2' % image_name
+        if os.path.exists(image_file_name) and use_existing:
+            logging.info('Using existing image file %s' % image_file_name)
+            continue
+        command = ['disk-image-create', '-o', '%s' % image_name]
+        if len(packages):
+            command.extend(['-p', ','.join(packages)])
+        command.extend(f)
+        command.extend(extra)
+        Run.cmd(command)
+    return images
+
+
+def image_exists(image):
+    global devnull
+    args = ['glance', 'image-show', image]
+    if devnull is None:
+        devnull = open('/dev/null', 'a')
+    try:
+        subprocess.check_call(args, stdout=devnull, stderr=devnull)
+    except subprocess.CalledProcessError:
+        return False
+    return True
+
+
+def upload_images(images, noop, use_existing, kernel, initrd):
+    """ upload images to glance """
+    for img, _ in images:
+        if use_existing and image_exists(img):
+            continue
+        img_filename = '%s.qcow2' % img
+        script_path = os.path.join(INCUBATOR_SCRIPTS, 'load-image')
+        args = [script_path, '-d', img_filename]
+        Run.cmd(args)
+
+
+def run_heat(images, options):
+    params = []
+    for i, param in images:
+        if param:
+                params.append('%s=%s' % (param, i))
+    if len(params) != len(images):
+        print >>sys.stderr, 'Cannot determine parameters to run heat.'
+        if len(params):
+            print >>sys.stderr, ('Known parameters are as follows: %s'
+                                 % (params))
+    else:
+        args = ['heat', 'create', options.stack_name,
+                '--template-file', options.stack_path,
+                '--parameters', ';'.join(params)]
+        Run.cmd(args)
+
+
+def main():
+    """ This program is made to integrate with diskimage-builder and
+        OpenStack HEAT to deploy workloads defined as elements in
+        diskimage-builder.
+
+        For each resource, specify which elements and/or packages to
+        build with MetaData keys. Use OpenStack::ImageBuilder::Elements
+        or OpenStack::ImageBuilder::Packages respectively."""
+    parser = argparse.ArgumentParser(description=main.__doc__)
+    parser.add_argument('stack_path',
+                        help='Heat template to deploy')
+    parser.add_argument('stack_name', nargs='?',
+                        help='Stack name for heat')
+    parser.add_argument('--log-level', default='WARN',
+                        help='Basic root logging level')
+    parser.add_argument('--extra', '-e', nargs='*', default=[],
+                        help='Extra elements to add to all images')
+    parser.add_argument('--prefix', '-p', default='image-',
+                        help='Prefix for image names')
+    parser.add_argument('--noop', '-n', default=False, action='store_true',
+                        help='Just print actions instead of executing them.')
+    parser.add_argument('--use-existing', '-u', default=False, action='store_true',
+                        help='Use any existing image files or images in glance')
+    parser.add_argument('--skip-heat', default=False, action='store_true',
+                        help='Do not try to run heat')
+    parser.add_argument('--kernel', nargs='?',
+                        help='Attach this kernel to the image in glance')
+    parser.add_argument('--initrd', nargs='?',
+                        help='Attach this initrd ot the image in glance')
+    options = parser.parse_args()
+
+    if options.stack_name is None:
+        options.stack_name = os.path.basename(options.stack_path).rsplit('.', 1)[0]
+
+    logging.basicConfig(level=options.log_level)
+
+    Run.noop = options.noop
+
+    stack = read_stack(options.stack_path)
+    if not stack:
+        return 1
+
+    found = find_element_metadata(stack)
+    if found:
+        images = build_images(options.prefix,
+                              found, options.extra, options.use_existing)
+        if images:
+            upload_images(images,
+                          options.noop,
+                          options.use_existing,
+                          options.kernel,
+                          options.initrd)
+
+            if not options.skip_heat:
+                run_heat(images, options)
+
+    return 0
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main())
+    except RunError as e:
+        print >>sys.stderr, "Fatal error: %s" % e
+        sys.exit(1)
