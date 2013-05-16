@@ -49,6 +49,10 @@ Detailed instructions
 * Before you start, check to see that your machine supports hardware
   virtualization, otherwise KVM is going to get very grumpy.
 
+* Also check ssh server is running on the host machine and port 22 is open. 
+  VirtPowerManager will boot vms by ssh'ing into the host machine and 
+  issuing libvirt/virsh commands.
+
 * Choose a base location to put all of the source code.
 
         mkdir ~/tripleo
