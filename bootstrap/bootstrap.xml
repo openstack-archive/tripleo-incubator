@@ -1,4 +1,4 @@
-<domain type='kvm'>
+<domain type='%(engine)s'>
   <name>%(name)s</name>
   <memory unit='KiB'>1572864</memory>
   <vcpu>2</vcpu>
