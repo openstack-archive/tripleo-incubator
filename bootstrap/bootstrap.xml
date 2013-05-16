@@ -16,7 +16,7 @@
   <on_reboot>restart</on_reboot>
   <on_crash>restart</on_crash>
   <devices>
-    <emulator>/usr/bin/kvm</emulator>
+    <emulator>%(emulator)s</emulator>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2' cache='writeback'/>
       <source file='%(imagefile)s'/>
