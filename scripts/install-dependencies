@@ -47,9 +47,8 @@ if [ "$os" = "debian" ]; then
 fi
 
 if [ "$os" = "redhat" ]; then
-  sudo yum update -y
   # For RHEL/CentOS, python-pip is in EPEL
-  sudo yum install -y python-lxml libvirt-python libvirt qemu-kvm git python-pip openssl-devel python-devel gcc
+  sudo yum install -y python-lxml libvirt-python libvirt qemu-kvm git python-pip openssl-devel python-devel gcc audit
 
   sudo pip-python install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
 
