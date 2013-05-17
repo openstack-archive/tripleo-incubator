@@ -6,15 +6,6 @@ if ! grep "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys >/dev/null; then
   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 fi
 
-# libvirtd group
-grep libvirtd /etc/group || sudo groupadd libvirtd
-if ! id | grep libvirtd; then
-   echo "adding $USER to group libvirtd"
-   sudo usermod -a -G libvirtd $USER
-   exec sudo su -l $USER $PWD/$0
-   PRINT_RESTART=1
-fi
-
 # packages
 os=unsupported
 if [ -f /etc/redhat-release ]; then
@@ -54,6 +45,25 @@ if [ "$os" = "redhat" ]; then
   sudo pip-python install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
 
   sudo service libvirtd restart
+fi
+
+# libvirtd group
+grep libvirtd /etc/group || sudo groupadd libvirtd
+if ! id | grep libvirtd; then
+   echo "adding $USER to group libvirtd"
+   sudo usermod -a -G libvirtd $USER
+
+   if [ "$os" = "redhat" ]; then
+       libvirtd_file=/etc/libvirt/libvirtd.conf
+       if ! sudo grep  "^unix_sock_group" $libvirtd_file > /dev/null; then
+           sudo sed -i 's/^#unix_sock_group.*/unix_sock_group = "libvirtd"/g' $libvirtd_file
+           sudo sed -i 's/^#auth_unix_rw.*/auth_unix_rw = "none"/g' $libvirtd_file
+           sudo sed -i 's/^#unix_sock_rw_perms.*/unix_sock_rw_perms = "0770"/g' $libvirtd_file
+           sudo service libvirtd restart
+       fi
+   fi
+
+   exec sudo su -l $USER $PWD/$0
 fi
 
 echo "Check to see that you are in the libvirtd group in your current shell before going on. You can check by running:"
