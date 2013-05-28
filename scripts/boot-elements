@@ -23,6 +23,7 @@ SCRIPT_HOME=$(dirname $0)
 # Some defaults
 ARCH=i386
 IMAGE_NAME=stack
+ENGINE=kvm
 export DIB_IMAGE_SIZE=10
 START_VM=yes
 ALWAYS_ELEMENTS='vm local-config stackuser ubuntu cloud-init-nocloud'
@@ -40,6 +41,7 @@ function show_options () {
     echo "      -a i386|amd64 -- set the architecture of the VM (i386)"
     echo "      -o name       -- set the name of the VM and image file (stack)"
     echo "      -s size       -- set the image size (10 GB)"
+    echo "      -e engine     -- set the virt engine to use (defaults to kvm)"
     echo "      -n            -- don't automatically start the VM"
     echo
     exit 0
@@ -56,6 +58,7 @@ while true ; do
         -a) export ARCH=$2; shift 2 ;;
         -o) export IMAGE_NAME=$2; shift 2 ;;
         -s) export DIB_IMAGE_SIZE=$2; shift 2 ;;
+        -e) export ENGINE=$2; shift 2 ;;
         -h) show_options;;
         -n) export START_VM=; shift ;;
         --) shift ; break ;;
@@ -102,7 +105,7 @@ sudo mv /tmp/$IMAGE_NAME.qcow2 /var/lib/libvirt/images/
 $SCRIPT_HOME/../bootstrap/configure-bootstrap-vm \
            --name $IMAGE_NAME \
            --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
-           --engine kvm
+           --engine $ENGINE
 
 VM_IP=''
 function poll_vm {
