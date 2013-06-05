@@ -31,7 +31,7 @@ fi
 if [ "$os" = "debian" ]; then
   # packages
   sudo apt-get update
-  DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-system qemu-kvm git python-pip
+  DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-system qemu-kvm git python-pip python-dev gcc
   sudo pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
 
   sudo service libvirt-bin restart
