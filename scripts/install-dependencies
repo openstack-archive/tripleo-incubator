@@ -31,7 +31,7 @@ fi
 if [ "$os" = "debian" ]; then
   # packages
   sudo apt-get update
-  DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-system qemu-kvm git python-pip python-dev gcc
+  DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc
   sudo pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
 
   sudo service libvirt-bin restart
@@ -39,7 +39,7 @@ fi
 
 if [ "$os" = "redhat" ]; then
   # For RHEL/CentOS, python-pip is in EPEL
-  sudo yum install -y python-lxml libvirt-python libvirt qemu-kvm git python-pip openssl-devel python-devel gcc audit
+  sudo yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit
 
   sudo pip-python install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
 
