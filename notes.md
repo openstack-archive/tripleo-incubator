@@ -84,10 +84,6 @@ Detailed instructions
         cd $TRIPLEO_ROOT/bm_poseur/
         sudo ./bm_poseur --bridge-ip=none create-bridge
 
-* Activate these changes (alternatively, restart):
-
-        sudo service libvirt-bin restart
-
 * Create your machine image. This is the image that baremetal nova
   will install on each node. You can also download a pre-built image,
   or experiment with different combinations of elements.
