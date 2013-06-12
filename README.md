@@ -234,26 +234,26 @@ We have future worked planned to perform cloud capacity planning, node
 allocation, and other essential operational tasks.
 
 
-Broad conceptual plan
-=====================
+Development plan
+================
 
-Stage 1
--------
+Stage 1 - Implemented but not polished
+--------------------------------------
 
-OpenStack on OpenStack with two distinct clouds:
+OpenStack on OpenStack with three distinct clouds:
 
-1. The under cloud, runs baremetal nova-compute and deploys instances on
-   bare metal, is managed and used by the cloud sysadmins, starts deployed onto
-   a laptop or other similar device in a VM.
+1. A seed cloud, runs baremetal nova-compute and deploys instances on bare
+   metal. Hosted in a KVM or similar virtual machine within a manually
+   installed machine. This is used to deploy the under cloud.
+1. The under cloud, runs baremetal nova-compute and deploys instances on bare
+   metal, is managed and used by the cloud sysadmins.
 1. The over cloud, which runs using the same images as the under cloud, but as
    a tenant on the undercloud, and delivers virtualised compute machines rather
    than bare metal machines.
 
-Flat networking will be in use everywhere: the bootstrap cloud will use a single
-range (e.g. 192.0.2.0/26), the virtualised cloud will allocate instances in
-another range (e.g. 192.0.2.64/26), and floating ips can be issued to any range
-the cloud operator has available. For demonstration purposes, we can issue
-floating ips in the high half of the bootstrap ip range (e.g. 192.168.2.129/25).
+The overcloud runs a GRE overlay network; the undercloud runs on flat networking, 
+as does the seed cloud. The seed cloud and the undercloud can use the same
+network as long as non-overlapping ranges are setup.
 
 Infrastructure like Glance and Swift will be duplicated - both clouds will need
 their own, to avoid issues with skew between the APIs in the two clouds.
@@ -262,13 +262,17 @@ The under cloud will, during its deployment, include enough images to bring
 up the virtualised cloud without internet access, making it suitable for
 deploying behind firewalls and other restricted networking environments.
 
+Enrollment of machines is manual, as is hardware setup including RAID.
+
 Stage 2
 -------
 
-Use Quantum to provide VLANs to the bare metal, permitting segregated
-management and tenant traffic.
-
-<...>
+OpenStack on OpenStack with two distinct clouds. The seed cloud from stage 1
+is replaced by a full HA configuration in the undercloud, permitting it to
+host itself and do rolling deploys across it's own servers. This requires
+improvements to Heat as well as a full HA setup. The initial install of the
+undercloud will be done using a seed cloud, but that will hand-off to the
+undercloud and stop existing once the undercloud is live.
 
 Stage N
 -------
@@ -304,24 +308,24 @@ Nova baremetal does nothing to secure transfers via PXE on the
 network. This means that a node spoofing DHCP and TFTP on the provisioning
 network could potentially compromise a new machine. As these networks
 should be under full control of the user, strategies to eliminate and/or
-detect spoofing are advised.
+detect spoofing are advised. TXT and/or UEFI secure boot may help, though
+key distribution is still an issue.
 
 Also requests from baremetal machines to the Nova/EC2 meta-data service
-may be transmitted over an unsecured network. This carries the same
-attack vector as the PXE problems noted above, and so should be given
-similar consideration.
+may be transmitted over an unsecured network, at least until full hardware
+SDN is in palce. This carries the same attack vector as the PXE problems noted
+above, and so should be given similar consideration.
 
 Machine State
 -------------
 
-Currently there is no way to guarantee preservation of any of the drive
-contents on a machine if it is deleted in nova baremetal.
+Currently there is no way to guarantee preservation (or deletion) of any of the
+drive contents on a machine if it is deleted in nova baremetal. The planned
+cinder driver will give us an API for describing what behaviour is needed on
+an instance by instance basis.
 
 See also
 --------
-https://github.com/tripleo/incubator/blob/master/devtest.md - for technical 
-setup walk-thru.
-
 https://github.com/tripleo/incubator-bootstrap contains the scripts we run on
 the devstack based bootstrap node - but these are no longer maintained, as
 we have moved to tripleo-image-element based bootstrap nodes.
