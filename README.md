@@ -202,20 +202,33 @@ We start with an [image builder]
 [build OpenStack images] (https://github.com/stackforge/tripleo-image-elements/).
 We then use [Heat] (https://github.com/openstack/heat) to orchestrate deployment
 of those images onto bare metal using the [Nova baremetal driver]
-(https://wiki.openstack.org/wiki/GeneralBareMetalProvisioningFramework).
+(https://wiki.openstack.org/wiki/Baremetal).
 
-The Heat instance we use is hosted in the same cloud we're deploying, taking
-advantage of rolling deploys + a fully redundant deployment to avoid needing
-any manually maintained infrastructure.
+Eventually we will have the Heat instance we use to deploy both the undercloud
+and overcloud hosted in the undercloud. That depends on a full-HA setup so that
+we can upgrade itself using rolling deploys... and we haven't implemented the
+full HA setup yet. Today, we deploy the undercloud from a Heat instance hosted
+in a seed cloud just big enough to deploy the undercloud. Then the undercloud
+Heat instance deploys the overcloud.
 
-Within each machine we use small focused tools for converting Heat metadata to
-configuration files on disk, and handling updates from Heat. It is possible to
-replace those with e.g. Chef or Puppet if desired.
-
-Finally, we use this self contained bare metal cloud to deploy a kvm (or Xen or
+We use this self contained bare metal cloud to deploy a kvm (or Xen or
 whatever) OpenStack instance as a tenant of the bare metal cloud. In future we
 would like to consolidate this into one cloud, but there are technical and
 security issues to overcome first.
+
+So this gives us three clouds:
+
+1. A KVM hosted single-node bare-metal cloud that owns a small set of machines
+   we deploy the undercloud onto. This is the 'seed cloud'.
+1. A baremetal hosted single-node bare-metal cloud that owns the rest of the
+   datacentre and we deploy the overcloud onto. The is the 'under cloud'.
+1. A baremetal hosted many-node KVM cloud which is deployed on the undercloud.
+   This is the user facing cloud - the 'over cloud'.
+
+Within each machine we use small focused tools for converting Heat metadata to
+configuration files on disk, and handling updates from Heat. It is possible to
+replace or augment those with Chef/Puppet/Salt - working well in existing
+operational environments is a key goal for TripleO.
 
 We have future worked planned to perform cloud capacity planning, node
 allocation, and other essential operational tasks.
