@@ -180,7 +180,7 @@ Caveats/Limitations:
 
 These templates provide the rules describing how to deploy the baremetal 
 undercloud and virtual overclouds.  Downloadable from
-https://github.com/stackforge/tripleo-eat-elements.
+https://github.com/stackforge/tripleo-heat-templates.
 
 Deploying
 ---------
@@ -191,7 +191,8 @@ manual or automated) within an organisation, some care is needed to make
 migration, or integration smooth.
 
 This is a sufficiently complex topic, we've created a dedicated document for
-it - [Deploying TripleO] (./Deploying.md).
+it - [Deploying TripleO] (./Deploying.md). A related document is the
+instructions for doing [Dev/Test of TripleO] (./devtest.md).
 
 Architecture
 ------------
@@ -305,8 +306,9 @@ contents on a machine if it is deleted in nova baremetal.
 
 See also
 --------
-https://github.com/tripleo/incubator/blob/master/notes.md - for technical 
+https://github.com/tripleo/incubator/blob/master/devtest.md - for technical 
 setup walk-thru.
-and
+
 https://github.com/tripleo/incubator-bootstrap contains the scripts we run on
-the devstack based bootstrap node.
+the devstack based bootstrap node - but these are no longer maintained, as
+we have moved to tripleo-image-element based bootstrap nodes.
