@@ -31,7 +31,8 @@ machine to emulate this with virtual machine 'bare metal' nodes.
 
 
   NOTE: We recommend using an apt/HTTP proxy and setting the http_proxy
-        environment variable accordingly.
+        environment variable accordingly in order to speed up the image build
+        times.  See Footnote [4] to set up Squid proxy.
 
   NOTE: Building images will be extremely slow on Ubuntu 12.04 (precise). This
         is due to nbd-qemu lacking writeback caching. Using 12.10 will be
@@ -228,4 +229,49 @@ Footnotes
   See localrc and scripts/defaults in the incubator tree on your bootstrap node.
   Also see devstack/lib/baremetal for a full list of options that can
   inform Nova of the environment.
+
+* [4] Setting Up Squid Proxy
+
+  - Install squid proxy: `apt-get install squid`
+  - Set `/etc/squid3/squid.conf` to the following:
+<pre><code>
+          acl manager proto cache_object
+          acl localhost src 127.0.0.1/32 ::1
+          acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
+          acl localnet src 10.0.0.0/8 # RFC1918 possible internal network
+          acl localnet src 172.16.0.0/12  # RFC1918 possible internal network
+          acl localnet src 192.168.0.0/16 # RFC1918 possible internal network
+          acl SSL_ports port 443
+          acl Safe_ports port 80      # http
+          acl Safe_ports port 21      # ftp
+          acl Safe_ports port 443     # https
+          acl Safe_ports port 70      # gopher
+          acl Safe_ports port 210     # wais
+          acl Safe_ports port 1025-65535  # unregistered ports
+          acl Safe_ports port 280     # http-mgmt
+          acl Safe_ports port 488     # gss-http
+          acl Safe_ports port 591     # filemaker
+          acl Safe_ports port 777     # multiling http
+          acl CONNECT method CONNECT
+          http_access allow manager localhost
+          http_access deny manager
+          http_access deny !Safe_ports
+          http_access deny CONNECT !SSL_ports
+          http_access allow localnet
+          http_access allow localhost
+          http_access deny all
+          http_port 3128
+          cache_dir aufs /var/spool/squid3 5000 24 256
+          maximum_object_size 1024 MB
+          coredump_dir /var/spool/squid3
+          refresh_pattern ^ftp:       1440    20% 10080
+          refresh_pattern ^gopher:    1440    0%  1440
+          refresh_pattern -i (/cgi-bin/|\?) 0 0%  0
+          refresh_pattern (Release|Packages(.gz)*)$      0       20%     2880
+          refresh_pattern .       0   20% 4320
+          refresh_all_ims on
+         </pre></code>
+
+ - Restart squid: `sudo service squid3 restart`
+ - Set http_proxy environment variable: `http_proxy=http://your_ip_or_localhost:3128/`
 
