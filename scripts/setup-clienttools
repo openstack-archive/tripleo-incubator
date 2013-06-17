@@ -3,6 +3,8 @@ set -eu
 
 BASE=$(readlink -f $(dirname $0)/..)
 
+[ -d $BASE/openstack-tools ] && exit 0
+
 virtualenv $BASE/openstack-tools
 set +u
 . $BASE/openstack-tools/bin/activate
