@@ -119,25 +119,25 @@ Detailed instructions
 
         sudo $TRIPLEO_ROOT/bm_poseur/bm_poseur --vms 1 --arch i686 create-vm
 
-1. Get the list of MAC addresses for all the VMs you have created.
-   If you used bm_poseur to create the bare metal nodes, you can run this
-   on your laptop to get the MACs:
-
-        MAC=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
-
 1. Copy the openstack credentials out of the bootstrap VM, and add the IP:
+   (https://bugs.launchpad.net/tripleo/+bug/1191650)
 
-        scp root@$BOOTSTRAP_IP:stackrc ~/stackrc
-        sed -i "s/localhost/$BOOTSTRAP_IP/" ~/stackrc
-        source ~/stackrc
+        scp root@$BOOTSTRAP_IP:stackrc $TRIPLEO_ROOT/stackrc
+        sed -i "s/localhost/$BOOTSTRAP_IP/" $TRIPLEO_ROOT/stackrc
+        source $TRIPLEO_ROOT/stackrc
+
+1. Get the list of MAC addresses for all the VMs you have created.
+
+        MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
+
 
 __(Note: all of the following commands should be run on your host machine, not inside the bootstrap VM)__
 __(Note: if you have set http_proxy or https_proxy to a network host, you must either configure that network host to route traffic to your VM ip properly, or add the BOOTSTRAP_IP to your no_proxy environment variable value.)__
 
-1. Nova tools have been installed in $TRIPLEO_ROOT/openstack-tools - you need
-   to source the environment unless you have them installed already.
+1. Nova tools have been installed in $TRIPLEO_ROOT/incubator/scripts - you need
+   to add that to the PATH (unless you have them installed already).
 
-        . $TRIPLEO_ROOT/openstack-tools/bin/activate
+        export PATH=$PATH:$TRIPLEO_ROOT/scripts
 
 1. Add your key to nova:
 
@@ -145,13 +145,7 @@ __(Note: if you have set http_proxy or https_proxy to a network host, you must e
 
 1. Inform Nova on the bootstrap node of these resources by running this:
 
-        nova baremetal-node-create ubuntu 1 512 10
-	nova baremetal--interface add 1 $MAC
-
-   If you have multiple VMs created by bm_poseur, you can simplify this process
-   by running this script.
-
-        for MAC in $($TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs); do
+        for MAC in $MACS; do
             nova baremetal-node-create ubuntu 1 512 10 $MAC
             nova baremetal-interface-add $id $MAC
         done

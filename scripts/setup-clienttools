@@ -9,4 +9,7 @@ set +u
 set -u
 pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
 
-echo "Installed openstack client tools in the virtualenv in $BASE/openstack-tools"
+for tool in `echo nova glance heat keystone`; do
+  ln -s $BASE/openstack-tools/bin/$tool scripts/$tool ;
+done
+echo "Installed openstack client tool symlinks in $BASE/scripts"

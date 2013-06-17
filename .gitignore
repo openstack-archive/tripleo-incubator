@@ -7,3 +7,9 @@
 *.pyc
 
 openstack-tools
+scripts/glance
+scripts/heat
+scripts/keystone
+scripts/nova
+stackrc
+
