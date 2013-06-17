@@ -86,12 +86,6 @@ Detailed instructions
         cd $TRIPLEO_ROOT/bm_poseur/
         sudo ./bm_poseur --bridge-ip=none create-bridge
 
-1. Create your machine image. This is the image that baremetal nova
-   will install on each node. You can also download a pre-built image,
-   or experiment with different combinations of elements.
-
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu -a i386 -o $TRIPLEO_ROOT/incubator/base
-
 1. Create and start your seed VM. This script invokes diskimage-builder with
    suitable paths and options to create and start a VM that contains an
    all-in-one OpenStack cloud with the baremetal driver enabled, and
@@ -173,10 +167,15 @@ __(Note: if you have set http_proxy or https_proxy to a network host, you must e
         2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free disk (GB): 0
         2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free VCPUS: 1
 
+1. Create your base image. This is the image that baremetal nova
+   will install on each node. You can also download a pre-built image,
+   or experiment with different combinations of elements.
+
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu -a i386 -o base
+
 1. Load the base image into Glance:
 
-        cd $TRIPLEO_ROOT/incubator/
-        scripts/load-image base.qcow2
+        $TRIPLEO_ROOT/incubator/scripts/load-image base.qcow2
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
