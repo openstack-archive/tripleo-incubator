@@ -79,9 +79,10 @@ Detailed instructions
         scripts/install-dependencies
 
 1. Configure a network for your test environment.
-   This alters your /etc/network/interfaces file and adds an exclusion for
-   dnsmasq so it does not listen on your test network. Note that the order
-   of the parameters to bm_poseur is significant : copy-paste this line.
+   This configures libvirt to setup a bridge with no ip address and adds an
+   exclusion for dnsmasq so it does not listen on your test network. Note that
+   the order of the parameters to bm_poseur is significant : copy-paste this
+   line.
 
         cd $TRIPLEO_ROOT/bm_poseur/
         sudo ./bm_poseur --bridge-ip=none create-bridge
