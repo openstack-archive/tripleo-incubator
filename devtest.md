@@ -5,97 +5,97 @@ VM (on Ubuntu)
 configuration sections provide background information).
 
 Overview:
-* Setup a VM that is your bootstrap node
+* Setup SSH access to let the seed node turn on/off other libvirt VMs.
+* Setup a VM that is your seed node
 * Setup N VMs to pretend to be your cluster
 * Go to town testing deployments on them.
 * For troubleshooting see [troubleshooting.md](troubleshooting.md)
+* For generic deployment information see [Deploying.md](Deploying.md)
 
 Configuration
 -------------
 
-The bootstrap instance expects to run with its eth0 connected to the outside
-world, via whatever IP range you choose to setup. You can run NAT, or not, as
-you choose. This is how we connect to it to run scripts etc - though you can
+The seed instance expects to run with its eth0 connected to the outside world,
+via whatever IP range you choose to setup. You can run NAT, or not, as you
+choose. This is how we connect to it to run scripts etc - though you can
 equally log in on its console if you like.
 
-As we have not yet taught quantum how to deploy VLANs to bare metal instances,
-we're using flat networking, with a single broadcast domain which all the bare
-metal machines are connected to.
+We use flat networking with all machines on one broadcast domain for dev-test.
 
-According, the eth1 of your bootstrap instance should be connected to your bare
-metal cloud LAN. The bootstrap VM uses the rfc5735 TEST-NET-1 range -
-192.0.2.0/24 for bringing up nodes, and does its own DHCP etc, so do not
-connect it to a network shared with other DHCP servers or the like. The
-instructions in this document create a bridge device ('br99') on your
-machine to emulate this with virtual machine 'bare metal' nodes.
+The eth1 of your seed instance should be connected to your bare metal cloud
+LAN. The seed VM uses the rfc5735 TEST-NET-1 range - 192.0.2.0/24 for
+bringing up nodes, and does its own DHCP etc, so do not connect it to a network
+shared with other DHCP servers or the like. The instructions in this document
+create a bridge device ('br99') on your machine to emulate this with virtual
+machine 'bare metal' nodes.
 
 
   NOTE: We recommend using an apt/HTTP proxy and setting the http_proxy
         environment variable accordingly in order to speed up the image build
-        times.  See Footnote [4] to set up Squid proxy.
-
-  NOTE: Building images will be extremely slow on Ubuntu 12.04 (precise). This
-        is due to nbd-qemu lacking writeback caching. Using 12.10 will be
-        significantly faster.
+        times.  See footnote [3] to set up Squid proxy.
 
   NOTE: The CPU architecture specified in several places must be consistent.
-        This document's examples use 32-bit arch for the reduced memory footprint.
-        If you are running on real hardware, or want to test with 64-bit arch,
-        replace i386 => amd64 and i686 => x86_64 in all the commands below.
-        Also, you need to edit incubator/localrc and change BM_CPU_ARCH accordingly.
+	The examples here use 32-bit arch for the reduced memory footprint.  If
+	you are running on real hardware, or want to test with 64-bit arch,
+	replace i386 => amd64 and i686 => x86_64 in all the commands below. You
+	will of course need amd64 capable hardware to do this.
 
 Detailed instructions
 ---------------------
 
-* Before you start, check to see that your machine supports hardware
-  virtualization, otherwise KVM is going to get very grumpy.
+1. Before you start, check to see that your machine supports hardware
+   virtualization, otherwise performance of the test environment will be poor.
+   We are currently bringing up an LXC based alternative testing story, which
+   will mitigate this, thoug the deployed instances will still be full virtual
+   machines and so performance will be significantly less there without
+   hardware virtualisation.
 
-* Also check ssh server is running on the host machine and port 22 is open. 
-  VirtPowerManager will boot vms by ssh'ing into the host machine and 
-  issuing libvirt/virsh commands.
+1. Also check ssh server is running on the host machine and port 22 is open for
+   connections from virbr0 -  VirtPowerManager will boot VMs by sshing into the
+   host machine and issuing libvirt/virsh commands.
 
-* Choose a base location to put all of the source code.
+1. Choose a base location to put all of the source code.
 
         mkdir ~/tripleo
         export TRIPLEO_ROOT=~/tripleo
         cd $TRIPLEO_ROOT
 
-* git clone this repository to your local machine.
+1. git clone this repository to your local machine.
 
         git clone https://github.com/tripleo/incubator.git
 
-* git clone bm_poseur to your local machine.
+1. git clone bm_poseur to your local machine.
 
         git clone https://github.com/tripleo/bm_poseur.git
 
-* git clone diskimage-builder and the tripleo elements likewise.
+1. git clone diskimage-builder and the tripleo elements likewise.
 
         git clone https://github.com/stackforge/diskimage-builder.git
         git clone https://github.com/stackforge/tripleo-image-elements.git
 
-* Ensure dependencies are installed and required virsh configuration is performed:
+1. Ensure dependencies are installed and required virsh configuration is performed:
 
         cd $TRIPLEO_ROOT/incubator
         scripts/install-dependencies
 
-* Configure a network for your test environment.
-  (This alters your /etc/network/interfaces file and adds an exclusion for
-  dnsmasq so it doesn't listen on your test network.)
+1. Configure a network for your test environment.
+   This alters your /etc/network/interfaces file and adds an exclusion for
+   dnsmasq so it does not listen on your test network. Note that the order
+   of the parameters to bm_poseur is significant : copy-paste this line.
 
         cd $TRIPLEO_ROOT/bm_poseur/
         sudo ./bm_poseur --bridge-ip=none create-bridge
 
-* Create your machine image. This is the image that baremetal nova
-  will install on each node. You can also download a pre-built image,
-  or experiment with different combinations of elements.
+1. Create your machine image. This is the image that baremetal nova
+   will install on each node. You can also download a pre-built image,
+   or experiment with different combinations of elements.
 
-        cd $TRIPLEO_ROOT/diskimage-builder/
-        bin/disk-image-create -u base -a i386 -o $TRIPLEO_ROOT/incubator/base
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u base -a i386 -o $TRIPLEO_ROOT/incubator/base
 
-* Create and start your bootstrap VM. This script invokes diskimage-builder
-  with suitable paths and options to create and start a VM that contains an
-  all-in-one OpenStack cloud with the baremetal driver enabled, and preconfigures
-  it for a development environment.
+1. Create and start your seed VM. This script invokes diskimage-builder with
+   suitable paths and options to create and start a VM that contains an
+   all-in-one OpenStack cloud with the baremetal driver enabled, and
+   preconfigures it for a development environment.
 
         cd $TRIPLEO_ROOT/tripleo-image-elements/elements/boot-stack
         sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
@@ -103,59 +103,60 @@ Detailed instructions
         cd $TRIPLEO_ROOT/incubator/
         scripts/boot-elements boot-stack -o bootstrap
 
-  Your SSH pub key has been copied to the resulting 'bootstrap' VM's root user.
-  It has been started by the boot-elements script, and can be logged into at this point.
+   Your SSH pub key has been copied to the resulting 'bootstrap' VMs root
+   user.  It has been started by the boot-elements script, and can be logged
+   into at this point.
 
-* Get the IP of your 'bootstrap' VM
+1. Get the IP of your 'bootstrap' VM
 
         BOOTSTRAP_IP=`scripts/get-vm-ip bootstrap`
 
-  (If you downloaded a pre-built bootstrap image, or chose not to start it by
-  specifying the -n option, you will need to manually start it and customize it.
-  See footnote [1].)
+   If you downloaded a pre-built bootstrap image you will need to log into it
+   and customise the configuration with in it. See footnote [1].)
 
-* Create some 'baremetal' node(s) out of KVM virtual machines.
-  Nova will PXE boot these VMs as though they were physical hardware.
-  You can use bm_poseur to automate this, or if you want to create
-  the VMs yourself, see footnote [2] for details on their requirements.
+1. Create some 'baremetal' node(s) out of KVM virtual machines.
+   Nova will PXE boot these VMs as though they were physical hardware.
+   You can use bm_poseur to automate this, or if you want to create
+   the VMs yourself, see footnote [2] for details on their requirements.
 
         sudo $TRIPLEO_ROOT/bm_poseur/bm_poseur --vms 1 --arch i686 create-vm
 
-* Get the list of MAC addresses for all the VMs you have created.
-  If you used bm_poseur to create the bare metal nodes, you can run this
-  on your laptop to get the MACs:
+1. Get the list of MAC addresses for all the VMs you have created.
+   If you used bm_poseur to create the bare metal nodes, you can run this
+   on your laptop to get the MACs:
 
         MAC=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
-  If you are testing on real hardware, see footnote [3].
-
-* Copy the openstack credentials out of the bootstrap VM, and add the IP:
+1. Copy the openstack credentials out of the bootstrap VM, and add the IP:
+   XXX root@ is normally disabled for ssh? HTF does this work.
 
         scp root@$BOOTSTRAP_IP:stackrc ~/stackrc
         sed -i "s/localhost/$BOOTSTRAP_IP/" ~/stackrc
         source ~/stackrc
 
 __(Note: all of the following commands should be run on your host machine, not inside the bootstrap VM)__
-__(Note: if you have set http_proxy or https_proxy to a network host, these need to be unset before proceeding)__
+__(Note: if you have set http_proxy or https_proxy to a network host, you must either configure that network host to route traffic to your VM ip properly, or add the BOOTSTRAP_IP to your no_proxy environment variable value.)__
 
-* Add your key to nova:
+1. Add your key to nova:
 
         nova keypair-add --pub-key ~/.ssh/id_rsa.pub default
 
-* Inform Nova on the bootstrap node of these resources by running this:
+1. Inform Nova on the bootstrap node of these resources by running this:
 
-        nova baremetal-node-create ubuntu 1 512 10 $MAC
+        nova baremetal-node-create ubuntu 1 512 10
+	nova baremetal--interface add 1 $MAC
 
-  If you have multiple VMs created by bm_poseur, you can simplify this process
-  by running this script.
+   If you have multiple VMs created by bm_poseur, you can simplify this process
+   by running this script.
 
         for MAC in $($TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs); do
             nova baremetal-node-create ubuntu 1 512 10 $MAC
+            nova baremetal-interface-add $id $MAC
         done
 
-  (This assumes the default flavor of CPU:1 RAM:512 DISK:10. Change values if needed.)
+   (This assumes the default flavor of CPU:1 RAM:512 DISK:10. Change values if needed.)
 
-* Wait for the following to show up in the nova-compute log on the bootstrap node
+1. Wait for the following to show up in the nova-compute log on the bootstrap node
 
         ssh root@$BOOTSTRAP_IP "tail -f /var/log/upstart/nova-compute.log"
 
@@ -167,24 +168,24 @@ __(Note: if you have set http_proxy or https_proxy to a network host, these need
         2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free disk (GB): 0
         2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free VCPUS: 1
 
-* Load the base image into Glance:
+1. Load the base image into Glance:
 
         cd $TRIPLEO_ROOT/incubator/
         scripts/load-image base.qcow2
 
-* Allow the VirtualPowerManager to ssh into your host machine to power on vms:
+1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
         ssh root@$BOOTSTRAP_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
 
-* Start the process of provisioning a baremetal node:
+1. Start the process of provisioning a baremetal node:
 
         nova boot --flavor 256 --image base --key_name default bmtest
 
-  You can watch its console to observe the PXE boot/deploy process.
-  After the deploy is complete, it will reboot into the base image.
+   You can watch its console to observe the PXE boot/deploy process.
+   After the deploy is complete, it will reboot into the base image.
 
 
-  The End!
+The End!
 
 
 
@@ -220,17 +221,7 @@ Footnotes
    - if using KVM, specify that you will install the virtual machine via PXE.
      This will avoid KVM prompting for a disk image or installation media.
 
-* [3] Notes for physical hardware environments
-
-  If you are running a different environment, e.g. real hardware, you will
-  need to edit the incubator environment as needed within the bootstrap
-  node prior to running incubator/scripts/demo.
-
-  See localrc and scripts/defaults in the incubator tree on your bootstrap node.
-  Also see devstack/lib/baremetal for a full list of options that can
-  inform Nova of the environment.
-
-* [4] Setting Up Squid Proxy
+* [3] Setting Up Squid Proxy
 
   - Install squid proxy: `apt-get install squid`
   - Set `/etc/squid3/squid.conf` to the following:
