@@ -147,7 +147,7 @@ __(Note: if you have set http_proxy or https_proxy to a network host, you must e
 
         for MAC in $MACS; do
             nova baremetal-node-create ubuntu 1 512 10 $MAC
-            nova baremetal-interface-add $id $MAC
+	    sleep 5
         done
 
    (This assumes the default flavor of CPU:1 RAM:512 DISK:10. Change values if needed.)
