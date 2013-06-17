@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eu
 
+BASE=$(dirname $0)/../..
+
 # keys
 if ! grep "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys >/dev/null; then
   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
@@ -31,20 +33,19 @@ fi
 if [ "$os" = "debian" ]; then
   # packages
   sudo apt-get update
-  DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc
-  sudo pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
+  DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc python-virtualenv
 
   sudo service libvirt-bin restart
 fi
 
 if [ "$os" = "redhat" ]; then
   # For RHEL/CentOS, python-pip is in EPEL
-  sudo yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit
-
-  sudo pip-python install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
+  sudo yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv
 
   sudo service libvirtd restart
 fi
+
+$BASE/scripts/setup-clienttools
 
 # libvirtd group
 grep libvirtd /etc/group || sudo groupadd libvirtd

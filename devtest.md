@@ -137,6 +137,11 @@ Detailed instructions
 __(Note: all of the following commands should be run on your host machine, not inside the bootstrap VM)__
 __(Note: if you have set http_proxy or https_proxy to a network host, you must either configure that network host to route traffic to your VM ip properly, or add the BOOTSTRAP_IP to your no_proxy environment variable value.)__
 
+1. Nova tools have been installed in $TRIPLEO_ROOT/openstack-tools - you need
+   to source the environment unless you have them installed already.
+
+        . $TRIPLEO_ROOT/openstack-tools/bin/activate
+
 1. Add your key to nova:
 
         nova keypair-add --pub-key ~/.ssh/id_rsa.pub default

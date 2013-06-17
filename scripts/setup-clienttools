@@ -1,0 +1,12 @@
+#!/bin/bash
+set -eu
+
+BASE=$(readlink -f $(dirname $0)/..)
+
+virtualenv $BASE/openstack-tools
+set +u
+. $BASE/openstack-tools/bin/activate
+set -u
+pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
+
+echo "Installed openstack client tools in the virtualenv in $BASE/openstack-tools"
