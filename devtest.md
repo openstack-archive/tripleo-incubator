@@ -180,7 +180,7 @@ __(Note: if you have set http_proxy or https_proxy to a network host, you must e
 
 1. Start the process of provisioning a baremetal node:
 
-        nova boot --flavor 256 --image base --key_name default bmtest
+        nova boot --flavor baremetal --image base --key_name default bmtest
 
    You can watch its console to observe the PXE boot/deploy process.
    After the deploy is complete, it will reboot into the base image.
