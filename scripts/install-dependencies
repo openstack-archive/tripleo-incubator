@@ -3,7 +3,8 @@ set -eu
 
 BASE=$(dirname $0)/../..
 
-# keys
+# make the local id_rsa.pub be in .ssh/authorized_keys before that is copied
+# into images via local-config
 if ! grep "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys >/dev/null; then
   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 fi
