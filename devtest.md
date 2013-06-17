@@ -90,7 +90,7 @@ Detailed instructions
    will install on each node. You can also download a pre-built image,
    or experiment with different combinations of elements.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u base -a i386 -o $TRIPLEO_ROOT/incubator/base
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu -a i386 -o $TRIPLEO_ROOT/incubator/base
 
 1. Create and start your seed VM. This script invokes diskimage-builder with
    suitable paths and options to create and start a VM that contains an
