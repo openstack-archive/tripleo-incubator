@@ -52,7 +52,8 @@ Detailed instructions
 
 1. Also check ssh server is running on the host machine and port 22 is open for
    connections from virbr0 -  VirtPowerManager will boot VMs by sshing into the
-   host machine and issuing libvirt/virsh commands.
+   host machine and issuing libvirt/virsh commands. The user these instructions
+   use is your own, but you can also setup a dedicated user if you choose.
 
 1. Choose a base location to put all of the source code.
 
@@ -102,6 +103,8 @@ Detailed instructions
    user.  It has been started by the boot-elements script, and can be logged
    into at this point.
 
+   The IP address of the VM is printed out at the end of boot-elements.
+
 1. Get the IP of your 'bootstrap' VM
 
         BOOTSTRAP_IP=`scripts/get-vm-ip bootstrap`
@@ -123,7 +126,6 @@ Detailed instructions
         MAC=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
 1. Copy the openstack credentials out of the bootstrap VM, and add the IP:
-   XXX root@ is normally disabled for ssh? HTF does this work.
 
         scp root@$BOOTSTRAP_IP:stackrc ~/stackrc
         sed -i "s/localhost/$BOOTSTRAP_IP/" ~/stackrc
