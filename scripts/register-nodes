@@ -1,0 +1,13 @@
+#!/bin/bash
+set -eu
+
+CPU=$1
+MEM=$2
+DISK=$3
+
+for MAC in $MACS; do
+    nova baremetal-node-create ubuntu 1 512 10 $MAC
+    sleep 5
+done
+date
+echo "Nodes will be available in 60 seconds from now."

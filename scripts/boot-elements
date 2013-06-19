@@ -102,7 +102,7 @@ sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME doesn't exist"
 # Create the image!
 $DIB -x -u -a $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS -o /tmp/$IMAGE_NAME
 sudo mv /tmp/$IMAGE_NAME.qcow2 /var/lib/libvirt/images/
-$SCRIPT_HOME/../bootstrap/configure-bootstrap-vm \
+$SCRIPT_HOME/../bootstrap/configure-seed-vm \
            --name $IMAGE_NAME \
            --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
            --engine $ENGINE
@@ -142,6 +142,7 @@ if [ $START_VM ]; then
     echo
 
     echo "element(s): $ALWAYS_ELEMENTS $EXTRA_ELEMENTS booted and ready."
+    echo "SEED_IP=$VM_IP"
     echo
     echo "to login:   ssh root@$VM_IP"
     export VM_IP

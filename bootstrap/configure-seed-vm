@@ -9,8 +9,8 @@ basedir = os.path.dirname(__file__)
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Configure a kvm virtual machine for the bootstrap image.")
-    parser.add_argument('--name', default='bootstrap',
+        description="Configure a kvm virtual machine for the seed image.")
+    parser.add_argument('--name', default='seed',
         help='the name to give the machine in libvirt.')
     parser.add_argument('--image',
         help='Use a custom image file (must be qcow2).')
@@ -19,9 +19,9 @@ def main():
     parser.add_argument('--engine', default='kvm',
         help='The virtualization engine to use')
     args = parser.parse_args()
-    with file(basedir + '/bootstrap.xml', 'rb') as f:
+    with file(basedir + '/seed.xml', 'rb') as f:
         source_template = f.read()
-    imagefile = '/var/lib/libvirt/images/bootstrap.qcow2'
+    imagefile = '/var/lib/libvirt/images/seed.qcow2'
     if args.image:
         imagefile = args.image
     imagefile = os.path.realpath(imagefile)

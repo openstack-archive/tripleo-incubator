@@ -1,0 +1,31 @@
+#!/bin/bash
+set -eu
+
+BASE=$(dirname $0)/../
+CPU=$1
+MEM=$2
+DISK=$3
+arch=i386
+
+$BASE/scripts/register-nodes $1 $2 $3
+
+# TODO: this isn't usable until bgu 1192434 is fixed.
+# deploy_kernel=bm-deploy-kernel
+# deploy_ramdisk=bm-deploy-ramdisk
+# ls $BASE/$deploy_kernel || cp /boot/vmlinuz-$(uname -r) $BASE/$deploy_kernel
+# chmod a+r $BASE/$deploy_kernel
+# 
+# ls $BASE/$deploy_ramdisk || $dib/bin/ramdisk-image-create deploy -o $BASE/$deploy_ramdisk
+# 
+# deploy_kernel_id=$(glance image-create --name $deploy_kernel --public --disk-format aki < "$BASE/$deploy_kernel" \
+#                    | awk ' / id / {print $4}')
+# deploy_ramdisk_id=$(glance image-create --name $deploy_ramdisk --public --disk-format ari < "$BASE/$deploy_ramdisk" \
+#                      | awk ' / id / {print $4}')
+# 
+# 
+# nova flavor-delete baremetal || true
+# nova flavor-create baremetal auto $2 $3 $1
+# nova flavor-key baremetal set "cpu_arch"="$arch" \
+#     "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
+#     "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id"
+

@@ -43,6 +43,8 @@ machine 'bare metal' nodes.
 Detailed instructions
 ---------------------
 
+__(Note: all of the following commands should be run on your host machine, not inside the seed VM)__
+
 1. Before you start, check to see that your machine supports hardware
    virtualization, otherwise performance of the test environment will be poor.
    We are currently bringing up an LXC based alternative testing story, which
@@ -97,19 +99,22 @@ Detailed instructions
         sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 
         cd $TRIPLEO_ROOT/incubator/
-        scripts/boot-elements boot-stack -o bootstrap
+        scripts/boot-elements boot-stack -o seed
 
-   Your SSH pub key has been copied to the resulting 'bootstrap' VMs root
+   Your SSH pub key has been copied to the resulting 'seed' VMs root
    user.  It has been started by the boot-elements script, and can be logged
    into at this point.
 
-   The IP address of the VM is printed out at the end of boot-elements.
+   The IP address of the VM is printed out at the end of boot-elements, or
+   you can use the get-vm-ip script:
 
-1. Get the IP of your 'bootstrap' VM
+        SEED_IP=`scripts/get-vm-ip seed`
 
-        BOOTSTRAP_IP=`scripts/get-vm-ip bootstrap`
+1. Mask the SEED_IP out of your proxy settings
 
-   If you downloaded a pre-built bootstrap image you will need to log into it
+        export no_proxy=$no_proxy,$SEED_IP
+
+1. If you downloaded a pre-built seed image you will need to log into it
    and customise the configuration with in it. See footnote [1].)
 
 1. Create some 'baremetal' node(s) out of KVM virtual machines.
@@ -117,73 +122,73 @@ Detailed instructions
    You can use bm_poseur to automate this, or if you want to create
    the VMs yourself, see footnote [2] for details on their requirements.
 
-        sudo $TRIPLEO_ROOT/bm_poseur/bm_poseur --vms 1 --arch i686 create-vm
+        sudo $TRIPLEO_ROOT/bm_poseur/bm_poseur --vms 3 --arch i686 create-vm
 
-1. Copy the openstack credentials out of the bootstrap VM, and add the IP:
-   (https://bugs.launchpad.net/tripleo/+bug/1191650)
-
-        scp root@$BOOTSTRAP_IP:stackrc $TRIPLEO_ROOT/stackrc
-        sed -i "s/localhost/$BOOTSTRAP_IP/" $TRIPLEO_ROOT/stackrc
-        source $TRIPLEO_ROOT/stackrc
-
-1. Get the list of MAC addresses for all the VMs you have created.
-
-        MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
-
-
-__(Note: all of the following commands should be run on your host machine, not inside the bootstrap VM)__
-__(Note: if you have set http_proxy or https_proxy to a network host, you must either configure that network host to route traffic to your VM ip properly, or add the BOOTSTRAP_IP to your no_proxy environment variable value.)__
+__(Note: if you have set http_proxy or https_proxy to a network host, you must either configure that network host to route traffic to your VM ip properly, or add the SEED_IP to your no_proxy environment variable value.)__
 
 1. Nova tools have been installed in $TRIPLEO_ROOT/incubator/scripts - you need
    to add that to the PATH (unless you have them installed already).
 
         export PATH=$PATH:$TRIPLEO_ROOT/scripts
 
-1. Add your key to nova:
+1. Copy the openstack credentials out of the seed VM, and add the IP:
+   (https://bugs.launchpad.net/tripleo/+bug/1191650)
 
-        nova keypair-add --pub-key ~/.ssh/id_rsa.pub default
+        scp root@$SEED_IP:stackrc $TRIPLEO_ROOT/seedrc
+        sed -i "s/localhost/$SEED_IP/" $TRIPLEO_ROOT/seedrc
+        source $TRIPLEO_ROOT/seedrc
 
-1. Inform Nova on the bootstrap node of these resources by running this:
+1. Get the list of MAC addresses for all the VMs you have created.
 
-        for MAC in $MACS; do
-            nova baremetal-node-create ubuntu 1 512 10 $MAC
-	    sleep 5
-        done
+        MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
-   (This assumes the default flavor of CPU:1 RAM:512 DISK:10. Change values if needed.)
+1. Perform setup of your cloud. The 1 512 10 is CPU count, memory in MB, disk
+   in GB for your test nodes.
+   XXX: need to only use the first node (the seed)
 
-1. Wait for the following to show up in the nova-compute log on the bootstrap node
+        user-config
+	setup-baremetal 1 512 10
 
-        ssh root@$BOOTSTRAP_IP "tail -f /var/log/upstart/nova-compute.log"
+1. Create your undercloud image. This is the image that the seed nova
+   will deploy to become the baremetal undercloud.
 
-        2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Auditing locally available compute resources
-        2013-01-08 16:43:13 DEBUG nova.compute.resource_tracker [-] Hypervisor: free ram (MB): 512 from (pid=24853) _report_hypervisor_resource_view /opt/stack/nova/nova/compute/resource_tracker.py:327
-        2013-01-08 16:43:13 DEBUG nova.compute.resource_tracker [-] Hypervisor: free disk (GB): 0 from (pid=24853) _report_hypervisor_resource_view /opt/stack/nova/nova/compute/resource_tracker.py:328
-        2013-01-08 16:43:13 DEBUG nova.compute.resource_tracker [-] Hypervisor: free VCPUs: 1 from (pid=24853) _report_hypervisor_resource_view /opt/stack/nova/nova/compute/resource_tracker.py:333
-        2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free ram (MB): 0
-        2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free disk (GB): 0
-        2013-01-08 16:43:13 AUDIT nova.compute.resource_tracker [-] Free VCPUS: 1
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu -a i386 -o undercloud boot-stack
 
-1. Create your base image. This is the image that baremetal nova
-   will install on each node. You can also download a pre-built image,
-   or experiment with different combinations of elements.
+1. Load the undercloud image into Glance:
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu -a i386 -o base
-
-1. Load the base image into Glance:
-
-        $TRIPLEO_ROOT/incubator/scripts/load-image base.qcow2
+        $TRIPLEO_ROOT/incubator/scripts/load-image undercloud.qcow2
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
-        ssh root@$BOOTSTRAP_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
+        ssh root@$SEED_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
 
 1. Start the process of provisioning a baremetal node:
+   XX: This should be 'heat stack-create'.
 
-        nova boot --flavor baremetal --image base --key_name default bmtest
+        nova boot --flavor baremetal --image undercloud --key_name default bmtest
 
    You can watch its console to observe the PXE boot/deploy process.
-   After the deploy is complete, it will reboot into the base image.
+   After the deploy is complete, it will reboot into the image.
+
+1. Add a route to the baremetal bridge via the seed node (we do this so that
+   your host is isolated from the networking of the test environment.
+
+        ip route add 192.0.2.0/24 dev virbr0 via $SEED_IP
+
+1. Get the undercloud IP from 'nova list'
+
+1. Copy the stackrc out of the undercloud:
+
+        scp root@$UNDERCLOUD_IP:stackrc $TRIPLEO_ROOT/undercloudrc
+	sed -i "s/localhost/$UNDERCLOUD_IP/" $TRIPLEO_ROOT/undercloudrc
+	source $TRIPLEO_ROOT/undercloudrc
+
+1. Perform setup of your undercloud. The 1 512 10 is CPU count, memory in MB, disk
+   in GB for your test nodes.
+   XXX: need to mask out the first node (the seed)
+
+        user-config
+	setup-baremetal 1 512 10
 
 
 The End!
@@ -193,9 +198,9 @@ The End!
 Footnotes
 =========
 
-* [1] Customize a downloaded bootstrap image.
+* [1] Customize a downloaded seed image.
 
-  If you downloaded your bootstrap VM's image, you may need to configure it.
+  If you downloaded your seed VM image, you may need to configure it.
   Setup a network proxy, if you have one (e.g. 192.168.2.1 port 8080)
 
         echo << EOF >> ~/.profile
@@ -206,7 +211,7 @@ Footnotes
   Add an ~/.ssh/authorized_keys file. The image rejects password authentication
   for security, so you will need to ssh out from the VM console. Even if you
   don't copy your authorized_keys in, you will still need to ensure that
-  /home/stack/.ssh/authorized_keys on your bootstrap node has some kind of
+  /home/stack/.ssh/authorized_keys on your seed node has some kind of
   public SSH key in it, or the openstack configuration scripts will error.
 
 * [2] Requirements for the "baremetal node" VMs
