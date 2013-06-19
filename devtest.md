@@ -152,6 +152,7 @@ __(Note: if you have set http_proxy or https_proxy to a network host, you must e
 1. Create your undercloud image. This is the image that the seed nova
    will deploy to become the baremetal undercloud.
 
+        export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu -a i386 -o undercloud boot-stack
 
 1. Load the undercloud image into Glance:
