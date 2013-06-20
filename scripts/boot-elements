@@ -72,9 +72,11 @@ if [ ! "$EXTRA_ELEMENTS" ]; then
     show_options
 fi
 
+SEED_ARCH=
+
 case $ARCH in
-    i386) ;;
-    amd64) ;;
+    i386) SEED_ARCH='i686'; ;;
+    amd64) SEED_ARCH='x86_64'; ;;
     *) echo "Unsupported arch $ARCH!" ; exit 1 ;;
 esac
 
@@ -105,7 +107,8 @@ sudo mv /tmp/$IMAGE_NAME.qcow2 /var/lib/libvirt/images/
 $SCRIPT_HOME/../bootstrap/configure-seed-vm \
            --name $IMAGE_NAME \
            --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
-           --engine $ENGINE
+           --engine $ENGINE \
+           --arch $SEED_ARCH
 
 VM_IP=''
 function poll_vm {

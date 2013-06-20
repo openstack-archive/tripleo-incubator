@@ -3,7 +3,7 @@
   <memory unit='KiB'>1572864</memory>
   <vcpu>2</vcpu>
   <os>
-    <type arch='i686' machine='pc-1.0'>hvm</type>
+    <type arch='%(arch)s' machine='pc-1.0'>hvm</type>
     <boot dev='hd'/>
   </os>
   <features>
