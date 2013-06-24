@@ -182,7 +182,7 @@ __(Note: if you have set http_proxy or https_proxy to a network host, you must e
 
         scp root@$UNDERCLOUD_IP:stackrc $TRIPLEO_ROOT/undercloudrc
         sed -i "s/localhost/$UNDERCLOUD_IP/" $TRIPLEO_ROOT/undercloudrc
-	source $TRIPLEO_ROOT/undercloudrc
+        source $TRIPLEO_ROOT/undercloudrc
 
 1. Perform setup of your undercloud. The 1 512 10 is CPU count, memory in MB, disk
    in GB for your test nodes.
