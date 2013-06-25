@@ -82,7 +82,7 @@ The lowest layer in the dependency stack, diskimage-builder can be used to
 customise generic disk images for use with Nova bare metal. It can also be
 used to provide build-time specialisation for disk images. Diskimage-builder
 is quite mature and can be downloaded from
-https://github.com/diskimage-builder.
+https://github.com/stackforge/diskimage-builder.
 
 ### Nova bare-metal / Ironic
 
