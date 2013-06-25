@@ -144,10 +144,9 @@ __(Note: if you have set http_proxy or https_proxy to a network host, you must e
 
 1. Perform setup of your cloud. The 1 512 10 is CPU count, memory in MB, disk
    in GB for your test nodes.
-   XXX: need to only use the first node (the seed)
 
         user-config
-        setup-baremetal 1 512 10
+        setup-baremetal 1 512 10 1
 
 1. Create your undercloud image. This is the image that the seed nova
    will deploy to become the baremetal undercloud.
