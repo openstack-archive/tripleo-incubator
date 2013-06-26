@@ -20,6 +20,8 @@ def main():
         help='The virtualization engine to use')
     parser.add_argument('--arch', default='i686',
         help='The architecture to use')
+    parser.add_argument('--linuxbridge', action='store_true', default=False,
+        help="Use a linux bridge rather than ovs bridge.")
     args = parser.parse_args()
     with file(basedir + '/seed.xml', 'rb') as f:
         source_template = f.read()
@@ -27,12 +29,17 @@ def main():
     if args.image:
         imagefile = args.image
     imagefile = os.path.realpath(imagefile)
+    if not args.linuxbridge:
+        porttype = "      <virtualport type='openvswitch'/>\n"
+    else:
+        porttype = ""
     params = {
         'name': args.name,
         'imagefile': imagefile,
         'bmbridge': args.baremetal_interface,
         'engine': args.engine,
-        'arch': args.arch
+        'arch': args.arch,
+        'porttype': porttype,
         }
     if args.image is not None:
         params['imagefile'] = args.image
