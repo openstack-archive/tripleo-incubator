@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eu
 
+## This script should die: https://bugs.launchpad.net/tripleo/+bug/1195046.
+
 BASE=$(dirname $0)/..
 
 # make the local id_rsa.pub be in .ssh/authorized_keys before that is copied
