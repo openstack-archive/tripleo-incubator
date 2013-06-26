@@ -14,7 +14,7 @@ def main():
         help='the name to give the machine in libvirt.')
     parser.add_argument('--image',
         help='Use a custom image file (must be qcow2).')
-    parser.add_argument('--baremetal-interface', default='br99',
+    parser.add_argument('--baremetal-interface', default='brbm',
         help='The interface which bare metal nodes will be connected to.')
     parser.add_argument('--engine', default='kvm',
         help='The virtualization engine to use')

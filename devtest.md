@@ -26,7 +26,7 @@ The eth1 of your seed instance should be connected to your bare metal cloud
 LAN. The seed VM uses the rfc5735 TEST-NET-1 range - 192.0.2.0/24 for
 bringing up nodes, and does its own DHCP etc, so do not connect it to a network
 shared with other DHCP servers or the like. The instructions in this document
-create a bridge device ('br99') on your machine to emulate this with virtual
+create a bridge device ('brbm') on your machine to emulate this with virtual
 machine 'bare metal' nodes.
 
 
@@ -76,19 +76,19 @@ __(Note: all of the following commands should be run on your host machine, not i
         git clone https://github.com/stackforge/diskimage-builder.git
         git clone https://github.com/stackforge/tripleo-image-elements.git
 
+1. Nova tools get installed in $TRIPLEO_ROOT/incubator/scripts - you need to
+   add that to the PATH.
+
+        export PATH=$PATH:$TRIPLEO_ROOT/incubator/scripts
+
 1. Ensure dependencies are installed and required virsh configuration is performed:
 
-        cd $TRIPLEO_ROOT/incubator
-        scripts/install-dependencies
+        install-dependencies
 
 1. Configure a network for your test environment.
-   This configures libvirt to setup a bridge with no ip address and adds an
-   exclusion for dnsmasq so it does not listen on your test network. Note that
-   the order of the parameters to bm_poseur is significant : copy-paste this
-   line.
+   This configures an openvswitch bridge and teaches libvirt about it. 
 
-        cd $TRIPLEO_ROOT/bm_poseur/
-        sudo ./bm_poseur --bridge-ip=none create-bridge
+        setup-network
 
 1. Create and start your seed VM. This script invokes diskimage-builder with
    suitable paths and options to create and start a VM that contains an
@@ -99,7 +99,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 
         cd $TRIPLEO_ROOT/incubator/
-        scripts/boot-elements boot-stack -o seed
+        boot-elements boot-stack -o seed
 
    Your SSH pub key has been copied to the resulting 'seed' VMs root
    user.  It has been started by the boot-elements script, and can be logged
@@ -126,11 +126,6 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 __(Note: if you have set http_proxy or https_proxy to a network host, you must either configure that network host to route traffic to your VM ip properly, or add the SEED_IP to your no_proxy environment variable value.)__
 
-1. Nova tools have been installed in $TRIPLEO_ROOT/incubator/scripts - you need
-   to add that to the PATH (unless you have them installed already).
-
-        export PATH=$PATH:$TRIPLEO_ROOT/scripts
-
 1. Copy the openstack credentials out of the seed VM, and add the IP:
    (https://bugs.launchpad.net/tripleo/+bug/1191650)
 
@@ -156,7 +151,7 @@ __(Note: if you have set http_proxy or https_proxy to a network host, you must e
 
 1. Load the undercloud image into Glance:
 
-        $TRIPLEO_ROOT/incubator/scripts/load-image undercloud.qcow2
+        load-image undercloud.qcow2
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
@@ -218,9 +213,9 @@ Footnotes
 
   If you don't use bm_poseur, but want to create your own VMs, here are some
   suggestions for what they should look like.
-   - each VM should have two NICs
-   - both NICs should be on br99
-   - record the MAC addresses for each NIC
+   - each VM should have 1 NIC
+   - eth0 should be on brbm
+   - record the MAC addresses for the NIC of each VM.
    - give each VM no less than 2GB of disk, and ideally give them
      more than BM_FLAVOR_ROOT_DISK, which defaults to 2GB
    - 512MB RAM is probably enough
