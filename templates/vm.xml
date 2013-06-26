@@ -1,10 +1,11 @@
 <domain type='%(engine)s'>
   <name>%(name)s</name>
-  <memory unit='KiB'>1572864</memory>
-  <vcpu>2</vcpu>
+  <memory unit='KiB'>%(memory)s</memory>
+  <vcpu>%(cpus)s</vcpu>
   <os>
     <type arch='%(arch)s' machine='pc-1.0'>hvm</type>
-    <boot dev='hd'/>
+    <boot dev='%(bootdev)s'/>
+    <bootmenu enable='no'/>
   </os>
   <features>
     <acpi/>
@@ -26,18 +27,7 @@
     <controller type='ide' index='0'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
     </controller>
-    <!-- regular natted network, for access to the vm -->
-    <interface type='network'>
-      <source network='default'/>
-      <model type='e1000'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
-    </interface>
-    <!-- bridged 'bare metal' network -->
-    <interface type='bridge'>
-      <source bridge='%(bmbridge)s'/>
-      <model type='e1000'/>%(porttype)s
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
-    </interface>
+    %(network)s
     <input type='mouse' bus='ps2'/>
     <graphics type='vnc' port='-1' autoport='yes'/>
     <video>

@@ -8,6 +8,7 @@ DISK=$3
 NODES=$4
 arch=i386
 
+# Perhaps make this always recreate things?
 $BASE/scripts/register-nodes $CPU $MEM $DISK $NODES
 
 # TODO: this isn't usable until bgu 1192434 is fixed.

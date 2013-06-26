@@ -11,5 +11,6 @@ scripts/glance
 scripts/heat
 scripts/keystone
 scripts/nova
+seedrc
 stackrc
 

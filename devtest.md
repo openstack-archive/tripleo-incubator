@@ -117,15 +117,6 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. If you downloaded a pre-built seed image you will need to log into it
    and customise the configuration with in it. See footnote [1].)
 
-1. Create some 'baremetal' node(s) out of KVM virtual machines.
-   Nova will PXE boot these VMs as though they were physical hardware.
-   You can use bm_poseur to automate this, or if you want to create
-   the VMs yourself, see footnote [2] for details on their requirements.
-
-        sudo $TRIPLEO_ROOT/bm_poseur/bm_poseur --vms 3 --arch i686 create-vm
-
-__(Note: if you have set http_proxy or https_proxy to a network host, you must either configure that network host to route traffic to your VM ip properly, or add the SEED_IP to your no_proxy environment variable value.)__
-
 1. Copy the openstack credentials out of the seed VM, and add the IP:
    (https://bugs.launchpad.net/tripleo/+bug/1191650)
 
@@ -136,6 +127,14 @@ __(Note: if you have set http_proxy or https_proxy to a network host, you must e
 1. Get the list of MAC addresses for all the VMs you have created.
 
         export MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
+
+1. Create some 'baremetal' node(s) out of KVM virtual machines.
+   Nova will PXE boot these VMs as though they were physical hardware.
+   If you want to create the VMs yourself, see footnote [2] for details on
+   their requirements. The parameters to create-nodes are cpu count, memory
+   (MB), disk size (GB), vm count.
+
+	create-nodes 1 512 10 3
 
 1. Perform setup of your cloud. The 1 512 10 is CPU count, memory in MB, disk
    in GB for your test nodes.

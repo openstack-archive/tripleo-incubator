@@ -1,0 +1,18 @@
+#!/bin/bash
+set -eu
+
+BASE=$(dirname $0)/../
+
+CPU=$1
+MEM=$(( 1024 * $2 ))
+# extra G to allow fuzz for partition table : flavor size and registered size
+# need to be different to actual size.
+DISK=$(( $3 + 1))
+TOTAL=$4
+count=0
+
+for (( count=0; count<TOTAL; ++count )) ; do
+  # TODO: make this idempotent / at least not error when run more than once.
+  virsh vol-create-as default baremetal-$count.qcow2 ${DISK}G --format qcow2 --prealloc-metadata
+  configure-vm --name baremetal_$count --image /var/lib/libvirt/images/baremetal-$count.qcow2 --arch i686 --cpus $CPU --memory $MEM
+done
