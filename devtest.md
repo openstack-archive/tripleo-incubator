@@ -75,6 +75,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         git clone https://github.com/stackforge/diskimage-builder.git
         git clone https://github.com/stackforge/tripleo-image-elements.git
+        git clone https://github.com/stackforge/tripleo-heat-templates.git
 
 1. Nova tools get installed in $TRIPLEO_ROOT/incubator/scripts - you need to
    add that to the PATH.
@@ -142,38 +143,43 @@ __(Note: all of the following commands should be run on your host machine, not i
         user-config
         setup-baremetal 1 512 10 seed
 
-1. Create your undercloud image. This is the image that the seed nova
-   will deploy to become the baremetal undercloud.
-
-        export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu -a i386 -o undercloud boot-stack
-
-1. Load the undercloud image into Glance:
-
-        load-image undercloud.qcow2
-
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
         ssh root@$SEED_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
-
-1. Start the process of provisioning a baremetal node:
-   XX: This should be 'heat stack-create'.
-
-        nova boot --flavor baremetal --image undercloud --key_name default bmtest
-
-   You can watch its console to observe the PXE boot/deploy process.
-   After the deploy is complete, it will reboot into the image.
 
 1. Add a route to the baremetal bridge via the seed node (we do this so that
    your host is isolated from the networking of the test environment.
 
         ip route add 192.0.2.0/24 dev virbr0 via $SEED_IP
 
+1. Create your undercloud image. This is the image that the seed nova
+   will deploy to become the baremetal undercloud.
+
+        export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
+	    -a i386 -o undercloud boot-stack heat-localip heat-cfntools
+
+1. Load the undercloud image into Glance:
+
+        load-image undercloud.qcow2
+
+1. Deploy an undercloud:
+
+        heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
+	  -P "PowerUserName=$(whoami)" undercloud
+
+	# XXX: currently the stack is in review, use
+        nova boot --flavor baremetal --image undercloud --key_name default bmtest
+	# instead.
+
+   You can watch its console to observe the PXE boot/deploy process.
+   After the deploy is complete, it will reboot into the image.
+
 1. Get the undercloud IP from 'nova list'
 
 1. Copy the stackrc out of the undercloud:
 
-        scp root@$UNDERCLOUD_IP:stackrc $TRIPLEO_ROOT/undercloudrc
+        scp heat-admin@$UNDERCLOUD_IP:stackrc $TRIPLEO_ROOT/undercloudrc
         sed -i "s/localhost/$UNDERCLOUD_IP/" $TRIPLEO_ROOT/undercloudrc
         source $TRIPLEO_ROOT/undercloudrc
 
