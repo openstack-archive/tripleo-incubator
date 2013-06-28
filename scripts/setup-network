@@ -10,5 +10,5 @@ BASE=$(dirname $0)/../
 (virsh net-list --all --persistent | grep brbm) && (
  virsh net-destroy brbm; virsh net-undefine brbm)
 virsh net-define $BASE/templates/brbm.xml
-virst net-autostart brbm
+virsh net-autostart brbm
 virsh net-start brbm
