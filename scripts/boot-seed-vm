@@ -22,11 +22,11 @@ SCRIPT_HOME=$(dirname $0)
 
 # Some defaults
 ARCH=i386
-IMAGE_NAME=stack
+IMAGE_NAME=seed
 ENGINE=kvm
 export DIB_IMAGE_SIZE=30
 START_VM=yes
-ALWAYS_ELEMENTS='vm local-config stackuser ubuntu cloud-init-nocloud'
+ALWAYS_ELEMENTS='vm local-config stackuser ubuntu cloud-init-nocloud boot-stack nova-baremetal seed-stack-config'
 EXTRA_ELEMENTS=
 
 function show_options () {

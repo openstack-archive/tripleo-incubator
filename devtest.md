@@ -96,11 +96,11 @@ __(Note: all of the following commands should be run on your host machine, not i
    all-in-one OpenStack cloud with the baremetal driver enabled, and
    preconfigures it for a development environment.
 
-        cd $TRIPLEO_ROOT/tripleo-image-elements/elements/boot-stack
+        cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
         sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 
         cd $TRIPLEO_ROOT/incubator/
-        boot-elements boot-stack -o seed
+        boot-seed-vm
 
    Your SSH pub key has been copied to the resulting 'seed' VMs root
    user.  It has been started by the boot-elements script, and can be logged
@@ -213,6 +213,8 @@ Footnotes
   don't copy your authorized_keys in, you will still need to ensure that
   /home/stack/.ssh/authorized_keys on your seed node has some kind of
   public SSH key in it, or the openstack configuration scripts will error.
+
+  You can log into the console using the username 'stack' password 'stack'.
 
 * [2] Requirements for the "baremetal node" VMs
 
