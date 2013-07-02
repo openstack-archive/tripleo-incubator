@@ -109,7 +109,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    The IP address of the VM is printed out at the end of boot-elements, or
    you can use the get-vm-ip script:
 
-        SEED_IP=`scripts/get-vm-ip seed`
+        export SEED_IP=`scripts/get-vm-ip seed`
 
 1. Mask the SEED_IP out of your proxy settings
 
@@ -125,10 +125,6 @@ __(Note: all of the following commands should be run on your host machine, not i
         sed -i "s/localhost/$SEED_IP/" $TRIPLEO_ROOT/seedrc
         source $TRIPLEO_ROOT/seedrc
 
-1. Get the list of MAC addresses for all the VMs you have created.
-
-        export MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
-
 1. Create some 'baremetal' node(s) out of KVM virtual machines.
    Nova will PXE boot these VMs as though they were physical hardware.
    If you want to create the VMs yourself, see footnote [2] for details on
@@ -136,6 +132,10 @@ __(Note: all of the following commands should be run on your host machine, not i
    (MB), disk size (GB), vm count.
 
 	create-nodes 1 512 10 3
+
+1. Get the list of MAC addresses for all the VMs you have created.
+
+        export MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
 1. Perform setup of your cloud. The 1 512 10 is CPU count, memory in MB, disk
    in GB for your test nodes.
@@ -150,14 +150,17 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Add a route to the baremetal bridge via the seed node (we do this so that
    your host is isolated from the networking of the test environment.
 
-        ip route add 192.0.2.0/24 dev virbr0 via $SEED_IP
+        sudo ip route del 192.0.2.0/24 dev virbr0 || false
+        sudo ip route add 192.0.2.0/24 dev virbr0 via $SEED_IP
 
 1. Create your undercloud image. This is the image that the seed nova
-   will deploy to become the baremetal undercloud.
+   will deploy to become the baremetal undercloud. Note that stackuser is only
+   there for debugging support - it is not suitable for a production network.
 
         export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
-	    -a i386 -o undercloud boot-stack heat-localip heat-cfntools
+	    -a i386 -o undercloud boot-stack nova-baremetal heat-localip \
+	    heat-cfntools stackuser
 
 1. Load the undercloud image into Glance:
 
@@ -168,12 +171,9 @@ __(Note: all of the following commands should be run on your host machine, not i
         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
 	  -P "PowerUserName=$(whoami)" undercloud
 
-	# XXX: currently the stack is in review, use
-        nova boot --flavor baremetal --image undercloud --key_name default bmtest
-	# instead.
-
-   You can watch its console to observe the PXE boot/deploy process.
-   After the deploy is complete, it will reboot into the image.
+   You can watch the console via virsh/virt-manager to observe the PXE
+   boot/deploy process.  After the deploy is complete, it will reboot into the
+   image.
 
 1. Get the undercloud IP from 'nova list'
 
@@ -185,7 +185,6 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Perform setup of your undercloud. The 1 512 10 is CPU count, memory in MB, disk
    in GB for your test nodes.
-   XXX: need to mask out the first node (the seed)
 
         user-config
         setup-baremetal 1 512 10 undercloud

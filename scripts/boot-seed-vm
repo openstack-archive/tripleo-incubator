@@ -68,10 +68,6 @@ done
 
 for arg do EXTRA_ELEMENTS="$EXTRA_ELEMENTS $arg" ; done
 
-if [ ! "$EXTRA_ELEMENTS" ]; then
-    show_options
-fi
-
 SEED_ARCH=
 
 case $ARCH in
