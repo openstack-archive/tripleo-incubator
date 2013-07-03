@@ -14,5 +14,5 @@ count=0
 for (( count=0; count<TOTAL; ++count )) ; do
   # TODO: make this idempotent / at least not error when run more than once.
   virsh vol-create-as default baremetal-$count.qcow2 ${DISK}G --format qcow2 --prealloc-metadata
-  configure-vm --name baremetal_$count --image /var/lib/libvirt/images/baremetal-$count.qcow2 --arch i686 --cpus $CPU --memory $MEM
+  configure-vm --bootdev network --name baremetal_$count --image /var/lib/libvirt/images/baremetal-$count.qcow2 --arch i686 --cpus $CPU --memory $MEM
 done
