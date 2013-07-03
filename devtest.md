@@ -150,7 +150,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Add a route to the baremetal bridge via the seed node (we do this so that
    your host is isolated from the networking of the test environment.
 
-        sudo ip route del 192.0.2.0/24 dev virbr0 || false
+        sudo ip route del 192.0.2.0/24 dev virbr0 || true
         sudo ip route add 192.0.2.0/24 dev virbr0 via $SEED_IP
 
 1. Create your undercloud image. This is the image that the seed nova
