@@ -111,9 +111,15 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         export SEED_IP=`scripts/get-vm-ip seed`
 
+1. Add a route to the baremetal bridge via the seed node (we do this so that
+   your host is isolated from the networking of the test environment.
+
+        sudo ip route del 192.0.2.0/24 dev virbr0 || true
+        sudo ip route add 192.0.2.0/24 dev virbr0 via $SEED_IP
+
 1. Mask the SEED_IP out of your proxy settings
 
-        export no_proxy=$no_proxy,$SEED_IP
+        export no_proxy=$no_proxy,192.0.2.1
 
 1. If you downloaded a pre-built seed image you will need to log into it
    and customise the configuration with in it. See footnote [1].)
@@ -121,8 +127,8 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Copy the openstack credentials out of the seed VM, and add the IP:
    (https://bugs.launchpad.net/tripleo/+bug/1191650)
 
-        scp root@$SEED_IP:stackrc $TRIPLEO_ROOT/seedrc
-        sed -i "s/localhost/$SEED_IP/" $TRIPLEO_ROOT/seedrc
+        scp root@192.0.2.1:stackrc $TRIPLEO_ROOT/seedrc
+        sed -i "s/localhost/192.0.2.1/" $TRIPLEO_ROOT/seedrc
         source $TRIPLEO_ROOT/seedrc
 
 1. Create some 'baremetal' node(s) out of KVM virtual machines.
@@ -145,13 +151,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
-        ssh root@$SEED_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
-
-1. Add a route to the baremetal bridge via the seed node (we do this so that
-   your host is isolated from the networking of the test environment.
-
-        sudo ip route del 192.0.2.0/24 dev virbr0 || true
-        sudo ip route add 192.0.2.0/24 dev virbr0 via $SEED_IP
+        ssh root@192.0.2.1 "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
 
 1. Create your undercloud image. This is the image that the seed nova
    will deploy to become the baremetal undercloud. Note that stackuser is only
