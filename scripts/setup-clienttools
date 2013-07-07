@@ -11,7 +11,7 @@ set +u
 set -u
 pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient
 
-for tool in `echo nova glance heat keystone`; do
+for tool in `echo nova glance heat keystone neutron`; do
   ln -s $BASE/openstack-tools/bin/$tool $BASE/scripts/$tool ;
 done
 echo "Installed openstack client tool symlinks in $BASE/scripts"
