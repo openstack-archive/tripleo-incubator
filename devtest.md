@@ -82,7 +82,11 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         export PATH=$PATH:$TRIPLEO_ROOT/incubator/scripts
 
-1. Ensure dependencies are installed and required virsh configuration is performed:
+1. You need to make the tripleo image elements accessible to diskimage-builder:
+        export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
+
+1. Ensure dependencies are installed and required virsh configuration is
+   performed:
 
         install-dependencies
 
@@ -157,7 +161,6 @@ __(Note: all of the following commands should be run on your host machine, not i
    will deploy to become the baremetal undercloud. Note that stackuser is only
    there for debugging support - it is not suitable for a production network.
 
-        export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
 	    -a i386 -o undercloud boot-stack nova-baremetal heat-localip \
 	    heat-cfntools stackuser
@@ -197,6 +200,67 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         ssh heat-admin@$UNDERCLOUD_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
 
+1. Create your overcloud control plane image. This is the image the undercloud
+   will deploy to become the KVM (or Xen etc) cloud control plane. Note that
+   stackuser is only there for debugging support - it is not suitable for a
+   production network.
+
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
+	    -a i386 -o overcloud-control boot-stack heat-localip \
+	    heat-cfntools stackuser
+
+1. Load the image into Glance:
+
+	load-image overcloud-control.qcow2
+
+1. Create your overcloud compute image. This is the image the undercloud
+   deploys to host KVM instances. Note that stackuser is only there for
+   debugging support - it is not suitable for a production network.
+
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
+	    -a i386 -o overcloud-compute nova-compute \
+	    quantum-openvswitch-agent heat-localip heat-cfntools stackuser
+
+1. Load the image into Glance:
+
+	load-image overcloud-control.qcow2
+
+1. Deploy an overcloud:
+
+        heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
+	  overcloud
+
+   You can watch the console via virsh/virt-manager to observe the PXE
+   boot/deploy process.  After the deploy is complete, the machines will reboot
+   and be available.
+
+1. Get the overcloud IP from 'nova list'
+
+   # FIXME: gets multiple IPS
+   export OVERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\([0-9.]*\).*/\1/")
+
+1. Source the overcloud configuration:
+
+        source $TRIPLEO_ROOT/incubator/overcloudrc
+
+1. Exclude the undercloud from proxies:
+
+        export no_proxy=$no_proxy,$OVERCLOUD_IP
+
+1. Perform admin setup of your overcloud.
+
+        user-config
+
+1. Build an end user disk image and register it with glance.
+
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
+	    -a i386 -o user
+	glance image-create --name user --public --disk-format qcow2 \
+	    --container-format bare --file user.qcow2
+
+1. Deploy your image!
+
+	nova boot -k default --flavor m1.tiny --image user
 
 The End!
 
