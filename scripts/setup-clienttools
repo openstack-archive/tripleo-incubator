@@ -9,7 +9,7 @@ virtualenv $BASE/openstack-tools
 set +u
 . $BASE/openstack-tools/bin/activate
 set -u
-pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient
+pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient
 
 for tool in `echo nova glance heat keystone`; do
   ln -s $BASE/openstack-tools/bin/$tool $BASE/scripts/$tool ;

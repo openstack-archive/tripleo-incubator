@@ -1,0 +1,9 @@
+# TODO: generate random credentials.
+export NOVA_VERSION=1.1
+export OS_PASSWORD=unset
+export OS_AUTH_URL=http://$UNDERCLOUD_IP:5000/v2.0
+export OS_USERNAME=admin
+export OS_TENANT_NAME=admin
+export COMPUTE_API_VERSION=1.1
+export OS_NO_CACHE=True
+

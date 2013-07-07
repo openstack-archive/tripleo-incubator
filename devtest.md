@@ -179,17 +179,23 @@ __(Note: all of the following commands should be run on your host machine, not i
 
    export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\([0-9.]*\).*/\1/")
 
-1. Copy the stackrc out of the undercloud:
+1. Source the undercloud configuration:
 
-        scp heat-admin@$UNDERCLOUD_IP:stackrc $TRIPLEO_ROOT/undercloudrc
-        sed -i "s/localhost/$UNDERCLOUD_IP/" $TRIPLEO_ROOT/undercloudrc
-        source $TRIPLEO_ROOT/undercloudrc
+        source $TRIPLEO_ROOT/incubator/undercloudrc
+
+1. Exclude the undercloud from proxies:
+
+        export no_proxy=$no_proxy,$UNDERCLOUD_IP
 
 1. Perform setup of your undercloud. The 1 768 10 is CPU count, memory in MB, disk
    in GB for your test nodes.
 
         user-config
         setup-baremetal 1 768 10 undercloud
+
+1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
+
+        ssh heat-admin@$UNDERCLOUD_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
 
 
 The End!
