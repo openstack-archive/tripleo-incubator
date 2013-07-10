@@ -83,6 +83,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         export PATH=$PATH:$TRIPLEO_ROOT/incubator/scripts
 
 1. You need to make the tripleo image elements accessible to diskimage-builder:
+       
         export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
 
 1. Ensure dependencies are installed and required virsh configuration is
