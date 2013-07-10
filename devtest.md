@@ -180,7 +180,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Get the undercloud IP from 'nova list'
 
-   export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\([0-9.]*\).*/\1/")
+   export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
 1. Source the undercloud configuration:
 
@@ -238,7 +238,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Get the overcloud IP from 'nova list'
 
    # FIXME: gets multiple IPS
-   export OVERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\([0-9.]*\).*/\1/")
+   export OVERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
 1. Source the overcloud configuration:
 
