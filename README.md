@@ -170,7 +170,7 @@ Caveats/Limitations:
    configuration and persistent data from the image contents - which depends
    on cinder for baremetal).
  - Full HA is not yet implemented
-   https://bugs.launchpad.net/quantum/+bug/1174132
+   https://bugs.launchpad.net/neutron/+bug/1174132
  - Bootstrap removal is not yet implemented (depends on full HA).
  - Currently assumes two clouds: under cloud and over cloud. Long term we would
    like to be able to offer a single cloud, which is primarily (but not

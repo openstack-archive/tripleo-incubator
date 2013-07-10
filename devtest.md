@@ -35,10 +35,10 @@ machine 'bare metal' nodes.
         times.  See footnote [3] to set up Squid proxy.
 
   NOTE: The CPU architecture specified in several places must be consistent.
-	The examples here use 32-bit arch for the reduced memory footprint.  If
-	you are running on real hardware, or want to test with 64-bit arch,
-	replace i386 => amd64 and i686 => x86_64 in all the commands below. You
-	will of course need amd64 capable hardware to do this.
+        The examples here use 32-bit arch for the reduced memory footprint.  If
+        you are running on real hardware, or want to test with 64-bit arch,
+        replace i386 => amd64 and i686 => x86_64 in all the commands below. You
+        will of course need amd64 capable hardware to do this.
 
 Detailed instructions
 ---------------------
@@ -141,7 +141,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    their requirements. The parameters to create-nodes are cpu count, memory
    (MB), disk size (GB), vm count.
 
-	create-nodes 1 768 10 3
+        create-nodes 1 768 10 3
 
 1. Get the list of MAC addresses for all the VMs you have created.
 
@@ -162,8 +162,8 @@ __(Note: all of the following commands should be run on your host machine, not i
    there for debugging support - it is not suitable for a production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
-	    -a i386 -o undercloud boot-stack nova-baremetal heat-localip \
-	    heat-cfntools stackuser
+            -a i386 -o undercloud boot-stack nova-baremetal heat-localip \
+            heat-cfntools stackuser
 
 1. Load the undercloud image into Glance:
 
@@ -172,7 +172,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Deploy an undercloud:
 
         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-	  -P "PowerUserName=$(whoami)" undercloud
+          -P "PowerUserName=$(whoami)" undercloud
 
    You can watch the console via virsh/virt-manager to observe the PXE
    boot/deploy process.  After the deploy is complete, it will reboot into the
@@ -206,30 +206,30 @@ __(Note: all of the following commands should be run on your host machine, not i
    production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
-	    -a i386 -o overcloud-control boot-stack cinder heat-localip \
-	    heat-cfntools stackuser
+            -a i386 -o overcloud-control boot-stack cinder heat-localip \
+            heat-cfntools stackuser
 
 1. Load the image into Glance:
 
-	load-image overcloud-control.qcow2
+        load-image overcloud-control.qcow2
 
 1. Create your overcloud compute image. This is the image the undercloud
    deploys to host KVM instances. Note that stackuser is only there for
    debugging support - it is not suitable for a production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
-	    -a i386 -o overcloud-compute nova-compute \
-	    quantum-openvswitch-agent heat-localip heat-cfntools stackuser
+            -a i386 -o overcloud-compute nova-compute \
+            neutron-openvswitch-agent heat-localip heat-cfntools stackuser
 
 1. Load the image into Glance:
 
-	load-image overcloud-control.qcow2
+        load-image overcloud-compute.qcow2
 
 1. Deploy an overcloud:
 
         make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-	  overcloud
+          overcloud
 
    You can watch the console via virsh/virt-manager to observe the PXE
    boot/deploy process.  After the deploy is complete, the machines will reboot
@@ -255,13 +255,13 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Build an end user disk image and register it with glance.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
-	    -a i386 -o user
-	glance image-create --name user --public --disk-format qcow2 \
-	    --container-format bare --file user.qcow2
+            -a i386 -o user
+        glance image-create --name user --public --disk-format qcow2 \
+            --container-format bare --file user.qcow2
 
 1. Deploy your image!
 
-	nova boot -k default --flavor m1.tiny --image user
+        nova boot -k default --flavor m1.tiny --image user
 
 The End!
 

@@ -70,7 +70,7 @@ There are three ways the service can be deployed:
   cluster. This is the normal TripleO deployment.
 
 * Via the special bootstrap node image, which is built by diskimage-builder and
-  contains a full working stack - nova, glance, keystone and quantum,
+  contains a full working stack - nova, glance, keystone and neutron,
   configured by statically generated Heat metadata. This approach is used to 
   get TripleO up and running.
 
