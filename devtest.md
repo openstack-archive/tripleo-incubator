@@ -227,6 +227,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Deploy an overcloud:
 
+        make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 	  overcloud
 
