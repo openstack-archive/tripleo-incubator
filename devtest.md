@@ -222,7 +222,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    debugging support - it is not suitable for a production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
-            -a i386 -o overcloud-compute nova-compute \
+            -a i386 -o overcloud-compute nova-compute nova-kvm \
             neutron-openvswitch-agent heat-localip heat-cfntools stackuser
 
 1. Load the image into Glance:
