@@ -171,7 +171,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    will deploy to become the baremetal undercloud. Note that stackuser is only
    there for debugging support - it is not suitable for a production network.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
             -a i386 -o undercloud boot-stack nova-baremetal heat-localip \
             heat-cfntools stackuser
 
@@ -215,7 +215,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    stackuser is only there for debugging support - it is not suitable for a
    production network.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
             -a i386 -o overcloud-control boot-stack cinder heat-localip \
             heat-cfntools stackuser
 
@@ -227,7 +227,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    deploys to host KVM instances. Note that stackuser is only there for
    debugging support - it is not suitable for a production network.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
             -a i386 -o overcloud-compute nova-compute nova-kvm \
             neutron-openvswitch-agent heat-localip heat-cfntools stackuser
 
@@ -264,7 +264,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Build an end user disk image and register it with glance.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -u ubuntu \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
             -a i386 -o user
         glance image-create --name user --public --disk-format qcow2 \
             --container-format bare --file user.qcow2
