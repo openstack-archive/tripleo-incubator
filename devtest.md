@@ -98,6 +98,12 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         setup-network
 
+1. Create a deployment ramdisk + kernel. These are used by the seed cloud and
+   the undercloud for deployment to bare metal.
+
+        $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a i386 \
+            ubuntu deploy -o deploy-ramdisk
+
 1. Create and start your seed VM. This script invokes diskimage-builder with
    suitable paths and options to create and start a VM that contains an
    all-in-one OpenStack cloud with the baremetal driver enabled, and
