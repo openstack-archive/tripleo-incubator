@@ -217,7 +217,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
             -a i386 -o overcloud-control boot-stack cinder heat-localip \
-            heat-cfntools stackuser
+            heat-cfntools neutron-network-node stackuser
 
 1. Load the image into Glance:
 
