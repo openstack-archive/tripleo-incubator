@@ -16,7 +16,7 @@ deploy_ramdisk=$TRIPLEO_ROOT/deploy-ramdisk.initramfs
 deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --public \
     --disk-format aki < "$deploy_kernel" | awk ' / id / {print $4}')
 deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --public \
-    --disk-format aki < "$deploy_ramdisk" | awk ' / id / {print $4}')
+    --disk-format ari < "$deploy_ramdisk" | awk ' / id / {print $4}')
 
 nova flavor-delete baremetal || true
 nova flavor-create baremetal auto $2 $3 $1
