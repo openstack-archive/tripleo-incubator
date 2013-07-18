@@ -122,7 +122,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    The IP address of the VM is printed out at the end of boot-elements, or
    you can use the get-vm-ip script:
 
-        export SEED_IP=`scripts/get-vm-ip seed`
+        export SEED_IP=`get-vm-ip seed`
 
 1. Add a route to the baremetal bridge via the seed node (we do this so that
    your host is isolated from the networking of the test environment.
