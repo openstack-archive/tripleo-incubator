@@ -67,7 +67,7 @@ if ! id | grep libvirtd; then
        fi
    fi
 
-   exec sudo su -l $USER $PWD/$0
+   exec sudo su -l $USER $0
 fi
 
 echo "Check to see that you are in the libvirtd group in your current shell before going on. You can check by running:"
