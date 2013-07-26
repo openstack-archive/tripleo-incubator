@@ -1,6 +1,6 @@
 The following notes have already been incorporated into the baremetal-neutron-dhcp
-branches of devstack and nova, and this (neutron-dhcp) branch of incubator.
-Most of the differences are contained in incubator/localrc and devstack/lib/neutron.
+branches of devstack and nova, and this (neutron-dhcp) branch of tripleo-incubator.
+Most of the differences are contained in tripleo-incubator/localrc and devstack/lib/neutron.
 There are also several patches to Nova.
 
 These notes are preserved in a single place just for clarity.

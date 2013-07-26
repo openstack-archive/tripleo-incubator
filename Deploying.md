@@ -210,7 +210,7 @@ baremetal host.
   https://bugs.launchpad.net/tripleo/+bug/1178094
 
 * Enroll your vanilla image into the glance of that install.
-  Be sure to use incubator/scripts/load-image as that will extract the kernel
+  Be sure to use tripleo-incubator/scripts/load-image as that will extract the kernel
   and ramdisk and register them appropriately with glance.
 
 * Enroll your other datacentre machines into that nova baremetal install.
