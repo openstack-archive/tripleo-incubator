@@ -67,7 +67,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. git clone this repository to your local machine.
 
-        git clone https://github.com/tripleo/incubator.git
+        git clone https://github.com/openstack/tripleo-incubator.git
 
 1. git clone bm_poseur to your local machine.
 
@@ -79,10 +79,10 @@ __(Note: all of the following commands should be run on your host machine, not i
         git clone https://github.com/stackforge/tripleo-image-elements.git
         git clone https://github.com/stackforge/tripleo-heat-templates.git
 
-1. Nova tools get installed in $TRIPLEO_ROOT/incubator/scripts - you need to
+1. Nova tools get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts - you need to
    add that to the PATH.
 
-        export PATH=$PATH:$TRIPLEO_ROOT/incubator/scripts
+        export PATH=$PATH:$TRIPLEO_ROOT/tripleo-incubator/scripts
 
 1. You need to make the tripleo image elements accessible to diskimage-builder:
        
@@ -112,7 +112,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
         sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 
-        cd $TRIPLEO_ROOT/incubator/
+        cd $TRIPLEO_ROOT/tripleo-incubator/
         boot-seed-vm
 
    Your SSH pub key has been copied to the resulting 'seed' VMs root
@@ -194,7 +194,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Source the undercloud configuration:
 
-        source $TRIPLEO_ROOT/incubator/undercloudrc
+        source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 1. Exclude the undercloud from proxies:
 
@@ -252,7 +252,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Source the overcloud configuration:
 
-        source $TRIPLEO_ROOT/incubator/overcloudrc
+        source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
 
 1. Exclude the undercloud from proxies:
 
