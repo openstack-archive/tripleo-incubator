@@ -42,12 +42,13 @@ function show_options () {
     echo "      -o name       -- set the name of the VM and image file (stack)"
     echo "      -s size       -- set the image size (10 GB)"
     echo "      -e engine     -- set the virt engine to use (defaults to kvm)"
+    echo "      -c            -- use a image cache for seed image"
     echo "      -n            -- don't automatically start the VM"
     echo
     exit 0
 }
 
-TEMP=`getopt -o hna:o:s: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o hcna:o:s: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -60,6 +61,7 @@ while true ; do
         -s) export DIB_IMAGE_SIZE=$2; shift 2 ;;
         -e) export ENGINE=$2; shift 2 ;;
         -h) show_options;;
+        -c) export IMAGE_CACHE_DIR=${IMAGE_CACHE_DIR:-~/.cache/image-create/image-file-cache} ; shift ;;
         -n) export START_VM=; shift ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -97,8 +99,22 @@ which virsh >/dev/null || die "Error: virsh not found in path"
 sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME not running"
 sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME doesn't exist"
 
-# Create the image!
-$DIB -x -u -a $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS -o /tmp/$IMAGE_NAME
+if [ -n "$IMAGE_CACHE_DIR" ] ; then
+    mkdir -p $IMAGE_CACHE_DIR
+    IMAGE_CACHE_FILE=$IMAGE_CACHE_DIR/$(echo $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS | sha1sum | awk '{ print $1 }' )
+fi
+
+# Create the image or if $IMAGE_CACHE_FILE exists then use it instead
+if [ -n "$IMAGE_CACHE_FILE" -a -e "$IMAGE_CACHE_FILE" ] ; then
+    echo "Using cached seed image : $IMAGE_CACHE_FILE"
+    cp $IMAGE_CACHE_FILE /tmp/$IMAGE_NAME.qcow2
+else
+    $DIB -x -u -a $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS -o /tmp/$IMAGE_NAME > /tmp/$IMAGE_NAME.qcow2
+    if [ -n "$IMAGE_CACHE_FILE" ] ; then
+        cp /tmp/$IMAGE_NAME.qcow2 $IMAGE_CACHE_FILE
+    fi
+fi
+
 sudo mv /tmp/$IMAGE_NAME.qcow2 /var/lib/libvirt/images/
 configure-vm \
            --name $IMAGE_NAME \
