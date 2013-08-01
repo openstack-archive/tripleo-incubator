@@ -23,6 +23,7 @@ SCRIPT_HOME=$(dirname $0)
 # Some defaults
 ARCH=i386
 IMAGE_NAME=seed
+IMAGE_FILE_CACHE=
 ENGINE=kvm
 export DIB_IMAGE_SIZE=30
 START_VM=yes
@@ -39,6 +40,7 @@ function show_options () {
     echo
     echo "Options:"
     echo "      -a i386|amd64 -- set the architecture of the VM (i386)"
+    echo "      -c cache_file -- set to a filename to use as an image cache"
     echo "      -o name       -- set the name of the VM and image file (stack)"
     echo "      -s size       -- set the image size (10 GB)"
     echo "      -e engine     -- set the virt engine to use (defaults to kvm)"
@@ -47,7 +49,7 @@ function show_options () {
     exit 0
 }
 
-TEMP=`getopt -o hna:o:s: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o hna:c:o:s: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -56,6 +58,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         -a) export ARCH=$2; shift 2 ;;
+        -c) export IMAGE_FILE_CACHE=$2; shift 2 ;;
         -o) export IMAGE_NAME=$2; shift 2 ;;
         -s) export DIB_IMAGE_SIZE=$2; shift 2 ;;
         -e) export ENGINE=$2; shift 2 ;;
@@ -97,8 +100,17 @@ which virsh >/dev/null || die "Error: virsh not found in path"
 sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME not running"
 sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME doesn't exist"
 
-# Create the image!
-$DIB -x -u -a $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS -o /tmp/$IMAGE_NAME
+# Create the image or if $IMAGE_FILE_CACHE exists then use it instead
+if [ -n "$IMAGE_FILE_CACHE" -a -e "$IMAGE_FILE_CACHE" ] ; then
+    echo "Using cached seed image"
+    cp $IMAGE_FILE_CACHE /tmp/$IMAGE_NAME.qcow2
+else
+    $DIB -x -u -a $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS -o /tmp/$IMAGE_NAME
+    if [ -n "$IMAGE_FILE_CACHE" ] ; then
+        cp /tmp/$IMAGE_NAME.qcow2 $IMAGE_FILE_CACHE
+    fi
+fi
+
 sudo mv /tmp/$IMAGE_NAME.qcow2 /var/lib/libvirt/images/
 configure-vm \
            --name $IMAGE_NAME \
