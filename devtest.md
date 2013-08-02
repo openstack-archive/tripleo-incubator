@@ -69,29 +69,23 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         git clone https://github.com/openstack/tripleo-incubator.git
 
-1. git clone bm_poseur to your local machine.
-
-        git clone https://github.com/tripleo/bm_poseur.git
-
-1. git clone diskimage-builder and the tripleo elements likewise.
-
-        git clone https://github.com/stackforge/diskimage-builder.git
-        git clone https://github.com/stackforge/tripleo-image-elements.git
-        git clone https://github.com/stackforge/tripleo-heat-templates.git
-
 1. Nova tools get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts - you need to
    add that to the PATH.
 
         export PATH=$PATH:$TRIPLEO_ROOT/tripleo-incubator/scripts
 
-1. You need to make the tripleo image elements accessible to diskimage-builder:
-       
-        export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
-
 1. Ensure dependencies are installed and required virsh configuration is
    performed:
 
         install-dependencies
+
+1. Clone/update the other needed tools which are not available as packages.
+
+        pull-tools
+
+1. You need to make the tripleo image elements accessible to diskimage-builder:
+
+        export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
 
 1. Configure a network for your test environment.
    This configures an openvswitch bridge and teaches libvirt about it. 
