@@ -26,7 +26,7 @@ IMAGE_NAME=seed
 ENGINE=kvm
 export DIB_IMAGE_SIZE=30
 START_VM=yes
-ALWAYS_ELEMENTS='vm local-config stackuser boot-stack nova-baremetal seed-stack-config'
+ALWAYS_ELEMENTS='vm local-config stackuser boot-stack nova-baremetal seed-stack-config remove-serial-console'
 EXTRA_ELEMENTS=${EXTRA_ELEMENTS:-cloud-init-nocloud}
 
 function show_options () {
