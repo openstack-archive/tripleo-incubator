@@ -141,6 +141,9 @@ if [ $START_VM ]; then
     done
     echo
 
+    # Remove the 192.0.2.1 hostkey, new instance == new key.
+    ssh-keygen -R 192.0.2.1
+
     echo "element(s): $ALWAYS_ELEMENTS $EXTRA_ELEMENTS booted and ready."
     echo "SEED_IP=$VM_IP"
     echo
