@@ -106,7 +106,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
         sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 
-        cd $TRIPLEO_ROOT/tripleo-incubator/
+        cd $TRIPLEO_ROOT
         boot-seed-vm
 
    Your SSH pub key has been copied to the resulting 'seed' VMs root
