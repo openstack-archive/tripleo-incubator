@@ -130,7 +130,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         export no_proxy=$no_proxy,192.0.2.1
 
 1. If you downloaded a pre-built seed image you will need to log into it
-   and customise the configuration with in it. See footnote [1].)
+   and customise the configuration within it. See footnote [1].)
 
 1. Copy the openstack credentials out of the seed VM, and add the IP:
    (https://bugs.launchpad.net/tripleo/+bug/1191650)
