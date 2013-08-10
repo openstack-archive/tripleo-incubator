@@ -279,6 +279,7 @@ Footnotes
   If you downloaded your seed VM image, you may need to configure it.
   Setup a network proxy, if you have one (e.g. 192.168.2.1 port 8080)
 
+        # Run within the image!
         echo << EOF >> ~/.profile
         export no_proxy=192.0.2.1
         export http_proxy=http://192.168.2.1:8080/
