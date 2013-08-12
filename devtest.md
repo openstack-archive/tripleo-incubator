@@ -142,17 +142,17 @@ __(Note: all of the following commands should be run on your host machine, not i
    their requirements. The parameters to create-nodes are cpu count, memory
    (MB), disk size (GB), vm count.
 
-        create-nodes 1 768 10 3
+        create-nodes 1 1024 10 3
 
 1. Get the list of MAC addresses for all the VMs you have created.
 
         export MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
-1. Perform setup of your cloud. The 1 768 10 is CPU count, memory in MB, disk
+1. Perform setup of your cloud. The 1 1024 10 is CPU count, memory in MB, disk
    in GB for your test nodes.
 
         user-config
-        setup-baremetal 1 768 10 seed
+        setup-baremetal 1 1024 10 seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
@@ -192,11 +192,11 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         export no_proxy=$no_proxy,$UNDERCLOUD_IP
 
-1. Perform setup of your undercloud. The 1 768 10 is CPU count, memory in MB, disk
+1. Perform setup of your undercloud. The 1 1024 10 is CPU count, memory in MB, disk
    in GB for your test nodes.
 
         user-config
-        setup-baremetal 1 768 10 undercloud
+        setup-baremetal 1 1024 10 undercloud
         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
@@ -323,8 +323,8 @@ Footnotes
    - record the MAC addresses for the NIC of each VM.
    - give each VM no less than 2GB of disk, and ideally give them
      more than BM_FLAVOR_ROOT_DISK, which defaults to 2GB
-   - 768MB RAM is probably enough (512MB is not enough to run an all-in-one
-     OpenStack).
+   - 1GB RAM is probably enough (512MB is not enough to run an all-in-one
+     OpenStack), and 768M isn't enough to do repeated deploys with.
    - if using KVM, specify that you will install the virtual machine via PXE.
      This will avoid KVM prompting for a disk image or installation media.
 
