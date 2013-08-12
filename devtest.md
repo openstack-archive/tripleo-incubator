@@ -127,7 +127,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Mask the SEED_IP out of your proxy settings
 
-        export no_proxy=$no_proxy,192.0.2.1
+        export no_proxy=$no_proxy,192.0.2.1,$SEED_IP
 
 1. If you downloaded a pre-built seed image you will need to log into it
    and customise the configuration within it. See footnote [1].)
@@ -153,6 +153,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         user-config
         setup-baremetal 1 768 10 seed
+        setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
@@ -196,6 +197,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         user-config
         setup-baremetal 1 768 10 undercloud
+        setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
@@ -238,8 +240,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Get the overcloud IP from 'nova list'
 
-   # FIXME: gets multiple IPS
-   export OVERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+   export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
 1. Source the overcloud configuration:
 
@@ -252,6 +253,12 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Perform admin setup of your overcloud.
 
         user-config
+        setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
+
+1. Workaround https://bugs.launchpad.net/diskimage-builder/+bug/1211165
+
+        nova flavor-delete m1.tiny
+        nova flavor-create m1.tiny 1 512 2 1
 
 1. Build an end user disk image and register it with glance.
 
@@ -260,9 +267,26 @@ __(Note: all of the following commands should be run on your host machine, not i
         glance image-create --name user --public --disk-format qcow2 \
             --container-format bare --file user.qcow2
 
-1. Deploy your image!
+1. Log in as a user.
 
-        nova boot -k default --flavor m1.tiny --image user
+        source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc-user
+        user-config
+
+1. Deploy your image.
+
+        nova boot --key-name default --flavor m1.tiny --image user demo
+
+1. Add an external IP for it.
+
+        neutron floatingip-create ext-net --port-id \
+          $(neutron port-list -f csv -c id --quote none | tail -n1)
+
+1. And allow network access to it.
+
+        neutron security-group-rule-create default --protocol icmp \
+          --direction ingress --port-range-min 8 --port-range-max 8
+        neutron security-group-rule-create default --protocol tcp \
+          --direction ingress --port-range-min 22 --port-range-max 22
 
 The End!
 
