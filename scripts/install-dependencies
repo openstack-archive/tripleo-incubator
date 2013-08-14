@@ -70,6 +70,13 @@ if ! id | grep libvirtd; then
    exec sudo su -l $USER $0
 fi
 
+# Ensure all virsh commands connect to qemu:///system on redhat based systems.
+if [ "$os" = "redhat"]; then
+    if ! grep -E "^uri_default" ~/.config/libvirt/libvirt.conf >/dev/null; then
+        echo uri_default = \"qemu:///system\" >> ~/.config/libvirt/libvirt.conf
+    fi
+fi
+
 echo "Check to see that you are in the libvirtd group in your current shell before going on. You can check by running:"
 echo
 echo "id | grep libvirtd"
