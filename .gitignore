@@ -12,6 +12,5 @@ scripts/heat
 scripts/keystone
 scripts/nova
 scripts/neutron
-seedrc
 stackrc
 
