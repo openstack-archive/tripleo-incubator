@@ -164,8 +164,8 @@ __(Note: all of the following commands should be run on your host machine, not i
    there for debugging support - it is not suitable for a production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a i386 -o undercloud boot-stack nova-baremetal heat-localip \
-            heat-cfntools stackuser
+            -a i386 -o undercloud boot-stack nova-baremetal heat-cfntools \
+            stackuser
 
 1. Load the undercloud image into Glance:
 
@@ -209,8 +209,8 @@ __(Note: all of the following commands should be run on your host machine, not i
    production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a i386 -o overcloud-control boot-stack cinder heat-localip \
-            heat-cfntools neutron-network-node stackuser
+            -a i386 -o overcloud-control boot-stack cinder heat-cfntools \
+            neutron-network-node stackuser
 
 1. Load the image into Glance:
 
@@ -222,7 +222,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
             -a i386 -o overcloud-compute nova-compute nova-kvm \
-            neutron-openvswitch-agent heat-localip heat-cfntools stackuser
+            neutron-openvswitch-agent heat-cfntools stackuser
 
 1. Load the image into Glance:
 
