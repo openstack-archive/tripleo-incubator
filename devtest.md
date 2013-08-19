@@ -152,6 +152,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    disk in GB for your test nodes.
 
         user-config
+        setup-endpoints 192.0.2.1
         setup-baremetal 1 1024 10 seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
 
@@ -196,6 +197,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    in GB for your test nodes.
 
         user-config
+        setup-endpoints $UNDERCLOUD_IP
         setup-baremetal 1 1024 10 undercloud
         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
 
@@ -253,6 +255,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Perform admin setup of your overcloud.
 
         user-config
+        setup-endpoints $OVERCLOUD_IP
         setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 
 1. Workaround https://bugs.launchpad.net/diskimage-builder/+bug/1211165
