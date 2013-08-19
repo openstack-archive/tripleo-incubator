@@ -151,6 +151,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Perform setup of your seed cloud. The 1 1024 10 is CPU count, memory in MB,
    disk in GB for your test nodes.
 
+        SERVICE_TOKEN=unset setup-endpoints 192.0.2.1
         user-config
         setup-baremetal 1 1024 10 seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
@@ -195,6 +196,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Perform setup of your undercloud. The 1 1024 10 is CPU count, memory in MB, disk
    in GB for your test nodes.
 
+        SERVICE_TOKEN=unset setup-endpoints $UNDERCLOUD_IP
         user-config
         setup-baremetal 1 1024 10 undercloud
         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
@@ -252,6 +254,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Perform admin setup of your overcloud.
 
+        SERVICE_TOKEN=unset setup-endpoints $OVERCLOUD_IP
         user-config
         setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 
