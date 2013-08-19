@@ -1,0 +1,129 @@
+#!/bin/bash
+#
+# Copyright 2013 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+set -eu
+
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+DESCRIPTION=""
+ADMIN_URL=""
+INTERNAL_URL=""
+REGION="regionOne" # NB: This is the default keystone uses.
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] <name> <type> <public_url>"
+    echo
+    echo "Register a service and create an endpoint for it."
+    echo "The script assumes that the service tenant is called 'service' and "
+    echo "the admin role is called 'admin'."
+    echo
+    echo "Supported types are ec2, image, orchestration, identity,"
+    echo "network, compute."
+    echo
+    echo "Options:"
+    echo "    -d, --description -- the public URL prefix for this endpoint."
+    echo "    -a, --admin       -- the admin URL prefix for this endpoint. If"
+    echo "                         not supplied, defaults to the internal url."
+    echo "    -i, --internal    -- the internal URL prefix for this endpoint."
+    echo "                         If not supplied, defaults to the public url."
+    echo "    -r, --region      -- Override the default region 'regionOne'."
+    echo
+    echo "For instance: $SCRIPT_NAME nova compute https://api.cloud.com/nova/"
+    echo "would create a nova service and register"
+    echo "https://api.cloud.com/nova/v2/\$(tenant_id)s for all three endpoints."
+    exit 0
+}
+
+TEMP=`getopt -o p:d:i:r: -l description:,admin:,internal:,region: -n $SCRIPT_NAME -- "$@"`
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -d) export DESCRIPTION=$2; shift 2 ;;
+        --description) export DESCRIPTION=$2; shift 2 ;;
+        -a) export ADMIN_URL=$2; shift 2 ;;
+        --admin) export ADMIN_URL=$2; shift 2 ;;
+        -i) export INTERNAL_URL=$2; shift 2 ;;
+        --internal) export INTERNAL_URL=$2; shift 2 ;;
+        -r) export REGION=$2; shift 2 ;;
+        --region) export REGION=$2; shift 2 ;;
+        -h) show_options;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+NAME=${1:-""}
+TYPE=${2:-""}
+PUBLIC_URL=${3:-""}
+EXTRA=${4:-""}
+
+if [ -z "NAME" -o -z "$TYPE" -o -z "$PUBLIC_URL" -o -n "$EXTRA" ]; then
+    show_options
+fi
+
+if [ "ec2" = "$TYPE" ]; then
+    SUFFIX="/services/Cloud"   
+    ADMIN_SUFFIX="/services/Admin"
+elif [ "image" = "$TYPE" ]; then
+    SUFFIX="/v1"
+    ADMIN_SUFFIX="$SUFFIX"
+elif [ "orchestration" = "$TYPE" ]; then
+    SUFFIX="/v1/%(tenant_id)s"
+    ADMIN_SUFFIX="$SUFFIX"
+elif [ "identity" = "$TYPE" ]; then
+    SUFFIX="/v2.0"
+    ADMIN_SUFFIX="$SUFFIX"
+elif [ "network" = "$TYPE" ]; then
+    SUFFIX="/"
+    ADMIN_SUFFIX="$SUFFIX"
+elif [ "compute" = "$TYPE" ]; then
+    SUFFIX="/v2/\$(tenant_id)s"
+    ADMIN_SUFFIX="$SUFFIX"
+else
+    echo "Unknown service type" >&2
+    exit 1
+fi
+
+if [ -n "$DESCRIPTION" ]; then
+    DESCRIPTION="--description=$DESCRIPTION"
+fi
+
+if [ -z "$INTERNAL_URL" ]; then
+    INTERNAL_URL="$PUBLIC_URL"
+fi
+
+if [ -z "ADMIN_URL" ]; then
+    ADMIN_URL="$INTERNAL_URL"
+fi
+
+ADMIN_ROLE=$(keystone role-list | awk '/ admin / {print $2}')
+SERVICE_TENANT=$(keystone tenant-list | awk '/ service / {print $2}')
+PASSWORD=$(uuidgen | sha1sum | awk '{print $1}')
+SVC_USER=$(keystone user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
+keystone user-role-add --tenant-id $SERVICE_TENANT \
+                       --user-id $SVC_USER \
+                       --role-id $ADMIN_ROLE
+SERVICE_ID=$(keystone service-create --name=$NAME --type=$TYPE $DESCRIPTION | awk '/ id / {print $4}')
+keystone endpoint-create --region "$REGION" --service-id $SERVICE_ID \
+    --publicurl   "${PUBLIC_URL}/${SUFFIX}" \
+    --adminurl    "${ADMIN_URL}/${ADMIN_SUFFIX}" \
+    --internalurl "${INTERNAL_URL}/${SUFFIX}"
