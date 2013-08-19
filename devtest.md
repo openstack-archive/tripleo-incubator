@@ -148,8 +148,8 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         export MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
-1. Perform setup of your cloud. The 1 1024 10 is CPU count, memory in MB, disk
-   in GB for your test nodes.
+1. Perform setup of your seed cloud. The 1 1024 10 is CPU count, memory in MB,
+   disk in GB for your test nodes.
 
         user-config
         setup-baremetal 1 1024 10 seed
