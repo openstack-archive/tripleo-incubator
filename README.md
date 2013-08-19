@@ -163,7 +163,7 @@ images for TripleO. The elements build images with software installed but
 not configured - and hooks to configure the software with os-apply-config. 
 OpenStack is deployable via the elements that have been written but it is not
 yet setup for full HA. Downloadable from
-https://github.com/stackforge/tripleo-image-elements.
+https://github.com/openstack/tripleo-image-elements.
 
 Caveats/Limitations:
  - No support for image based updates yet. (Requires separating out updateable
@@ -180,7 +180,7 @@ Caveats/Limitations:
 
 These templates provide the rules describing how to deploy the baremetal 
 undercloud and virtual overclouds.  Downloadable from
-https://github.com/stackforge/tripleo-heat-templates.
+https://github.com/openstack/tripleo-heat-templates.
 
 Deploying
 ---------
@@ -198,8 +198,8 @@ Architecture
 ------------
 
 We start with an [image builder]
-(https://github.com/stackforge/diskimage-builder/), and rules for that to
-[build OpenStack images] (https://github.com/stackforge/tripleo-image-elements/).
+(https://github.com/openstack/diskimage-builder/), and rules for that to
+[build OpenStack images] (https://github.com/openstack/tripleo-image-elements/).
 We then use [Heat] (https://github.com/openstack/heat) to orchestrate deployment
 of those images onto bare metal using the [Nova baremetal driver]
 (https://wiki.openstack.org/wiki/Baremetal).
