@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Approved+1: lifeless <robertc@robertcollins.net>
+Code-Review+2: lifeless <robertc@robertcollins.net>
+Submitted-by: Jenkins
+Submitted-at: Tue, 20 Aug 2013 08:32:50 +0000
+Reviewed-on: https://review.openstack.org/39660
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
