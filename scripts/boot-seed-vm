@@ -110,7 +110,7 @@ else
     echo "Using cached seed image : $IMAGE_CACHE_FILE"
 fi
 
-sudo cp $IMAGE_CACHE_FILE.qcow2 /var/lib/libvirt/images/
+sudo cp $IMAGE_CACHE_FILE.qcow2 /var/lib/libvirt/images/$IMAGE_NAME.qcow2
 
 configure-vm \
            --name $IMAGE_NAME \
