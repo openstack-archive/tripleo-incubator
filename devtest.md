@@ -57,6 +57,16 @@ __(Note: all of the following commands should be run on your host machine, not i
    host machine and issuing libvirt/virsh commands. The user these instructions
    use is your own, but you can also setup a dedicated user if you choose.
 
+1. Check that the default libvirt connection for your user is qemu:///system.
+   If it is not, set an environment variable to configure the connection.
+   This configuration is necessary for consistency, as later steps assume
+   qemu:///system is being used.
+
+        # Check the output of "virsh uri"
+        virsh uri
+        # If it's not qemu:///system, export the following environment variable.
+        export LIBVIRT_DEFAULT_URI=qemu:///system
+
 1. Choose a base location to put all of the source code.
 
         mkdir ~/tripleo
