@@ -109,7 +109,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         cd $TRIPLEO_ROOT
         boot-seed-vm
 
-   Your SSH pub key has been copied to the resulting 'seed' VMs root
+   Your SSH pub key has been copied to the resulting 'seed' VM's root
    user.  It has been started by the boot-elements script, and can be logged
    into at this point.
 
