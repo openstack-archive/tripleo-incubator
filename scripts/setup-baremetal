@@ -18,6 +18,14 @@ deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --public \
 deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --public \
     --disk-format ari < "$deploy_ramdisk" | awk ' / id / {print $4}')
 
+# While we can't mix hypervisors, having non-baremetal flavors will just
+# confuse things.
+nova flavor-delete m1.tiny || true
+nova flavor-delete m1.small || true
+nova flavor-delete m1.medium || true
+nova flavor-delete m1.large || true
+nova flavor-delete m1.xlarge || true
+
 nova flavor-delete baremetal || true
 nova flavor-create baremetal auto $2 $3 $1
 nova flavor-key baremetal set "cpu_arch"="$arch" \
