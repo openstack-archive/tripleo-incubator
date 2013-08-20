@@ -151,7 +151,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Perform setup of your seed cloud. The 1 1024 10 is CPU count, memory in MB,
    disk in GB for your test nodes.
 
-        SERVICE_TOKEN=unset setup-endpoints 192.0.2.1
+        SERVICE_TOKEN=unset setup-endpoints $SEED_IP
         user-config
         setup-baremetal 1 1024 10 seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
