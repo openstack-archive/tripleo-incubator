@@ -59,10 +59,16 @@ fi
 $BASE/scripts/setup-clienttools
 
 # libvirtd group
-grep libvirtd /etc/group || sudo groupadd libvirtd
-if ! id | grep libvirtd; then
-   echo "adding $USER to group libvirtd"
-   sudo usermod -a -G libvirtd $USER
+LIBVIRTD_GROUP='libvirtd'
+
+if [ `lsb_release -i -s` = 'Debian' ]; then
+    LIBVIRTD_GROUP='libvirt'
+fi
+
+grep $LIBVIRTD_GROUP /etc/group || sudo groupadd $LIBVIRTD_GROUP
+if ! id | grep $LIBVIRTD_GROUP; then
+   echo "adding $USER to group $LIBVIRTD_GROUP"
+   sudo usermod -a -G $LIBVIRTD_GROUP $USER
 
    if [ "$os" = "redhat" ]; then
        libvirtd_file=/etc/libvirt/libvirtd.conf
@@ -77,9 +83,9 @@ if ! id | grep libvirtd; then
    exec sudo su -l $USER $0
 fi
 
-echo "Check to see that you are in the libvirtd group in your current shell before going on. You can check by running:"
+echo "Check to see that you are in the $LIBVIRTD_GROUP group in your current shell before going on. You can check by running:"
 echo
-echo "id | grep libvirtd"
+echo "id | grep $LIBVIRTD_GROUP"
 echo
 echo "If you are not, it's because this script added you. You can pick up the group by logging out and back in, or run:"
 echo
