@@ -150,9 +150,9 @@ __(Note: all of the following commands should be run on your host machine, not i
    Nova will PXE boot these VMs as though they were physical hardware.
    If you want to create the VMs yourself, see footnote [2] for details on
    their requirements. The parameters to create-nodes are cpu count, memory
-   (MB), disk size (GB), vm count.
+   (MB), disk size (GB), architecture, vm count.
 
-        create-nodes 1 1024 10 3
+        create-nodes 1 1024 10 i386 3
 
 1. Get the list of MAC addresses for all the VMs you have created.
 
