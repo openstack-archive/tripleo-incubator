@@ -152,7 +152,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    their requirements. The parameters to create-nodes are cpu count, memory
    (MB), disk size (GB), vm count.
 
-        create-nodes 1 1024 10 3
+        create-nodes 1 1024 10 i386 3
 
 1. Get the list of MAC addresses for all the VMs you have created.
 
