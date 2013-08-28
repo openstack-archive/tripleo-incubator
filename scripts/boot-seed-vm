@@ -24,7 +24,6 @@ SCRIPT_HOME=$(dirname $0)
 ARCH=i386
 IMAGE_NAME=seed
 IMAGE_CACHE_DIR=${IMAGE_CACHE_DIR:-~/.cache/image-create/image-file-cache}
-ENGINE=kvm
 export DIB_IMAGE_SIZE=30
 START_VM=yes
 ALWAYS_ELEMENTS='vm local-config stackuser boot-stack nova-baremetal seed-stack-config remove-serial-console'
@@ -70,6 +69,18 @@ while true ; do
 done
 
 for arg do EXTRA_ELEMENTS="$EXTRA_ELEMENTS $arg" ; done
+
+if [[ -z "$ENGINE" ]]; then
+    if [ -d /sys/module/kvm ]; then
+        ENGINE=kvm
+    else
+        ENGINE=qemu
+        if test -r /proc/cpuinfo && grep -q "vmx\|svm" /proc/cpuinfo; then
+            echo 'CPU supports virtualization but the kvm module is not loaded.'
+        fi
+        echo 'Using qemu as virtualization engine. Warning!: things will be extremely slow.'
+    fi
+fi
 
 SEED_ARCH=
 
