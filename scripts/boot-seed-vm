@@ -20,6 +20,8 @@ set -e
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
+PATH=$PATH:/usr/sbin:/sbin
+
 # Some defaults
 ARCH=i386
 IMAGE_NAME=seed
