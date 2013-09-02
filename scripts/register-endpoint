@@ -33,7 +33,7 @@ function show_options () {
     echo "the admin role is called 'admin'."
     echo
     echo "Supported types are ec2, image, orchestration, identity,"
-    echo "network, compute."
+    echo "network, compute, baremetal."
     echo
     echo "Options:"
     echo "    -d, --description -- the description for the service."
@@ -84,6 +84,9 @@ if [ "ec2" = "$TYPE" ]; then
     SUFFIX="/services/Cloud"
     ADMIN_SUFFIX="/services/Admin"
 elif [ "image" = "$TYPE" ]; then
+    SUFFIX="/v1"
+    ADMIN_SUFFIX="$SUFFIX"
+elif [ "baremetal" = "$TYPE" ]; then
     SUFFIX="/v1"
     ADMIN_SUFFIX="$SUFFIX"
 elif [ "orchestration" = "$TYPE" ]; then
