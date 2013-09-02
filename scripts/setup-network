@@ -12,3 +12,17 @@ BASE=$(dirname $0)/../
 virsh net-define $BASE/templates/brbm.xml
 virsh net-autostart brbm
 virsh net-start brbm
+
+# start default if needed and configure it to autostart
+default_net=$(sudo virsh net-list --all --persistent | grep default | awk 'BEGIN{OFS=":";} {print $2,$3}')
+state=${default_net%%:*}
+autostart=${default_net##*:}
+
+if [ "$state" != "active" ]; then
+  virsh net-start default
+fi
+
+if [ "$autostart" != "yes" ]; then
+  virsh net-autostart default
+fi
+
