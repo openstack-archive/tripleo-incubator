@@ -12,3 +12,5 @@ BASE=$(dirname $0)/../
 virsh net-define $BASE/templates/brbm.xml
 virsh net-autostart brbm
 virsh net-start brbm
+virsh net-autostart default
+virsh net-start default || true
