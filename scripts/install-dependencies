@@ -5,6 +5,11 @@ set -eu
 
 BASE=$(dirname $0)/..
 
+# generate ssh authentication keys if they don't exist
+if [ ! -d ~/.ssh ]; then
+  ssh-keygen -t rsa -N ""  -f ~/.ssh/id_rsa
+fi
+
 # make the local id_rsa.pub be in .ssh/authorized_keys before that is copied
 # into images via local-config
 if ! grep "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys >/dev/null; then
