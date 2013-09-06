@@ -84,6 +84,19 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         export PATH=$PATH:$TRIPLEO_ROOT/tripleo-incubator/scripts
 
+1. Set HW resources for VMs used as 'baremetal' nodes. NODE_CPU is cpu count,
+   NODE_MEM is memory (MB), NODE_DISK is disk size (GB), NODE_ARCH is
+   architecture (i386, amd64). NODE_ARCH is used also for the seed VM.
+
+   32bit VMs:
+
+        export NODE_CPU=1 NODE_MEM=1024 NODE_DISK=10 NODE_ARCH=i386
+
+   For 64bit it is better to create VMs with more memory and storage because of
+   increased memory footprint:
+
+        export NODE_CPU=1 NODE_MEM=1536 NODE_DISK=15 NODE_ARCH=amd64
+
 1. Ensure dependencies are installed and required virsh configuration is
    performed:
 
@@ -105,7 +118,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Create a deployment ramdisk + kernel. These are used by the seed cloud and
    the undercloud for deployment to bare metal.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a i386 \
+        $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
             ubuntu deploy -o deploy-ramdisk
 
 1. Create and start your seed VM. This script invokes diskimage-builder with
@@ -115,9 +128,11 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
         sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
+        # If you use 64bit VMs (NODE_ARCH=amd64), update also architecture.
+        sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
 
         cd $TRIPLEO_ROOT
-        boot-seed-vm
+        boot-seed-vm -a $NODE_ARCH
 
    Your SSH pub key has been copied to the resulting 'seed' VM's root
    user.  It has been started by the boot-elements script, and can be logged
@@ -149,21 +164,20 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Create some 'baremetal' node(s) out of KVM virtual machines.
    Nova will PXE boot these VMs as though they were physical hardware.
    If you want to create the VMs yourself, see footnote [2] for details on
-   their requirements. The parameters to create-nodes are cpu count, memory
-   (MB), disk size (GB), vm count.
+   their requirements. The parameter to create-nodes is VM count.
 
-        create-nodes 1 1024 10 3
+        create-nodes 3
 
 1. Get the list of MAC addresses for all the VMs you have created.
 
         export MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
-1. Perform setup of your seed cloud. The 1 1024 10 is CPU count, memory in MB,
+1. Perform setup of your seed cloud.
    disk in GB for your test nodes.
 
         SERVICE_TOKEN=unset setup-endpoints 192.0.2.1
         user-config
-        setup-baremetal 1 1024 10 seed
+        setup-baremetal seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
@@ -175,12 +189,16 @@ __(Note: all of the following commands should be run on your host machine, not i
    there for debugging support - it is not suitable for a production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a i386 -o undercloud boot-stack nova-baremetal os-collect-config \
+            -a $NODE_ARCH -o undercloud boot-stack nova-baremetal os-collect-config \
             stackuser
 
 1. Load the undercloud image into Glance:
 
         load-image undercloud.qcow2
+
+1. If you use 64bit VMs (NODE_ARCH=amd64), update architecture in undercloud
+   heat template.
+        sed -i "s/arch: i386/arch: $NODE_ARCH/" $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml
 
 1. Deploy an undercloud:
 
@@ -203,12 +221,11 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         export no_proxy=$no_proxy,$UNDERCLOUD_IP
 
-1. Perform setup of your undercloud. The 1 1024 10 is CPU count, memory in MB, disk
-   in GB for your test nodes.
+1. Perform setup of your undercloud.
 
         SERVICE_TOKEN=unset setup-endpoints $UNDERCLOUD_IP
         user-config
-        setup-baremetal 1 1024 10 undercloud
+        setup-baremetal undercloud
         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
@@ -221,7 +238,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a i386 -o overcloud-control boot-stack cinder os-collect-config \
+            -a $NODE_ARCH -o overcloud-control boot-stack cinder os-collect-config \
             neutron-network-node stackuser
 
 1. Load the image into Glance:
@@ -233,7 +250,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    debugging support - it is not suitable for a production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a i386 -o overcloud-compute nova-compute nova-kvm \
+            -a $NODE_ARCH -o overcloud-compute nova-compute nova-kvm \
             neutron-openvswitch-agent os-collect-config stackuser
 
 1. Load the image into Glance:
@@ -276,7 +293,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Build an end user disk image and register it with glance.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a i386 -o user
+            -a $NODE_ARCH -o user
         glance image-create --name user --public --disk-format qcow2 \
             --container-format bare --file user.qcow2
 

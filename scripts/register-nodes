@@ -1,10 +1,7 @@
 #!/bin/bash
 set -eu
 
-CPU=$1
-MEM=$2
-DISK=$3
-NODES=$4
+NODES=$1
 
 if [ -z "$NODES" ]; then
   NODES="all"
@@ -17,7 +14,7 @@ for MAC in $MACS; do
         # Skip the first node - allocated for use by the seed cloud.
         continue
     fi
-    nova baremetal-node-create ubuntu $CPU $MEM $DISK $MAC
+    nova baremetal-node-create ubuntu $NODE_CPU $NODE_MEM $NODE_DISK $MAC
     # Workaround https://bugs.launchpad.net/tripleo/+bug/1178529
     sleep 5
     if [ $NODES = "seed" ]; then 
