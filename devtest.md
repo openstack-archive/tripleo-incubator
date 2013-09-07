@@ -64,7 +64,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         # Check the output of "virsh uri"
         virsh uri
-        # If it's not qemu:///system, export the following environment variable.
+        # If this is not qemu:///system, export the following environment variable.
         export LIBVIRT_DEFAULT_URI=qemu:///system
 
 1. Choose a base location to put all of the source code.
