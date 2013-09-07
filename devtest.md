@@ -64,7 +64,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         # Check the output of "virsh uri"
         virsh uri
-        # If it's not qemu:///system, export the following environment variable.
+        # If this is not qemu:///system, export the following environment variable.
         export LIBVIRT_DEFAULT_URI=qemu:///system
 
 1. Choose a base location to put all of the source code.
@@ -134,9 +134,8 @@ __(Note: all of the following commands should be run on your host machine, not i
         cd $TRIPLEO_ROOT
         boot-seed-vm -a $NODE_ARCH
 
-   Your SSH pub key has been copied to the resulting 'seed' VM's root
-   user.  It has been started by the boot-elements script, and can be logged
-   into at this point.
+   boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
+   you can log into it with 'ssh root@192.0.2.1'.
 
    The IP address of the VM is printed out at the end of boot-elements, or
    you can use the get-vm-ip script:
