@@ -5,7 +5,7 @@ BASE=$(dirname $0)/../
 NODES=$1
 
 # Perhaps make this always recreate the nodes for repeatability?
-$BASE/scripts/register-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODES
+$BASE/scripts/register-nodes $NODES
 
 deploy_kernel=$TRIPLEO_ROOT/deploy-ramdisk.kernel
 deploy_ramdisk=$TRIPLEO_ROOT/deploy-ramdisk.initramfs
