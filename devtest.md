@@ -289,7 +289,11 @@ __(Note: all of the following commands should be run on your host machine, not i
         user-config
         setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 
-1. Workaround https://bugs.launchpad.net/diskimage-builder/+bug/1211165
+1. If you want a demo user in your overcloud (probably a good idea).
+
+	os-adduser demo demo@example.com
+
+1. Workaround https://bugs.launchpad.net/diskimage-builder/+bug/1211165.
 
         nova flavor-delete m1.tiny
         nova flavor-create m1.tiny 1 512 2 1
