@@ -197,6 +197,9 @@ instructions for doing [Dev/Test of TripleO] (./devtest.md).
 Architecture
 ------------
 
+There is a [high level presentation] (presentations/TripleO architecture overview.odp)
+accompanying these docs.
+
 We start with an [image builder]
 (https://github.com/openstack/diskimage-builder/), and rules for that to
 [build OpenStack images] (https://github.com/openstack/tripleo-image-elements/).
