@@ -166,7 +166,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    If you want to create the VMs yourself, see footnote [2] for details on
    their requirements. The parameter to create-nodes is VM count.
 
-        create-nodes 3
+        create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 3
 
 1. Get the list of MAC addresses for all the VMs you have created.
 
@@ -177,7 +177,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         SERVICE_TOKEN=unset setup-endpoints 192.0.2.1
         user-config
-        setup-baremetal seed
+        setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
@@ -225,7 +225,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         SERVICE_TOKEN=unset setup-endpoints $UNDERCLOUD_IP
         user-config
-        setup-baremetal undercloud
+        setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH undercloud
         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:

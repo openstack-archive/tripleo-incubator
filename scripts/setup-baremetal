@@ -2,10 +2,14 @@
 set -eu
 
 BASE=$(dirname $0)/../
-NODES=$1
+CPU=$1
+MEM=$2
+DISK=$3
+ARCH=$4
+NODES=$5
 
 # Perhaps make this always recreate the nodes for repeatability?
-$BASE/scripts/register-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODES
+$BASE/scripts/register-nodes $CPU $MEM $DISK $NODES
 
 deploy_kernel=$TRIPLEO_ROOT/deploy-ramdisk.kernel
 deploy_ramdisk=$TRIPLEO_ROOT/deploy-ramdisk.initramfs
@@ -23,7 +27,7 @@ nova flavor-delete m1.large || true
 nova flavor-delete m1.xlarge || true
 
 nova flavor-delete baremetal || true
-nova flavor-create baremetal auto $NODE_MEM $NODE_DISK $NODE_CPU
-nova flavor-key baremetal set "cpu_arch"="$NODE_ARCH" \
+nova flavor-create baremetal auto $MEM $DISK $CPU
+nova flavor-key baremetal set "cpu_arch"="$ARCH" \
     "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
     "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id"
