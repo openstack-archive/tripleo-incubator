@@ -61,8 +61,6 @@ if [ -z "HOST" -o -n "$EXTRA" ]; then
 fi
 
 export PASSWORD=unset
-SERVICE_ENDPOINT=http://$HOST:35357/v2.0 register-endpoint -r $REGION -d "Keystone Identity Service" keystone identity http://$HOST:5000 -a http://$HOST:35357
-unset SERVICE_TOKEN
 register-endpoint -r $REGION -d "Heat Service" heat orchestration http://$HOST:8004
 register-endpoint -r $REGION -d "Neutron Service" neutron network http://$HOST:9696
 register-endpoint -r $REGION -d "Glance Image Service" glance image http://$HOST:9292

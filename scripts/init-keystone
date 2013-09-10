@@ -1,0 +1,89 @@
+#!/bin/bash
+#
+# Copyright 2013 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+set -eux
+set -o pipefail
+
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] <service-token> <keystone-ip> <admin-email>"
+    echo
+    echo "Perform initial setup of keystone for a new cloud."
+    echo
+    echo "This will create the admin and service tenants, the admin and Member"
+    echo "roles, and the admin user, and finally register the initial identity"
+    echo "endpoint, without which regular credentials cannot be used."
+    echo
+    echo "Options:"
+    echo "    -r, --region      -- Override the default region 'regionOne'."
+    echo "    -p, --password    -- Choose the admin user password."
+    echo
+    echo "For instance: $SCRIPT_NAME unset 192.0.2.1 admin@example.com"
+    exit $1
+}
+
+REGION="regionOne" #NB: This is the keystone default.
+PASSWORD="" # Default to making a random one.
+
+TEMP=`getopt -o r:p: -l region:,password: -n $SCRIPT_NAME -- "$@"`
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -r) export REGION=$2; shift 2 ;;
+        --region) export REGION=$2; shift 2 ;;
+        -p) export PASSWORD=$2; shift 2 ;;
+        --password) export PASSWORD=$2; shift 2 ;;
+        -h) show_options 0;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+SERVICE_TOKEN=${1:-""}
+HOST=${2:-""}
+ADMIN_EMAIL=${3:-""}
+EXTRA=${4:-""}
+
+if [ -z "$SERVICE_TOKEN" -o -z "$HOST" -o -z "$ADMIN_EMAIL" -o -n "$EXTRA" ]; then
+    show_options 1
+fi
+
+export SERVICE_ENDPOINT=http://$HOST:35357/v2.0
+export SERVICE_TOKEN
+# Tenants
+ADMIN_TENANT_ID=$(keystone tenant-create --name=admin | awk '$2=="id" {print $4}')
+SERVICE_TENANT_ID=$(keystone tenant-create --name=service | awk '$2=="id" {print $4}')
+
+# Roles
+ADMIN_ROLE_ID=$(keystone role-create --name=admin | awk '$2=="id" {print $4}')
+MEMBER_ROLE_ID=$(keystone role-create --name=Member | awk '$2=="id" {print $4}')
+
+# Users
+ADMIN_USER_ID=$(keystone user-create --name=admin \
+    --pass="$PASSWORD" \
+    --email="$ADMIN_EMAIL" | awk '$2=="id" {print $4}')
+
+# User Roles
+keystone user-role-add --user-id $ADMIN_USER_ID --role-id $ADMIN_ROLE_ID --tenant-id $ADMIN_TENANT_ID
+
+register-endpoint -r $REGION -d "Keystone Identity Service" keystone identity http://$HOST:5000 -a http://$HOST:35357
