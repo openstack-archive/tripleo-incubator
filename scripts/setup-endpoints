@@ -32,7 +32,7 @@ function show_options () {
     echo "    -r, --region      -- Override the default region 'regionOne'."
     echo
     echo "For instance: $SCRIPT_NAME 192.0.2.1"
-    exit 0
+    exit $1
 }
 
 REGION="regionOne" #NB: This is the keystone default.
@@ -47,7 +47,7 @@ while true ; do
     case "$1" in
         -r) export REGION=$2; shift 2 ;;
         --region) export REGION=$2; shift 2 ;;
-        -h) show_options;;
+        -h) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -57,7 +57,7 @@ HOST=${1:-""}
 EXTRA=${2:-""}
 
 if [ -z "HOST" -o -n "$EXTRA" ]; then
-    show_options
+    show_options 1
 fi
 
 export PASSWORD=unset
