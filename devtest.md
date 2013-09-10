@@ -36,8 +36,8 @@ machine 'bare metal' nodes.
 
   NOTE: Likewise, setup a pypi mirror and use the pypi element, or use the
         pip-cache element. (See diskimage-builder documentation for both of
-	these). Add the relevant element name to the disk-image-builder and
-	boot-seed-vm script invocations.
+        these). Add the relevant element name to the disk-image-builder and
+        boot-seed-vm script invocations.
 
   NOTE: The CPU architecture specified in several places must be consistent.
         The examples here use 32-bit arch for the reduced memory footprint.  If
@@ -179,7 +179,8 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Perform setup of your seed cloud.
    disk in GB for your test nodes.
 
-        SERVICE_TOKEN=unset setup-endpoints 192.0.2.1
+        init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
+        setup-endpoints 192.0.2.1
         user-config
         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
@@ -216,6 +217,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Get the undercloud IP from 'nova list'
 
         export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+        ssh-keygen -R $UNDERCLOUD_IP
 
 1. Source the undercloud configuration:
 
@@ -227,7 +229,8 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Perform setup of your undercloud.
 
-        SERVICE_TOKEN=unset setup-endpoints $UNDERCLOUD_IP
+        init-keystone -p unset unset $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
+        setup-endpoints $UNDERCLOUD_IP
         user-config
         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH undercloud
         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
@@ -274,6 +277,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Get the overcloud IP from 'nova list'
 
         export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+        ssh-keygen -R $OVERCLOUD_IP
 
 1. Source the overcloud configuration:
 
@@ -285,7 +289,8 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Perform admin setup of your overcloud.
 
-        SERVICE_TOKEN=unset setup-endpoints $OVERCLOUD_IP
+        init-keystone -p unset unset $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP
+        setup-endpoints $OVERCLOUD_IP
         user-config
         setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 
