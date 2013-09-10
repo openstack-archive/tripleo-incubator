@@ -56,7 +56,7 @@ done
 HOST=${1:-""}
 EXTRA=${2:-""}
 
-if [ -z "HOST" -o -n "$EXTRA" ]; then
+if [ -z "$HOST" -o -n "$EXTRA" ]; then
     show_options 1
 fi
 
