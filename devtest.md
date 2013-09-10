@@ -181,6 +181,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         init-keystone -p unset unset 192.0.2.1 admin@example.com
         setup-endpoints 192.0.2.1
+        keystone role-create --name heat_stack_user
         user-config
         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
@@ -230,6 +231,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         init-keystone -p unset unset $UNDERCLOUD_IP admin@example.com
         setup-endpoints $UNDERCLOUD_IP
+        keystone role-create --name heat_stack_user
         user-config
         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH undercloud
         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
@@ -289,6 +291,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         init-keystone -p unset unset $OVERCLOUD_IP admin@example.com
         setup-endpoints $OVERCLOUD_IP
+        keystone role-create --name heat_stack_user
         user-config
         setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 
