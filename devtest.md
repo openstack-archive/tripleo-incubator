@@ -55,7 +55,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    We are currently bringing up an LXC based alternative testing story, which
    will mitigate this, thoug the deployed instances will still be full virtual
    machines and so performance will be significantly less there without
-   hardware virtualisation.
+   hardware virtualization.
 
 1. Also check ssh server is running on the host machine and port 22 is open for
    connections from virbr0 -  VirtPowerManager will boot VMs by sshing into the
@@ -116,7 +116,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
 
 1. Configure a network for your test environment.
-   This configures an openvswitch bridge and teaches libvirt about it. 
+   This configures an openvswitch bridge and teaches libvirt about it.
 
         setup-network
 
@@ -204,6 +204,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. If you use 64bit VMs (NODE_ARCH=amd64), update architecture in undercloud
    heat template.
+
         sed -i "s/arch: i386/arch: $NODE_ARCH/" $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml
 
 1. Deploy an undercloud:
