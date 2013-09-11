@@ -64,7 +64,7 @@ if [ -z "$NAME" -o -z "$EMAIL" ]; then
     show_options 1
 fi
 
-PASSWORD=${PASSWORD:-$(uuidgen | sha1sum | awk '{print $1}')}
+PASSWORD=${PASSWORD:-$(os-make-password)}
 
 ADMIN_ROLE=$(keystone role-get admin| awk '$2=="id" {print $4}')
 if [ -z "$ADMIN_ROLE" ]; then

@@ -124,7 +124,7 @@ if [ -z "$ADMIN_ROLE" ]; then
 fi
 
 SERVICE_TENANT=$(keystone $DEBUG tenant-list | awk '/ service / {print $2}')
-PASSWORD=${PASSWORD:-$(uuidgen | sha1sum | awk '{print $1}')}
+PASSWORD=${PASSWORD:-$(os-make-password)}
 SVC_USER=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
 keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
                        --user-id $SVC_USER \
