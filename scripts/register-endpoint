@@ -24,6 +24,7 @@ DESCRIPTION=""
 ADMIN_URL=""
 INTERNAL_URL=""
 REGION="regionOne" # NB: This is the default keystone uses.
+DEBUG=""
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options] <name> <type> <public_url>"
@@ -42,6 +43,7 @@ function show_options () {
     echo "    -i, --internal    -- the internal URL prefix for this endpoint."
     echo "                         If not supplied, defaults to the public url."
     echo "    -r, --region      -- Override the default region 'regionOne'."
+    echo "    --debug           -- Debug API calls made."
     echo
     echo "For instance: $SCRIPT_NAME nova compute https://api.cloud.com/nova/"
     echo "would create a nova service and register"
@@ -49,7 +51,7 @@ function show_options () {
     exit 0
 }
 
-TEMP=`getopt -o d:a:i:r: -l description:,admin:,internal:,region: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o d:a:i:r: -l debug,description:,admin:,internal:,region: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -59,6 +61,7 @@ while true ; do
     case "$1" in
         -d) export DESCRIPTION="$2"; shift 2 ;;
         --description) export DESCRIPTION="$2"; shift 2 ;;
+	--debug) export DEBUG="--debug"; shift 1 ;;
         -a) export ADMIN_URL="$2"; shift 2 ;;
         --admin) export ADMIN_URL="$2"; shift 2 ;;
         -i) export INTERNAL_URL="$2"; shift 2 ;;
@@ -118,20 +121,20 @@ if [ -z "$ADMIN_URL" ]; then
     ADMIN_URL="$INTERNAL_URL"
 fi
 
-ADMIN_ROLE=$(keystone role-list | awk '/ admin / {print $2}')
+ADMIN_ROLE=$(keystone $DEBUG role-list | awk '/ admin / {print $2}')
 if [ -z "$ADMIN_ROLE" ]; then
     echo "Could not find admin role" >&2
     exit 1
 fi
 
-SERVICE_TENANT=$(keystone tenant-list | awk '/ service / {print $2}')
+SERVICE_TENANT=$(keystone $DEBUG tenant-list | awk '/ service / {print $2}')
 PASSWORD=${PASSWORD:-$(uuidgen | sha1sum | awk '{print $1}')}
-SVC_USER=$(keystone user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
-keystone user-role-add --tenant-id $SERVICE_TENANT \
+SVC_USER=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
+keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
                        --user-id $SVC_USER \
                        --role-id $ADMIN_ROLE
-SERVICE_ID=$(keystone service-create --name=$NAME --type=$TYPE "$DESCRIPTION" | awk '/ id / {print $4}')
-keystone endpoint-create --region "$REGION" --service-id $SERVICE_ID \
+SERVICE_ID=$(keystone $DEBUG service-create --name=$NAME --type=$TYPE "$DESCRIPTION" | awk '/ id / {print $4}')
+keystone endpoint-create $DEBUG --region "$REGION" --service-id $SERVICE_ID \
     --publicurl   "${PUBLIC_URL}/${SUFFIX}" \
     --adminurl    "${ADMIN_URL}/${ADMIN_SUFFIX}" \
     --internalurl "${INTERNAL_URL}/${SUFFIX}"
