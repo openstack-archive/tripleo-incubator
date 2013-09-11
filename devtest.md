@@ -206,10 +206,14 @@ __(Note: all of the following commands should be run on your host machine, not i
    heat template.
         sed -i "s/arch: i386/arch: $NODE_ARCH/" $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml
 
+1. Create a keystone secret token.
+
+        ADMIN_TOKEN=$(os-make-password)
+
 1. Deploy an undercloud:
 
         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-          -P "PowerUserName=$(whoami)" undercloud
+          -P "PowerUserName=$(whoami)" -P "AdminToken=${ADMIN_TOKEN}" undercloud
 
    You can watch the console via virsh/virt-manager to observe the PXE
    boot/deploy process.  After the deploy is complete, it will reboot into the
@@ -230,7 +234,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Perform setup of your undercloud.
 
-        init-keystone -p unset unset $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
+        init-keystone -p unset $ADMIN_TOKEN $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
         setup-endpoints $UNDERCLOUD_IP
         keystone role-create --name heat_stack_user
         user-config
@@ -266,11 +270,15 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         load-image overcloud-compute.qcow2
 
+1. Create a keystone secret token.
+
+        ADMIN_TOKEN=$(os-make-password)
+
 1. Deploy an overcloud:
 
         make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-          overcloud
+          -P "AdminToken=${ADMIN_TOKEN}" overcloud
 
    You can watch the console via virsh/virt-manager to observe the PXE
    boot/deploy process.  After the deploy is complete, the machines will reboot
@@ -291,7 +299,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Perform admin setup of your overcloud.
 
-        init-keystone -p unset unset $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP
+        init-keystone -p unset $ADMIN_TOKEN $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP
         setup-endpoints $OVERCLOUD_IP
         keystone role-create --name heat_stack_user
         user-config
