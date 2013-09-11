@@ -59,15 +59,11 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        -d) export DESCRIPTION="$2"; shift 2 ;;
-        --description) export DESCRIPTION="$2"; shift 2 ;;
+        -d | --description) export DESCRIPTION="$2"; shift 2 ;;
 	--debug) export DEBUG="--debug"; shift 1 ;;
-        -a) export ADMIN_URL="$2"; shift 2 ;;
-        --admin) export ADMIN_URL="$2"; shift 2 ;;
-        -i) export INTERNAL_URL="$2"; shift 2 ;;
-        --internal) export INTERNAL_URL="$2"; shift 2 ;;
-        -r) export REGION="$2"; shift 2 ;;
-        --region) export REGION="$2"; shift 2 ;;
+        -a | --admin) export ADMIN_URL="$2"; shift 2 ;;
+        -i | --internal) export INTERNAL_URL="$2"; shift 2 ;;
+        -r | --region) export REGION="$2"; shift 2 ;;
         -h) show_options;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
