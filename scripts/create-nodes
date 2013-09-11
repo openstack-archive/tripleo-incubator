@@ -23,8 +23,13 @@ count=0
 (virsh pool-list --all --persistent | grep default) || (
  virsh pool-define-as --name default dir --target /var/lib/libvirt/images; virsh pool-autostart default; virsh pool-start default)
 
+PREALLOC=
+if [ -f /etc/debian_version ]; then
+  PREALLOC="--prealloc-metadata"
+fi
+
 for (( count=0; count<TOTAL; ++count )) ; do
   # TODO: make this idempotent / at least not error when run more than once.
-  virsh vol-create-as default baremetal-$count.qcow2 ${DISK}G --format qcow2 --prealloc-metadata
+  virsh vol-create-as default baremetal-$count.qcow2 ${DISK}G --format qcow2 $PREALLOC
   configure-vm --bootdev network --name baremetal_$count --image /var/lib/libvirt/images/baremetal-$count.qcow2 --arch $ARCH --cpus $CPU --memory $MEM
 done
