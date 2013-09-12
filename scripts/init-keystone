@@ -49,8 +49,8 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        -r | --region) export REGION=$2; shift 2 ;;
-        -p | --password) export PASSWORD=$2; shift 2 ;;
+        -r | --region) REGION=$2; shift 2 ;;
+        -p | --password) PASSWORD=$2; shift 2 ;;
         -h) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
