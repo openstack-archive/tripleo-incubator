@@ -12,6 +12,9 @@ Overview:
 * For troubleshooting see [troubleshooting.md](troubleshooting.md)
 * For generic deployment information see [Deploying.md](Deploying.md)
 
+This document is extracted from devtest.sh, our automated bring-up story for
+CI/experimentation.
+
 Configuration
 -------------
 
