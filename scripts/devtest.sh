@@ -261,15 +261,17 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## 
 ##         sed -i "s/arch: i386/arch: $NODE_ARCH/" $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml
 ## 
-## 1. Create a keystone secret token.
-## 
-##         ADMIN_TOKEN=$(os-make-password)
-## 
+## 1. Create secrets for the cloud.
+
+UNDERCLOUD_ADMIN_TOKEN=$(os-make-password)
+UNDERCLOUD_ADMIN_PASSWORD=$(os-make-password)
+
 ## 1. Deploy an undercloud:
-## 
-##         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-##           -P "PowerUserName=$(whoami)" -P "AdminToken=${ADMIN_TOKEN}" undercloud
-## 
+
+heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
+    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
+    undercloud
+
 ##    You can watch the console via virsh/virt-manager to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, it will reboot into the
 ##    image.
@@ -289,7 +291,7 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## 
 ## 1. Perform setup of your undercloud.
 ## 
-##         init-keystone -p unset $ADMIN_TOKEN $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
+init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
 ##         setup-endpoints $UNDERCLOUD_IP
 ##         keystone role-create --name heat_stack_user
 ##         user-config
@@ -325,16 +327,17 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## 
 ##         load-image overcloud-compute.qcow2
 ## 
-## 1. Create a keystone secret token.
-## 
-##         ADMIN_TOKEN=$(os-make-password)
-## 
+## 1. Create secrets for the cloud.
+
+OVERCLOUD_ADMIN_TOKEN=$(os-make-password)
+OVERCLOUD_ADMIN_PASSWORD=$(os-make-password)
+
 ## 1. Deploy an overcloud:
-## 
-##         make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
-##         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-##           -P "AdminToken=${ADMIN_TOKEN}" overcloud
-## 
+
+make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
+heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
+  -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWPRD}" overcloud
+
 ##    You can watch the console via virsh/virt-manager to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, the machines will reboot
 ##    and be available.
@@ -353,13 +356,13 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ##         export no_proxy=$no_proxy,$OVERCLOUD_IP
 ## 
 ## 1. Perform admin setup of your overcloud.
-## 
-##         init-keystone -p unset $ADMIN_TOKEN $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP
-##         setup-endpoints $OVERCLOUD_IP
-##         keystone role-create --name heat_stack_user
-##         user-config
-##         setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
-## 
+
+init-keystone -p $OVERCLOUD_ADMIN_PASSWORD $OVERCLOUD_ADMIN_TOKEN $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP
+setup-endpoints $OVERCLOUD_IP
+keystone role-create --name heat_stack_user
+user-config
+setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
+
 ## 1. If you want a demo user in your overcloud (probably a good idea).
 ## 
 ##         os-adduser demo demo@example.com
