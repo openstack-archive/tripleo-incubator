@@ -41,7 +41,7 @@ function show_options () {
 REGION="regionOne" #NB: This is the keystone default.
 PASSWORD="" # Default to making a random one.
 
-TEMP=`getopt -o r:p: -l region:,password: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o hr:p: -l help,region:,password: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
