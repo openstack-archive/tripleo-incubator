@@ -47,8 +47,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        -r) export REGION=$2; shift 2 ;;
-        --region) export REGION=$2; shift 2 ;;
+        -r|--region) export REGION=$2; shift 2 ;;
         --debug) export DEBUG=--debug; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
