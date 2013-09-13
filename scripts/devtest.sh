@@ -261,15 +261,25 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## 
 ##         sed -i "s/arch: i386/arch: $NODE_ARCH/" $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml
 ## 
-## 1. Create secrets for the cloud.
+## 1. Create secrets for the cloud. Note that you can also make or change these
+##    later and update the heat stack definition to inject them - as long as you
+##    also update the keystone recorded password. Note that there will be a window
+##    between updating keystone and instances where they will disagree and service
+##    will be down. Instead consider adding a new service account and changing 
+##    everything across to it, then deleting the old account after the cluster is
+##    updated.
 
 UNDERCLOUD_ADMIN_TOKEN=$(os-make-password)
 UNDERCLOUD_ADMIN_PASSWORD=$(os-make-password)
+UNDERCLOUD_GLANCE_PASSWORD=$(os-make-password)
+UNDERCLOUD_HEAT_PASSWORD=$(os-make-password)
+UNDERCLOUD_NEUTRON_PASSWORD=$(os-make-password)
+UNDERCLOUD_NOVA_PASSWORD=$(os-make-password)
 
 ## 1. Deploy an undercloud:
 
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
+    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD}" \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
@@ -290,14 +300,18 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
 ##         export no_proxy=$no_proxy,$UNDERCLOUD_IP
 ## 
 ## 1. Perform setup of your undercloud.
-## 
-init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
-##         setup-endpoints $UNDERCLOUD_IP
-##         keystone role-create --name heat_stack_user
-##         user-config
-##         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH undercloud
-##         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
-## 
+
+init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
+    $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
+setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+    --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+    --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
+    --nova-password $UNDERCLOUD_NOVA_PASSWORD
+keystone role-create --name heat_stack_user
+user-config
+setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH undercloud
+setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
+
 ## 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 ## 
 ##         ssh heat-admin@$UNDERCLOUD_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
@@ -331,12 +345,18 @@ init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN $UNDERCLOUD_
 
 OVERCLOUD_ADMIN_TOKEN=$(os-make-password)
 OVERCLOUD_ADMIN_PASSWORD=$(os-make-password)
+OVERCLOUD_CINDER_PASSWORD=$(os-make-password)
+OVERCLOUD_GLANCE_PASSWORD=$(os-make-password)
+OVERCLOUD_HEAT_PASSWORD=$(os-make-password)
+OVERCLOUD_NEUTRON_PASSWORD=$(os-make-password)
+OVERCLOUD_NOVA_PASSWORD=$(os-make-password)
 
 ## 1. Deploy an overcloud:
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-  -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWPRD}" overcloud
+    -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD}" \
+    overcloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, the machines will reboot
@@ -357,8 +377,13 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ## 
 ## 1. Perform admin setup of your overcloud.
 
-init-keystone -p $OVERCLOUD_ADMIN_PASSWORD $OVERCLOUD_ADMIN_TOKEN $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP
-setup-endpoints $OVERCLOUD_IP
+init-keystone -p $OVERCLOUD_ADMIN_PASSWORD $OVERCLOUD_ADMIN_TOKEN \
+    $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP
+setup-endpoints $OVERCLOUD_IP --cinder-password $OVERCLOUD_CINDER_PASSWORD \
+    --glance-password $OVERCLOUD_GLANCE_PASSWORD \
+    --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+    --neutron-password $OVERCLOUD_NEUTRON_PASSWORD \
+    --nova-password $OVERCLOUD_NOVA_PASSWORD
 keystone role-create --name heat_stack_user
 user-config
 setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24

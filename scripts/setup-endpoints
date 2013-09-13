@@ -29,15 +29,25 @@ function show_options () {
     echo "compute services as running on the default ports on controlplane-ip."
     echo
     echo "Options:"
-    echo "    -r, --region      -- Override the default region 'regionOne'."
-    echo "    --debug           -- Debug the API calls made."
+    echo "    -r, --region       -- Override the default region 'regionOne'."
+    echo "    --cinder-password  -- Specify a password for cinder."
+    echo "    --glance-password  -- Specify a password for glance."
+    echo "    --heat-password    -- Specify a password for heat."
+    echo "    --neutron-password -- Specify a password for neutron."
+    echo "    --nova-password    -- Specify a password for nova."
+    echo "    --debug            -- Debug the API calls made."
     echo
     echo "For instance: $SCRIPT_NAME 192.0.2.1"
     exit $1
 }
 
-REGION="regionOne" #NB: This is the keystone default.
 DEBUG=""
+CINDER_PASSWORD=""
+GLANCE_PASSWORD=""
+HEAT_PASSWORD=""
+NEUTRON_PASSWORD=""
+NOVA_PASSWORD=""
+REGION="regionOne" #NB: This is the keystone default.
 
 TEMP=`getopt -o r: -l region:,debug -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
@@ -49,6 +59,11 @@ while true ; do
     case "$1" in
         -r|--region) export REGION=$2; shift 2 ;;
         --debug) export DEBUG=--debug; shift 1;;
+        --cinder-password) export CINDER_PASSWORD=$2; shift 2 ;;
+        --glance-password) export GLANCE_PASSWORD=$2; shift 2 ;;
+        --heat-password) export HEAT_PASSWORD=$2; shift 2 ;;
+        --neutron-password) export NEUTRON_PASSWORD=$2; shift 2 ;;
+        --nova-password) export NOVA_PASSWORD=$2; shift 2 ;;
         -h) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -62,9 +77,8 @@ if [ -z "$HOST" -o -n "$EXTRA" ]; then
     show_options 1
 fi
 
-export PASSWORD=unset
-register-endpoint $DEBUG -r $REGION -d "Heat Service" heat orchestration http://$HOST:8004
-register-endpoint $DEBUG -r $REGION -d "Neutron Service" neutron network http://$HOST:9696
-register-endpoint $DEBUG -r $REGION -d "Glance Image Service" glance image http://$HOST:9292
+PASSWORD=$HEAT_PASSWORD register-endpoint $DEBUG -r $REGION -d "Heat Service" heat orchestration http://$HOST:8004
+PASSWORD=$NEUTRON_PASSWORD register-endpoint $DEBUG -r $REGION -d "Neutron Service" neutron network http://$HOST:9696
+PASSWORD=$GLANCE_PASSWORD register-endpoint $DEBUG -r $REGION -d "Glance Image Service" glance image http://$HOST:9292
 register-endpoint $DEBUG -r $REGION -d "EC2 Compatibility Layer" ec2 ec2 http://$HOST:8773
-register-endpoint $DEBUG -r $REGION -d "Nova Compute Service" nova compute http://$HOST:8774
+PASSWORD=$NOVA_PASSWORD register-endpoint $DEBUG -r $REGION -d "Nova Compute Service" nova compute http://$HOST:8774
