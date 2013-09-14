@@ -187,10 +187,9 @@ __(Note: all of the following commands should be run on your host machine, not i
         export MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
 
 1. Perform setup of your seed cloud.
-   disk in GB for your test nodes.
 
         init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
-        setup-endpoints 192.0.2.1
+        setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
         keystone role-create --name heat_stack_user
         user-config
         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH seed
