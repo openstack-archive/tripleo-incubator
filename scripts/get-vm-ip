@@ -1,24 +1,65 @@
-#!/bin/sh
+#!/bin/bash
 set -u
 
+SCRIPT_NAME=$(basename $0)
 PATH=$PATH:/usr/sbin:/sbin
+WAIT=0
 
-if [ "$#" -eq 0 ]; then
-  echo "provide vm name as argument."
-  exit 1
+function show_options () {
+  echo "Usage: $SCRIPT_NAME [options] <vm-name>"
+  echo
+  echo "Get the IP of a VM with the name <vm-name>"
+  echo
+  echo "Options:"
+  echo "     -w, --wait     -- Wait indefinitely for the VM to appear"
+  exit $1
+}
+
+TEMP=`getopt -o w -l wait -n $SCRIPT_NAME -- "$@"`
+if [ $? != 0 ]; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP`: they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+  case "$1" in
+    -w|--wait) export WAIT=1 ; shift 1 ;;
+    -h|--help) show_options 0;;
+    --) shift ; break ;;
+    *) echo "Error: unsupported option $1." ; exit 1 ;;
+  esac
+done
+
+VMNAME=${1:-""}
+ip=""
+
+if [ -z "$VMNAME" ]; then
+  show_options 1
 fi
 
-mac=$(sudo virsh dumpxml $1 | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+while true ; do
+  mac=$(sudo virsh dumpxml $VMNAME 2>/dev/null | grep "mac address" | head -1 | awk -F "'" '{print $2}')
 
-ip=$(arp -n | awk " /$mac/ {print \$1}")
+  if [ "$mac" != "" ]; then
+    ip=$(arp -n | awk " / $mac/ {print \$1}")
+  
+    if [ -z "$ip" ] ; then
+      ip=$(sudo awk "/$mac/ { print \$3 }" /var/lib/libvirt/dnsmasq/default.leases)
+    fi
+  fi
 
-if [ -z "$ip" ] ; then
-    ip=$(sudo awk "/$mac/ { print \$3 }" /var/lib/libvirt/dnsmasq/default.leases)
+  if [ -z "$ip" ]; then
+    echo "VM $VMNAME not found. It may not have booted yet." >/dev/stderr
+    if [ "$WAIT" == "1" ]; then
+      echo "Sleeping for 2 seconds" >/dev/stderr
+      sleep 2
+      continue;
+    fi
+  fi
+
+  break;
+done
+
+if [ ! -z "$ip" ]; then
+  echo $ip
 fi
-
-if [ -z "$ip" ]; then
-  echo "mac $mac not found. it's possible that the vm just isn't up yet."
-  exit 1
-fi
-
-echo $ip
