@@ -255,11 +255,6 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## 
 ##         load-image undercloud.qcow2
 ## 
-## 1. If you use 64bit VMs (NODE_ARCH=amd64), update architecture in undercloud
-##    heat template.
-## 
-##         sed -i "s/arch: i386/arch: $NODE_ARCH/" $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml
-## 
 ## 1. Create secrets for the cloud. Note that you can also make or change these
 ##    later and update the heat stack definition to inject them - as long as you
 ##    also update the keystone recorded password. Note that there will be a window
@@ -278,7 +273,7 @@ UNDERCLOUD_NOVA_PASSWORD=$(os-make-password)
 ## 1. Deploy an undercloud:
 
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD}" \
+    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH}" \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
