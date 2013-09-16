@@ -1,0 +1,30 @@
+#!/bin/sh
+set -u
+
+PATH=$PATH:/usr/sbin:/sbin
+
+if [ "$#" -lt 2 ]; then
+  echo "Usage: $(basename $0) <num> <vm-name>"
+  exit 1
+fi
+
+echo "Waiting for $1 VMs matching $2..." >/dev/stderr
+while true ; do
+  vms=$(sudo virsh list --all | grep $2 | awk '{ print $2 }')
+  num=$(sudo virsh list --all | grep $2 | awk '{ print $2 }' | wc -l)
+
+  if [ $num -lt $1 ]; then
+    echo "$num VMs found, sleeping..." >/dev/stderr
+    sleep 2
+    continue
+  fi
+
+  macs=""
+  for vm in $vms ; do
+    macs="${macs}$(sudo virsh dumpxml $vm | grep "mac address" | head -1 | awk -F "'" '{print $2}') "
+  done
+
+  break
+done
+
+echo $macs
