@@ -1,7 +1,6 @@
 #!/bin/bash
 set -eu
 
-BASE=$(dirname $0)/../
 CPU=$1
 MEM=$2
 DISK=$3
@@ -9,7 +8,7 @@ ARCH=$4
 NODES=$5
 
 # Perhaps make this always recreate the nodes for repeatability?
-$BASE/scripts/register-nodes $CPU $MEM $DISK $NODES
+register-nodes $CPU $MEM $DISK $NODES
 
 deploy_kernel=$TRIPLEO_ROOT/deploy-ramdisk.kernel
 deploy_ramdisk=$TRIPLEO_ROOT/deploy-ramdisk.initramfs

@@ -1,8 +1,6 @@
 #!/bin/bash
 set -eu
 
-BASE=$(dirname $0)/../
-
 CPU=$1
 MEM=$(( 1024 * $2 ))
 # extra G to allow fuzz for partition table : flavor size and registered size
