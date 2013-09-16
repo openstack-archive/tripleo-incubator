@@ -134,7 +134,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    the undercloud for deployment to bare metal.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-            ubuntu deploy -o deploy-ramdisk
+            ubuntu deploy -o $TRIPLEO_ROOT/deploy-ramdisk
 
 1. Create and start your seed VM. This script invokes diskimage-builder with
    suitable paths and options to create and start a VM that contains an
@@ -204,12 +204,12 @@ __(Note: all of the following commands should be run on your host machine, not i
    there for debugging support - it is not suitable for a production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a $NODE_ARCH -o undercloud boot-stack nova-baremetal os-collect-config \
-            stackuser
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
+            boot-stack nova-baremetal os-collect-config stackuser
 
 1. Load the undercloud image into Glance:
 
-        load-image undercloud.qcow2
+        load-image $TRIPLEO_ROOT/undercloud.qcow2
 
 1. Create secrets for the cloud. Note that you can also make or change these
    later and update the heat stack definition to inject them - as long as you
@@ -272,24 +272,24 @@ __(Note: all of the following commands should be run on your host machine, not i
    production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a $NODE_ARCH -o overcloud-control boot-stack cinder os-collect-config \
-            neutron-network-node stackuser
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
+            boot-stack cinder os-collect-config neutron-network-node stackuser
 
 1. Load the image into Glance:
 
-        load-image overcloud-control.qcow2
+        load-image $TRIPLEO_ROOT/overcloud-control.qcow2
 
 1. Create your overcloud compute image. This is the image the undercloud
    deploys to host KVM instances. Note that stackuser is only there for
    debugging support - it is not suitable for a production network.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a $NODE_ARCH -o overcloud-compute nova-compute nova-kvm \
-            neutron-openvswitch-agent os-collect-config stackuser
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
+            nova-compute nova-kvm neutron-openvswitch-agent os-collect-config stackuser
 
 1. Load the image into Glance:
 
-        load-image overcloud-compute.qcow2
+        load-image $TRIPLEO_ROOT/overcloud-compute.qcow2
 
 1. Create secrets for the cloud.
 
@@ -350,9 +350,9 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Build an end user disk image and register it with glance.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
-            -a $NODE_ARCH -o user
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/user
         glance image-create --name user --public --disk-format qcow2 \
-            --container-format bare --file user.qcow2
+            --container-format bare --file $TRIPLEO_ROOT/user.qcow2
 
 1. Log in as a user.
 
