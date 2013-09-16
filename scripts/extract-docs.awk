@@ -31,6 +31,8 @@
             unexpected_eof()
         if (line ~ /^### --end/)
             break
+        if (match(line, ".* #nodocs$"))
+            continue
         if (substr(line, 0, 3) == "## ") {
             line = substr(line, 4)
         } else if (line != "") {
