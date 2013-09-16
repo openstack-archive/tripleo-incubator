@@ -19,7 +19,7 @@ set -eu
 
 # This is a cheap mr/cm-alike. Perhaps we should use mr/cm.
 
-TOOLS="https://github.com/tripleo/bm_poseur https://github.com/openstack/diskimage-builder https://github.com/openstack/tripleo-image-elements https://github.com/openstack/tripleo-heat-templates"
+TOOLS="https://github.com/openstack/diskimage-builder https://github.com/openstack/tripleo-image-elements https://github.com/openstack/tripleo-heat-templates"
 
 for TOOL in $TOOLS; do
     TOOL_BASE=$(basename $TOOL)
