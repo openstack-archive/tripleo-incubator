@@ -56,7 +56,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Before you start, check to see that your machine supports hardware
    virtualization, otherwise performance of the test environment will be poor.
    We are currently bringing up an LXC based alternative testing story, which
-   will mitigate this, thoug the deployed instances will still be full virtual
+   will mitigate this, though the deployed instances will still be full virtual
    machines and so performance will be significantly less there without
    hardware virtualization.
 

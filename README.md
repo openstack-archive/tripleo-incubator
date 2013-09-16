@@ -14,7 +14,7 @@ What is TripleO?
 ----------------
 
 TripleO is an endeavour to drive down the effort required to deploy an
-OpenStack cloud, increase the reliabilty of deployments and configuration
+OpenStack cloud, increase the reliability of deployments and configuration
 changes - and hopefully consolidate the disparate operations projects around
 OpenStack.
 
@@ -316,7 +316,7 @@ key distribution is still an issue.
 
 Also requests from baremetal machines to the Nova/EC2 meta-data service
 may be transmitted over an unsecured network, at least until full hardware
-SDN is in palce. This carries the same attack vector as the PXE problems noted
+SDN is in place. This carries the same attack vector as the PXE problems noted
 above, and so should be given similar consideration.
 
 Machine State
