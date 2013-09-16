@@ -219,16 +219,13 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## 
 ##         source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 ## 
-## 1. Create some 'baremetal' node(s) out of KVM virtual machines.
+## 1. Create some 'baremetal' node(s) out of KVM virtual machines and collect
+##    their MAC addresses.
 ##    Nova will PXE boot these VMs as though they were physical hardware.
 ##    If you want to create the VMs yourself, see footnote [2] for details on
 ##    their requirements. The parameter to create-nodes is VM count.
 ## 
-##         create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 3
-## 
-## 1. Get the list of MAC addresses for all the VMs you have created.
-## 
-##         export MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
+##         export MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 3)
 ## 
 ## 1. Perform setup of your seed cloud.
 ## 
@@ -446,13 +443,13 @@ setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 ## 
 ## * [2] Requirements for the "baremetal node" VMs
 ## 
-##   If you don't use bm_poseur, but want to create your own VMs, here are some
+##   If you don't use create-nodes, but want to create your own VMs, here are some
 ##   suggestions for what they should look like.
 ##    - each VM should have 1 NIC
 ##    - eth0 should be on brbm
 ##    - record the MAC addresses for the NIC of each VM.
 ##    - give each VM no less than 2GB of disk, and ideally give them
-##      more than BM_FLAVOR_ROOT_DISK, which defaults to 2GB
+##      more than NODE_DISK, which defaults to 10GB
 ##    - 1GB RAM is probably enough (512MB is not enough to run an all-in-one
 ##      OpenStack), and 768M isn't enough to do repeated deploys with.
 ##    - if using KVM, specify that you will install the virtual machine via PXE.
