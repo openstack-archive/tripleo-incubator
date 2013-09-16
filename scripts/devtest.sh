@@ -13,7 +13,7 @@ function show_options () {
     echo "Test the core TripleO story."
     echo
     echo "Options:"
-    echo "    --trash-my-machine -- make nontrivial descructive changes to the machine."
+    echo "    --trash-my-machine -- make nontrivial destructive changes to the machine."
     echo "                          For details read the source."
     echo
     exit $1
@@ -37,7 +37,7 @@ while true ; do
 done
 
 if [ "0" = "$CONTINUE" ]; then
-    echo "Not running - this script is descructive and requires --trash-my-machine to run." >&2
+    echo "Not running - this script is destructive and requires --trash-my-machine to run." >&2
     exit 1
 fi
 
@@ -100,7 +100,7 @@ fi
 ## 1. Before you start, check to see that your machine supports hardware
 ##    virtualization, otherwise performance of the test environment will be poor.
 ##    We are currently bringing up an LXC based alternative testing story, which
-##    will mitigate this, thoug the deployed instances will still be full virtual
+##    will mitigate this, though the deployed instances will still be full virtual
 ##    machines and so performance will be significantly less there without
 ##    hardware virtualization.
 ## 
