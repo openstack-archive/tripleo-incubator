@@ -228,7 +228,7 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## 
 ## 1. Get the list of MAC addresses for all the VMs you have created.
 ## 
-##         export MACS=`$TRIPLEO_ROOT/bm_poseur/bm_poseur get-macs`
+##         export MACS=`get-vm-mac 3 baremetal_`
 ## 
 ## 1. Perform setup of your seed cloud.
 ##    disk in GB for your test nodes.
@@ -452,13 +452,13 @@ setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 ## 
 ## * [2] Requirements for the "baremetal node" VMs
 ## 
-##   If you don't use bm_poseur, but want to create your own VMs, here are some
+##   If you don't use create-nodes, but want to create your own VMs, here are some
 ##   suggestions for what they should look like.
 ##    - each VM should have 1 NIC
 ##    - eth0 should be on brbm
 ##    - record the MAC addresses for the NIC of each VM.
 ##    - give each VM no less than 2GB of disk, and ideally give them
-##      more than BM_FLAVOR_ROOT_DISK, which defaults to 2GB
+##      more than NODE_DISK, which defaults to 10GB
 ##    - 1GB RAM is probably enough (512MB is not enough to run an all-in-one
 ##      OpenStack), and 768M isn't enough to do repeated deploys with.
 ##    - if using KVM, specify that you will install the virtual machine via PXE.
