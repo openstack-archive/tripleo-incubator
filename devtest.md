@@ -75,6 +75,12 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 
+   If LIBVIRT_DEFAULT_URI is not set, make sure that ssh connections done by
+   seed and undercloud VMs will use qemu:///system URI. For example by
+   setting user's virsh profile.
+
+        echo 'export LIBVIRT_DEFAULT_URI=qemu:///system' > ~/.config/libvirt/libvirt.conf
+
 1. Choose a base location to put all of the source code.
 
         mkdir ~/tripleo
