@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Approved+1: Clint Byrum <clint@ubuntu.com>
+Code-Review+2: Clint Byrum <clint@ubuntu.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 16 Sep 2013 17:34:16 +0000
+Reviewed-on: https://review.openstack.org/46623
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
