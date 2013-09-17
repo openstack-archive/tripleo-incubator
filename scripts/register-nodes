@@ -4,26 +4,12 @@ set -eu
 CPU=$1
 MEM=$2
 DISK=$3
-NODES=$4
+MACS="$4"
 
-if [ -z "$NODES" ]; then
-  NODES="all"
-fi
-
-count=0
 for MAC in $MACS; do
-    count=$((count + 1))
-    if [ $NODES = "undercloud" -a $count -eq 1 ]; then
-        # Skip the first node - allocated for use by the seed cloud.
-        continue
-    fi
     nova baremetal-node-create ubuntu $CPU $MEM $DISK $MAC
     # Workaround https://bugs.launchpad.net/tripleo/+bug/1178529
     sleep 5
-    if [ $NODES = "seed" ]; then 
-        # Only allocate one node for underclouds.
-        break
-    fi
 done
 date
 echo "Nodes will be available in 60 seconds from now."
