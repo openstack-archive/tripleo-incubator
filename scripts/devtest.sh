@@ -149,12 +149,12 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## 
 ##    32bit VMs:
 ## 
-##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=10 NODE_ARCH=i386
+##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=i386
 ## 
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint:
 ## 
-##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=15 NODE_ARCH=amd64
+##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=amd64
 ## 
 ## 1. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
@@ -451,7 +451,7 @@ setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 ##    - eth0 should be on brbm
 ##    - record the MAC addresses for the NIC of each VM.
 ##    - give each VM no less than 2GB of disk, and ideally give them
-##      more than NODE_DISK, which defaults to 10GB
+##      more than NODE_DISK, which defaults to 20GB
 ##    - 1GB RAM is probably enough (512MB is not enough to run an all-in-one
 ##      OpenStack), and 768M isn't enough to do repeated deploys with.
 ##    - if using KVM, specify that you will install the virtual machine via PXE.
