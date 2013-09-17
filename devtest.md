@@ -1,4 +1,4 @@
-VM (on Ubuntu)
+VM
 ==============
 
 (There are detailed instructions available below, the overview and
@@ -112,6 +112,14 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=15 NODE_ARCH=amd64
 
+1. Set distribution used for VMs (fedora, ubuntu).
+
+        export NODE_DIST=ubuntu
+
+   for Fedora set SELinux permissive mode.
+
+        export NODE_DIST="fedora selinux-permissive"
+
 1. Ensure dependencies are installed and required virsh configuration is
    performed:
 
@@ -134,7 +142,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    the undercloud for deployment to bare metal.
 
         $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-            ubuntu deploy -o $TRIPLEO_ROOT/deploy-ramdisk
+            $NODE_DIST deploy -o $TRIPLEO_ROOT/deploy-ramdisk
 
 1. Create and start your seed VM. This script invokes diskimage-builder with
    suitable paths and options to create and start a VM that contains an
@@ -147,7 +155,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
 
         cd $TRIPLEO_ROOT
-        boot-seed-vm -a $NODE_ARCH
+        boot-seed-vm -a $NODE_ARCH $NODE_DIST
 
    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
    you can log into it with 'ssh root@192.0.2.1'.
@@ -202,7 +210,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    will deploy to become the baremetal undercloud. Note that stackuser is only
    there for debugging support - it is not suitable for a production network.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
             boot-stack nova-baremetal os-collect-config stackuser
 
@@ -270,7 +278,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    stackuser is only there for debugging support - it is not suitable for a
    production network.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
             boot-stack cinder os-collect-config neutron-network-node stackuser
 
@@ -282,7 +290,7 @@ __(Note: all of the following commands should be run on your host machine, not i
    deploys to host KVM instances. Note that stackuser is only there for
    debugging support - it is not suitable for a production network.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
             nova-compute nova-kvm neutron-openvswitch-agent os-collect-config stackuser
 
@@ -348,7 +356,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Build an end user disk image and register it with glance.
 
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create ubuntu \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/user
         glance image-create --name user --public --disk-format qcow2 \
             --container-format bare --file $TRIPLEO_ROOT/user.qcow2
