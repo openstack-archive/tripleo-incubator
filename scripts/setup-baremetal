@@ -6,10 +6,10 @@ CPU=$1
 MEM=$2
 DISK=$3
 ARCH=$4
-NODES=$5
+MACS="$5"
 
 # Perhaps make this always recreate the nodes for repeatability?
-register-nodes $CPU $MEM $DISK $NODES
+register-nodes $CPU $MEM $DISK "$MACS"
 
 deploy_kernel=$TRIPLEO_ROOT/deploy-ramdisk.kernel
 deploy_ramdisk=$TRIPLEO_ROOT/deploy-ramdisk.initramfs
