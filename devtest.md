@@ -175,24 +175,24 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 
-1. Create some 'baremetal' node(s) out of KVM virtual machines and collect
-   their MAC addresses.
-   Nova will PXE boot these VMs as though they were physical hardware.
-   If you want to create the VMs yourself, see footnote [2] for details on
-   their requirements. The parameter to create-nodes is VM count.
-
-        export MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 3)
-
-   If you need to collect MAC addresses separately, see scripts/get-vm-mac.
-
 1. Perform setup of your seed cloud.
 
         init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
         setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
         keystone role-create --name heat_stack_user
         user-config
-        setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
+
+1. Create some 'baremetal' node(s) out of KVM virtual machines and collect
+   their MAC addresses.
+   Nova will PXE boot these VMs as though they were physical hardware.
+   If you want to create the VMs yourself, see footnote [2] for details on
+   their requirements. The parameter to create-nodes is VM count.
+
+        export SEED_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 1)
+        setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS"
+
+   If you need to collect MAC addresses separately, see scripts/get-vm-mac.
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
@@ -258,8 +258,12 @@ __(Note: all of the following commands should be run on your host machine, not i
             --nova-password $UNDERCLOUD_NOVA_PASSWORD
         keystone role-create --name heat_stack_user
         user-config
-        setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH undercloud
         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
+
+1. Create some 'baremetal' node(s) and register them with your undercloud.
+
+        export UNDERCLOUD_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 1)
+        setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$UNDERCLOUD_MACS"
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
