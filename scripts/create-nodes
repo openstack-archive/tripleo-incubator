@@ -30,5 +30,5 @@ for (( count=0; count<TOTAL; ++count )) ; do
   # TODO: make this idempotent / at least not error when run more than once.
   virsh vol-create-as default baremetal-$count.qcow2 ${DISK}G --format qcow2 $PREALLOC
   configure-vm --bootdev network --name baremetal_$count --image /var/lib/libvirt/images/baremetal-$count.qcow2 --arch $ARCH --cpus $CPU --memory $MEM
-  sudo chattr +C /var/lib/libvirt/images/baremetal-$count.qcow2
+  sudo chattr +C /var/lib/libvirt/images/baremetal-$count.qcow2 || true
 done
