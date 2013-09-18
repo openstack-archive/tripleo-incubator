@@ -391,7 +391,8 @@ setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 
 ## 1. If you want a demo user in your overcloud (probably a good idea).
 ## 
-##         os-adduser demo demo@example.com
+##         export OVERCLOUD_DEMO_PASSWORD=$(os-make-password)
+##         os-adduser -p $OVERCLOUD_DEMO_PASSWORD demo demo@example.com
 ## 
 ## 1. Workaround https://bugs.launchpad.net/diskimage-builder/+bug/1211165.
 ## 
