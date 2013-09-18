@@ -77,7 +77,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Choose a base location to put all of the source code.
 
-        mkdir ~/tripleo
+        mkdir -p ~/tripleo
         # exports are ephemeral - new shell sessions, or reboots, and you need
         # to redo them.
         export TRIPLEO_ROOT=~/tripleo
@@ -85,7 +85,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. git clone this repository to your local machine.
 
-        git clone https://github.com/openstack/tripleo-incubator.git
+   git clone https://github.com/openstack/tripleo-incubator.git
 
 1. Nova tools get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts - you need to
    add that to the PATH.
