@@ -258,11 +258,11 @@ source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
 ## 1. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. Note that stackuser is only
 ##    there for debugging support - it is not suitable for a production network.
-## 
-##         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-##             -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-##             boot-stack nova-baremetal os-collect-config stackuser
-## 
+
+$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+    -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
+    boot-stack nova-baremetal os-collect-config stackuser
+
 ## 1. Load the undercloud image into Glance:
 ## 
 ##         load-image $TRIPLEO_ROOT/undercloud.qcow2
