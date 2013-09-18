@@ -59,7 +59,7 @@ function load_image() {
 
     $DIGK -d ${TMP_IMAGE_DIR} -o 'tmp' -i $FILE
 
-    GLANCE_IMAGE_NAME=$(basename ${FILE%%.*})
+    GLANCE_IMAGE_NAME=$(basename ${FILE%.*})
     if [ "$REMOVE_OLD_IMAGES" ]; then
         remove_image "${GLANCE_IMAGE_NAME}-vmlinuz"
         remove_image "${GLANCE_IMAGE_NAME}-initrd"
