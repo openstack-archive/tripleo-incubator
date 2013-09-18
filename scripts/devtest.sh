@@ -223,6 +223,11 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## 1. If you downloaded a pre-built seed image you will need to log into it
 ##    and customise the configuration within it. See footnote [1].)
 ## 
+## 1. Setup a prompt clue so you can tell what cloud you have configured.
+##    (Do this once).
+
+source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
+
 ## 1. Source the client configuration for the seed cloud.
 ## 
 ##         source $TRIPLEO_ROOT/tripleo-incubator/seedrc

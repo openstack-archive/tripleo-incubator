@@ -1,0 +1,2 @@
+# Add OS_CLOUDNAME to PS1
+export PS1=${OS_CLOUDNAME:+"(\$OS_CLOUDNAME)"}$PS1
