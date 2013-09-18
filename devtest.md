@@ -77,15 +77,15 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Choose a base location to put all of the source code.
 
-        mkdir ~/tripleo
-        # exports are ephemeral - new shell sessions, or reboots, and you need
-        # to redo them.
-        export TRIPLEO_ROOT=~/tripleo
+   # exports are ephemeral - new shell sessions, or reboots, and you need
+   # to redo them.
+        export TRIPLEO_ROOT=~/.cache/tripleo
+        mkdir -p $TRIPLEO_ROOT
         cd $TRIPLEO_ROOT
 
 1. git clone this repository to your local machine.
 
-        git clone https://github.com/openstack/tripleo-incubator.git
+        git clone https://git.openstack.org/openstack/tripleo-incubator
 
 1. Nova tools get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts - you need to
    add that to the PATH.
@@ -206,12 +206,14 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. Perform setup of your seed cloud.
 
+        ssh-keyscan -t rsa 192.0.2.1 >>~/.ssh/known_hosts
         init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
-        setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
+        setup-endpoints $SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
         keystone role-create --name heat_stack_user
         user-config
         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH seed
         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
+
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
