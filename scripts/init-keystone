@@ -71,7 +71,7 @@ export SERVICE_ENDPOINT=http://$ENDPOINT:35357/v2.0
 export SERVICE_TOKEN
 # Setup PKI
 
-ssh -t $HOST sudo /opt/stack/venvs/keystone/bin/keystone-manage pki_setup --keystone-user keystone --keystone-group keystone
+ssh -o "StrictHostKeyChecking no" -t $HOST sudo /opt/stack/venvs/keystone/bin/keystone-manage pki_setup --keystone-user keystone --keystone-group keystone
 
 # Tenants
 ADMIN_TENANT_ID=$(keystone tenant-create --name=admin | awk '$2=="id" {print $4}')
