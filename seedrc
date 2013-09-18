@@ -1,4 +1,3 @@
-# TODO: generate random credentials.
 export NOVA_VERSION=1.1
 export OS_PASSWORD=unset
 export OS_AUTH_URL=http://$SEED_IP:5000/v2.0
