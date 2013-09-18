@@ -192,15 +192,15 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ##    suitable paths and options to create and start a VM that contains an
 ##    all-in-one OpenStack cloud with the baremetal driver enabled, and
 ##    preconfigures it for a development environment.
-## 
-##         cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
-##         sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
-##         # If you use 64bit VMs (NODE_ARCH=amd64), update also architecture.
-##         sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
-## 
-##         cd $TRIPLEO_ROOT
-##         boot-seed-vm -a $NODE_ARCH $NODE_DIST
-## 
+
+cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
+sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
+# If you use 64bit VMs (NODE_ARCH=amd64), update also architecture.
+sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
+
+cd $TRIPLEO_ROOT
+boot-seed-vm -a $NODE_ARCH $NODE_DIST
+
 ##    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
 ##    you can log into it with 'ssh root@192.0.2.1'.
 ## 
