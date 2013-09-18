@@ -90,7 +90,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Nova tools get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts - you need to
    add that to the PATH.
 
-        export PATH=$PATH:$TRIPLEO_ROOT/tripleo-incubator/scripts
+        export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
 1. Set HW resources for VMs used as 'baremetal' nodes. NODE_CPU is cpu count,
    NODE_MEM is memory (MB), NODE_DISK is disk size (GB), NODE_ARCH is
