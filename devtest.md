@@ -120,6 +120,12 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         export NODE_DIST="fedora selinux-permissive"
 
+1. A DHCP driver is used to do DHCP when booting nodes.
+   The default bm-dnsmasq is deprecated and soon to be replaced by
+   neutron-dhcp-agent.
+
+        export DHCP_DRIVER=bm-dnsmasq
+
 1. Ensure dependencies are installed and required virsh configuration is
    performed:
 
@@ -155,7 +161,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
 
         cd $TRIPLEO_ROOT
-        boot-seed-vm -a $NODE_ARCH $NODE_DIST
+        boot-seed-vm -a $NODE_ARCH $NODE_DIST $DHCP_DRIVER
 
    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
    you can log into it with 'ssh root@192.0.2.1'.
@@ -217,7 +223,7 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-            boot-stack nova-baremetal os-collect-config stackuser
+            boot-stack nova-baremetal os-collect-config stackuser $DHCP_DRIVER
 
 1. Load the undercloud image into Glance:
 
