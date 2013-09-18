@@ -144,7 +144,7 @@ function poll_vm {
 if [ $START_VM ]; then
     sudo virsh start $IMAGE_NAME
 
-    echo "Waiting for VM $IMAGE_NAME to boot."
+    echo "Waiting for $IMAGE_NAME VM to boot."
     until [ -n "$VM_IP" ]; do
         poll_vm
         echo -n '.'
