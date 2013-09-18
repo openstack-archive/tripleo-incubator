@@ -121,21 +121,25 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 
 ## 1. Choose a base location to put all of the source code.
 ## 
-##         mkdir ~/tripleo
-##         # exports are ephemeral - new shell sessions, or reboots, and you need
-##         # to redo them.
-##         export TRIPLEO_ROOT=~/tripleo
-##         cd $TRIPLEO_ROOT
-## 
+##    # exports are ephemeral - new shell sessions, or reboots, and you need
+##    # to redo them.
+export TRIPLEO_ROOT=~/.cache/tripleo
+mkdir -p $TRIPLEO_ROOT
+cd $TRIPLEO_ROOT
+
 ## 1. git clone this repository to your local machine.
-## 
-##         git clone https://github.com/openstack/tripleo-incubator.git
-## 
+
+if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then #nodocs
+git clone https://git.openstack.org/openstack/tripleo-incubator
+else #nodocs
+cd $TRIPLEO_ROOT/tripleo-incubator ; git pull #nodocs
+fi #nodocs
+
 ## 1. Nova tools get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts - you need to
 ##    add that to the PATH.
-## 
-##         export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
-## 
+
+export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
+
 ## 1. Set HW resources for VMs used as 'baremetal' nodes. NODE_CPU is cpu count,
 ##    NODE_MEM is memory (MB), NODE_DISK is disk size (GB), NODE_ARCH is
 ##    architecture (i386, amd64). NODE_ARCH is used also for the seed VM.
@@ -148,18 +152,18 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ##    or it cannot host more than one VM.
 ## 
 ##    32bit VMs:
-## 
-##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=i386
-## 
+
+export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-20} NODE_ARCH=${NODE_ARCH:-i386}
+
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint:
 ## 
 ##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=amd64
 ## 
 ## 1. Set distribution used for VMs (fedora, ubuntu).
-## 
-##         export NODE_DIST=ubuntu
-## 
+
+export NODE_DIST=ubuntu
+
 ##    for Fedora set SELinux permissive mode.
 ## 
 ##         export NODE_DIST="fedora selinux-permissive"
@@ -172,28 +176,28 @@ export DHCP_DRIVER=bm-dnsmasq
 
 ## 1. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
-## 
-##         install-dependencies
-## 
+
+install-dependencies
+
 ## 1. Clone/update the other needed tools which are not available as packages.
-## 
-##         pull-tools
-## 
+
+pull-tools
+
 ## 1. You need to make the tripleo image elements accessible to diskimage-builder:
-## 
-##         export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
-## 
+
+export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
+
 ## 1. Configure a network for your test environment.
 ##    This configures an openvswitch bridge and teaches libvirt about it.
-## 
-##         setup-network
-## 
+
+setup-network
+
 ## 1. Create a deployment ramdisk + kernel. These are used by the seed cloud and
 ##    the undercloud for deployment to bare metal.
-## 
-##         $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-##             $NODE_DIST deploy -o $TRIPLEO_ROOT/deploy-ramdisk
-## 
+
+$TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
+    $NODE_DIST deploy -o $TRIPLEO_ROOT/deploy-ramdisk
+
 ## 1. Create and start your seed VM. This script invokes diskimage-builder with
 ##    suitable paths and options to create and start a VM that contains an
 ##    all-in-one OpenStack cloud with the baremetal driver enabled, and
@@ -212,55 +216,60 @@ boot-seed-vm -a $NODE_ARCH $NODE_DIST $DHCP_DRIVER
 ## 
 ##    The IP address of the VM is printed out at the end of boot-elements, or
 ##    you can use the get-vm-ip script:
-## 
-##         export SEED_IP=`get-vm-ip seed`
-## 
+
+export SEED_IP=`get-vm-ip seed`
+
 ## 1. Add a route to the baremetal bridge via the seed node (we do this so that
 ##    your host is isolated from the networking of the test environment.
-## 
-##         # These are not persistent, if you reboot, re-run them.
-##         sudo ip route del 192.0.2.0/24 dev virbr0 || true
-##         sudo ip route add 192.0.2.0/24 dev virbr0 via $SEED_IP
-## 
+
+# These are not persistent, if you reboot, re-run them.
+sudo ip route del 192.0.2.0/24 dev virbr0 || true
+sudo ip route add 192.0.2.0/24 dev virbr0 via $SEED_IP
+
 ## 1. Mask the SEED_IP out of your proxy settings
-## 
-##         export no_proxy=$no_proxy,192.0.2.1,$SEED_IP
-## 
+
+set +u #nodocs
+export no_proxy=$no_proxy,192.0.2.1,$SEED_IP
+set -u #nodocs
+
 ## 1. If you downloaded a pre-built seed image you will need to log into it
 ##    and customise the configuration within it. See footnote [1].)
 ## 
 ## 1. Setup a prompt clue so you can tell what cloud you have configured.
 ##    (Do this once).
-
-source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
+## 
+## source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
 
 ## 1. Source the client configuration for the seed cloud.
-## 
-##         source $TRIPLEO_ROOT/tripleo-incubator/seedrc
-## 
+
+source $TRIPLEO_ROOT/tripleo-incubator/seedrc
+
 ## 1. Create some 'baremetal' node(s) out of KVM virtual machines and collect
 ##    their MAC addresses.
 ##    Nova will PXE boot these VMs as though they were physical hardware.
 ##    If you want to create the VMs yourself, see footnote [2] for details on
 ##    their requirements. The parameter to create-nodes is VM count.
-## 
-##         export MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 3)
-## 
+
+export MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 3)
+
 ##    If you need to collect MAC addresses separately, see scripts/get-vm-mac.
 ## 
 ## 1. Perform setup of your seed cloud.
-## 
-##         init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
-##         setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
-##         keystone role-create --name heat_stack_user
-##         user-config
-##         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH seed
-##         setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
+
+while ! ping -c 1 192.0.2.1 >/dev/null ; do echo "Waiting for seed node to configure br-ctlplane..." ; sleep 2 ; done #nodocs
+ssh-keyscan -t rsa 192.0.2.1 >>~/.ssh/known_hosts
+init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
+setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
+keystone role-create --name heat_stack_user
+user-config
+setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH seed
+setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 ctlplane
+
 ## 
 ## 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
-## 
-##         ssh root@192.0.2.1 "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
-## 
+
+ssh root@192.0.2.1 "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
+
 ## 1. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. Note that stackuser is only
 ##    there for debugging support - it is not suitable for a production network.
@@ -270,9 +279,9 @@ $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     boot-stack nova-baremetal os-collect-config stackuser $DHCP_DRIVER
 
 ## 1. Load the undercloud image into Glance:
-## 
-##         load-image $TRIPLEO_ROOT/undercloud.qcow2
-## 
+
+load-image $TRIPLEO_ROOT/undercloud.qcow2
+
 ## 1. Create secrets for the cloud. Note that you can also make or change these
 ##    later and update the heat stack definition to inject them - as long as you
 ##    also update the keystone recorded password. Note that there will be a window
@@ -299,20 +308,25 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
 ##    image.
 ## 
 ## 1. Get the undercloud IP from 'nova list'
-## 
-##         export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
-##         ssh-keygen -R $UNDERCLOUD_IP
-## 
+
+UNDERCLOUD_IP="" #nodocs
+while [ "$UNDERCLOUD_IP" == "" ]; do #nodocs
+export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+done #nodocs
+while ! nc -w 1 $UNDERCLOUD_IP 22 >/dev/null ; do echo "Waiting for undercloud node to configure br-ctlplane..." ; sleep 2 ; done #nodocs
+ssh-keygen -R $UNDERCLOUD_IP
+
 ## 1. Source the undercloud configuration:
-## 
-##         source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
-## 
+
+source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
+
 ## 1. Exclude the undercloud from proxies:
-## 
-##         export no_proxy=$no_proxy,$UNDERCLOUD_IP
-## 
+
+export no_proxy=$no_proxy,$UNDERCLOUD_IP
+
 ## 1. Perform setup of your undercloud.
 
+echo sleeping.... ; sleep 90 # FIXME: Unacceptable #nodocs
 init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
     $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
 setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
@@ -325,34 +339,34 @@ setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH undercloud
 setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
 
 ## 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
-## 
-##         ssh heat-admin@$UNDERCLOUD_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
-## 
+
+ssh heat-admin@$UNDERCLOUD_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
+
 ## 1. Create your overcloud control plane image. This is the image the undercloud
 ##    will deploy to become the KVM (or Xen etc) cloud control plane. Note that
 ##    stackuser is only there for debugging support - it is not suitable for a
 ##    production network.
-## 
-##         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-##             -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
-##             boot-stack cinder os-collect-config neutron-network-node stackuser
-## 
+
+$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+    -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
+    boot-stack cinder os-collect-config neutron-network-node stackuser
+
 ## 1. Load the image into Glance:
-## 
-##         load-image $TRIPLEO_ROOT/overcloud-control.qcow2
-## 
+
+load-image $TRIPLEO_ROOT/overcloud-control.qcow2
+
 ## 1. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM instances. Note that stackuser is only there for
 ##    debugging support - it is not suitable for a production network.
-## 
-##         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-##             -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
-##             nova-compute nova-kvm neutron-openvswitch-agent os-collect-config stackuser
-## 
+
+$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+    -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
+    nova-compute nova-kvm neutron-openvswitch-agent os-collect-config stackuser
+
 ## 1. Load the image into Glance:
-## 
-##         load-image $TRIPLEO_ROOT/overcloud-compute.qcow2
-## 
+
+load-image $TRIPLEO_ROOT/overcloud-compute.qcow2
+
 ## 1. Create secrets for the cloud.
 
 OVERCLOUD_ADMIN_TOKEN=$(os-make-password)
@@ -379,20 +393,26 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##    and be available.
 ## 
 ## 1. Get the overcloud IP from 'nova list'
-## 
-##         export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
-##         ssh-keygen -R $OVERCLOUD_IP
-## 
+
+OVERCLOUD_IP="" #nodocs
+while [ "$OVERCLOUD_IP" == "" ]; do #nodocs
+export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+done #nodocs
+bash
+while ! nc -w 1 $OVERCLOUD_IP 22 >/dev/null ; do echo "Waiting for overcloud node to configure br-ctlplane..." ; sleep 2 ; done #nodocs
+ssh-keygen -R $OVERCLOUD_IP
+
 ## 1. Source the overcloud configuration:
-## 
-##         source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
-## 
+
+source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
+
 ## 1. Exclude the undercloud from proxies:
-## 
-##         export no_proxy=$no_proxy,$OVERCLOUD_IP
-## 
+
+export no_proxy=$no_proxy,$OVERCLOUD_IP
+
 ## 1. Perform admin setup of your overcloud.
 
+echo sleeping.... ; sleep 90 # FIXME: Unacceptable #nodocs
 init-keystone -p $OVERCLOUD_ADMIN_PASSWORD $OVERCLOUD_ADMIN_TOKEN \
     $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP
 setup-endpoints $OVERCLOUD_IP --cinder-password $OVERCLOUD_CINDER_PASSWORD \
@@ -405,43 +425,44 @@ user-config
 setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 
 ## 1. If you want a demo user in your overcloud (probably a good idea).
-## 
-##         export OVERCLOUD_DEMO_PASSWORD=$(os-make-password)
-##         os-adduser -p $OVERCLOUD_DEMO_PASSWORD demo demo@example.com
-## 
+
+export OVERCLOUD_DEMO_PASSWORD=$(os-make-password)
+os-adduser -p $OVERCLOUD_DEMO_PASSWORD demo demo@example.com
+
 ## 1. Workaround https://bugs.launchpad.net/diskimage-builder/+bug/1211165.
-## 
-##         nova flavor-delete m1.tiny
-##         nova flavor-create m1.tiny 1 512 2 1
-## 
+
+nova flavor-delete m1.tiny
+nova flavor-create m1.tiny 1 512 2 1
+
 ## 1. Build an end user disk image and register it with glance.
-## 
-##         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-##             -a $NODE_ARCH -o $TRIPLEO_ROOT/user
-##         glance image-create --name user --public --disk-format qcow2 \
-##             --container-format bare --file $TRIPLEO_ROOT/user.qcow2
-## 
+
+$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+    -a $NODE_ARCH -o $TRIPLEO_ROOT/user
+glance image-create --name user --public --disk-format qcow2 \
+    --container-format bare --file $TRIPLEO_ROOT/user.qcow2
+
 ## 1. Log in as a user.
-## 
-##         source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc-user
-##         user-config
-## 
+
+source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc-user
+user-config
+
 ## 1. Deploy your image.
-## 
-##         nova boot --key-name default --flavor m1.tiny --image user demo
-## 
+
+nova boot --key-name default --flavor m1.tiny --image user demo
+
 ## 1. Add an external IP for it.
-## 
-##         PORT=$(neutron port-list -f csv -c id --quote none | tail -n1)
-##         neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}"
-## 
+
+PORT=$(neutron port-list -f csv -c id --quote none | tail -n1)
+neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}"
+
 ## 1. And allow network access to it.
-## 
-##         neutron security-group-rule-create default --protocol icmp \
-##           --direction ingress --port-range-min 8 --port-range-max 8
-##         neutron security-group-rule-create default --protocol tcp \
-##           --direction ingress --port-range-min 22 --port-range-max 22
-## 
+
+neutron security-group-rule-create default --protocol icmp \
+    --direction ingress --port-range-min 8 --port-range-max 8
+neutron security-group-rule-create default --protocol tcp \
+    --direction ingress --port-range-min 22 --port-range-max 22
+
+echo "devtest.sh completed." #nodocs
 ## The End!
 ## 
 ## 
