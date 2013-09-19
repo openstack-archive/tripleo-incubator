@@ -362,7 +362,8 @@ __(Note: all of the following commands should be run on your host machine, not i
 
 1. If you want a demo user in your overcloud (probably a good idea).
 
-        os-adduser demo demo@example.com
+        export OVERCLOUD_DEMO_PASSWORD=$(os-make-password)
+        os-adduser -p $OVERCLOUD_DEMO_PASSWORD demo demo@example.com
 
 1. Workaround https://bugs.launchpad.net/diskimage-builder/+bug/1211165.
 
