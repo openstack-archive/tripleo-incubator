@@ -319,11 +319,15 @@ __(Note: all of the following commands should be run on your host machine, not i
         OVERCLOUD_NEUTRON_PASSWORD=$(os-make-password)
         OVERCLOUD_NOVA_PASSWORD=$(os-make-password)
 
+1. For running an overcloud in VM's:
+
+        OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-";NovaComputeLibvirtType=qemu"}
+
 1. Deploy an overcloud:
 
         make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-            -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD}" \
+            -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD}${OVERCLOUD_LIBVIRT_TYPE}" \
             overcloud
 
    You can watch the console via virsh/virt-manager to observe the PXE
