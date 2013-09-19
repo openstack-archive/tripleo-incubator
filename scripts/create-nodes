@@ -14,8 +14,6 @@ case $4 in
 esac
 
 TOTAL=$5
-count=0
-
 
 # define the default storage pool if its not there yet
 (virsh pool-list --all --persistent | grep -q default) || (
@@ -27,11 +25,11 @@ if [ -f /etc/debian_version ]; then
 fi
 
 MACS=""
-for (( count=0; count<TOTAL; ++count )) ; do
-  # TODO: make this idempotent / at least not error when run more than once.
-  virsh vol-create-as default baremetal-$count.qcow2 ${DISK}G --format qcow2 $PREALLOC >/dev/stderr
-  configure-vm --bootdev network --name baremetal_$count --image /var/lib/libvirt/images/baremetal-$count.qcow2 --arch $ARCH --cpus $CPU --memory $MEM >/dev/stderr
-  sudo chattr +C /var/lib/libvirt/images/baremetal-$count.qcow2 || true
+for (( count=idx=0; count<TOTAL; ++idx )) ; do
+  (virsh list --all | grep -q baremetal_$idx) && continue
+  virsh vol-create-as default baremetal-$idx.qcow2 ${DISK}G --format qcow2 $PREALLOC >/dev/stderr
+  configure-vm --bootdev network --name baremetal_$idx --image /var/lib/libvirt/images/baremetal-$idx.qcow2 --arch $ARCH --cpus $CPU --memory $MEM >/dev/stderr
+  sudo chattr +C /var/lib/libvirt/images/baremetal-$idx.qcow2 || true
+  get-vm-mac baremetal_$idx
+  (( ++count ))
 done
-
-get-vm-mac baremetal_
