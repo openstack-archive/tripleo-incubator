@@ -281,12 +281,12 @@ $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
 ##    everything across to it, then deleting the old account after the cluster is
 ##    updated.
 
-UNDERCLOUD_ADMIN_TOKEN=$(os-make-password)
-UNDERCLOUD_ADMIN_PASSWORD=$(os-make-password)
-UNDERCLOUD_GLANCE_PASSWORD=$(os-make-password)
-UNDERCLOUD_HEAT_PASSWORD=$(os-make-password)
-UNDERCLOUD_NEUTRON_PASSWORD=$(os-make-password)
-UNDERCLOUD_NOVA_PASSWORD=$(os-make-password)
+export UNDERCLOUD_ADMIN_TOKEN=$(os-make-password)
+export UNDERCLOUD_ADMIN_PASSWORD=$(os-make-password)
+export UNDERCLOUD_GLANCE_PASSWORD=$(os-make-password)
+export UNDERCLOUD_HEAT_PASSWORD=$(os-make-password)
+export UNDERCLOUD_NEUTRON_PASSWORD=$(os-make-password)
+export UNDERCLOUD_NOVA_PASSWORD=$(os-make-password)
 
 ## 1. Deploy an undercloud:
 
@@ -355,13 +355,13 @@ setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
 ## 
 ## 1. Create secrets for the cloud.
 
-OVERCLOUD_ADMIN_TOKEN=$(os-make-password)
-OVERCLOUD_ADMIN_PASSWORD=$(os-make-password)
-OVERCLOUD_CINDER_PASSWORD=$(os-make-password)
-OVERCLOUD_GLANCE_PASSWORD=$(os-make-password)
-OVERCLOUD_HEAT_PASSWORD=$(os-make-password)
-OVERCLOUD_NEUTRON_PASSWORD=$(os-make-password)
-OVERCLOUD_NOVA_PASSWORD=$(os-make-password)
+export OVERCLOUD_ADMIN_TOKEN=$(os-make-password)
+export OVERCLOUD_ADMIN_PASSWORD=$(os-make-password)
+export OVERCLOUD_CINDER_PASSWORD=$(os-make-password)
+export OVERCLOUD_GLANCE_PASSWORD=$(os-make-password)
+export OVERCLOUD_HEAT_PASSWORD=$(os-make-password)
+export OVERCLOUD_NEUTRON_PASSWORD=$(os-make-password)
+export OVERCLOUD_NOVA_PASSWORD=$(os-make-password)
 
 ## 1. For running an overcloud in VM's:
 
