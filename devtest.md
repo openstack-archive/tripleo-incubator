@@ -60,6 +60,12 @@ __(Note: all of the following commands should be run on your host machine, not i
    machines and so performance will be significantly less there without
    hardware virtualization.
 
+1. As you step through the instructions several environment
+   variables are set in your shell.  These variables will be lost if
+   you exit out of your shell.  After setting variables, use
+   scripts/write-tripleorc to write out the variables to a file that
+   can be sourced later to restore the environment.
+
 1. Also check ssh server is running on the host machine and port 22 is open for
    connections from virbr0 -  VirtPowerManager will boot VMs by sshing into the
    host machine and issuing libvirt/virsh commands. The user these instructions
@@ -79,7 +85,8 @@ __(Note: all of the following commands should be run on your host machine, not i
 
         mkdir ~/tripleo
         # exports are ephemeral - new shell sessions, or reboots, and you need
-        # to redo them.
+        # to redo them, or use $TRIPLEO_ROOT/scripts/write-tripleorc
+        # and then source the generated tripleorc file.
         export TRIPLEO_ROOT=~/tripleo
         cd $TRIPLEO_ROOT
 
@@ -386,6 +393,12 @@ __(Note: all of the following commands should be run on your host machine, not i
           --direction ingress --port-range-min 8 --port-range-max 8
         neutron security-group-rule-create default --protocol tcp \
           --direction ingress --port-range-min 22 --port-range-max 22
+
+1. Don't forget to save your shell environment variables.
+
+         write-tripleorc
+         # To restore your environment variables later...
+         source tripleorc
 
 The End!
 

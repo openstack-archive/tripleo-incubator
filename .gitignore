@@ -15,3 +15,4 @@ scripts/neutron
 stackrc
 
 tripleo-passwords
+tripleorc
