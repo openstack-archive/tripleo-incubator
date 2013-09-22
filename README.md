@@ -6,7 +6,7 @@ deployed on and with OpenStack. This repository is our staging area, where we
 incubate new ideas and new tools which get us closer to our goal.
 
 As an incubation area, we move tools to permanent homes in
-https://github.com/stackforge once they have proved that they do need to exist.
+OpenStack Infra once they have proved that they do need to exist.
 Other times we will propose the tool for inclusion in an existing project (such
 as nova or glance).
 
@@ -82,7 +82,7 @@ The lowest layer in the dependency stack, diskimage-builder can be used to
 customise generic disk images for use with Nova bare metal. It can also be
 used to provide build-time specialisation for disk images. Diskimage-builder
 is quite mature and can be downloaded from
-https://github.com/stackforge/diskimage-builder.
+https://git.openstack.org/cgit/openstack/diskimage-builder.
 
 ### Nova bare-metal / Ironic
 
@@ -163,7 +163,7 @@ images for TripleO. The elements build images with software installed but
 not configured - and hooks to configure the software with os-apply-config. 
 OpenStack is deployable via the elements that have been written but it is not
 yet setup for full HA. Downloadable from
-https://github.com/openstack/tripleo-image-elements.
+https://git.openstack.org/cgit/openstack/tripleo-image-elements.
 
 Caveats/Limitations:
  - No support for image based updates yet. (Requires separating out updateable
@@ -180,7 +180,7 @@ Caveats/Limitations:
 
 These templates provide the rules describing how to deploy the baremetal 
 undercloud and virtual overclouds.  Downloadable from
-https://github.com/openstack/tripleo-heat-templates.
+https://git.openstack.org/cgit/openstack/tripleo-heat-templates.
 
 Deploying
 ---------
@@ -201,9 +201,9 @@ There is a [high level presentation] (presentations/TripleO architecture overvie
 accompanying these docs.
 
 We start with an [image builder]
-(https://github.com/openstack/diskimage-builder/), and rules for that to
-[build OpenStack images] (https://github.com/openstack/tripleo-image-elements/).
-We then use [Heat] (https://github.com/openstack/heat) to orchestrate deployment
+(https://git.openstack.org/cgit/openstack/diskimage-builder/), and rules for that to
+[build OpenStack images] (https://git.openstack.org/cgit/openstack/tripleo-image-elements/).
+We then use [Heat] (https://git.openstack.org/cgit/openstack/heat) to orchestrate deployment
 of those images onto bare metal using the [Nova baremetal driver]
 (https://wiki.openstack.org/wiki/Baremetal).
 
@@ -326,9 +326,3 @@ Currently there is no way to guarantee preservation (or deletion) of any of the
 drive contents on a machine if it is deleted in nova baremetal. The planned
 cinder driver will give us an API for describing what behaviour is needed on
 an instance by instance basis.
-
-See also
---------
-https://github.com/tripleo/incubator-bootstrap contains the scripts we run on
-the devstack based bootstrap node - but these are no longer maintained, as
-we have moved to tripleo-image-element based bootstrap nodes.

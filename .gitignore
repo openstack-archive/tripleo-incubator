@@ -4,6 +4,8 @@
 
 .DS_Store
 
+*.egg
+*.egg-info
 *.pyc
 
 openstack-tools
@@ -14,3 +16,5 @@ scripts/nova
 scripts/neutron
 stackrc
 
+.tox
+doc/build
