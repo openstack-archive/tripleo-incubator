@@ -82,7 +82,7 @@ The lowest layer in the dependency stack, diskimage-builder can be used to
 customise generic disk images for use with Nova bare metal. It can also be
 used to provide build-time specialisation for disk images. Diskimage-builder
 is quite mature and can be downloaded from
-https://github.com/openstack/diskimage-builder.
+https://git.openstack.org/cgit/openstack/diskimage-builder.
 
 ### Nova bare-metal / Ironic
 
@@ -163,7 +163,7 @@ images for TripleO. The elements build images with software installed but
 not configured - and hooks to configure the software with os-apply-config. 
 OpenStack is deployable via the elements that have been written but it is not
 yet setup for full HA. Downloadable from
-https://github.com/openstack/tripleo-image-elements.
+https://git.openstack.org/cgit/openstack/tripleo-image-elements.
 
 Caveats/Limitations:
  - No support for image based updates yet. (Requires separating out updateable
@@ -180,7 +180,7 @@ Caveats/Limitations:
 
 These templates provide the rules describing how to deploy the baremetal 
 undercloud and virtual overclouds.  Downloadable from
-https://github.com/openstack/tripleo-heat-templates.
+https://git.openstack.org/cgit/openstack/tripleo-heat-templates.
 
 Deploying
 ---------
@@ -202,9 +202,9 @@ There is a [high level presentation] (presentations/TripleO architecture overvie
 accompanying these docs.
 
 We start with an [image builder]
-(https://github.com/openstack/diskimage-builder/), and rules for that to
-[build OpenStack images] (https://github.com/openstack/tripleo-image-elements/).
-We then use [Heat] (https://github.com/openstack/heat) to orchestrate deployment
+(https://git.openstack.org/cgit/openstack/diskimage-builder/), and rules for that to
+[build OpenStack images] (https://git.openstack.org/cgit/openstack/tripleo-image-elements/).
+We then use [Heat] (https://git.openstack.org/cgit/openstack/heat) to orchestrate deployment
 of those images onto bare metal using the [Nova baremetal driver]
 (https://wiki.openstack.org/wiki/Baremetal).
 

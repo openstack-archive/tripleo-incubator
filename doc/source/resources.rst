@@ -18,7 +18,9 @@ Tripleo team resources
 
    ::
 
-       https://github.com/tripleo
+       https://git.openstack.org/cgit/?q=tripleo
+       https://git.openstack.org/cgit/?q=tuskar
+       https://git.openstack.org/cgit/openstack/diskimage-builder
 
 -  IRC: duh.
 
