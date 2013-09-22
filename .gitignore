@@ -4,8 +4,11 @@
 
 .DS_Store
 
+*.egg
+*.egg-info
 *.pyc
 
+doc/source/devtest.rst
 openstack-tools
 scripts/glance
 scripts/heat
@@ -14,3 +17,5 @@ scripts/nova
 scripts/neutron
 stackrc
 
+.tox
+doc/build
