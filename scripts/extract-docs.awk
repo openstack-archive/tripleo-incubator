@@ -38,7 +38,7 @@
         } else if (line != "") {
             line = "        "line
         }
-        print line > "devtest.md"
+        print line > "doc/source/devtest.rst"
     }
 }
 

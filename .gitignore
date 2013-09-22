@@ -4,8 +4,11 @@
 
 .DS_Store
 
+*.egg
+*.egg-info
 *.pyc
 
+doc/source/devtest.rst
 openstack-tools
 scripts/glance
 scripts/heat
@@ -15,3 +18,5 @@ scripts/neutron
 stackrc
 
 tripleo-passwords
+.tox
+doc/build
