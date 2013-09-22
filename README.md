@@ -6,7 +6,7 @@ deployed on and with OpenStack. This repository is our staging area, where we
 incubate new ideas and new tools which get us closer to our goal.
 
 As an incubation area, we move tools to permanent homes in
-https://github.com/stackforge once they have proved that they do need to exist.
+OpenStack Infra once they have proved that they do need to exist.
 Other times we will propose the tool for inclusion in an existing project (such
 as nova or glance).
 
@@ -82,7 +82,7 @@ The lowest layer in the dependency stack, diskimage-builder can be used to
 customise generic disk images for use with Nova bare metal. It can also be
 used to provide build-time specialisation for disk images. Diskimage-builder
 is quite mature and can be downloaded from
-https://github.com/stackforge/diskimage-builder.
+https://github.com/openstack/diskimage-builder.
 
 ### Nova bare-metal / Ironic
 
@@ -191,8 +191,9 @@ manual or automated) within an organisation, some care is needed to make
 migration, or integration smooth.
 
 This is a sufficiently complex topic, we've created a dedicated document for
-it - [Deploying TripleO] (./Deploying.md). A related document is the
-instructions for doing [Dev/Test of TripleO] (./devtest.md).
+it - [Deploying TripleO] (http://docs.openstack.org/developer/tripleo-incubator/deploying).
+A related document is the
+instructions for doing [Dev/Test of TripleO] (http://docs.openstack.org/developer/tripleo-incubator/devtest)
 
 Architecture
 ------------
@@ -326,9 +327,3 @@ Currently there is no way to guarantee preservation (or deletion) of any of the
 drive contents on a machine if it is deleted in nova baremetal. The planned
 cinder driver will give us an API for describing what behaviour is needed on
 an instance by instance basis.
-
-See also
---------
-https://github.com/tripleo/incubator-bootstrap contains the scripts we run on
-the devstack based bootstrap node - but these are no longer maintained, as
-we have moved to tripleo-image-element based bootstrap nodes.
