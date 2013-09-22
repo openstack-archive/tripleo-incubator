@@ -132,7 +132,7 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ## #. git clone this repository to your local machine.
 ##    ::
 ## 
-##         git clone https://github.com/openstack/tripleo-incubator.git
+##         git clone https://git.openstack.org/openstack/tripleo-incubator.git
 ## 
 ## #. Nova tools get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts
 ##    - you need to add that to the PATH.

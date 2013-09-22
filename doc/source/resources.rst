@@ -18,7 +18,7 @@ Tripleo team resources
 
    ::
 
-       https://github.com/tripleo
+       https://git.openstack.org
 
 -  IRC: duh.
 
