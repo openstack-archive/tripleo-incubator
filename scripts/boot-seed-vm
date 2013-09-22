@@ -37,7 +37,7 @@ function show_options () {
     echo "Create and start a VM by combining the specified elements"
     echo "with common default elements, assuming many things about"
     echo "the local operating environment."
-    echo "See ../devtest.md"
+    echo "See ../scripts/devtest.sh"
     echo
     echo "Options:"
     echo "      -a i386|amd64 -- set the architecture of the VM (i386)"
