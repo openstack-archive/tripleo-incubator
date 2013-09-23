@@ -273,20 +273,18 @@ $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
 ## 
 ##         load-image $TRIPLEO_ROOT/undercloud.qcow2
 ## 
-## 1. Create secrets for the cloud. Note that you can also make or change these
-##    later and update the heat stack definition to inject them - as long as you
-##    also update the keystone recorded password. Note that there will be a window
-##    between updating keystone and instances where they will disagree and service
-##    will be down. Instead consider adding a new service account and changing 
-##    everything across to it, then deleting the old account after the cluster is
-##    updated.
+## 1. Create secrets for the cloud. The secrets will be written to a file
+##    (tripleo-passwords by default) that you need to source into your shell
+##    environment.  Note that you can also make or change these later and
+##    update the heat stack definition to inject them - as long as you also
+##    update the keystone recorded password. Note that there will be a window
+##    between updating keystone and instances where they will disagree and
+##    service will be down. Instead consider adding a new service account and
+##    changing everything across to it, then deleting the old account after
+##    the cluster is updated.
 
-UNDERCLOUD_ADMIN_TOKEN=$(os-make-password)
-UNDERCLOUD_ADMIN_PASSWORD=$(os-make-password)
-UNDERCLOUD_GLANCE_PASSWORD=$(os-make-password)
-UNDERCLOUD_HEAT_PASSWORD=$(os-make-password)
-UNDERCLOUD_NEUTRON_PASSWORD=$(os-make-password)
-UNDERCLOUD_NOVA_PASSWORD=$(os-make-password)
+setup-passwords
+source tripleo-passwords
 
 ## 1. Deploy an undercloud:
 
@@ -353,16 +351,6 @@ setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
 ## 
 ##         load-image $TRIPLEO_ROOT/overcloud-compute.qcow2
 ## 
-## 1. Create secrets for the cloud.
-
-OVERCLOUD_ADMIN_TOKEN=$(os-make-password)
-OVERCLOUD_ADMIN_PASSWORD=$(os-make-password)
-OVERCLOUD_CINDER_PASSWORD=$(os-make-password)
-OVERCLOUD_GLANCE_PASSWORD=$(os-make-password)
-OVERCLOUD_HEAT_PASSWORD=$(os-make-password)
-OVERCLOUD_NEUTRON_PASSWORD=$(os-make-password)
-OVERCLOUD_NOVA_PASSWORD=$(os-make-password)
-
 ## 1. For running an overcloud in VM's:
 
 OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-";NovaComputeLibvirtType=qemu"}
@@ -406,7 +394,6 @@ setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 
 ## 1. If you want a demo user in your overcloud (probably a good idea).
 ## 
-##         export OVERCLOUD_DEMO_PASSWORD=$(os-make-password)
 ##         os-adduser -p $OVERCLOUD_DEMO_PASSWORD demo demo@example.com
 ## 
 ## 1. Workaround https://bugs.launchpad.net/diskimage-builder/+bug/1211165.

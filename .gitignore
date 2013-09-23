@@ -14,3 +14,4 @@ scripts/nova
 scripts/neutron
 stackrc
 
+tripleo-passwords
