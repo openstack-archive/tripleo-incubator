@@ -8,7 +8,6 @@ TripleO Incubator
 
    deploying
    resources
-   neutron_notes
    troubleshooting
 
 
