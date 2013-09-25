@@ -436,6 +436,9 @@ Footnotes
      OpenStack), and 768M isn't enough to do repeated deploys with.
    - if using KVM, specify that you will install the virtual machine via PXE.
      This will avoid KVM prompting for a disk image or installation media.
+   - If you see over-mtu packets getting dropped when iscsi data is copied
+     over the control plane you may need to increase the MTU on your brbm
+     interfaces.
 
 * [3] Setting Up Squid Proxy
 
