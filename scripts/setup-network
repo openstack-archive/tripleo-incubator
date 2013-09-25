@@ -4,7 +4,11 @@ set -eu
 BASE=$(dirname $0)/../
 
 # Only add brbm if missing
-(sudo ovs-vsctl list-br | grep brbm) || sudo ovs-vsctl add-br brbm
+if ! sudo ovs-vsctl list-br | grep brbm &> /dev/null; then
+  sudo ovs-vsctl add-br brbm
+  # increase mtu to accommodate iscsi traffic
+  ifconfig brbm mtu 1504
+fi
 
 # remove brbm before replacing it.
 (virsh net-list --all --persistent | grep brbm) && (

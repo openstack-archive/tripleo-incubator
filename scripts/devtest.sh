@@ -473,6 +473,8 @@ setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 ##   suggestions for what they should look like.
 ##    - each VM should have 1 NIC
 ##    - eth0 should be on brbm
+##    - brbm (and all interfaces on it) should have MTU set to 1504 or greater
+##      to avoid potential issues with iscsi packet loss
 ##    - record the MAC addresses for the NIC of each VM.
 ##    - give each VM no less than 2GB of disk, and ideally give them
 ##      more than NODE_DISK, which defaults to 20GB
