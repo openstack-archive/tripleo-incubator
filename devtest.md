@@ -285,6 +285,12 @@ __(Note: all of the following commands should be run on your host machine, not i
         user-config
         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH undercloud
         setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
+        if [ "$DHCP_DRIVER" != "bm-dnsmasq" ]; then
+            # See bug 1231366 - this may become part of setup-neutron if that is
+            # determined to be not a bug.
+            UNDERCLOUD_DHCP_AGENT_UUID=$(neutron agent-list | awk '/DHCP/ { print $2 }')
+            neutron dhcp-agent-network-add $UNDERCLOUD_DHCP_AGENT_UUID ctlplane
+        fi
 
 1. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 
