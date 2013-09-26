@@ -350,6 +350,12 @@ setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
 keystone role-create --name heat_stack_user
 user-config
 setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
+if [ "$DHCP_DRIVER" != "bm-dnsmasq" ]; then
+    # See bug 1231366 - this may become part of setup-neutron if that is
+    # determined to be not a bug.
+    UNDERCLOUD_DHCP_AGENT_UUID=$(neutron agent-list | awk '/DHCP/ { print $2 }')
+    neutron dhcp-agent-network-add $UNDERCLOUD_DHCP_AGENT_UUID ctlplane
+fi
 
 ## #. Create two more 'baremetal' node(s) and register them with your undercloud.
 ##    ::
