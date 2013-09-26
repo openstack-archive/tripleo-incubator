@@ -11,6 +11,12 @@ if [ -z "$NODES" ]; then
 fi
 
 count=0
+
+# Power management settings are optional and only used for real bare metal.
+ips=( $PM_IPS )
+users=( $PM_USERS )
+passwords=( $PM_PASSWORDS )
+
 for MAC in $MACS; do
     count=$((count + 1))
     if [ $NODES = "undercloud" -a $count -eq 1 ]; then
@@ -18,7 +24,14 @@ for MAC in $MACS; do
         continue
     fi
     nova baremetal-node-create $NODES $CPU $MEM $DISK $MAC
-    if [ $NODES = "seed" ]; then 
+
+    if [ -n "$PM_IPS" -a -n "$PM_USERS" -a -n "$PM_PASSWORDS" ]; then
+        nova baremetal-node-create --pm_address=${ips[$count]} --pm_user=${users[$count]} --pm_password=${passwords[$count]} $NODES $CPU $MEM $DISK $MAC
+    else
+        nova baremetal-node-create $NODES $CPU $MEM $DISK $MAC
+    fi
+
+    if [ $NODES = "seed" ]; then
         # Only allocate one node for underclouds.
         break
     fi
