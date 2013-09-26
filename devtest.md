@@ -153,7 +153,9 @@ __(Note: all of the following commands should be run on your host machine, not i
 1. Create and start your seed VM. This script invokes diskimage-builder with
    suitable paths and options to create and start a VM that contains an
    all-in-one OpenStack cloud with the baremetal driver enabled, and
-   preconfigures it for a development environment.
+   preconfigures it for a development environment. Note that the seed has
+   minimal variation in it's configuration: the goal is to bootstrap with
+   a known-solid config.
 
         cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
         sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
@@ -161,7 +163,7 @@ __(Note: all of the following commands should be run on your host machine, not i
         sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
 
         cd $TRIPLEO_ROOT
-        boot-seed-vm -a $NODE_ARCH $NODE_DIST $DHCP_DRIVER
+        boot-seed-vm -a $NODE_ARCH $NODE_DIST bm-dnsmasq
 
    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
    you can log into it with 'ssh root@192.0.2.1'.
