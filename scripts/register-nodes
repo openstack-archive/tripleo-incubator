@@ -18,7 +18,18 @@ for MAC in $MACS; do
         continue
     fi
     nova baremetal-node-create $NODES $CPU $MEM $DISK $MAC
-    if [ $NODES = "seed" ]; then 
+
+    # Power management settings are optional and only used for real bare metal.
+    if [ -n "$PM_IPS" -a -n "$PM_USERS" -a -n "$PM_PASSWORDS" ]; then
+        IPS=( $PM_IPS )
+        USERS=( $PM_USERS )
+        PASSWORDS=( $PM_PASSWORDS )
+        nova baremetal-node-create --pm_address=${IPS[$count]} --pm_user=${USERS[$count]} --pm_password=${PASSWORDS[$count]} $NODES $CPU $MEM $DISK $MAC
+    else
+        nova baremetal-node-create $NODES $CPU $MEM $DISK $MAC
+    fi
+
+    if [ $NODES = "seed" ]; then
         # Only allocate one node for underclouds.
         break
     fi
