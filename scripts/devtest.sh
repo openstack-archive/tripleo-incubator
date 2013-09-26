@@ -570,5 +570,13 @@ setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 ##      and PM_PASSWORDS variables which should all be space delemited lists
 ##      that correspond to the MAC addresses and power management commands
 ##      your real baremetal machines require.
+##
+##    * If you see over-mtu packets getting dropped when iscsi data is copied
+##      over the control plane you may need to increase the MTU on your brbm
+##      interfaces. Symptoms that this might be the cause include:
+##
+##        iscsid: log shows repeated connection failed errors (and reconnects)
+##        dmesg shows:
+##            openvswitch: vnet1: dropped over-mtu packet: 1502 > 1500
 ## 
 ### --end
