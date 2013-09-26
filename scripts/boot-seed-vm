@@ -41,9 +41,10 @@ function show_options () {
     echo
     echo "Options:"
     echo "      -a i386|amd64 -- set the architecture of the VM (i386)"
-    echo "      -o name       -- set the name of the VM and image file (stack)"
-    echo "      -s size       -- set the image size (10 GB)"
-    echo "      -e engine     -- set the virt engine to use (defaults to kvm)"
+    echo "      -o name       -- set the name of the VM and image file (seed)"
+    echo "      -s size       -- set the image size (30 GB)"
+    echo "      -e engine     -- set the virt engine to use"
+    echo "                       (defaults to kvm if available, otherwise qemu)"
     echo "      -c            -- use a image cache for seed image"
     echo "      -n            -- don't automatically start the VM"
     echo
