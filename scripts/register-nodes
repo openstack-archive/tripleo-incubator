@@ -18,8 +18,6 @@ for MAC in $MACS; do
         continue
     fi
     nova baremetal-node-create ubuntu $CPU $MEM $DISK $MAC
-    # Workaround https://bugs.launchpad.net/tripleo/+bug/1178529
-    sleep 5
     if [ $NODES = "seed" ]; then 
         # Only allocate one node for underclouds.
         break
