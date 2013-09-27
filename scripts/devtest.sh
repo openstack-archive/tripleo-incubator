@@ -565,5 +565,15 @@ setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 ##    * Set http_proxy environment variable
 ##      ::
 ##          http_proxy=http://your_ip_or_localhost:3128/
+##
+## .. [#f4] Notes when using real bare metal
+##
+##    If you want to use real bare metal see the following.
+##
+##    * When calling setup-baremetal you can set MACS, PM_IPS, PM_USERS,
+##      and PM_PASSWORDS parameters which should all be space delemited lists
+##      that correspond to the MAC addresses and power management commands
+##      your real baremetal machines require. See scripts/setup-baremetal
+##      for details.
 ## 
 ### --end
