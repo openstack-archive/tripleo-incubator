@@ -14,7 +14,7 @@ PM_PASSWORDS=( $8 )
 count=0
 for MAC in $MACS; do
 
-    if [ -n "$PM_IPS" -a -n "$PM_USERS" -a -n "$PM_PASSWORDS" ]; then
+    if [ -n "${PM_IPS:-}" -a -n "${PM_USERS:-}" -a -n "${PM_PASSWORDS:-}" ]; then
         nova baremetal-node-create --pm_address=${PM_IPS[$count]} --pm_user=${PM_USERS[$count]} --pm_password=${PM_PASSWORDS[$count]} $SERVICE_HOST $CPU $MEM $DISK $MAC
     else
         nova baremetal-node-create $SERVICE_HOST $CPU $MEM $DISK $MAC
