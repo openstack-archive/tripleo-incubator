@@ -13,15 +13,18 @@ function show_options () {
     echo "Test the core TripleO story."
     echo
     echo "Options:"
+    echo "    --offline          -- operate without Internet access. Requires a previous"
+    echo "                          run to have fetched source/packages and built images."
     echo "    --trash-my-machine -- make nontrivial destructive changes to the machine."
     echo "                          For details read the source."
     echo
     exit $1
 }
 
+TRIPLEO_ONLINE=1
 CONTINUE=0
 
-TEMP=`getopt -o h -l trash-my-machine -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o h -l offline,trash-my-machine -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -29,6 +32,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --offline) TRIPLEO_ONLINE=0; shift 1;;
         --trash-my-machine) CONTINUE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
@@ -146,10 +150,12 @@ cd $TRIPLEO_ROOT
 ## #. git clone this repository to your local machine.
 ##    ::
 
-if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then #nodocs
+if (( $TRIPLEO_ONLINE )) ; then #nodocs
+    if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then #nodocs
 git clone https://git.openstack.org/openstack/tripleo-incubator
-else #nodocs
+    else #nodocs
 cd $TRIPLEO_ROOT/tripleo-incubator ; git pull #nodocs
+    fi #nodocs
 fi #nodocs
 
 ## 
@@ -201,11 +207,16 @@ export DHCP_DRIVER=bm-dnsmasq
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
 ##    ::
+
+if (( $TRIPLEO_ONLINE )) ; then #nodocs
 install-dependencies
+fi #nodocs
 
 ## #. Clone/update the other needed tools which are not available as packages.
 ##    ::
+if (( $TRIPLEO_ONLINE )) ; then #nodocs
 pull-tools
+fi #nodocs
 
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
@@ -219,8 +230,10 @@ setup-network
 ## #. Create a deployment ramdisk + kernel. These are used by the seed cloud and
 ##    the undercloud for deployment to bare metal.
 ##    ::
+if (( $TRIPLEO_ONLINE )) ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
     $NODE_DIST deploy -o $TRIPLEO_ROOT/deploy-ramdisk
+fi #nodocs
 
 ## #. Create and start your seed VM. This script invokes diskimage-builder with
 ##    suitable paths and options to create and start a VM that contains an
@@ -236,7 +249,8 @@ sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
 
 cd $TRIPLEO_ROOT
-boot-seed-vm -a $NODE_ARCH $NODE_DIST bm-dnsmasq
+##    boot-seed-vm -a $NODE_ARCH $NODE_DIST bm-dnsmasq
+boot-seed-vm $( if ! (( $TRIPLEO_ONLINE )) ; then echo "-c" ; fi ) -a $NODE_ARCH $NODE_DIST bm-dnsmasq
 
 ##    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
 ##    you can log into it with 'ssh root@192.0.2.1'.
@@ -309,9 +323,11 @@ ssh root@192.0.2.1 "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/a
 ##    there for debugging support - it is not suitable for a production network.
 ##    ::
 
+if (( $TRIPLEO_ONLINE )) ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
     boot-stack nova-baremetal os-collect-config stackuser $DHCP_DRIVER
+fi #nodocs
 
 ## #. Load the undercloud image into Glance:
 ##    ::
@@ -393,9 +409,11 @@ ssh heat-admin@$UNDERCLOUD_IP "cat /opt/stack/boot-stack/virtual-power-key.pub" 
 ##    production network.
 ##    ::
 
+if (( $TRIPLEO_ONLINE )) ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
     boot-stack cinder os-collect-config neutron-network-node stackuser
+fi #nodocs
 
 ## #. Load the image into Glance:
 ##    ::
@@ -407,9 +425,11 @@ load-image $TRIPLEO_ROOT/overcloud-control.qcow2
 ##    debugging support - it is not suitable for a production network.
 ##    ::
 
+if (( $TRIPLEO_ONLINE )) ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
     nova-compute nova-kvm neutron-openvswitch-agent os-collect-config stackuser
+fi #nodocs
 
 ## #. Load the image into Glance:
 ##    ::
@@ -479,8 +499,10 @@ nova flavor-create m1.tiny 1 512 2 1
 ## #. Build an end user disk image and register it with glance.
 ##    ::
 
+if (( $TRIPLEO_ONLINE )) ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/user
+fi #nodocs
 glance image-create --name user --public --disk-format qcow2 \
     --container-format bare --file $TRIPLEO_ROOT/user.qcow2
 
