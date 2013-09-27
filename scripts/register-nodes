@@ -5,9 +5,10 @@ CPU=$1
 MEM=$2
 DISK=$3
 MACS="$4"
+SERVICE_HOST="$5"
 
 for MAC in $MACS; do
-    nova baremetal-node-create ubuntu $CPU $MEM $DISK $MAC
+    nova baremetal-node-create $SERVICE_HOST $CPU $MEM $DISK $MAC
 done
 date
 echo "Nodes will be available in 60 seconds from now."
