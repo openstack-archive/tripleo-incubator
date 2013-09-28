@@ -269,7 +269,7 @@ source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
 ##    ::
 ## 
 ##         export SEED_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 1)
-##         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" undercloud
+##         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed
 ## 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
 ## 
@@ -349,7 +349,7 @@ setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
 ##    ::
 ## 
 ##         export UNDERCLOUD_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 2)
-##         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$UNDERCLOUD_MACS" seed
+##         setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$UNDERCLOUD_MACS" undercloud
 ## 
 ## #. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 ##    ::
