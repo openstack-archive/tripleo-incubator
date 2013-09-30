@@ -17,7 +17,7 @@ TOTAL=$5
 
 # define the default storage pool if its not there yet
 (virsh pool-list --all --persistent | grep -q default) || (
- virsh pool-define-as --name default dir --target /var/lib/libvirt/images; virsh pool-autostart default; virsh pool-start default)
+ virsh pool-define-as --name default dir --target /var/lib/libvirt/images; virsh pool-autostart default; virsh pool-start default) >dev/stderr
 
 PREALLOC=
 if [ -f /etc/debian_version ]; then
