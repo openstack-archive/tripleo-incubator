@@ -18,5 +18,7 @@ scripts/neutron
 stackrc
 
 tripleo-passwords
+tripleorc
+
 .tox
 doc/build
