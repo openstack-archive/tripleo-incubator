@@ -5,6 +5,10 @@ TripleO Incubator
    :maxdepth: 1
 
    devtest
+   devtest_seed
+   devtest_undercloud
+   devtest_overcloud
+   devtest_end
 
    deploying
    resources
