@@ -50,4 +50,8 @@ done
 
 EXTRA=${1:-""}
 
-awk -f scripts/extract-docs.awk scripts/devtest.sh > doc/source/devtest.rst
+for script in $(ls scripts/devtest*.sh) ; do
+    bname=${script#*/}
+    noext=${bname%.sh}
+    awk -f scripts/extract-docs.awk $script > doc/source/$noext.rst
+done
