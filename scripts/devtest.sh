@@ -503,7 +503,7 @@ nova flavor-create m1.tiny 1 512 2 1
 ## #. Build an end user disk image and register it with glance.
 ##    ::
 
-$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/user
 glance image-create --name user --public --disk-format qcow2 \
     --container-format bare --file $TRIPLEO_ROOT/user.qcow2
