@@ -24,7 +24,6 @@ if [ -f /etc/debian_version ]; then
   PREALLOC="--prealloc-metadata"
 fi
 
-MACS=""
 for (( count=idx=0; count<TOTAL; ++idx )) ; do
   (virsh list --all | grep -q baremetal_$idx) && continue
   virsh vol-create-as default baremetal-$idx.qcow2 ${DISK}G --format qcow2 $PREALLOC >/dev/stderr
