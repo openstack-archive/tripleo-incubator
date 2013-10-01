@@ -8,7 +8,7 @@
 *.egg-info
 *.pyc
 
-doc/source/devtest.rst
+doc/source/devtest*.rst
 openstack-tools
 scripts/glance
 scripts/heat
