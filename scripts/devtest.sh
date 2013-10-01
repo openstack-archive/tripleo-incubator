@@ -528,8 +528,7 @@ neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}"
 ## #. And allow network access to it.
 ##    ::
 
-neutron security-group-rule-create default --protocol icmp \
-    --direction ingress --port-range-min 8 --port-range-max 8
+neutron security-group-rule-create default --protocol icmp --direction ingress
 neutron security-group-rule-create default --protocol tcp \
     --direction ingress --port-range-min 22 --port-range-max 22
 
