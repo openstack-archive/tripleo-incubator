@@ -73,7 +73,7 @@ done
 SERVICE_TOKEN=${1:-""}
 ENDPOINT=${2:-""}
 ADMIN_EMAIL=${3:-""}
-HOST=${4:=""}
+HOST=${4:-""}
 EXTRA=${5:-""}
 
 if [ -z "$SERVICE_TOKEN" -o -z "$ENDPOINT" -o -z "$ADMIN_EMAIL" -o -z "$HOST" -o -n "$EXTRA" ]; then
