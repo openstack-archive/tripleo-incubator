@@ -296,7 +296,7 @@ HOWTO
 -  Create a Heat stack with your application topology. Be sure to use
    the image id of your cfn-tools customised image.
 
-Flat-networking OpenStack managed by Heat
+GRE Neutron OpenStack managed by Heat
 -----------------------------------------
 
 In this scenario we build on Baremetal with Heat to deploy a full
@@ -306,36 +306,150 @@ different OpenStack node roles.
 Prerequisites.
 ~~~~~~~~~~~~~~
 
--  A boot-stack image setup to run in KVM.
+- A boot-stack image setup to run in KVM.
 
--  A vanilla image with cfn-tools installed.
+- A vanilla image with cfn-tools installed.
 
--  A seed machine installed with your OS of choice in your datacentre.
+- A seed machine installed with your OS of choice in your datacentre.
 
-HOWTO
-~~~~~
+- At least 4 machines in your datacentre, one of which manually installed with
+  a recent Linux (libvirt 1.0+ or newer required).
 
--  Build the images you need (add any local elements you need to the
-   commands)
+- L2 network with private address range
 
-   disk-image-create -o bootstrap vm boot-stack ubuntu heat-api
-   stackuser disk-image-create -o ubuntu ubuntu cfn-tools
+- L3 accessible management network (via the L2 default router)
 
--  Setup a VM using bootstrap.qcow2 on your existing machine, with eth1
-   bridged into your datacentre LAN.
+- VLAN with public IP ranges on it
 
--  Run up that VM, which will create a self contained nova baremetal
-   install.
+Needed data
+~~~~~~~~~~~
 
--  Enroll your vanilla image into the glance of that install.
+- IPMI (address, user, password) details for the three non-manually installed
+  machines.
 
--  Enroll your other datacentre machines into that nova baremetal
-   install.
+- MAC addresses for all network interface cards in those same machines.
 
--  Setup admin users with SSH keypairs etc.
+- 2 spare contiguous ip addresses on your L2 network for seed deployment.
 
--  Create a Heat stack with your application topology. Be sure to use
-   the image id of your cfn-tools customised image.
+- 1 spare ip address for your seed VM, and one spare for talking to it on it's
+  bridge (seedip, seediplink)
+
+- 3 spare ip addresses for your undercloud tenant network + neutron services.
+
+- Public IP address to be your undercloud endpoint
+
+- Public IP address to be your overcloud endpoint
+
+- CPU count, memory in MB and disk in GB for your 4 machines.
+
+Install Seed
+~~~~~~~~~~~~
+
+Follow the 'devtest' guide but edit the seed config.json to:
+
+- change the dnsmasq range to the seed deployment range
+
+- change the heat endpoint details to refer to your seed ip address
+
+- change the ctlplane ip and cidr to match your seed ip address
+
+- change the power manager line nova.virt.baremetal.ipmi.IPMI and
+  remove the virtual subsection.
+
+- register the undercloud machine with its details rather than generic virtual
+  ones - e.g.
+
+  setup-baremetal 24 98304 1500 amd64 $somemac undercloud $ipmi_ip $ipmi_user $ipmi_password
+
+- setup proxy arp (this and the related bits are used to avoid messing about
+  with the public NIC and bridging: you may choose to use that approach
+  instead...):
+
+  sudo sysctl  net/ipv4/conf/all/proxy_arp=1
+  arp -s <seedip> -i <external_interface> -D <external_interface> pub
+  ip addr add <seediplink>/32 dev brbm
+  ip route add <seedip>/32 dev brbm src <seediplink>
+
+- setup ec2 metadata support:
+
+  iptables -t nat -A PREROUTING -d 169.254.169.254/32 -i <external_interface> -p tcp -m tcp --dport 80 -j DNAT --to-destination <seedip>:8775
+
+- setup DHCP relay:
+  sudo apt-get install dhcp-helper and configure it with
+  "-s <seedip>"
+  Note that isc-dhcp-relay fails to forward responses correctly, so dhcp-helper is preferred.
+    https://bugs.launchpad.net/ubuntu/+bug/1233953
+  Also note that dnsmasq may have to be stopped as they both listen to \*:dhcps
+    https://bugs.launchpad.net/ubuntu/+bug/1233954
+  Disable the filter-bootps cronjob (./etc/cron.d/filter-bootp) inside the seed vm and reset the table:
+    sudo iptables  -F FILTERBOOTPS
+
+  edit /etc/init/novabm-dnsmasq.conf:
+  exec dnsmasq --conf-file= \
+  --keep-in-foreground \
+  --port=0 \
+  --dhcp-boot=pxelinux.0,<seedip>,<seedip> \
+  --bind-interfaces \
+  --pid-file=/var/run/dnsmasq.pid \
+  --interface=br-ctlplane \
+  --dhcp-range=<seed_deploy_start>,<seed_deploy_end>,<network_cidr>
+
+- When you setup the seed, use <seedip> instead of 192.0.2.1, and you may need to edit seedrc.
+
+- For setup-neutron:
+  setup-neutron <start of seed deployment> <end of seed deployment> <cidr of network> <seedip> ctlplane
+
+- Validate networking:
+  From outside the seed host you should be able to ping <seedip>
+  From the seed VM you should be able to ping <all ipmi addresses>
+  From outside the seed host you should be able to get a response from the dnsmasq running on <seedip>
+
+- Create your deployment ramdisk with baremetal in mind:
+
+  $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST -a \
+  $NODE_ARCH -o $TRIPLEO_ROOT/undercloud  boot-stack nova-baremetal \
+  os-collect-config stackuser $DHCP_DRIVER -p linux-image-generic mellanox \
+  serial-console --offline
+
+- If your hardware has something other than eth0 plugged into the network,
+  fix your file injection template -
+  /opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template inside the
+  seed vm, replacing the enumerated interface values with the right interface
+  to use (e.g. auto eth2... iface eth2 inet static..)
+
+Deploy Undercloud
+~~~~~~~~~~~~~~~~~
+
+Use 'heat stack-create' per the devtest documentation to boot your undercloud.
+But use the undercloud-bm.yaml file rather than undercloud-vm.yaml.
+
+Once it's booted:
+
+- modprobe 8021q
+
+- edit /etc/network/interfaces and define your vlan
+
+- delete the default route on your internal network
+
+- add a targeted route to your management l3 range via the internal network router
+
+- add a targeted route to 169.254.169.254 via <seedip>
+
+- ifup the vlan interface
+
+- fix your resolv.conf
+
+- configure the undercloud per devtest.
+
+- upgrade your quotas:
+  nova quota-update --cores node_size*machine_count \
+  --instances machine_count --ram node_size*machine_count admin-tenant-id
+
+
+Deploy Overcloud
+~~~~~~~~~~~~~~~~
+
+Follow devtest again, but modify the images you build per the undercloud notes, and for machines you put public services on, follow the undercloud notes to fix them up.
 
 Example deployments (future)
 ============================
@@ -348,4 +462,3 @@ VM seed + bare metal under cloud
 -  need to be aware nova metadata wont be available after booting as the
    default rule assumes this host never initiates requests.
    https://bugs.launchpad.net/tripleo/+bug/1178487
-
