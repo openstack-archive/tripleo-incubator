@@ -50,4 +50,4 @@ done
 
 EXTRA=${1:-""}
 
-awk -f scripts/extract-docs.awk scripts/devtest.sh
+awk -f scripts/extract-docs.awk scripts/devtest.sh > doc/source/devtest.rst

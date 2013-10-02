@@ -38,7 +38,7 @@
         } else if (line != "") {
             line = "        "line
         }
-        print line > "doc/source/devtest.rst"
+        print line > "/dev/stdout"
     }
 }
 
