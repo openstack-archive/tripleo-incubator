@@ -51,7 +51,7 @@ set -u #nodocs
 ##    (Do this once).
 ##    ::
 ## 
-## source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
+##    source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
 
 ## #. Source the client configuration for the seed cloud.
 ##    ::
