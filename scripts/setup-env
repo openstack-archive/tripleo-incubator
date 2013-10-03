@@ -1,0 +1,10 @@
+First set your TRIPLEO_ROOT
+# export TRIPLEO_ROOT=$(pwd)
+
+export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
+export NODE_DIST=${NODE_DIST:-ubuntu}
+pull-tools
+setup-clienttools
+export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
+
+echo "Make sure to source your stackrc file"
