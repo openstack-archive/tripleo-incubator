@@ -9,9 +9,9 @@ set -eu
 
 
 ## #. Create your overcloud control plane image. This is the image the undercloud
-##    will deploy to become the KVM (or Xen etc) cloud control plane. Note that
-##    stackuser is only there for debugging support - it is not suitable for a
-##    production network.
+##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
+##    Note that stackuser is only there for debugging support - it is not
+##    suitable for a production network.
 ##    ::
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
@@ -24,8 +24,9 @@ $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
 load-image $TRIPLEO_ROOT/overcloud-control.qcow2
 
 ## #. Create your overcloud compute image. This is the image the undercloud
-##    deploys to host KVM instances. Note that stackuser is only there for
-##    debugging support - it is not suitable for a production network.
+##    deploys to host KVM (or QEMU, Xen, etc.) instances. Note that stackuser 
+##    is only there for debugging support - it is not suitable for a production
+##    network.
 ##    ::
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
