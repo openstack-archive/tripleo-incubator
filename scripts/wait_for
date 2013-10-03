@@ -1,0 +1,12 @@
+#!/bin/bash
+
+LOOPS=$1
+SLEEPTIME=$2
+shift 2
+i=0
+while [ $i -lt $LOOPS ]; do
+    i=$((i + 1))
+    eval "$@" && exit 0 || true
+    sleep $SLEEPTIME
+done
+exit 1
