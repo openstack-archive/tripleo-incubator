@@ -21,19 +21,6 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
-function wait_for() {
-    LOOPS=$1
-    SLEEPTIME=$2
-    shift 2
-    i=0
-    while [ $i -lt $LOOPS ]; do
-        i=$((i + 1))
-        eval "$@" && return 0 || true
-        sleep $SLEEPTIME
-    done
-    return 1
-}
-
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options] <service-token> <keystone-endpoint> <admin-email> <keystone-ssh>"
     echo
