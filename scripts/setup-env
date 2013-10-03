@@ -1,0 +1,13 @@
+# Setup your undercloud environment to run devtest_overcloud.sh
+
+# First set your TRIPLEO_ROOT
+#   export TRIPLEO_ROOT=$(pwd)
+
+export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
+export NODE_DIST=${NODE_DIST:-ubuntu}
+export NODE_ARCH=${NODE_ARCH:-i386}
+pull-tools
+setup-clienttools
+export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
+
+echo "Make sure to source your stackrc file"
