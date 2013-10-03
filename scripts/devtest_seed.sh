@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -eu
+
 ### --include
 ## devtest_seed
 ## ============
