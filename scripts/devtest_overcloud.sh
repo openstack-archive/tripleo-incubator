@@ -21,7 +21,7 @@ $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
 ## #. Load the image into Glance:
 ##    ::
 
-load-image $TRIPLEO_ROOT/overcloud-control.qcow2
+load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2
 
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances. Note that stackuser 
@@ -36,7 +36,7 @@ $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
 ## #. Load the image into Glance:
 ##    ::
 
-load-image $TRIPLEO_ROOT/overcloud-compute.qcow2
+load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2
 
 ## #. For running an overcloud in VM's::
 ##    ::
