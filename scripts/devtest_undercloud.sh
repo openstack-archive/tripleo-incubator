@@ -32,7 +32,7 @@ load-image $TRIPLEO_ROOT/undercloud.qcow2
 ##    the cluster is updated.
 ##    ::
 
-setup-passwords
+setup-passwords --overwrite
 source tripleo-passwords
 
 ## #. Deploy an undercloud::
