@@ -59,7 +59,7 @@ wait_for 60 10 "nova list | grep ctlplane" #nodocs
 export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
 echo "Waiting for undercloud node to configure br-ctlplane..." #nodocs
-wait_for 60 10 "echo | nc -w 1 $UNDERCLOUD_IP 22" >/dev/null #nodocs
+wait_for 60 10 "echo | nc -w 1 $UNDERCLOUD_IP 22" #nodocs
 ssh-keygen -R $UNDERCLOUD_IP
 
 ## #. Source the undercloud configuration:

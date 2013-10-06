@@ -37,8 +37,8 @@ function show_options() {
 }
 
 
-LOOPS=${1:-""}
-SLEEPTIME=${2:-""}
+LOOPS=${1:-"1"}
+SLEEPTIME=${2:-"0"}
 shift 2 || true
 COMMAND="$@"
 
@@ -50,7 +50,9 @@ fi
 i=0
 while [ $i -lt $LOOPS ]; do
     i=$((i + 1))
-    eval $COMMAND && exit 0 || true
+    OUTPUT=$(eval $COMMAND) && exit 0 || true
     sleep $SLEEPTIME
 done
+echo "Timing out - last probe output:"
+echo $OUTPUT
 exit 1
