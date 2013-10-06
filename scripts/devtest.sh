@@ -41,24 +41,6 @@ if [ "0" = "$CONTINUE" ]; then
     exit 1
 fi
 
-function wait_for() {
-    LOOPS=$1
-    SLEEPTIME=$2
-    shift 2
-    i=0
-    while [ $i -lt $LOOPS ]; do
-        i=$((i + 1))
-        eval "$@" && return 0 || true
-        sleep $SLEEPTIME
-    done
-    echo "Failed: $@"
-    if [ -t 1 ]; then
-        echo "Dropping to shell for post-mortem..."
-        bash
-    fi
-    return 1
-}
-
 ### --include
 ## devtest
 ## =======
