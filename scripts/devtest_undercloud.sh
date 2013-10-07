@@ -14,7 +14,8 @@ set -eu
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-    boot-stack nova-baremetal os-collect-config stackuser $DHCP_DRIVER
+    boot-stack nova-baremetal os-collect-config stackuser $DHCP_DRIVER \
+    $UNDERCLOUD_EXTRA_ELEMENTS
 
 ## #. Load the undercloud image into Glance:
 ##    ::
