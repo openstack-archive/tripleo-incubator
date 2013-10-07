@@ -6,7 +6,7 @@ set -eu
 ## devtest_end
 ## ============
 
-write-tripleorc
+write-tripleorc --overwrite
 
 ## #. If you need to recover the environment, you can source tripleorc.
 ## 
