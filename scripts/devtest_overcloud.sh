@@ -45,7 +45,9 @@ OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-";NovaComputeLibvirtType=qemu"}
 
 ## #. Deploy an overcloud::
 
-setup-overcloud-passwords --overwrite
+if [ ! -f tripleo-overcloud-passwords ]; then
+    setup-overcloud-passwords
+fi
 source tripleo-overcloud-passwords
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
