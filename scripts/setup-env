@@ -24,6 +24,7 @@ export TRIPLEO_ROOT=$1
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 export NODE_DIST=${NODE_DIST:-ubuntu}
 export NODE_ARCH=${NODE_ARCH:-i386}
+export OVERCLOUD_DIB_EXTRA_ARGS=${OVERCLOUD_DIB_EXTRA_ARGS:-}
 pull-tools
 setup-clienttools
 export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
