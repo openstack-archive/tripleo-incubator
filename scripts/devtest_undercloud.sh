@@ -10,12 +10,15 @@ set -eu
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. Note that stackuser is only
 ##    there for debugging support - it is not suitable for a production network.
+##    $UNDERCLOUD_DIB_EXTRA_ARGS is meant to be used to pass additional arguments
+##    to disk-image-create.
 ##    ::
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
     boot-stack nova-baremetal os-collect-config stackuser dhcp-all-interfaces \
-    $DHCP_DRIVER 2>&1 | tee $TRIPLEO_ROOT/dib-undercloud.log
+    $DHCP_DRIVER ${UNDERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
+    tee $TRIPLEO_ROOT/dib-undercloud.log
 
 ## #. Load the undercloud image into Glance:
 ##    ::

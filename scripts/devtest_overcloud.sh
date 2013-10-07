@@ -18,13 +18,14 @@ FLOATING_CIDR=${7:-'192.0.2.0/24'}
 ## #. Create your overcloud control plane image. This is the image the undercloud
 ##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
 ##    Note that stackuser is only there for debugging support - it is not
-##    suitable for a production network.
+##    suitable for a production network. $OVERCLOUD_DIB_EXTRA_ARGS is meant to be
+##    used to pass additional build-time specific arguments to disk-image-create.
 ##    ::
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
     boot-stack cinder os-collect-config neutron-network-node notcompute \
-    dhcp-all-interfaces stackuser 2>&1 | \
+    dhcp-all-interfaces stackuser ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
     tee $TRIPLEO_ROOT/dib-overcloud-control.log
 
 ## #. Load the image into Glance:
@@ -41,7 +42,7 @@ load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
     nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-    dhcp-all-interfaces stackuser 2>&1 | \
+    dhcp-all-interfaces stackuser $OVERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
     tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 
 ## #. Load the image into Glance:
