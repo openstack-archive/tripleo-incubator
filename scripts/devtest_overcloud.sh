@@ -6,8 +6,6 @@ set -eu
 ## devtest_overcloud
 ## =================
 
-
-
 ## #. Create your overcloud control plane image. This is the image the undercloud
 ##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
 ##    Note that stackuser is only there for debugging support - it is not
@@ -42,6 +40,27 @@ load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2
 ##    ::
 
 OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-";NovaComputeLibvirtType=qemu"}
+
+## #. Delete any previous overcloud::
+
+##         heat stack-delete overcloud || true
+
+### --end
+
+# Should really be wait_for, but it can't cope with complex if/or yet.
+tries=0
+while true;
+    do (heat stack-show overcloud > /dev/null) || break
+    if [ $((++tries)) -gt 120 ] ; then
+        echo ERROR: Giving up waiting for delete to succeed after 120 attempts.
+        exit 1
+    fi
+    heat stack-delete overcloud || true
+    # Don't busy-spin
+    sleep 2;
+done
+
+### --include
 
 ## #. Deploy an overcloud::
 
