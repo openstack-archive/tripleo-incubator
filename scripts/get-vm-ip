@@ -12,7 +12,7 @@ if [ -z "$VMNAME" ]; then
 fi
 
 while true ; do
-  echo "Looking for $VMNAME..." >/dev/stderr
+  echo "Looking for $VMNAME..." >&2
   mac=$(sudo virsh dumpxml $VMNAME 2>/dev/null | grep "mac address" | head -1 | awk -F "'" '{print $2}')
 
   if [ "$mac" != "" ]; then
@@ -24,7 +24,7 @@ while true ; do
   fi
 
   if [ -z "$ip" ]; then
-    echo "VM $VMNAME not found. It may not have booted yet. Waiting..." >/dev/stderr
+    echo "VM $VMNAME not found. It may not have booted yet. Waiting..." >&2
     sleep 2
     continue
   fi
