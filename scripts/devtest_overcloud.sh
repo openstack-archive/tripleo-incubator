@@ -74,7 +74,9 @@ source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
 
 ## #. Exclude the undercloud from proxies::
 
+set +u #nodocs
 export no_proxy=$no_proxy,$OVERCLOUD_IP
+set -u #nodocs
 
 ## #. Perform admin setup of your overcloud.
 ##    ::
