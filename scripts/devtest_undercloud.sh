@@ -37,7 +37,7 @@ source tripleo-undercloud-passwords
 
 ## #. Deploy an undercloud::
 
-if [ "$DHCP_DRIVER" != "bm-dnsmasq" ]; then
+if [ "$DHCP_DRIVER" = "bm-dnsmasq" ]; then
     UNDERCLOUD_NATIVE_PXE=""
 else
     UNDERCLOUD_NATIVE_PXE=";NeutronNativePXE=True"
