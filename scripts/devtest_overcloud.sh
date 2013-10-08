@@ -16,7 +16,8 @@ set -eu
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
-    boot-stack cinder os-collect-config neutron-network-node stackuser
+    boot-stack cinder os-collect-config neutron-network-node stackuser 2>&1 | \
+    tee $TRIPLEO_ROOT/dib-overcloud-control.log
 
 ## #. Load the image into Glance:
 ##    ::
@@ -31,7 +32,8 @@ load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
-    nova-compute nova-kvm neutron-openvswitch-agent os-collect-config stackuser
+    nova-compute nova-kvm neutron-openvswitch-agent os-collect-config stackuser 2>&1 | \
+    tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 
 ## #. Load the image into Glance:
 ##    ::
@@ -107,7 +109,7 @@ nova flavor-create m1.tiny 1 512 2 1
 ##    ::
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
-    -a $NODE_ARCH -o $TRIPLEO_ROOT/user
+    -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
 glance image-create --name user --public --disk-format qcow2 \
     --container-format bare --file $TRIPLEO_ROOT/user.qcow2
 
