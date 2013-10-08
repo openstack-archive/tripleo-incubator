@@ -104,7 +104,7 @@ init-keystone -p $OVERCLOUD_ADMIN_PASSWORD $OVERCLOUD_ADMIN_TOKEN \
     $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP
 setup-endpoints $OVERCLOUD_IP --cinder-password $OVERCLOUD_CINDER_PASSWORD \
     --glance-password $OVERCLOUD_GLANCE_PASSWORD \
-    --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+    --heat-password $OVERCLOUD_HEAT_PASSWORD \
     --neutron-password $OVERCLOUD_NEUTRON_PASSWORD \
     --nova-password $OVERCLOUD_NOVA_PASSWORD
 keystone role-create --name heat_stack_user
