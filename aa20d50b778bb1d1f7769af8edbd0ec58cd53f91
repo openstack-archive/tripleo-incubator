@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Approved+1: Devananda van der Veen <devananda.vdv@gmail.com>
+Code-Review+2: Devananda van der Veen <devananda.vdv@gmail.com>
+Code-Review+2: Clint Byrum <clint@ubuntu.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 09 Oct 2013 20:52:25 +0000
+Reviewed-on: https://review.openstack.org/50745
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
