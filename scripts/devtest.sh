@@ -214,7 +214,8 @@ setup-network
 ##    the undercloud for deployment to bare metal.
 ##    ::
 $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-    $NODE_DIST deploy -o $TRIPLEO_ROOT/deploy-ramdisk
+    $NODE_DIST deploy -o $TRIPLEO_ROOT/deploy-ramdisk 2>&1 | \
+    tee $TRIPLEO_ROOT/dib-deploy.log
 
 ## Next Steps:
 ## -----------
