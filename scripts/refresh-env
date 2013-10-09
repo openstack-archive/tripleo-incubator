@@ -13,11 +13,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# Setup/update your undercloud environment to run devtest_overcloud.sh
+# Setup your undercloud environment to run devtest_overcloud.sh
 # Usage:
-# source refresh-env TRIPLEO_ROOT
+# source setup-env TRIPLEO_ROOT
 # Ex:
-# source refresh-env ~/tripleo
+# source setup-env ~/tripleo
 
 export TRIPLEO_ROOT=$1
 
