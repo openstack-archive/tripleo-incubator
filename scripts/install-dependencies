@@ -64,7 +64,7 @@ setup-clienttools
 # libvirtd group
 LIBVIRTD_GROUP='libvirtd'
 
-if [ `lsb_release -i -s` = 'Debian' ]; then
+if [ "$(lsb_release -i -s)" = 'Debian' ]; then
     LIBVIRTD_GROUP='libvirt'
 fi
 
