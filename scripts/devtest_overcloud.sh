@@ -82,12 +82,10 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ## #. Get the overcloud IP from 'nova list'
 ##    ::
 
-echo "Waiting for undercloud nova to configure overcloud node..." #nodocs
-wait_for 60 10 "nova list | grep notcompute.*ctlplane" #nodocs
+echo "Waiting for staack ready" #nodocs
+wait_for 1800 10 stack-ready overcloud
 export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
-echo "Waiting for overcloud node to configure br-ctlplane..." #nodocs
-wait_for 84 10 "echo | nc -w 1 $OVERCLOUD_IP 22" #nodocs
 ssh-keygen -R $OVERCLOUD_IP
 
 ## #. Source the overcloud configuration::

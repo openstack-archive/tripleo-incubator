@@ -75,8 +75,9 @@ ssh -o StrictHostKeyChecking=no -t $HOST sudo /opt/stack/venvs/keystone/bin/keys
 
 # Tenants
 echo "Waiting for keystone to initialise..."
+# FIXME: when undercloud uses wait conditions, this wait can be removed.
 wait_for 60 10 "keystone tenant-create --name=admin"
-ADMIN_TENANT_ID=$(keystone tenant-get admin | awk '$2=="id" {print $4}')
+ADMIN_TENANT_ID=$(keystone tenant-create admin | awk '$2=="id" {print $4}')
 SERVICE_TENANT_ID=$(keystone tenant-create --name=service | awk '$2=="id" {print $4}')
 
 # Roles
