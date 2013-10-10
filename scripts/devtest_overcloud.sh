@@ -14,7 +14,8 @@ set -eu
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
-    boot-stack cinder os-collect-config neutron-network-node stackuser 2>&1 | \
+    boot-stack cinder os-collect-config neutron-network-node notcompute \
+    stackuser 2>&1 | \
     tee $TRIPLEO_ROOT/dib-overcloud-control.log
 
 ## #. Load the image into Glance:
