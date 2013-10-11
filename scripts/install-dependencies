@@ -31,6 +31,12 @@ if [ -f /etc/debian_version ]; then
   os=debian
 fi
 
+if [ -f /etc/SuSE-release ]; then
+  os=suse
+  # Need these in path for sudo service & usermod to work
+  PATH=/sbin:/usr/sbin:$PATH
+fi
+
 if [ "$os" = "unsupported" ]; then
   echo This script has not been tested outside of Fedora, RHEL, and Ubuntu variants.
   echo Aborting.
@@ -59,6 +65,18 @@ if [ "$os" = "redhat" ]; then
   sudo service openvswitch restart
 fi
 
+if [ "$os" = "suse" ]; then
+  # TODO: this is a bit fragile, and assumes openSUSE, not SLES
+  suse_version=$(awk '/VERSION/ { print $3 }' /etc/SuSE-release)
+  [ -f /etc/zypp/repos.d/Cloud_OpenStack_Master.repo ] || sudo zypper --non-interactive --gpg-auto-import-keys ar -f http://download.opensuse.org/repositories/Cloud:/OpenStack:/Master/openSUSE_$suse_version/Cloud:OpenStack:Master.repo
+  sudo zypper --non-interactive install \
+    python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
+    python-devel gcc audit python-virtualenv openvswitch-switch python-PyYAML net-tools \
+    lsb-release
+  sudo service libvirtd restart
+  sudo service openvswitch-switch restart
+fi
+
 setup-clienttools
 
 # libvirtd group
@@ -73,7 +91,7 @@ if ! id | grep $LIBVIRTD_GROUP; then
    echo "adding $USER to group $LIBVIRTD_GROUP"
    sudo usermod -a -G $LIBVIRTD_GROUP $USER
 
-   if [ "$os" = "redhat" ]; then
+   if [ "$os" = "redhat" -o "$os" = "suse" ]; then
        libvirtd_file=/etc/libvirt/libvirtd.conf
        if ! sudo grep  "^unix_sock_group" $libvirtd_file > /dev/null; then
            sudo sed -i 's/^#unix_sock_group.*/unix_sock_group = "libvirtd"/g' $libvirtd_file
@@ -83,7 +101,9 @@ if ! id | grep $LIBVIRTD_GROUP; then
        fi
    fi
 
-   exec sudo su -l $USER $0
+   # This sudo su business breaks on openSUSE (loses $PATH), so skip it
+   # and let the user read the message below ;)
+   [ "$os" != "suse" ] && exec sudo su -l $USER $0
 fi
 
 echo "Check to see that you are in the $LIBVIRTD_GROUP group in your current shell before going on. You can check by running:"
