@@ -67,7 +67,7 @@ done
 
 ## #. Deploy an overcloud::
 
-setup-overcloud-passwords --overwrite
+setup-overcloud-passwords
 source tripleo-overcloud-passwords
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
