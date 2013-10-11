@@ -21,7 +21,7 @@ NeutronPublicInterfaceDefaultRoute=${4:-''}
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
     boot-stack cinder os-collect-config neutron-network-node notcompute \
-    stackuser 2>&1 | \
+    dhcp-all-interfaces stackuser 2>&1 | \
     tee $TRIPLEO_ROOT/dib-overcloud-control.log
 
 ## #. Load the image into Glance:
@@ -37,7 +37,8 @@ load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
-    nova-compute nova-kvm neutron-openvswitch-agent os-collect-config stackuser 2>&1 | \
+    nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
+    dhcp-all-interfaces stackuser 2>&1 | \
     tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 
 ## #. Load the image into Glance:
