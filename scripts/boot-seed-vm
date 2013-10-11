@@ -94,10 +94,16 @@ case $ARCH in
 esac
 
 ELEMENTS_PATH=${ELEMENTS_PATH:-$SCRIPT_HOME/../../tripleo-image-elements/elements}
-if [ ! -d $ELEMENTS_PATH ]; then
-    echo "Error: unable to locate elements path at $ELEMENTS_PATH"
-    exit 1
-fi
+OLD_IFS=$IFS
+IFS=:
+for EPATH in  $ELEMENT_PATH; do
+  if [ ! -d $EPATH ]; then
+      echo "Error: unable to locate elements path at $EPATH"
+      exit 1
+  fi
+done
+IFS=$OLD_IFS
+
 export ELEMENTS_PATH
 
 DIB_PATH=${DIB_PATH:-$SCRIPT_HOME/../../diskimage-builder}
