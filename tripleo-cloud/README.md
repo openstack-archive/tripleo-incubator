@@ -4,8 +4,9 @@ the TripleO program is running in a continuous delivery fashion.
 
 Currently found here:
 
-* tripleo-cd-admins: A list (ircname + human name) of people permitted root
-  access to the tripleo cloud.
+* tripleo-cd-admins: A list (ircname,email,human name,comment) of people
+  permitted root access to the tripleo cloud. This is used for recording
+  details and for automatically creating admin user accounts.
 
 * tripleo-cd-ssh-keys: The ssh keys for people in tripleo-cd-admins.
 
