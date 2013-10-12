@@ -10,6 +10,8 @@ NeutronPublicInterfaceDefaultRoute=${4:-''}
 FLOATING_START=${5:-'192.0.2.45'}
 FLOATING_END=${6:-'192.0.2.64'}
 FLOATING_CIDR=${7:-'192.0.2.0/24'}
+ADMIN_USERS=${8:-''}
+USERS=${9:-''}
 
 ### --include
 ## devtest_overcloud
@@ -169,3 +171,12 @@ neutron security-group-rule-create default --protocol tcp \
 
 ##
 ### --end
+
+if [ -n "$ADMIN_USERS" ]; then
+    assert-admin-users "$ADMIN_USERS"
+    assert-users "$ADMIN_USERS"
+fi
+
+if [ -n "$USERS" ] ; then
+    assert-users "$USERS"
+fi
