@@ -90,7 +90,13 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##    You can watch the console via virsh/virt-manager to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, the machines will reboot
 ##    and be available.
-## 
+
+## #. While we wait for the stack to come up, build an end user disk image and
+##    register it with glance.::
+
+$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
+    -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
+
 ## #. Get the overcloud IP from 'nova list'
 ##    ::
 
@@ -143,11 +149,9 @@ os-adduser -p $OVERCLOUD_DEMO_PASSWORD demo demo@example.com
 nova flavor-delete m1.tiny
 nova flavor-create m1.tiny 1 512 2 1
 
-## #. Build an end user disk image and register it with glance.
+## #. Register the end user image with glance.
 ##    ::
 
-$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
-    -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
 glance image-create --name user --public --disk-format qcow2 \
     --container-format bare --file $TRIPLEO_ROOT/user.qcow2
 
