@@ -6,7 +6,13 @@ Currently found here:
 
 * tripleo-cd-admins: A list (ircname,email,human name,comment) of people
   permitted root access to the tripleo cloud. This is used for recording
-  details and for automatically creating admin user accounts.
+  details and for automatically creating admin (and regular user) accounts.
+
+* tripleo-cd-users: A list of users of the TripleO CD overcloud - either
+  TripleO ATC's or other folk which the TripleO PTL has granted access to the
+  cloud. This is used to populate users on the cloud automatically, and new
+  ATC's should ask for access by submitting a review to add their details.
+  The comment field should list why non-ATC's have access.
 
 * tripleo-cd-ssh-keys: The ssh keys for people in tripleo-cd-admins.
 
