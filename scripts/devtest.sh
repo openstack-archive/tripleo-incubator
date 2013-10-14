@@ -90,7 +90,7 @@ fi
 ## NOTE: The CPU architecture specified in several places must be consistent.
 ##       The examples here use 32-bit arch for the reduced memory footprint.  If
 ##       you are running on real hardware, or want to test with 64-bit arch,
-##       replace i386 => amd64 and i686 => x86_64 in all the commands below. You
+##       replace i386 => amd64 in all the commands below. You
 ##       will of course need amd64 capable hardware to do this.
 ## 
 ## Detailed instructions
