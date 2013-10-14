@@ -63,6 +63,9 @@ echo "Waiting for undercloud node to configure br-ctlplane..." #nodocs
 wait_for 60 10 "echo | nc -w 1 $UNDERCLOUD_IP 22" #nodocs
 ssh-keygen -R $UNDERCLOUD_IP
 
+echo "Waiting for cloud-init to configure/restart sshd"  #nodocs
+wait_for 10 5 ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no -t heat-admin@$UNDERCLOUD_IP  echo "" #nodocs
+
 ## #. Source the undercloud configuration:
 ##    ::
 
