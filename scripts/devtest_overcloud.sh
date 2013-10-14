@@ -135,8 +135,8 @@ setup-endpoints $OVERCLOUD_IP --cinder-password $OVERCLOUD_CINDER_PASSWORD \
     --nova-password $OVERCLOUD_NOVA_PASSWORD
 keystone role-create --name heat_stack_user
 user-config
-##         setup-neutron "" "" 10.0.0.0/8 "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
-setup-neutron "" "" 10.0.0.0/8 "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
+##         setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
+setup-neutron "" "" 10.0.0.0/8 "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
 
 ## #. If you want a demo user in your overcloud (probably a good idea).
 ##    ::
