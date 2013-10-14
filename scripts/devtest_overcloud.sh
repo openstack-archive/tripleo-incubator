@@ -95,7 +95,14 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 echo "Waiting for the stack to be ready" #nodocs
 wait_for 190 10 stack-ready overcloud
 export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+### --end
+# If we're forcing a specific public interface, we'll want to advertise that as
+# the public endpoint for APIs.
+if [ -n "$NeutronPublicInterfaceIP" ]; then
+    OVERCLOUD_IP=$(echo ${NeutronPublicInterfaceIP} | sed -e s,/.*,,)
+fi
 
+### --include
 ssh-keygen -R $OVERCLOUD_IP
 
 ## #. Source the overcloud configuration::
