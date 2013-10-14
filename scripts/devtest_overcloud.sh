@@ -72,7 +72,7 @@ ssh-keygen -R $OVERCLOUD_IP
 
 source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
 
-## #. Exclude the undercloud from proxies::
+## #. Exclude the overcloud from proxies::
 
 set +u #nodocs
 export no_proxy=$no_proxy,$OVERCLOUD_IP
