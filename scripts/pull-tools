@@ -29,7 +29,7 @@ for TOOL in $TOOLS; do
         git clone $TOOL
     else
         cd $TRIPLEO_ROOT/$TOOL_BASE
-        if [ "$(git symbolic-ref --short -q HEAD || :)" = "master" ] ; then
+        if [ "$(git symbolic-ref -q HEAD | rev | cut -d "/" -f 1 | rev || :)" = "master" ] ; then
             if ! git pull --ff-only ; then
                     echo "***************************************************"
                     echo "* Perhaps you want to 'git rebase origin/master'? *"
