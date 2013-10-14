@@ -86,7 +86,7 @@ setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --nova-password $UNDERCLOUD_NOVA_PASSWORD
 keystone role-create --name heat_stack_user
 user-config
-setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 $UNDERCLOUD_IP ctlplane
+setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplane
 if [ "$DHCP_DRIVER" != "bm-dnsmasq" ]; then
     # See bug 1231366 - this may become part of setup-neutron if that is
     # determined to be not a bug.
