@@ -34,7 +34,7 @@ function show_options () {
     echo "    -r, --region      -- Override the default region 'regionOne'."
     echo "    -p, --password    -- Choose the admin user password."
     echo
-    echo "For instance: $SCRIPT_NAME unset unset 192.0.2.1 admin@example.com"
+    echo "For instance: $SCRIPT_NAME -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1"
     exit $1
 }
 
