@@ -54,7 +54,7 @@ else
 fi
 
 NET_ID=$(neutron net-create $NET_NAME $NET_EXTRA | grep ' id ' | awk '{print $4}')
-SUBNET_ID=$(neutron subnet-create $SUBNET_EXTRA --ip_version 4 ${ALLOCATION_POOL:+--allocation-pool $ALLOCATION_POOL} ${NETWORK_GATEWAY:+--gateway $NETWORK_GATEWAY} $NET_ID $NETWORK_CIDR | grep ' id ' | awk '{print $4}')
+SUBNET_ID=$(neutron subnet-create --ip_version 4 ${ALLOCATION_POOL:+--allocation-pool $ALLOCATION_POOL} ${NETWORK_GATEWAY:+--gateway $NETWORK_GATEWAY} $NET_ID $NETWORK_CIDR $SUBNET_EXTRA | grep ' id ' | awk '{print $4}')
 
 if [ -z "$PHYSICAL_NETWORK" ] ; then
     neutron router-create default-router
