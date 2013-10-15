@@ -190,6 +190,9 @@ export NODE_DIST=${NODE_DIST:-ubuntu} #nodocs
 ##    neutron-dhcp-agent.
 ##    ::
 
+echo "Cleaning up vm's/storage from previous devtest runs" #nodocs
+cleanup-env #nodocs
+
 export DHCP_DRIVER=bm-dnsmasq
 
 ## #. Ensure dependencies are installed and required virsh configuration is
