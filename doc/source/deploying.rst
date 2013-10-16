@@ -397,7 +397,7 @@ Follow the 'devtest' guide but edit the seed config.json to:
 - When you setup the seed, use <seedip> instead of 192.0.2.1, and you may need to edit seedrc.
 
 - For setup-neutron:
-  setup-neutron <start of seed deployment> <end of seed deployment> <cidr of network> <seedip> ctlplane
+  setup-neutron <start of seed deployment> <end of seed deployment> <cidr of network> <seedip> <metadata server> ctlplane
 
 - Validate networking:
   From outside the seed host you should be able to ping <seedip>
