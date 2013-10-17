@@ -202,9 +202,9 @@ There is a [high level presentation] (presentations/TripleO architecture overvie
 accompanying these docs.
 
 We start with an [image builder]
-(https://git.openstack.org/cgit/openstack/diskimage-builder/), and rules for that to
-[build OpenStack images] (https://git.openstack.org/cgit/openstack/tripleo-image-elements/).
-We then use [Heat] (https://git.openstack.org/cgit/openstack/heat) to orchestrate deployment
+(https://github.com/openstack/diskimage-builder), and rules for that to
+[build OpenStack images] (https://github.com/openstack/tripleo-image-elements).
+We then use [Heat] (https://wiki.openstack.org/wiki/Heat) to orchestrate deployment
 of those images onto bare metal using the [Nova baremetal driver]
 (https://wiki.openstack.org/wiki/Baremetal).
 
