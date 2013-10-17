@@ -61,6 +61,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
 echo "Waiting for seed nova to configure undercloud node..." #nodocs
 wait_for 60 10 "nova list | grep ctlplane" #nodocs
 export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+write-tripleorc --overwrite #nodocs
 
 echo "Waiting for undercloud node to configure br-ctlplane..." #nodocs
 wait_for 60 10 "echo | nc -w 1 $UNDERCLOUD_IP 22" #nodocs

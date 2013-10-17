@@ -104,6 +104,7 @@ $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
 echo "Waiting for the overcloud stack to be ready" #nodocs
 wait_for 190 10 stack-ready overcloud
 export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+write-tripleorc --overwrite
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
 # the public endpoint for APIs.

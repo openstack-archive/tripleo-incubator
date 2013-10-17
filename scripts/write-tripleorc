@@ -27,7 +27,7 @@ function show_options () {
     echo "Write devtest defined environment variables to a file."
     echo
     echo "Creates a tripleorc file that can be sourced later to restore"
-    echo "evironment variables that are defined by devtest.md"
+    echo "environment variables that are defined by devtest.md"
     echo
     echo "Options:"
     echo "    -f, --file        -- Specify path for tripleorc file."

@@ -31,6 +31,7 @@ boot-seed-vm -a $NODE_ARCH $NODE_DIST bm-dnsmasq
 ##    you can use the get-vm-ip script::
 
 export SEED_IP=`get-vm-ip seed`
+write-tripleorc --overwrite #nodocs
 
 ## #. Add a route to the baremetal bridge via the seed node (we do this so that
 ##    your host is isolated from the networking of the test environment.
