@@ -41,6 +41,13 @@ if [ "0" = "$CONTINUE" ]; then
     exit 1
 fi
 
+# Source environment variables from .devtestrc, allowing defaults to be setup
+# specific to users environments
+if [ -e ~/.devtestrc ] ; then
+    echo "sourcing ~/.devtestrc"
+    source ~/.devtestrc
+fi
+
 ### --include
 ## devtest
 ## =======
