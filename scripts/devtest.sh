@@ -200,6 +200,17 @@ export NODE_DIST=${NODE_DIST:-ubuntu} #nodocs
 
 export DHCP_DRIVER=bm-dnsmasq
 
+## #. Run cleanup-env to ensure VM's and storage pools from previous devtest
+##    runs are removed.
+##    ::
+##         cleanup-env
+### --end
+if [ "${TRIPLEO_CLEANUP:-1}" = "1"  ]; then
+    echo "Cleaning up vm's/storage from previous devtest runs"
+    cleanup-env
+fi
+### --include
+
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
 ##    ::
