@@ -101,7 +101,7 @@ $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
 ## #. Get the overcloud IP from 'nova list'
 ##    ::
 
-echo "Waiting for the stack to be ready" #nodocs
+echo "Waiting for the overcloud stack to be ready" #nodocs
 wait_for 190 10 stack-ready overcloud
 export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 ### --end
