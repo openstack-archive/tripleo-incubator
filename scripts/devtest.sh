@@ -41,6 +41,13 @@ if [ "0" = "$CONTINUE" ]; then
     exit 1
 fi
 
+# Source environment variables from .devtestrc, allowing defaults to be setup
+# specific to users environments
+if [ -e ~/.devtestrc ] ; then
+    echo "sourcing ~/.devtestrc"
+    source ~/.devtestrc
+fi
+
 ### --include
 ## devtest
 ## =======
@@ -53,6 +60,7 @@ fi
 ## * Setup SSH access to let the seed node turn on/off other libvirt VMs.
 ## * Setup a VM that is your seed node
 ## * Setup N VMs to pretend to be your cluster
+## * Add environment variables to be included to ~/.devtestrc, e.g. http_proxy
 ## * Go to town testing deployments on them.
 ## * For troubleshooting see :doc:`troubleshooting`
 ## * For generic deployment information see :doc:`deploying`
