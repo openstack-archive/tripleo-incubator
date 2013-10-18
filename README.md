@@ -5,10 +5,9 @@ Welcome to our TripleO incubator! TripleO is our pithy term for OpenStack
 deployed on and with OpenStack. This repository is our staging area, where we
 incubate new ideas and new tools which get us closer to our goal.
 
-As an incubation area, we move tools to permanent homes in
-OpenStack Infra once they have proved that they do need to exist.
-Other times we will propose the tool for inclusion in an existing project (such
-as nova or glance).
+As an incubation area, we move tools to permanent homes in OpenStack Infra once
+they have proved that they do need to exist.  Other times we will propose the
+tool for inclusion in an existing project (such as nova or glance).
 
 What is TripleO?
 ----------------
