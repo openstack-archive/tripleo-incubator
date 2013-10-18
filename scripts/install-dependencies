@@ -101,9 +101,7 @@ if ! id | grep $LIBVIRTD_GROUP; then
        fi
    fi
 
-   # This sudo su business breaks on openSUSE (loses $PATH), so skip it
-   # and let the user read the message below ;)
-   [ "$os" != "suse" ] && exec sudo su -l $USER $0
+   exec sudo su -l $USER -c "PATH=$PATH $0"
 fi
 
 echo "Check to see that you are in the $LIBVIRTD_GROUP group in your current shell before going on. You can check by running:"
