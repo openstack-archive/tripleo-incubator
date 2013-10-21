@@ -229,13 +229,17 @@ export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
 ##    ::
 setup-network
 
+## #. Choose the deploy image element to be used. `deploy-kexec` will relieve you of
+##    you need to wait for long hardware POST times, however it has known stability
+##    issues. If stability is preferred over speed, use `deploy` image element.
+##    ::
+export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-kexec}
+
 ## #. Create a deployment ramdisk + kernel. These are used by the seed cloud and
 ##    the undercloud for deployment to bare metal.
-##    If for some reason your hardware doesn't like kexec, just
-##    s/deploy-kexec/deploy/.
 ##    ::
 $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-    $NODE_DIST deploy-kexec -o $TRIPLEO_ROOT/deploy-ramdisk 2>&1 | \
+    $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk 2>&1 | \
     tee $TRIPLEO_ROOT/dib-deploy.log
 
 ## Next Steps:
