@@ -80,5 +80,6 @@ fi
 PASSWORD=$HEAT_PASSWORD register-endpoint $DEBUG -r $REGION -d "Heat Service" heat orchestration http://$HOST:8004
 PASSWORD=$NEUTRON_PASSWORD register-endpoint $DEBUG -r $REGION -d "Neutron Service" neutron network http://$HOST:9696
 PASSWORD=$GLANCE_PASSWORD register-endpoint $DEBUG -r $REGION -d "Glance Image Service" glance image http://$HOST:9292
+PASSWORD=$CINDER_PASSWORD register-endpoint $DEBUG -r $REGION -d "Cinder Volume Service" cinder volume http://$HOST:8776
 register-endpoint $DEBUG -r $REGION -d "EC2 Compatibility Layer" ec2 ec2 http://$HOST:8773
 PASSWORD=$NOVA_PASSWORD register-endpoint $DEBUG -r $REGION -d "Nova Compute Service" nova compute http://$HOST:8774
