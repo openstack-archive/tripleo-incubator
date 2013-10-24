@@ -4,7 +4,7 @@ set -eu
 ## This script should die: https://bugs.launchpad.net/tripleo/+bug/1195046.
 
 # generate ssh authentication keys if they don't exist
-if [ ! -d ~/.ssh ]; then
+if [ ! -f ~/.ssh/id_rsa ]; then
   ssh-keygen -t rsa -N ""  -f ~/.ssh/id_rsa
 fi
 
