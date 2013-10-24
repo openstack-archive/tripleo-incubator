@@ -192,11 +192,6 @@ export NODE_DIST=${NODE_DIST:-ubuntu} #nodocs
 ##    ::
 ## 
 ##         export NODE_DIST="fedora selinux-permissive"
-## 
-## #. A DHCP driver is used to do DHCP when booting nodes.
-##    ::
-
-export DHCP_DRIVER=neutron-dhcp-agent
 
 ## #. Run cleanup-env to ensure VM's and storage pools from previous devtest
 ##    runs are removed.
