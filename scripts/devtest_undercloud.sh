@@ -17,7 +17,7 @@ set -eu
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
     boot-stack nova-baremetal os-collect-config stackuser dhcp-all-interfaces \
-    $DHCP_DRIVER ${UNDERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
+    neutron-dhcp-agent ${UNDERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
     tee $TRIPLEO_ROOT/dib-undercloud.log
 
 ## #. Load the undercloud image into Glance:
@@ -41,14 +41,8 @@ source tripleo-undercloud-passwords
 
 ## #. Deploy an undercloud::
 
-if [ "$DHCP_DRIVER" = "bm-dnsmasq" ]; then
-    UNDERCLOUD_NATIVE_PXE=""
-else
-    UNDERCLOUD_NATIVE_PXE=";NeutronNativePXE=True"
-fi
-
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH}$UNDERCLOUD_NATIVE_PXE" \
+    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};NeutronNativePXE=True" \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
@@ -93,17 +87,16 @@ setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
 keystone role-create --name heat_stack_user
 user-config
 setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplane
-if [ "$DHCP_DRIVER" != "bm-dnsmasq" ]; then
-    # See bug 1231366 - this may become part of setup-neutron if that is
-    # determined to be not a bug.
-    wait_for 30 10 neutron agent-list \| grep DHCP
-    UNDERCLOUD_DHCP_AGENT_UUID=$(neutron agent-list | awk '/DHCP/ { print $2 }')
-    # NOTE(rpodolyaka): by the time we've got here the network might have already
-    #                   been scheduled, so the next command can possibly fail with
-    #                   'network has already been hosted' error. That would mean
-    #                   we are done here and can continue.
-    neutron dhcp-agent-network-add $UNDERCLOUD_DHCP_AGENT_UUID ctlplane || true
-fi
+
+# See bug 1231366 - this may become part of setup-neutron if that is
+# determined to be not a bug.
+wait_for 30 10 neutron agent-list \| grep DHCP
+UNDERCLOUD_DHCP_AGENT_UUID=$(neutron agent-list | awk '/DHCP/ { print $2 }')
+# NOTE(rpodolyaka): by the time we've got here the network might have already
+#                   been scheduled, so the next command can possibly fail with
+#                   'network has already been hosted' error. That would mean
+#                   we are done here and can continue.
+neutron dhcp-agent-network-add $UNDERCLOUD_DHCP_AGENT_UUID ctlplane || true
 
 ## #. Create two more 'baremetal' node(s) and register them with your undercloud.
 ##    ::
