@@ -2,16 +2,18 @@
 set -eu
 
 BASE=$(dirname $0)/../
+BRIDGE_SUFFIX=${1:-''}
+BRIDGE_NAME=brbm$BRIDGE_SUFFIX
 
-# Only add brbm if missing
-(sudo ovs-vsctl list-br | grep brbm) || sudo ovs-vsctl add-br brbm
+# Only add bridge if missing
+(sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) || sudo ovs-vsctl add-br ${BRIDGE_NAME}
 
-# remove brbm before replacing it.
-(virsh net-list --all --persistent | grep brbm) && (
- virsh net-destroy brbm; virsh net-undefine brbm)
-virsh net-define $BASE/templates/brbm.xml
-virsh net-autostart brbm
-virsh net-start brbm
+# remove bridge before replacing it.
+(virsh net-list --all --persistent | grep "${BRIDGE_NAME} ") && (
+ virsh net-destroy ${BRIDGE_NAME}; virsh net-undefine ${BRIDGE_NAME})
+virsh net-define <(sed s/brbm/$BRIDGE_NAME/ $BASE/templates/brbm.xml)
+virsh net-autostart ${BRIDGE_NAME}
+virsh net-start ${BRIDGE_NAME}
 
 # start default if needed and configure it to autostart
 default_net=$(sudo virsh net-list --all --persistent | grep default | awk 'BEGIN{OFS=":";} {print $2,$3}')
