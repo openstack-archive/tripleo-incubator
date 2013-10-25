@@ -2,16 +2,17 @@
 set -eu
 
 BASE=$(dirname $0)/../
+BRBM=brbm${1:-''}
 
 # Only add brbm if missing
-(sudo ovs-vsctl list-br | grep brbm) || sudo ovs-vsctl add-br brbm
+(sudo ovs-vsctl list-br | grep ${BRBM}"$") || sudo ovs-vsctl add-br ${BRBM}
 
 # remove brbm before replacing it.
-(virsh net-list --all --persistent | grep brbm) && (
- virsh net-destroy brbm; virsh net-undefine brbm)
-virsh net-define $BASE/templates/brbm.xml
-virsh net-autostart brbm
-virsh net-start brbm
+(virsh net-list --all --persistent | grep ${BRBM}" ") && (
+ virsh net-destroy ${BRBM}; virsh net-undefine ${BRBM})
+scripts/configure-brbm --name ${BRBM}
+virsh net-autostart ${BRBM}
+virsh net-start ${BRBM}
 
 # start default if needed and configure it to autostart
 default_net=$(sudo virsh net-list --all --persistent | grep default | awk 'BEGIN{OFS=":";} {print $2,$3}')
