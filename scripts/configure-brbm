@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+import argparse
+import os.path
+
+import libvirt
+
+templatedir = os.path.dirname(os.path.dirname(__file__)) + '/templates'
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Configure the network bridge.")
+    parser.add_argument('--name', default='',
+        help='Bridge name ie: brbm1')
+    args = parser.parse_args()
+    with file(templatedir + '/brbm.xml', 'rb') as f:
+        source_template = f.read()
+    params = {
+        'name': args.name,
+        }
+    if os.path.exists("/usr/bin/kvm"): # Debian
+        params['emulator'] = "/usr/bin/kvm"
+    elif os.path.exists("/usr/bin/qemu-kvm"): # Redhat
+        params['emulator'] = "/usr/bin/qemu-kvm"
+
+    brbm_template = source_template % params
+    conn=libvirt.open("qemu:///system")
+    a = conn.networkDefineXML(brbm_template)
+
+if __name__ == '__main__':
+    main()

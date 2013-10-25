@@ -1,6 +1,6 @@
 <network>
-  <name>brbm</name>
+  <name>%(name)s</name>
   <forward mode='bridge'/>
-  <bridge name='brbm' />
+  <bridge name='%(name)s'/>
   <virtualport type='openvswitch'/>
 </network>
