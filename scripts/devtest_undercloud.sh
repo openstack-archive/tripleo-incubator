@@ -2,6 +2,10 @@
 
 set -eu
 
+if [[ $NODE_DIST =~ .*fedora.* ]] ; then
+    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS dracut-network"
+fi
+
 ### --include
 ## devtest_undercloud
 ## ==================
@@ -11,7 +15,9 @@ set -eu
 ##    will deploy to become the baremetal undercloud. Note that stackuser is only
 ##    there for debugging support - it is not suitable for a production network.
 ##    $UNDERCLOUD_DIB_EXTRA_ARGS is meant to be used to pass additional arguments
-##    to disk-image-create.
+##    to disk-image-create. If building images with Fedora you should include the
+##    dracut-network element in the lists of elements passed to
+##    the disk-image-create command
 ##    ::
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
