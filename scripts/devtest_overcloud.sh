@@ -170,6 +170,7 @@ nova boot --key-name default --flavor m1.tiny --image user demo
 ## #. Add an external IP for it.
 ##    ::
 
+wait_for 10 5 neutron port-list -f csv -c id --quote none \| grep id
 PORT=$(neutron port-list -f csv -c id --quote none | tail -n1)
 neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}"
 
