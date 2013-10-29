@@ -27,8 +27,9 @@ fi
 for (( count=idx=0; count<TOTAL; ++idx )) ; do
   (virsh list --all | grep -q baremetal_$idx) && continue
   virsh vol-create-as default baremetal-$idx.qcow2 ${DISK}G --format qcow2 $PREALLOC >&2
-  configure-vm --bootdev network --name baremetal_$idx --image /var/lib/libvirt/images/baremetal-$idx.qcow2 --arch $ARCH --cpus $CPU --memory $MEM >&2
-  sudo chattr +C /var/lib/libvirt/images/baremetal-$idx.qcow2 || true
+  volume_path=$(virsh vol-path --pool default baremetal-$idx.qcow2)
+  configure-vm --bootdev network --name baremetal_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM >&2
+  sudo chattr +C "$volume_path" || true
   get-vm-mac baremetal_$idx
   (( ++count ))
 done
