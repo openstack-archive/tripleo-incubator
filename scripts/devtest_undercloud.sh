@@ -88,15 +88,6 @@ keystone role-create --name heat_stack_user
 user-config
 setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplane
 
-# See bug 1231366 - this may become part of setup-neutron if that is
-# determined to be not a bug.
-wait_for 30 10 neutron agent-list \| grep DHCP
-UNDERCLOUD_DHCP_AGENT_UUID=$(neutron agent-list | awk '/DHCP/ { print $2 }')
-# NOTE(rpodolyaka): by the time we've got here the network might have already
-#                   been scheduled, so the next command can possibly fail with
-#                   'network has already been hosted' error. That would mean
-#                   we are done here and can continue.
-neutron dhcp-agent-network-add $UNDERCLOUD_DHCP_AGENT_UUID ctlplane || true
 
 ## #. Create two more 'baremetal' node(s) and register them with your undercloud.
 ##    ::
