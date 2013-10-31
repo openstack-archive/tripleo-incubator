@@ -28,6 +28,8 @@ def main():
         help="What boot device to use (hd/network).")
     parser.add_argument('--seed', default=False, action='store_true',
         help='Create a seed vm with two interfaces.')
+    parser.add_argument('--libvirt-nic-driver', default='e1000',
+        help='The libvirt network driver to use')
     args = parser.parse_args()
     with file(templatedir + '/vm.xml', 'rb') as f:
         source_template = f.read()
@@ -52,28 +54,29 @@ def main():
         params['emulator'] = "/usr/bin/kvm"
     elif os.path.exists("/usr/bin/qemu-kvm"): # Redhat
         params['emulator'] = "/usr/bin/qemu-kvm"
+    nicparams = dict(nicdriver=args.libvirt_nic_driver)
     if args.seed:
         network = """
       <!-- regular natted network, for access to the vm -->
       <interface type='network'>
         <source network='default'/>
-        <model type='e1000'/>
+        <model type='%(nicdriver)s'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
       </interface>
       <!-- bridged 'bare metal' network -->
       <interface type='network'>
         <source network='brbm'/>
-        <model type='e1000'/>
+        <model type='%(nicdriver)s'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
-      </interface>"""
+      </interface>""" % nicparams
     else:
         network = """
       <!-- bridged 'bare metal' network -->
       <interface type='network'>
         <source network='brbm'/>
-        <model type='e1000'/>
+        <model type='%(nicdriver)s'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
-      </interface>"""
+      </interface>""" % nicparams
     params['network'] = network
     libvirt_template = source_template % params
     conn=libvirt.open("qemu:///system")

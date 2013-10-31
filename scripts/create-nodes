@@ -15,6 +15,8 @@ esac
 
 TOTAL=$5
 
+LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
+
 # define the default storage pool if its not there yet
 (virsh pool-list --all --persistent | grep -q default) || (
  virsh pool-define-as --name default dir --target /var/lib/libvirt/images; virsh pool-autostart default; virsh pool-start default) >&2
@@ -28,7 +30,7 @@ for (( count=idx=0; count<TOTAL; ++idx )) ; do
   (virsh list --all | grep -q baremetal_$idx) && continue
   virsh vol-create-as default baremetal-$idx.qcow2 ${DISK}G --format qcow2 $PREALLOC >&2
   volume_path=$(virsh vol-path --pool default baremetal-$idx.qcow2)
-  configure-vm --bootdev network --name baremetal_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM >&2
+  configure-vm --bootdev network --name baremetal_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER >&2
   sudo chattr +C "$volume_path" || true
   get-vm-mac baremetal_$idx
   (( ++count ))
