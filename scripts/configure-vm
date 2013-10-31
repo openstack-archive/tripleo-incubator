@@ -57,13 +57,13 @@ def main():
       <!-- regular natted network, for access to the vm -->
       <interface type='network'>
         <source network='default'/>
-        <model type='e1000'/>
+        <model type='virtio'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
       </interface>
       <!-- bridged 'bare metal' network -->
       <interface type='network'>
         <source network='brbm'/>
-        <model type='e1000'/>
+        <model type='virtio'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
       </interface>"""
     else:
@@ -71,7 +71,7 @@ def main():
       <!-- bridged 'bare metal' network -->
       <interface type='network'>
         <source network='brbm'/>
-        <model type='e1000'/>
+        <model type='virtio'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
       </interface>"""
     params['network'] = network
