@@ -113,13 +113,13 @@ fi
 ##    machines and so performance will be significantly less there without
 ##    hardware virtualization.
 ## 
-## 1. As you step through the instructions several environment
+## #. As you step through the instructions several environment
 ##    variables are set in your shell.  These variables will be lost if
 ##    you exit out of your shell.  After setting variables, use
 ##    scripts/write-tripleorc to write out the variables to a file that
 ##    can be sourced later to restore the environment.
 ## 
-## 1. Also check ssh server is running on the host machine and port 22 is open for
+## #. Also check ssh server is running on the host machine and port 22 is open for
 ##    connections from virbr0 -  VirtPowerManager will boot VMs by sshing into the
 ##    host machine and issuing libvirt/virsh commands. The user these instructions
 ##    use is your own, but you can also setup a dedicated user if you choose.
