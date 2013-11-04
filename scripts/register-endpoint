@@ -134,7 +134,7 @@ keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
                        --role-id $ADMIN_ROLE
 SERVICE_ID=$(keystone $DEBUG service-create --name=$NAME --type=$TYPE "$DESCRIPTION" | awk '/ id / {print $4}')
 keystone endpoint-create $DEBUG --region "$REGION" --service-id $SERVICE_ID \
-    --publicurl   "${PUBLIC_URL}/${SUFFIX}" \
-    --adminurl    "${ADMIN_URL}/${ADMIN_SUFFIX}" \
-    --internalurl "${INTERNAL_URL}/${SUFFIX}"
+    --publicurl   "${PUBLIC_URL}${SUFFIX}" \
+    --adminurl    "${ADMIN_URL}${ADMIN_SUFFIX}" \
+    --internalurl "${INTERNAL_URL}${SUFFIX}"
 echo "Service $TYPE created with password $PASSWORD"
