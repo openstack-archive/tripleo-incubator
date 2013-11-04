@@ -135,6 +135,13 @@ fi
 
 export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 
+## #. The vm's created by devtest will use e1000 network device emulation by
+##    default.  This can be overriden to use a different network driver for
+##    interfaces instead, such as virtio.  virtio provides faster network
+##    performance than e1000, but may prove to be less stable.
+
+export LIBVIRT_NIC_DIRVER=${LIBVIRT_NIC_DIRVER:-"e1000"}
+
 ## #. Choose a base location to put all of the source code.
 ##    ::
 ##         # exports are ephemeral - new shell sessions, or reboots, and you need
