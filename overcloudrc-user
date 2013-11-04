@@ -1,4 +1,3 @@
-# TODO: generate random credentials.
 export NOVA_VERSION=1.1
 export OS_PASSWORD=$OVERCLOUD_DEMO_PASSWORD
 export OS_AUTH_URL=http://$OVERCLOUD_IP:5000/v2.0
