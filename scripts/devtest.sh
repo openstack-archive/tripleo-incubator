@@ -140,7 +140,7 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 ##    interfaces instead, such as virtio.  virtio provides faster network
 ##    performance than e1000, but may prove to be less stable.
 
-export LIBVIRT_NIC_DIRVER=${LIBVIRT_NIC_DIRVER:-"e1000"}
+export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
 ## #. Choose a base location to put all of the source code.
 ##    ::
