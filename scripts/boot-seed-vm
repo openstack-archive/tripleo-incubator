@@ -30,7 +30,7 @@ export DIB_IMAGE_SIZE=30
 START_VM=yes
 ALWAYS_ELEMENTS='vm local-config stackuser boot-stack nova-baremetal seed-stack-config remove-serial-console'
 EXTRA_ELEMENTS=${EXTRA_ELEMENTS:-cloud-init-nocloud}
-LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DIRVER:-"e1000"}
+LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options] <element> [<element> ...]"
