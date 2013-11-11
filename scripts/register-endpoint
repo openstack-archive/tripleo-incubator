@@ -103,6 +103,9 @@ elif [ "compute" = "$TYPE" ]; then
 elif [ "volume" = "$TYPE" ]; then
     SUFFIX="/v1/%(tenant_id)s"
     ADMIN_SUFFIX="$SUFFIX"
+elif [ "object-store" = "$TYPE" ]; then
+    SUFFIX="/v1/AUTH_%(tenant_id)s"
+    ADMIN_SUFFIX="/v1"
 else
     echo "Unknown service type" >&2
     exit 1
