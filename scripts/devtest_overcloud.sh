@@ -27,7 +27,7 @@ USERS=${9:-''}
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
     boot-stack cinder os-collect-config neutron-network-node notcompute \
-    dhcp-all-interfaces stackuser ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
+    dhcp-all-interfaces stackuser swift-proxy swift-storage ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
     tee $TRIPLEO_ROOT/dib-overcloud-control.log
 
 ## #. Load the image into Glance:
@@ -85,7 +85,7 @@ source tripleo-overcloud-passwords
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-    -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute}${OVERCLOUD_LIBVIRT_TYPE}" \
+    -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE}" \
     overcloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
@@ -133,7 +133,8 @@ setup-endpoints $OVERCLOUD_IP --cinder-password $OVERCLOUD_CINDER_PASSWORD \
     --glance-password $OVERCLOUD_GLANCE_PASSWORD \
     --heat-password $OVERCLOUD_HEAT_PASSWORD \
     --neutron-password $OVERCLOUD_NEUTRON_PASSWORD \
-    --nova-password $OVERCLOUD_NOVA_PASSWORD
+    --nova-password $OVERCLOUD_NOVA_PASSWORD \
+    --swift-password $OVERCLOUD_SWIFT_PASSWORD
 keystone role-create --name heat_stack_user
 user-config
 ##         setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
