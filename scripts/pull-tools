@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-set -eu
+set -eux
 
 # This is a cheap mr/cm-alike. Perhaps we should use mr/cm.
 
@@ -29,6 +29,14 @@ for TOOL in $TOOLS; do
         git clone $TOOL
     else
         cd $TRIPLEO_ROOT/$TOOL_BASE
+	echo $TOOL_BASE
+	if [ $TOOL_BASE == 'tripleo-image-elements' ]; then
+	    # Changes are made in the devstest.seed script.
+	    # Restore to original values so this can be rerun
+	    sed -i "s/\"user\": \".*\",/\"user\": \"stack\",/" elements/seed-stack-config/config.json
+	    sed -i "s/\"arch\": \".*\",/\"arch\": \"i386\",/" elements/seed-stack-config/config.json
+	fi
+
         if [ "$(git symbolic-ref -q HEAD | rev | cut -d "/" -f 1 | rev || :)" = "master" ] ; then
             if ! git pull --ff-only ; then
                     echo "***************************************************"
