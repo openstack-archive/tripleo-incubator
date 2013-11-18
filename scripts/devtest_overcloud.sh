@@ -182,7 +182,7 @@ neutron security-group-rule-create default --protocol icmp \
 neutron security-group-rule-create default --protocol tcp \
     --direction ingress --port-range-min 22 --port-range-max 22
 
-##
+## 
 ### --end
 
 if [ -n "$ADMIN_USERS" ]; then

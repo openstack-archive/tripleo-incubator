@@ -76,7 +76,7 @@ setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 ## #. Create a 'baremetal' node out of a KVM virtual machine and collect
 ##    its MAC address.
 ##    Nova will PXE boot this VM as though it is physical hardware.
-##    If you want to create the VM yourself, see footnote [#f2] for details on
+##    If you want to create the VM yourself, see footnote [#f2]_ for details on
 ##    its requirements. The parameter to create-nodes is VM count.
 ##    ::
 
@@ -111,5 +111,39 @@ ssh root@192.0.2.1 "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/a
 ##    public SSH key in it, or the openstack configuration scripts will error.
 ## 
 ##    You can log into the console using the username 'stack' password 'stack'.
+## 
+## .. [#f2] Requirements for the "baremetal node" VMs
+## 
+##    If you don't use create-nodes, but want to create your own VMs, here are some
+##    suggestions for what they should look like.
+## 
+##    * each VM should have 1 NIC
+##    * eth0 should be on brbm
+##    * record the MAC addresses for the NIC of each VM.
+##    * give each VM no less than 2GB of disk, and ideally give them
+##      more than NODE_DISK, which defaults to 20GB
+##    * 1GB RAM is probably enough (512MB is not enough to run an all-in-one
+##      OpenStack), and 768M isn't enough to do repeated deploys with.
+##    * if using KVM, specify that you will install the virtual machine via PXE.
+##      This will avoid KVM prompting for a disk image or installation media.
+## 
+## .. [#f3] Notes when using real bare metal
+## 
+##    If you want to use real bare metal see the following.
+## 
+##    * When calling setup-baremetal you can set MACS, PM_IPS, PM_USERS,
+##      and PM_PASSWORDS parameters which should all be space delemited lists
+##      that correspond to the MAC addresses and power management commands
+##      your real baremetal machines require. See scripts/setup-baremetal
+##      for details.
+## 
+##    * If you see over-mtu packets getting dropped when iscsi data is copied
+##      over the control plane you may need to increase the MTU on your brbm
+##      interfaces. Symptoms that this might be the cause include:
+##      ::
+## 
+##        iscsid: log shows repeated connection failed errors (and reconnects)
+##        dmesg shows:
+##            openvswitch: vnet1: dropped over-mtu packet: 1502 > 1500
 ## 
 ### --end

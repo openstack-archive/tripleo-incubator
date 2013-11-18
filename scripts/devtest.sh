@@ -265,7 +265,7 @@ source devtest_end.sh #nodocs
 
 ## .. rubric:: Footnotes
 ## .. [#f3] Setting Up Squid Proxy
-##
+## 
 ##    * Install squid proxy
 ##      ::
 ##          apt-get install squid
@@ -316,6 +316,6 @@ source devtest_end.sh #nodocs
 ##    * Set http_proxy environment variable
 ##      ::
 ##          http_proxy=http://your_ip_or_localhost:3128/
-##
-##
+## 
+## 
 ### --end
