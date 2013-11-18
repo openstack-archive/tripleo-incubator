@@ -24,6 +24,7 @@ PATH=$PATH:/usr/sbin:/sbin
 
 # Some defaults
 ARCH=i386
+BRIDGE=brbm
 IMAGE_NAME=seed
 IMAGE_CACHE_DIR=${IMAGE_CACHE_DIR:-~/.cache/image-create/image-file-cache}
 export DIB_IMAGE_SIZE=30
@@ -44,6 +45,7 @@ function show_options () {
     echo "      -a i386|amd64 -- set the architecture of the VM (i386)"
     echo "      -o name       -- set the name of the VM and image file (seed)"
     echo "      -s size       -- set the image size (30 GB)"
+    echo "      -b bridge     -- define a baremetal bridge to use"
     echo "      -e engine     -- set the virt engine to use"
     echo "                       (defaults to kvm if available, otherwise qemu)"
     echo "      -c            -- use a image cache for seed image"
@@ -52,7 +54,7 @@ function show_options () {
     exit 0
 }
 
-TEMP=`getopt -o hcna:o:s:e: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o hcna:o:s:b:e: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -63,6 +65,7 @@ while true ; do
         -a) export ARCH=$2; shift 2 ;;
         -o) export IMAGE_NAME=$2; shift 2 ;;
         -s) export DIB_IMAGE_SIZE=$2; shift 2 ;;
+        -b) export BRIDGE=$2; shift 2 ;;
         -e) export ENGINE=$2; shift 2 ;;
         -h) show_options;;
         -c) export IMAGE_CACHE_USE=1; shift ;;
@@ -128,6 +131,7 @@ sudo chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
 configure-vm \
            --name $IMAGE_NAME \
            --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
+           --baremetal-interface $BRIDGE \
            --engine $ENGINE \
            --arch $SEED_ARCH \
            --libvirt-nic-driver $LIBVIRT_NIC_DRIVER \
