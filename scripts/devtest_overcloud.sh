@@ -3,15 +3,18 @@
 set -eu
 
 # Parameters for tripleo-cd - see the tripleo-cd element.
-NeutronPublicInterface=${1:-'eth0'}
-NeutronPublicInterfaceIP=${2:-''}
-NeutronPublicInterfaceRawDevice=${3:-''}
-NeutronPublicInterfaceDefaultRoute=${4:-''}
-FLOATING_START=${5:-'192.0.2.45'}
-FLOATING_END=${6:-'192.0.2.64'}
-FLOATING_CIDR=${7:-'192.0.2.0/24'}
-ADMIN_USERS=${8:-''}
-USERS=${9:-''}
+# NOTE(rpodolyaka): retain backwards compatibility by accepting both positional
+#                   arguments and environment variables. Positional arguments
+#                   take precedence over environment variables
+NeutronPublicInterface=${1:-${NeutronPublicInterface:-'eth0'}}
+NeutronPublicInterfaceIP=${2:-${NeutronPublicInterfaceIP:-''}}
+NeutronPublicInterfaceRawDevice=${3:-${NeutronPublicInterfaceRawDevice:-''}}
+NeutronPublicInterfaceDefaultRoute=${4:-${NeutronPublicInterfaceDefaultRoute:-''}}
+FLOATING_START=${5:-${FLOATING_START:-'192.0.2.45'}}
+FLOATING_END=${6:-${FLOATING_END:-'192.0.2.64'}}
+FLOATING_CIDR=${7:-${FLOATING_CIDR:-'192.0.2.0/24'}}
+ADMIN_USERS=${8:-${ADMIN_USERS:-''}}
+USERS=${9:-${USERS:-''}}
 
 ### --include
 ## devtest_overcloud
