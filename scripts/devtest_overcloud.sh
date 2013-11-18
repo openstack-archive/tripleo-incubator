@@ -3,7 +3,6 @@
 set -eu
 
 # Parameters for tripleo-cd - see the tripleo-cd element.
-NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP:-''}
 NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice:-''}
 NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute:-''}
@@ -56,6 +55,11 @@ load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2
 ##    ::
 
 OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-";NovaComputeLibvirtType=qemu"}
+
+## #. Set the public interface of overcloud network node::
+##    ::
+
+NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
 ## #. Delete any previous overcloud::
 
