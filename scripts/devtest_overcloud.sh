@@ -183,16 +183,29 @@ neutron security-group-rule-create default --protocol icmp \
 neutron security-group-rule-create default --protocol tcp \
     --direction ingress --port-range-min 22 --port-range-max 22
 
+if [ -n "$ADMIN_USERS" ]; then #nodocs
+    source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc #nodocs
+    assert-admin-users "$ADMIN_USERS" #nodocs
+    assert-users "$ADMIN_USERS" #nodocs
+fi #nodocs
+
+if [ -n "$USERS" ] ; then #nodocs
+    source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc #nodocs
+    assert-users "$USERS" #nodocs
+fi #nodocs
+
+## #. Save your devtest environment.
+##    ::
+
+##      write-tripleorc --overwrite
+
+## #. If you need to recover the environment, you can source tripleorc.
+##    ::
+
+echo "devtest.sh completed." #nodocs
+echo source tripleorc to restore all values #nodocs
+echo "" #nodocs
+
+## The End!
 ## 
 ### --end
-
-if [ -n "$ADMIN_USERS" ]; then
-    source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
-    assert-admin-users "$ADMIN_USERS"
-    assert-users "$ADMIN_USERS"
-fi
-
-if [ -n "$USERS" ] ; then
-    source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
-    assert-users "$USERS"
-fi

@@ -252,8 +252,6 @@ $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
 ## #. :doc:`devtest_undercloud`
 ## 
 ## #. :doc:`devtest_overcloud`
-## 
-## #. :doc:`devtest_end`
 
 #FIXME: This is a little weird. Perhaps we should identify whatever state we're #nodocs
 #      accumulating and store it in files or something, rather than using #nodocs
@@ -261,7 +259,6 @@ $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
 source devtest_seed.sh #nodocs
 source devtest_undercloud.sh #nodocs
 source devtest_overcloud.sh #nodocs
-source devtest_end.sh #nodocs
 
 ## .. rubric:: Footnotes
 ## .. [#f3] Setting Up Squid Proxy
