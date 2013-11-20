@@ -147,11 +147,13 @@ if [ $START_VM ]; then
     sudo virsh start $IMAGE_NAME
 
     echo "Waiting for $IMAGE_NAME VM to boot."
-    until [ -n "$VM_IP" ]; do
+    for i in {0..100} ; do
+        [ -n "$VM_IP" ] && break
         poll_vm
         echo -n '.'
         sleep 1
     done
+    [ -z "$VM_IP" ] && echo "$IMAGE_NAME VM didn't boot." && exit 1
 
     echo
     echo "Booted. Found IP: $VM_IP. Waiting for ssh service to start."
