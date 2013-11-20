@@ -100,6 +100,9 @@ elif [ "network" = "$TYPE" ]; then
 elif [ "compute" = "$TYPE" ]; then
     SUFFIX="/v2/\$(tenant_id)s"
     ADMIN_SUFFIX="$SUFFIX"
+elif [ "computev3" = "$TYPE" ]; then
+    SUFFIX="/v3"
+    ADMIN_SUFFIX="$SUFFIX"
 elif [ "volume" = "$TYPE" ]; then
     SUFFIX="/v1/%(tenant_id)s"
     ADMIN_SUFFIX="$SUFFIX"
@@ -131,10 +134,14 @@ fi
 
 SERVICE_TENANT=$(keystone $DEBUG tenant-list | awk '/ service / {print $2}')
 PASSWORD=${PASSWORD:-$(os-make-password)}
-SVC_USER=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
-keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
-                       --user-id $SVC_USER \
-                       --role-id $ADMIN_ROLE
+
+# Some services have multiple endpoints, the user doesn't need to be recreated
+if [ -z $(keystone user-list | grep " $NAME " || true) ] ; then
+    SVC_USER=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
+    keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
+                           --user-id $SVC_USER \
+                           --role-id $ADMIN_ROLE
+fi
 SERVICE_ID=$(keystone $DEBUG service-create --name=$NAME --type=$TYPE "$DESCRIPTION" | awk '/ id / {print $4}')
 keystone endpoint-create $DEBUG --region "$REGION" --service-id $SERVICE_ID \
     --publicurl   "${PUBLIC_URL}${SUFFIX}" \
