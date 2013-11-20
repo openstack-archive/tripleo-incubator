@@ -25,7 +25,7 @@ PATH=$PATH:/usr/sbin:/sbin
 # Some defaults
 ARCH=i386
 BRIDGE=brbm
-IMAGE_NAME=seed
+export IMAGE_NAME=seed
 IMAGE_CACHE_DIR=${IMAGE_CACHE_DIR:-~/.cache/image-create/image-file-cache}
 export DIB_IMAGE_SIZE=30
 START_VM=yes
@@ -137,21 +137,20 @@ configure-vm \
            --libvirt-nic-driver $LIBVIRT_NIC_DRIVER \
 	   --seed
 
-VM_IP=''
 function poll_vm {
   MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
   VM_IP=$(arp -n | grep $MAC | awk '{print $1}')
+  [ -z $VM_IP ] && return 1
+  return 0
 }
+export -f poll_vm
 
 if [ $START_VM ]; then
     sudo virsh start $IMAGE_NAME
 
     echo "Waiting for $IMAGE_NAME VM to boot."
-    until [ -n "$VM_IP" ]; do
-        poll_vm
-        echo -n '.'
-        sleep 1
-    done
+    wait_for 100 1 poll_vm
+    poll_vm
 
     echo
     echo "Booted. Found IP: $VM_IP. Waiting for ssh service to start."
