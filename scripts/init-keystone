@@ -84,6 +84,10 @@ SERVICE_TENANT_ID=$(keystone tenant-create --name=service | awk '$2=="id" {print
 ADMIN_ROLE_ID=$(keystone role-create --name=admin | awk '$2=="id" {print $4}')
 MEMBER_ROLE_ID=$(keystone role-create --name=Member | awk '$2=="id" {print $4}')
 
+# Creating these roles to be used by tenants using swift
+keystone role-create --name=swiftoperator
+keystone role-create --name=ResellerAdmin
+
 # Users
 ADMIN_USER_ID=$(keystone user-create --name=admin \
     --pass="$PASSWORD" \
