@@ -14,6 +14,7 @@ case $4 in
 esac
 
 TOTAL=$5
+BRIDGE=${6:-""}
 
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
@@ -27,11 +28,15 @@ if [ -f /etc/debian_version ]; then
 fi
 
 for (( count=idx=0; count<TOTAL; ++idx )) ; do
-  (virsh list --all | grep -q baremetal_$idx) && continue
-  virsh vol-create-as default baremetal-$idx.qcow2 ${DISK}G --format qcow2 $PREALLOC >&2
-  volume_path=$(virsh vol-path --pool default baremetal-$idx.qcow2)
-  configure-vm --bootdev network --name baremetal_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER >&2
+  (virsh list --all | grep -q baremetal${BRIDGE}_$idx) && continue
+  virsh vol-create-as default baremetal${BRIDGE}-$idx.qcow2 ${DISK}G --format qcow2 $PREALLOC >&2
+  volume_path=$(virsh vol-path --pool default baremetal${BRIDGE}-$idx.qcow2)
+  if [ -z $BRIDGE ]; then
+    configure-vm --bootdev network --name baremetal_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER >&2
+  else
+    configure-vm --bootdev network --name baremetal${BRIDGE}_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER --baremetal-interface ${BRIDGE} >&2
+  fi
   sudo chattr +C "$volume_path" || true
-  get-vm-mac baremetal_$idx
+  get-vm-mac baremetal${BRIDGE}_$idx
   (( ++count ))
 done
