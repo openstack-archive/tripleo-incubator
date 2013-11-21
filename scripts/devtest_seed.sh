@@ -70,7 +70,11 @@ ssh-keyscan -t rsa 192.0.2.1 >>~/.ssh/known_hosts
 init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
 setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
 keystone role-create --name heat_stack_user
+
+echo "Waiting for nova to initialise..."
+wait_for 30 10 nova list
 user-config
+
 setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 
 ## #. Create a 'baremetal' node out of a KVM virtual machine and collect
