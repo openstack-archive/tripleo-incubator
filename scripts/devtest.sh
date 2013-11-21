@@ -15,13 +15,17 @@ function show_options () {
     echo "Options:"
     echo "    --trash-my-machine -- make nontrivial destructive changes to the machine."
     echo "                          For details read the source."
+    echo "    --offline          -- re-use existing source/images."
+    echo "                          Note: requires a previous online run to have fetched"
+    echo "                                all the sources and built all the images."
     echo
     exit $1
 }
 
 CONTINUE=0
+export OFFLINE=false
 
-TEMP=`getopt -o h -l trash-my-machine -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o h -l trash-my-machine,offline -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -30,6 +34,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --trash-my-machine) CONTINUE=1; shift 1;;
+        --offline) OFFLINE=true; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -156,10 +161,12 @@ cd $TRIPLEO_ROOT
 ## #. git clone this repository to your local machine.
 ##    ::
 
-if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then #nodocs
+if ! $OFFLINE ; then #nodocs
+  if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then #nodocs
 git clone https://git.openstack.org/openstack/tripleo-incubator
-else #nodocs
+  else #nodocs
 cd $TRIPLEO_ROOT/tripleo-incubator ; git pull #nodocs
+  fi #nodocs
 fi #nodocs
 
 ## 
@@ -215,11 +222,15 @@ fi
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
 ##    ::
+if ! $OFFLINE ; then #nodocs
 install-dependencies
+fi #nodocs
 
 ## #. Clone/update the other needed tools which are not available as packages.
 ##    ::
+if ! $OFFLINE ; then #nodocs
 pull-tools
+fi #nodocs
 
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
@@ -240,9 +251,11 @@ export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy}
 ## #. Create a deployment ramdisk + kernel. These are used by the seed cloud and
 ##    the undercloud for deployment to bare metal.
 ##    ::
+if ! $OFFLINE ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
     $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk 2>&1 | \
     tee $TRIPLEO_ROOT/dib-deploy.log
+fi #nodocs
 
 ## Next Steps:
 ## -----------

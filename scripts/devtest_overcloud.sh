@@ -24,11 +24,13 @@ USERS=${9:-''}
 ##    used to pass additional build-time specific arguments to disk-image-create.
 ##    ::
 
+if ! $OFFLINE ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
     boot-stack cinder os-collect-config neutron-network-node notcompute \
     dhcp-all-interfaces stackuser swift-proxy swift-storage ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
     tee $TRIPLEO_ROOT/dib-overcloud-control.log
+fi #nodocs
 
 ## #. Load the image into Glance:
 ##    ::
@@ -41,11 +43,13 @@ load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2
 ##    network.
 ##    ::
 
+if ! $OFFLINE ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
     nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
     dhcp-all-interfaces stackuser ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
     tee $TRIPLEO_ROOT/dib-overcloud-compute.log
+fi #nodocs
 
 ## #. Load the image into Glance:
 ##    ::
@@ -95,8 +99,10 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ## #. While we wait for the stack to come up, build an end user disk image and
 ##    register it with glance.::
 
+if ! $OFFLINE ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
+fi #nodocs
 
 ## #. Get the overcloud IP from 'nova list'
 ##    ::
