@@ -9,9 +9,9 @@ virtualenv --setuptools $BASE/openstack-tools
 set +u
 . $BASE/openstack-tools/bin/activate
 set -u
-pip install -U python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient
+pip install -U python-cinderclient python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient
 
-for tool in `echo nova glance heat keystone neutron swift`; do
+for tool in `echo cinder nova glance heat keystone neutron swift`; do
   ln -sf $BASE/openstack-tools/bin/$tool $BASE/scripts/$tool ;
 done
 echo "Installed openstack client tool symlinks in $BASE/scripts"
