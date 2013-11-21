@@ -14,11 +14,13 @@ set -eu
 ##    to disk-image-create.
 ##    ::
 
-$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-    -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-    boot-stack nova-baremetal os-collect-config stackuser dhcp-all-interfaces \
-    neutron-dhcp-agent ${UNDERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
-    tee $TRIPLEO_ROOT/dib-undercloud.log
+if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
+        boot-stack nova-baremetal os-collect-config stackuser dhcp-all-interfaces \
+        neutron-dhcp-agent ${UNDERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
+        tee $TRIPLEO_ROOT/dib-undercloud.log
+fi #nodocs
 
 ## #. Load the undercloud image into Glance:
 ##    ::
