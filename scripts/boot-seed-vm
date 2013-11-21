@@ -112,7 +112,7 @@ fi
 # but ignore any errors if one doesn't exist
 which virsh >/dev/null || die "Error: virsh not found in path"
 sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME not running"
-sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME doesn't exist"
+sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM doesn't exist"
 
 mkdir -p $IMAGE_CACHE_DIR
 IMAGE_CACHE_FILE=$IMAGE_CACHE_DIR/$(echo $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS | sha1sum | awk '{ print $1 }' )

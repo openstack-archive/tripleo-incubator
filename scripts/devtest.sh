@@ -15,13 +15,15 @@ function show_options () {
     echo "Options:"
     echo "    --trash-my-machine -- make nontrivial destructive changes to the machine."
     echo "                          For details read the source."
+    echo "    -c                 -- re-use existing source/images if they exist."
     echo
     exit $1
 }
 
 CONTINUE=0
+export USE_CACHE=0
 
-TEMP=`getopt -o h -l trash-my-machine -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o h,c -l trash-my-machine -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -30,6 +32,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --trash-my-machine) CONTINUE=1; shift 1;;
+        -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -155,12 +158,17 @@ cd $TRIPLEO_ROOT
 
 ## #. git clone this repository to your local machine.
 ##    ::
-
-if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then #nodocs
-git clone https://git.openstack.org/openstack/tripleo-incubator
-else #nodocs
-cd $TRIPLEO_ROOT/tripleo-incubator ; git pull #nodocs
-fi #nodocs
+### --end
+if [ "$USE_CACHE" == "0" ] ; then
+  if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then
+### --include
+    git clone https://git.openstack.org/openstack/tripleo-incubator
+### --end
+  else
+    cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
+  fi
+fi
+### --include
 
 ## 
 ## #. Nova tools get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts
@@ -215,11 +223,15 @@ fi
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
 ##    ::
-install-dependencies
+if [ "$USE_CACHE" == "0" ] ; then #nodocs
+    install-dependencies
+fi #nodocs
 
 ## #. Clone/update the other needed tools which are not available as packages.
 ##    ::
-pull-tools
+if [ "$USE_CACHE" == "0" ] ; then #nodocs
+    pull-tools
+fi #nodocs
 
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
@@ -240,9 +252,12 @@ export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy}
 ## #. Create a deployment ramdisk + kernel. These are used by the seed cloud and
 ##    the undercloud for deployment to bare metal.
 ##    ::
-$TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-    $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk 2>&1 | \
-    tee $TRIPLEO_ROOT/dib-deploy.log
+if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
+     ! -e $TRIPLEO_ROOT/deploy-ramdisk.initramfs -o "$USE_CACHE" == "0" ] ; then #nodocs
+    $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
+        $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk 2>&1 | \
+        tee $TRIPLEO_ROOT/dib-deploy.log
+fi #nodocs
 
 ## Next Steps:
 ## -----------
