@@ -86,6 +86,7 @@ PASSWORD=$NEUTRON_PASSWORD register-endpoint $DEBUG -r $REGION -d "Neutron Servi
 PASSWORD=$GLANCE_PASSWORD register-endpoint $DEBUG -r $REGION -d "Glance Image Service" glance image http://$HOST:9292
 register-endpoint $DEBUG -r $REGION -d "EC2 Compatibility Layer" ec2 ec2 http://$HOST:8773
 PASSWORD=$NOVA_PASSWORD register-endpoint $DEBUG -r $REGION -d "Nova Compute Service" nova compute http://$HOST:8774
+PASSWORD=$NOVA_PASSWORD register-endpoint $DEBUG -r $REGION -d "Nova Compute Service v3" nova computev3 http://$HOST:8774
 if [ -n "$CINDER_PASSWORD" ]; then
   PASSWORD=$CINDER_PASSWORD register-endpoint $DEBUG -r $REGION -d "Cinder Volume Service" cinder volume http://$HOST:8776
 fi
