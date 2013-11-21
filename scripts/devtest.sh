@@ -135,6 +135,13 @@ fi
 
 export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 
+## #. Set LIBVIRT_DEFAULT_URI on login.
+##    This needs to be set automatically so that the virtual power manager has
+##    the correct value when it connects to the host to manage instances.
+##    ::
+
+echo "export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-'qemu:///system'}" >> ~/.bashrc
+
 ## #. The vm's created by devtest will use e1000 network device emulation by
 ##    default.  This can be overriden to use a different network driver for
 ##    interfaces instead, such as virtio.  virtio provides faster network
