@@ -60,6 +60,11 @@ load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2
 
 OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-";NovaComputeLibvirtType=qemu"}
 
+## #. Set the public interface of overcloud network node::
+##    ::
+
+NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
+
 ## #. Delete any previous overcloud::
 
 ##         heat stack-delete overcloud || true
