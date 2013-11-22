@@ -34,7 +34,7 @@ function show_options () {
     echo "the admin role is called 'admin'."
     echo
     echo "Supported types are ec2, image, orchestration, identity,"
-    echo "network, compute, baremetal."
+    echo "network, compute, baremetal, dashboard."
     echo
     echo "Options:"
     echo "    -d, --description -- the description for the service."
@@ -109,6 +109,9 @@ elif [ "volume" = "$TYPE" ]; then
 elif [ "object-store" = "$TYPE" ]; then
     SUFFIX="/v1/AUTH_%(tenant_id)s"
     ADMIN_SUFFIX="/v1"
+elif [ "dashboard" = "$TYPE" ]; then
+    SUFFIX="/"
+    ADMIN_SUFFIX="/admin"
 else
     echo "Unknown service type" >&2
     exit 1
@@ -132,20 +135,23 @@ if [ -z "$ADMIN_ROLE" ]; then
     exit 1
 fi
 
-SERVICE_TENANT=$(keystone $DEBUG tenant-list | awk '/ service / {print $2}')
-PASSWORD=${PASSWORD:-$(os-make-password)}
+# Some services don't need a user
+if [ "dashboard" != "$TYPE" ]; then
+    SERVICE_TENANT=$(keystone $DEBUG tenant-list | awk '/ service / {print $2}')
+    PASSWORD=${PASSWORD:-$(os-make-password)}
 
-# Some services have multiple endpoints, the user doesn't need to be recreated
-USER_ID=$(keystone user-get $NAME | awk '$2=="id" { print $4 }')
-if [ -z "$USER_ID" ]; then
-    SVC_USER=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
-    keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
-                           --user-id $SVC_USER \
-                           --role-id $ADMIN_ROLE
+    # Some services have multiple endpoints, the user doesn't need to be recreated
+    USER_ID=$(keystone user-get $NAME | awk '$2=="id" { print $4 }')
+    if [ -z "$USER_ID" ]; then
+        SVC_USER=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
+        keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
+                               --user-id $SVC_USER \
+                               --role-id $ADMIN_ROLE
+    fi
 fi
 SERVICE_ID=$(keystone $DEBUG service-create --name=$NAME --type=$TYPE "$DESCRIPTION" | awk '/ id / {print $4}')
 keystone endpoint-create $DEBUG --region "$REGION" --service-id $SERVICE_ID \
     --publicurl   "${PUBLIC_URL}${SUFFIX}" \
     --adminurl    "${ADMIN_URL}${ADMIN_SUFFIX}" \
     --internalurl "${INTERNAL_URL}${SUFFIX}"
-echo "Service $TYPE created with password $PASSWORD"
+echo "Service $TYPE created"
