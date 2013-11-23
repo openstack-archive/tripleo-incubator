@@ -62,7 +62,7 @@ if [ -z "$PHYSICAL_NETWORK" ] ; then
 fi
 
 if [ -n "$FLOATING_START" -a -n "$FLOATING_END" -a -n "$FLOATING_CIDR" ] ; then
-    neutron net-create ext-net --router:external=True
+    neutron net-create ext-net --router:external=True --shared
     SUBNET_ID=$(neutron subnet-create ext-net $FLOATING_CIDR --disable-dhcp \
                 --allocation-pool start=$FLOATING_START,end=$FLOATING_END)
     neutron router-gateway-set default-router ext-net

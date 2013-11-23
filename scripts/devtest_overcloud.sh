@@ -182,7 +182,10 @@ user-config
 ## #. Deploy your image.
 ##    ::
 
-nova boot --key-name default --flavor m1.tiny --image user demo
+DEFAULT_NET_ID=$(neutron net-show default-net -f shell -c id)
+DEFAULT_NET_ID=${DEFAULT_NET_ID##*=}
+DEFAULT_NET_ID=${DEFAULT_NET_ID//\"/}
+nova boot --key-name default --flavor m1.tiny --image user --nic net-id=$DEFAULT_NET_ID demo
 
 ## #. Add an external IP for it.
 ##    ::
