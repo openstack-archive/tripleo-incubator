@@ -26,12 +26,11 @@ function show_options() {
 
 [ $# -gt 0 ] && show_options
 
-
-for NAME in $(sudo virsh list --name --all | grep "^\(seed\|baremetal_.*\)$"); do
+for NAME in $(sudo virsh list --name --all | grep "^\(seed\(.*\|\)\|baremetal\(\|brbm.*\)_.*\)$"); do
   sudo virsh destroy $NAME
   sudo virsh undefine --remove-all-storage $NAME
 done
 
-for NAME in $(sudo virsh vol-list default | grep /var/ | awk '{print $1}' | grep "^\(seed\|baremetal-\)" ); do
+for NAME in $(sudo virsh vol-list default | grep /var/ | awk '{print $1}' | grep "^\(seed\(.*\|\)|baremetal\(\|brbm.*\)-\)" ); do
   sudo virsh vol-delete --pool default $NAME
 done
