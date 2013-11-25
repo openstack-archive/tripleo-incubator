@@ -189,7 +189,21 @@ nova boot --key-name default --flavor m1.tiny --image user demo
 
 wait_for 10 5 neutron port-list -f csv -c id --quote none \| grep id
 PORT=$(neutron port-list -f csv -c id --quote none | tail -n1)
-neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}"
+# Workaround neutron bug https://bugs.launchpad.net/tripleo/+bug/1254555
+ext_net=
+for try in {1..12} ; do
+    ssh -l heat-admin -o StrictHostKeyChecking=no -t $OVERCLOUD_IP sudo service neutron-server restart
+    # Give things time to synchronize.. I think.
+    sleep 10
+    if neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}" ; then
+        ext_net=1
+        break
+    fi
+done
+if [ -z "$ext_net" ] ; then
+  echo Still cannot find ext-net after $try tries.
+  exit 42
+fi
 
 ## #. And allow network access to it.
 ##    ::
