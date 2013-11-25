@@ -15,6 +15,7 @@ scripts/heat
 scripts/keystone
 scripts/nova
 scripts/neutron
+scripts/swift
 stackrc
 
 tripleo-passwords
