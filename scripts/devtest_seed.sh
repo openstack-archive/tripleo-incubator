@@ -22,7 +22,8 @@ sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
 
 cd $TRIPLEO_ROOT
-boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent
+boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
+    tee $TRIPLEO_ROOT/dib-seed.log
 
 ##    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
 ##    you can log into it with 'ssh root@192.0.2.1'.
