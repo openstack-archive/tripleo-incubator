@@ -202,12 +202,21 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 ##    ::
 ## 
 ##         export NODE_DIST=ubuntu
-export NODE_DIST=${NODE_DIST:-ubuntu} #nodocs
-
+##
 ##    for Fedora set SELinux permissive mode.
 ##    ::
 ## 
 ##         export NODE_DIST="fedora selinux-permissive"
+### --end
+
+source $TRIPLEO_ROOT/tripleo-incubator/scripts/set-os-type
+if [ "$TRIPLEO_OS_DISTRO" == 'unsupported' ]; then
+    echo 'Unsupported OS distro.'
+    exit 1
+fi
+export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
+
+### --include
 
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
