@@ -29,7 +29,7 @@ USERS=${9:-${USERS:-''}}
 
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
-    boot-stack cinder os-collect-config neutron-network-node notcompute \
+    boot-stack cinder os-collect-config neutron-network-node \
     dhcp-all-interfaces stackuser swift-proxy swift-storage ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
     tee $TRIPLEO_ROOT/dib-overcloud-control.log
 
