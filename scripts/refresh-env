@@ -22,7 +22,8 @@
 export TRIPLEO_ROOT=$1
 
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
-export NODE_DIST=${NODE_DIST:-ubuntu}
+source set-os-type
+export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
 export NODE_ARCH=${NODE_ARCH:-i386}
 pull-tools
 setup-clienttools
