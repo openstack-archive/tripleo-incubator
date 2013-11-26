@@ -21,7 +21,7 @@ def main():
     parser.add_argument('--arch', default='i686',
         help='The architecture to use')
     parser.add_argument('--memory', default='2097152',
-        help="Maximum memory for the VM.")
+        help="Maximum memory for the VM in KB.")
     parser.add_argument('--cpus', default='1',
         help="CPU count for the VM.")
     parser.add_argument('--bootdev', default='hd',
