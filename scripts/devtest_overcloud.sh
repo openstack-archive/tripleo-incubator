@@ -15,6 +15,7 @@ FLOATING_END=${6:-${FLOATING_END:-'192.0.2.64'}}
 FLOATING_CIDR=${7:-${FLOATING_CIDR:-'192.0.2.0/24'}}
 ADMIN_USERS=${8:-${ADMIN_USERS:-''}}
 USERS=${9:-${USERS:-''}}
+USE_CACHE=${USE_CACHE:-0}
 
 ### --include
 ## devtest_overcloud

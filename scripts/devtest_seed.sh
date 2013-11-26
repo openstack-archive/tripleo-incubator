@@ -2,6 +2,8 @@
 
 set -eu
 
+USE_CACHE=${USE_CACHE:-0}
+
 ### --include
 ## devtest_seed
 ## ============
