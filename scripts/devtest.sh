@@ -202,12 +202,14 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 ##    ::
 ## 
 ##         export NODE_DIST=ubuntu
-export NODE_DIST=${NODE_DIST:-ubuntu} #nodocs
 
 ##    for Fedora set SELinux permissive mode.
 ##    ::
 ## 
 ##         export NODE_DIST="fedora selinux-permissive"
+
+source set-os-type
+export NODE_DIST=${NODE_DIST:?"$TRIPLEO_OS_DISTRO"} #nodocs
 
 ## #. Run cleanup-env to ensure VM's and storage pools from previous devtest
 ##    runs are removed.

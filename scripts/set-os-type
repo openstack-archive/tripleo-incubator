@@ -1,0 +1,35 @@
+#!/bin/bash
+
+TRIPLEO_OS_FAMILY='unsupported' # Generic OS Family: debian, redhat, suse
+TRIPLEO_OS_DISTRO='unsupported' # Specific distro: centos, fedora, redhat, suse, ubuntu
+
+if [ -f /etc/redhat-release ]; then
+  TRIPLEO_OS_FAMILY='redhat'
+  if $(grep -Eqs 'Red Hat Enterprise Linux' /etc/redhat-release); then
+    TRIPLEO_OS_DISTRO='redhat'
+  fi
+  if $(grep -Eqs 'CentOS' /etc/redhat-release); then
+    TRIPLEO_OS_DISTRO='centos'
+  fi
+  if $(grep -Eqs 'Fedora' /etc/redhat-release); then
+    TRIPLEO_OS_DISTRO='fedora'
+  fi
+fi
+
+if [ -f /etc/debian_version ]; then
+  TRIPLEO_OS_FAMILY='debian'
+  if $(grep -Eqs 'Ubuntu' /etc/lsb-release); then
+    TRIPLEO_OS_DISTRO='ubuntu'
+  fi
+  if $(grep -Eqs 'Debian' /etc/lsb-release); then
+    TRIPLEO_OS_DISTRO='debian'
+  fi
+fi
+
+if [ -f /etc/SuSE-release ]; then
+  TRIPLEO_OS_FAMILY='suse'
+  TRIPLEO_OS_DISTRO='suse'
+fi
+
+export TRIPLEO_OS_FAMILY
+export TRIPLEO_OS_DISTRO
