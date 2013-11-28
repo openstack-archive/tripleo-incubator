@@ -26,7 +26,7 @@ boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
     tee $TRIPLEO_ROOT/dib-seed.log
 
 ##    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
-##    you can log into it with 'ssh root@192.0.2.1'.
+##    you can log into it with 'ssh stack@192.0.2.1'.
 ## 
 ##    The IP address of the VM is printed out at the end of boot-elements, or
 ##    you can use the get-vm-ip script::
