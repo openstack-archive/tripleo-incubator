@@ -209,6 +209,13 @@ export NODE_DIST=${NODE_DIST:-ubuntu} #nodocs
 ## 
 ##         export NODE_DIST="fedora selinux-permissive"
 
+## #. Ensure dependencies are installed and required virsh configuration is
+##    performed:
+##    ::
+if [ "$USE_CACHE" == "0" ] ; then #nodocs
+    install-dependencies
+fi #nodocs
+
 ## #. Run cleanup-env to ensure VM's and storage pools from previous devtest
 ##    runs are removed.
 ##    ::
@@ -219,13 +226,6 @@ if [ "${TRIPLEO_CLEANUP:-1}" = "1"  ]; then
     cleanup-env
 fi
 ### --include
-
-## #. Ensure dependencies are installed and required virsh configuration is
-##    performed:
-##    ::
-if [ "$USE_CACHE" == "0" ] ; then #nodocs
-    install-dependencies
-fi #nodocs
 
 ## #. Clone/update the other needed tools which are not available as packages.
 ##    ::
