@@ -2,6 +2,13 @@
 
 set -eu
 
+OS_PASSWORD=${OS_PASSWORD:-""}
+if [ "$OS_PASSWORD" == "" ]; then
+    echo "ERROR: OS_PASSWORD is not set. undercloud credentials are required"
+    echo "(hint, maybe you have not sourced tripleo-undercloud-passwords/stackrc, or they are broken?)"
+    exit 1
+fi
+
 # Parameters for tripleo-cd - see the tripleo-cd element.
 # NOTE(rpodolyaka): retain backwards compatibility by accepting both positional
 #                   arguments and environment variables. Positional arguments
