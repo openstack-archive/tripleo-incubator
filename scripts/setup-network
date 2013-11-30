@@ -9,8 +9,9 @@ BRIDGE_NAME=brbm$BRIDGE_SUFFIX
 (sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) || sudo ovs-vsctl add-br ${BRIDGE_NAME}
 
 # remove bridge before replacing it.
-(virsh net-list --all --persistent | grep "${BRIDGE_NAME} ") && (
- virsh net-destroy ${BRIDGE_NAME}; virsh net-undefine ${BRIDGE_NAME})
+(virsh net-list --persistent | grep "${BRIDGE_NAME} ") && virsh net-destroy ${BRIDGE_NAME}
+(virsh net-list --inactive --persistent | grep "${BRIDGE_NAME} ") && virsh net-undefine ${BRIDGE_NAME}
+
 virsh net-define <(sed s/brbm/$BRIDGE_NAME/ $BASE/templates/brbm.xml)
 virsh net-autostart ${BRIDGE_NAME}
 virsh net-start ${BRIDGE_NAME}
