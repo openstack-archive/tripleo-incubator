@@ -22,15 +22,22 @@ deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --public \
 deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --public \
     --disk-format ari < "$deploy_ramdisk" | awk ' / id / {print $4}')
 
+function cleanup_flavor () {
+    local FLAVOR_NAME=${1:?"cleanup_flavor requires a flavor name"}
+    if nova flavor-show "$FLAVOR_NAME" &> /dev/null; then
+        nova flavor-delete "$FLAVOR_NAME"
+    fi
+}
+
 # While we can't mix hypervisors, having non-baremetal flavors will just
 # confuse things.
-nova flavor-delete m1.tiny || true
-nova flavor-delete m1.small || true
-nova flavor-delete m1.medium || true
-nova flavor-delete m1.large || true
-nova flavor-delete m1.xlarge || true
+cleanup_flavor 'm1.tiny'
+cleanup_flavor 'm1.small'
+cleanup_flavor 'm1.medium'
+cleanup_flavor 'm1.large'
+cleanup_flavor 'm1.xlarge'
 
-nova flavor-delete baremetal || true
+cleanup_flavor 'baremetal'
 nova flavor-create baremetal auto $MEM $DISK $CPU
 nova flavor-key baremetal set "cpu_arch"="$ARCH" \
     "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
