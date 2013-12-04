@@ -2,6 +2,8 @@
 
 set -eu
 
+OS_PASSWORD=${OS_PASSWORD:?"OS_PASSWORD is not set. Undercloud credentials are required"}
+
 # Parameters for tripleo-cd - see the tripleo-cd element.
 # NOTE(rpodolyaka): retain backwards compatibility by accepting both positional
 #                   arguments and environment variables. Positional arguments
