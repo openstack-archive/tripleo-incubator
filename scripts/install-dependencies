@@ -14,6 +14,9 @@ if ! grep "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys >/dev/null; then
   cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 fi
 
+# Make sure permissions are correct for ssh authorized_keys file.
+chmod 0600 ~/.ssh/authorized_keys
+
 # packages
 os=unsupported
 if [ -f /etc/redhat-release ]; then
