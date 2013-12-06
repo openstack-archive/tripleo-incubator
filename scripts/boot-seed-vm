@@ -28,6 +28,7 @@ BRIDGE=brbm
 export IMAGE_NAME=seed
 IMAGE_CACHE_DIR=${IMAGE_CACHE_DIR:-~/.cache/image-create/image-file-cache}
 export DIB_IMAGE_SIZE=30
+CONFIGURE_VM=yes
 START_VM=yes
 ALWAYS_ELEMENTS='vm local-config stackuser boot-stack nova-baremetal seed-stack-config remove-serial-console'
 EXTRA_ELEMENTS=${EXTRA_ELEMENTS:-cloud-init-nocloud}
@@ -42,19 +43,22 @@ function show_options () {
     echo "See ../scripts/devtest.sh"
     echo
     echo "Options:"
-    echo "      -a i386|amd64 -- set the architecture of the VM (i386)"
-    echo "      -o name       -- set the name of the VM and image file (seed)"
-    echo "      -s size       -- set the image size (30 GB)"
-    echo "      -b bridge     -- define a baremetal bridge to use"
-    echo "      -e engine     -- set the virt engine to use"
-    echo "                       (defaults to kvm if available, otherwise qemu)"
-    echo "      -c            -- use a image cache for seed image"
-    echo "      -n            -- don't automatically start the VM"
+    echo "      -a i386|amd64     -- set the architecture of the VM (i386)"
+    echo "      -o name           -- set the name of the VM and image file
+                                     (seed)"
+    echo "      -s size           -- set the image size (30 GB)"
+    echo "      -b bridge         -- define a baremetal bridge to use"
+    echo "      -e engine         -- set the virt engine to use"
+    echo "                           (defaults to kvm if available, otherwise
+                                     qemu)"
+    echo "      -c                -- use a image cache for seed image"
+    echo "      -n                -- don't automatically start the VM"
+    echo "      --use-existing-vm -- use existing VM"
     echo
     exit 0
 }
 
-TEMP=`getopt -o hcna:o:s:b:e: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o hcna:o:s:b:e: -l use-existing-vm -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -70,6 +74,7 @@ while true ; do
         -h) show_options;;
         -c) export IMAGE_CACHE_USE=1; shift ;;
         -n) export START_VM=; shift ;;
+        --use-existing-vm) export CONFIGURE_VM=; shift ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -108,11 +113,13 @@ if [ ! -e $DIB ]; then
     exit 1
 fi
 
-# Destroy pre-existing VM of the same name
+# If we're setting up a new VM, destroy pre-existing VM of the same name
 # but ignore any errors if one doesn't exist
-which virsh >/dev/null || die "Error: virsh not found in path"
-sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
-sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not defined"
+if [ $CONFIGURE_VM ]; then
+    which virsh >/dev/null || die "Error: virsh not found in path"
+    sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
+    sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not defined"
+fi
 
 mkdir -p $IMAGE_CACHE_DIR
 IMAGE_CACHE_FILE=$IMAGE_CACHE_DIR/$(echo $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS | sha1sum | awk '{ print $1 }' )
@@ -128,7 +135,8 @@ sudo cp $IMAGE_CACHE_FILE.qcow2 /var/lib/libvirt/images/$IMAGE_NAME.qcow2
 
 sudo chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
 
-configure-vm \
+if [ $CONFIGURE_VM ]; then
+    configure-vm \
            --name $IMAGE_NAME \
            --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
            --baremetal-interface $BRIDGE \
@@ -136,6 +144,7 @@ configure-vm \
            --arch $SEED_ARCH \
            --libvirt-nic-driver $LIBVIRT_NIC_DRIVER \
 	   --seed
+fi
 
 function poll_vm {
   MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
