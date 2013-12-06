@@ -1,3 +1,4 @@
 openstack-infra,infra-root@openstack.org,OpenStack CI Service hosts,PTL - used by openstack infra for long lived hosts
 openstack-nodepool,jenkins@openstack.org,OpenStack CI nodepool hosts,PTL - used by openstack infra for test hosts
 rpodolyaka,rpodolyaka@mirantis.com,Roman Podoliaka,ATC
+pleia2,lyz@princessleia.com,Elizabeth Krumbach Joseph
