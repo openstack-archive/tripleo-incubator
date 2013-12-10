@@ -1,2 +1,2 @@
 oslo.sphinx
-sphinx>=1.1.2
+sphinx>=1.1.2,<=1.2
