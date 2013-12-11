@@ -182,6 +182,11 @@ nova flavor-create m1.tiny 1 512 2 1
 glance image-create --name user --public --disk-format qcow2 \
     --container-format bare --file $TRIPLEO_ROOT/user.qcow2
 
+## #. Wait for L2 Agent On Nova Compute
+##    ::
+
+wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep -F '":-)","Open vSwitch agent","overcloud-notcompute-'
+
 ## #. Log in as a user.
 ##    ::
 
