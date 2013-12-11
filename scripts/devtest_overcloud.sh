@@ -188,6 +188,11 @@ glance image-create --name user --public --disk-format qcow2 \
 source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc-user
 user-config
 
+## #. Wait for L2 Agent On Nova Compute
+##    ::
+
+wait_for 30 10 neutron agent-list \| grep overcloud-novacompute
+
 ## #. Deploy your image.
 ##    ::
 
