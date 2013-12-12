@@ -15,18 +15,29 @@
 
 # Setup/update your undercloud environment to run devtest_overcloud.sh
 # Usage:
-# source refresh-env TRIPLEO_ROOT
-# Ex:
-# source refresh-env ~/tripleo
+#
+if [ -z "${1:-}" ] ; then
+  echo "source refresh-env TRIPLEO_ROOT"
+  echo "Ex:"
+  echo "source refresh-env ~/tripleo"
+else
+  if [ -d "$1/tripleo-incubator/scripts" ] ; then
+    __tripleo_refresh_env $1
+  else
+    echo "TRIPLEO_ROOT must contain tripleo-incubator/scripts"
+  fi
+fi
 
-export TRIPLEO_ROOT=$1
+__tripleo_refresh_env() {
+    export TRIPLEO_ROOT=$1
 
-export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
-source set-os-type
-export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
-export NODE_ARCH=${NODE_ARCH:-i386}
-pull-tools
-setup-clienttools
-export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
+    export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
+    source $(dirname $BASH_SOURCE)/set-os-type
+    export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
+    export NODE_ARCH=${NODE_ARCH:-i386}
+    pull-tools
+    setup-clienttools
+    export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
 
-echo "Make sure to source your stackrc file"
+    echo "Make sure to source your stackrc file"
+}
