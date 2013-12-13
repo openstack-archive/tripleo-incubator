@@ -193,6 +193,17 @@ export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 ##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=i386
 export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-20} NODE_ARCH=${NODE_ARCH:-i386} #nodocs
 
+## #. Set the default bare metal power manager. By default devtest uses
+##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
+##    support a fully virtualized TripleO test environment. You may
+##    optionally customize this setting if you are using real baremetal
+##    hardware with the devtest scripts. This setting controls the
+##    power manager used in both the seed VM and undercloud.
+##
+##         export POWER_MANAGER='nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'
+
+export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'} #nodocs
+
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint::
 ## 
