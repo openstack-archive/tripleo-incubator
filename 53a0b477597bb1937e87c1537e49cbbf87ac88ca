@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Approved+1: James Slagle <jslagle@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 13 Dec 2013 12:52:49 +0000
+Reviewed-on: https://review.openstack.org/61976
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
