@@ -185,7 +185,7 @@ glance image-create --name user --public --disk-format qcow2 \
 ## #. Wait for L2 Agent On Nova Compute
 ##    ::
 
-wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep -F '":-)","Open vSwitch agent","overcloud-notcompute-'
+wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep '":-).*Open vSwitch agent.*overcloud-novacompute-"'
 
 ## #. Log in as a user.
 ##    ::
