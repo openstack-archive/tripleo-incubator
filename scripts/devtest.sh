@@ -218,6 +218,15 @@ export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
 
 ### --include
 
+## #. Set the default bare metal power manager. By default devtest uses
+##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
+##    support a fully virtualized TripleO test environment. You may
+##    optionally customize this setting if you are using real baremetal
+##    hardware with the devtest scripts. This setting controls the
+##    power manager used in both the seed VM and undercloud.
+##    ::
+export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
+
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
 ##    ::

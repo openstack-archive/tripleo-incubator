@@ -22,6 +22,7 @@ cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
 sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 # If you use 64bit VMs (NODE_ARCH=amd64), update also architecture.
 sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
+sed -i "s/\"power_manager\":.*,/\"power_manager\": \"$POWER_MANAGER\",/" config.json
 
 cd $TRIPLEO_ROOT
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
