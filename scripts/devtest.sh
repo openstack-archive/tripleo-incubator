@@ -229,6 +229,24 @@ export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
 
 export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'} #nodocs
 
+
+## #. By default the devtest scripts use VMs to create a fully virtual
+##    testing environment. If you wish to use real baremetal machines
+##    you can set MACS, PM_IPS, PM_USERS, and PM_PASSWORDS parameters
+##    which should all be space delemited lists that correspond to the
+##    MAC addresses and power management commands.
+##
+##    These are space delimited, aligned in order:
+##
+##         export MACS="84:2b:22:11:11:11 84:2b:22:11:11:12 84:2b:22:11:11:13"
+##         export PM_IPS="10.16.111.111 10.16.111.112 10.16.111.113"
+##         export PM_USERS="root root root"
+##         export PM_PASSWORDS="passwd passwd passwd"
+##
+##    NOTE: The first machine in the list will be used as an undercloud.
+##    NOTE: The 2nd and 3rd machines are used to create the overcloud.
+
+
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
 ##    ::

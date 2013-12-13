@@ -87,13 +87,26 @@ setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 
 ## #. Create a 'baremetal' node out of a KVM virtual machine and collect
 ##    its MAC address.
-##    Nova will PXE boot this VM as though it is physical hardware.
 ##    If you want to create the VM yourself, see footnote [#f2]_ for details on
 ##    its requirements. The parameter to create-nodes is VM count.
+##    Nova will PXE boot this VM as though it is physical hardware.
+##    Alternately, If you are using real baremetal hardware the first entry
+##    in your MACS, PM_IPS, PM_USERS, and PM_PASSWORDS variables is used
+##    to configure a baremetal node in the seed VM (for the undercloud).
 ##    ::
 
-export SEED_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 1)
-setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed
+if [ -z "$MACS" ]; then
+
+    export SEED_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 1)
+    setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed
+
+else
+
+    # Using real baremetal machines...
+    # For the seed VM we use only the first MAC and power management setting
+    setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "${MACS%% *}" seed "${PM_IPS%% *}" "${PM_USERS%% *}" "${PM_PASSWORDS%% *}"
+
+fi
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
 ## 
@@ -146,7 +159,7 @@ ssh root@192.0.2.1 "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/a
 ##    * When calling setup-baremetal you can set MACS, PM_IPS, PM_USERS,
 ##      and PM_PASSWORDS parameters which should all be space delemited lists
 ##      that correspond to the MAC addresses and power management commands
-##      your real baremetal machines require. See scripts/setup-baremetal
+##      your real baremetal machines require. See scripts/_setup-baremetal
 ##      for details.
 ## 
 ##    * If you see over-mtu packets getting dropped when iscsi data is copied
