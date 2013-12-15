@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -eu
+set -o pipefail
 
 USE_CACHE=${USE_CACHE:-0}
 
