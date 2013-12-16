@@ -31,6 +31,6 @@ for NAME in $(sudo virsh list --name --all | grep "^\(seed\(.*\|\)\|baremetal\(\
   sudo virsh undefine --remove-all-storage $NAME
 done
 
-for NAME in $(sudo virsh vol-list default | grep /var/ | awk '{print $1}' | grep "^\(seed\(.*\|\)|baremetal\(\|brbm.*\)-\)" ); do
+for NAME in $(sudo virsh vol-list default 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\(seed\(.*\|\)|baremetal\(\|brbm.*\)-\)" ); do
   sudo virsh vol-delete --pool default $NAME
 done
