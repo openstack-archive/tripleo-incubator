@@ -19,6 +19,11 @@ FLOATING_CIDR=${7:-${FLOATING_CIDR:-'192.0.2.0/24'}}
 ADMIN_USERS=${8:-${ADMIN_USERS:-''}}
 USERS=${9:-${USERS:-''}}
 USE_CACHE=${USE_CACHE:-0}
+# This will stop being a parameter once rebuild --preserve-ephemeral is fully
+# merged. For now, it requires manual effort to use, so it should be opt-in.
+# Since it's not an end-user thing yet either, we don't document it in the 
+# example prose below either.
+OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 
 ### --include
 ## devtest_overcloud
@@ -101,6 +106,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
 
 heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE}" \
+    -P "ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY}" \
     overcloud
 
 ### --include
