@@ -26,7 +26,7 @@ fi
 
 STACK_STATUS=$(heat stack-show $STACK_NAME | awk '/ stack_status / { print $4 }')
 
-if [ "CREATE_COMPLETE" = "$STACK_STATUS" ]; then
+if [ "CREATE_COMPLETE" = "$STACK_STATUS" -o "UPDATE_COMPLETE" = "$STACK_STATUS" ]; then
     exit 0
 else
     exit 1
