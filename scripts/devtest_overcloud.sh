@@ -73,24 +73,18 @@ OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-";NovaComputeLibvirtType=qemu"}
 
 NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
-## #. Delete any previous overcloud::
+## #. Choose whether to deploy or update. Use stack-update to update::
+##    ::
 
-##         heat stack-delete overcloud || true
+##         HEAT_OP=stack-create
 
 ### --end
 
-# Should really be wait_for, but it can't cope with complex if/or yet.
-tries=0
-while true;
-    do (heat stack-show overcloud > /dev/null) || break
-    if [ $((++tries)) -gt 120 ] ; then
-        echo ERROR: Giving up waiting for overcloud delete to complete after 120 attempts.
-        exit 1
-    fi
-    heat stack-delete overcloud || true
-    # Don't busy-spin
-    sleep 2;
-done
+if heat stack-show overcloud > /dev/null; then
+    HEAT_OP=stack-update
+else
+    HEAT_OP=stack-create
+fi
 
 ### --include
 
@@ -100,13 +94,13 @@ setup-overcloud-passwords
 source tripleo-overcloud-passwords
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
-##         heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
+##         heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE}" \
 ##             overcloud
 
 ### --end
 
-heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
+heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE}" \
     overcloud
 
