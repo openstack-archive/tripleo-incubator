@@ -20,6 +20,9 @@ set -e
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
+# save stdout for later then make fd 1 stderr
+exec 3>&1 >&2
+
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options] <file>"
     echo
@@ -71,13 +74,14 @@ function load_image() {
     ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd"  --public --disk-format ari < "$TMP_IMAGE_DIR/tmp-initrd" \
                  | grep ' id ' | awk '{print $4}')
 
+    # >&3 sends to the original stdout as this is what we are after
     glance image-create --name $GLANCE_IMAGE_NAME \
                         --public \
                         --disk-format qcow2 \
                         --container-format bare \
                         --property kernel_id=$kernel_id \
                         --property ramdisk_id=$ramdisk_id \
-                        --file $FILE
+                        --file $FILE | awk '/ id / { print $4 }' >&3
 
     cleanup
     trap EXIT
