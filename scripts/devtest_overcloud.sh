@@ -72,6 +72,14 @@ fi #nodocs
 
 load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2
 
+
+
+## #. Record Image IDs
+##    ::
+
+OVERCLOUD_CONTROL_ID=$(glance image-show overcloud-control|awk '/ id / { print $4 }')
+OVERCLOUD_COMPUTE_ID=$(glance image-show overcloud-compute|awk '/ id / { print $4 }')
+
 ## #. For running an overcloud in VM's::
 ##    ::
 
@@ -109,7 +117,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
 ### --end
 
 heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-    -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE};ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY}" \
+    -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE};ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY};notcomputeImage=${OVERCLOUD_CONTROL_ID};computeImage=${OVERCLOUD_COMPUTE_ID}" \
     overcloud
 
 ### --include

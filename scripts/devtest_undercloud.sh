@@ -30,6 +30,11 @@ fi #nodocs
 
 load-image $TRIPLEO_ROOT/undercloud.qcow2
 
+## #. Record the undercloud image id:
+##    ::
+
+UNDERCLOUD_ID=$(glance image-show undercloud | awk '/ id / { print $4 }')
+
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    (tripleo-passwords by default) that you need to source into your shell
 ##    environment.  Note that you can also make or change these later and
@@ -48,7 +53,7 @@ source tripleo-undercloud-passwords
 ##    ::
 make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};PowerManager=$POWER_MANAGER" \
+    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};PowerManager=$POWER_MANAGER;Image=${UNDERCLOUD_ID}" \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
