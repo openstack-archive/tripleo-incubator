@@ -115,7 +115,7 @@ Caveats / limitations:
    (work is in progress to have multiple bare-metal compute hosts dynamically
     take over each others configuration)
  - File injection is required due to the PXE boot configuration conflicting
-   with Nova-network/Quantum DHCP (work is in progress to resolve this)
+   with Nova-network/Neutron DHCP (work is in progress to resolve this)
  - Dynamic VLAN support is not yet implemented (but was specced at the Havana
    summit). Workaround is to manually configure it via Nova userdata.
    https://bugs.launchpad.net/tripleo/+bug/1174149
@@ -289,12 +289,12 @@ OpenStack on itself: OpenStack on OpenStack with one cloud:
    physical (as long as they are machines which the cluster can be rebooted
    without.
 
-Quantum will be in use everywhere, in two layers: The hardware nodes will
+Neutron will be in use everywhere, in two layers: The hardware nodes will
 talk to Openflow switches, allowing secure switching of a hardware node between
 use as a cloud component and use by a tenant of the cloud. When a node is
 being used a cloud component, traffic from the node itself will flow onto the
-cloud's own network (managed by Quantum), and traffic from instances running
-on that node will participate in their own Quantum defined networks.
+cloud's own network (managed by Neutron), and traffic from instances running
+on that node will participate in their own Neutron defined networks.
 
 Infrastructure such as Glance, Swift and Keystone will be solely owned by the
 one cloud: there is no duplication needed.
