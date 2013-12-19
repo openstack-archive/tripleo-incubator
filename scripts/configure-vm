@@ -48,6 +48,7 @@ def main():
         'memory': args.memory,
         'cpus': args.cpus,
         'bootdev': args.bootdev,
+        'network': '',
         }
     if args.image is not None:
         params['imagefile'] = args.image
@@ -56,44 +57,38 @@ def main():
         params['emulator'] = "/usr/bin/kvm"
     elif os.path.exists("/usr/bin/qemu-kvm"): # Redhat
         params['emulator'] = "/usr/bin/qemu-kvm"
-    nicparams = dict(nicdriver=args.libvirt_nic_driver,bminterface=args.baremetal_interface,ovsbridge=args.ovsbridge)
+
+    nicparams = {
+        'nicdriver': args.libvirt_nic_driver,
+        'bminterface': args.baremetal_interface,
+        'ovsbridge': args.ovsbridge,
+        }
     if args.seed:
         if args.ovsbridge:
-            network = """
+            params['network'] = """
       <interface type='bridge'>
         <source bridge='%(ovsbridge)s'/>
         <virtualport type='openvswitch'/>
         <model type='%(nicdriver)s'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
-      </interface>
-      <interface type='network'>
-        <source network='%(bminterface)s'/>
-        <model type='%(nicdriver)s'/>
-        <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
       </interface>""" % nicparams
         else:
-            network = """
+            params['network'] = """
       <!-- regular natted network, for access to the vm -->
       <interface type='network'>
         <source network='default'/>
         <model type='%(nicdriver)s'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
-      </interface>
+      </interface>""" % nicparams
+
+    params['bm_network'] = """
       <!-- bridged 'bare metal' network -->
       <interface type='network'>
         <source network='%(bminterface)s'/>
         <model type='%(nicdriver)s'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
       </interface>""" % nicparams
-    else:
-        network = """
-      <!-- bridged 'bare metal' network -->
-      <interface type='network'>
-        <source network='%(bminterface)s'/>
-        <model type='%(nicdriver)s'/>
-        <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
-      </interface>""" % nicparams
-    params['network'] = network
+
     libvirt_template = source_template % params
     conn=libvirt.open("qemu:///system")
     a = conn.defineXML(libvirt_template)
