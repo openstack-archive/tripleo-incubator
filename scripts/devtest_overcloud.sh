@@ -212,7 +212,7 @@ source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc-user
 ## #. If you just created the cloud you need to add your keypair to your user.
 ##    ::
 
-if [ "stack-create" = "$HEAT_OP"] ; then #nodocs
+if [ "stack-create" = "$HEAT_OP" ] ; then #nodocs
 user-config
 fi #nodocs
 
