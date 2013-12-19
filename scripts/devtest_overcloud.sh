@@ -98,7 +98,7 @@ fi
 
 ## #. Deploy an overcloud::
 
-setup-overcloud-passwords
+setup-passwords -c OVERCLOUD
 source tripleo-overcloud-passwords
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
