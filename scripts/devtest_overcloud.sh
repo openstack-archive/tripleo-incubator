@@ -140,6 +140,10 @@ if [ -n "$NeutronPublicInterfaceIP" ]; then
 fi
 
 ### --include
+
+## #. We don't (yet) preserve ssh keys on rebuilds.
+##    ::
+
 ssh-keygen -R $OVERCLOUD_IP
 
 ## #. Source the overcloud configuration::
@@ -151,6 +155,10 @@ source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
 set +u #nodocs
 export no_proxy=$no_proxy,$OVERCLOUD_IP
 set -u #nodocs
+
+## #. If we updated the cloud we don't need to do admin setup again - skip down to 'Wait for nova-compute'.
+
+if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
 
 ## #. Perform admin setup of your overcloud.
 ##    ::
@@ -185,6 +193,8 @@ nova flavor-create m1.tiny 1 512 2 1
 glance image-create --name user --public --disk-format qcow2 \
     --container-format bare --file $TRIPLEO_ROOT/user.qcow2
 
+fi #nodocs
+
 ## #. Wait for Nova Compute
 ##    ::
 
@@ -199,9 +209,15 @@ wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep 
 ##    ::
 
 source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc-user
-user-config
 
-## #. Deploy your image.
+## #. If you just created the cloud you need to add your keypair to your user.
+##    ::
+
+if [ "stack-create" = "$HEAT_OP"] ; then #nodocs
+user-config
+fi #nodocs
+
+## #. Deploy a VM.
 ##    ::
 
 nova boot --key-name default --flavor m1.tiny --image user demo
