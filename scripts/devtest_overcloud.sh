@@ -24,7 +24,6 @@ USE_CACHE=${USE_CACHE:-0}
 # Since it's not an end-user thing yet either, we don't document it in the
 # example prose below either.
 # The patch sets needed are:
-# heat: Ibc4c24bb2efb82c11699231ae76e2755a753a706
 # nova: I6bf01e52589c5894eb043f2b57e915d52e81ebc3
 # python-novaclient: Ib1511653904d4f95ab03fb471669175127004582
 OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
