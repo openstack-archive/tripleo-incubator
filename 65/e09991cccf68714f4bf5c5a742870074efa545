@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Approved+1: Chris Jones <cmsj@tenshu.net>
+Code-Review+2: Chris Jones <cmsj@tenshu.net>
+Submitted-by: Jenkins
+Submitted-at: Thu, 19 Dec 2013 12:35:53 +0000
+Reviewed-on: https://review.openstack.org/63057
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
