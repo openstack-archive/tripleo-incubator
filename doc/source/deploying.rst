@@ -23,7 +23,7 @@ the heart of TripleO.
 
 -  Image management (Glance)
 
--  Network management (Quantum)
+-  Network management (Neutron)
 
 -  Authentication and service catalog (Keystone)
 
@@ -70,7 +70,7 @@ from any physical machine that is being booted.
 Nova
 ----
 
-Nova depends on Keystone, Glance and Quantum. In future Cinder will be
+Nova depends on Keystone, Glance and Neutron. In future Cinder will be
 one of the dependencies.
 
 There are three ways the service can be deployed:
@@ -94,11 +94,11 @@ Cinder is needed for persistent storage on bare metal machines. That
 aspect of TripleO is not yet available : when an instance is deleted,
 the storage is deleted with it.
 
-Quantum
+Neutron
 -------
 
-Quantum depends on Keystone. The same three deployment options exist as
-for Nova. The Quantum network node(s) must be the only DHCP servers on
+Neutron depends on Keystone. The same three deployment options exist as
+for Nova. The Neutron network node(s) must be the only DHCP servers on
 the network.
 
 Glance
