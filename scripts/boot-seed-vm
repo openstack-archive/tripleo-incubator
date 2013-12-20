@@ -45,16 +45,16 @@ function show_options () {
     echo
     echo "Options:"
     echo "      -a i386|amd64     -- set the architecture of the VM (i386)"
-    echo "      -o name           -- set the name of the VM and image file
-                                     (seed)"
+    echo "      -o name           -- set the name of the VM and image file"
+    echo "                           (seed) - must match that from setup-seed-vm"
     echo "      -s size           -- set the image size (30 GB)"
     echo "      -b bridge         -- define a baremetal bridge to use"
     echo "      -e engine         -- set the virt engine to use"
-    echo "                           (defaults to kvm if available, otherwise
-                                     qemu)"
+    echo "                           (defaults to kvm if available, otherwise"
+    echo "                           qemu)"
     echo "      -c                -- use a image cache for seed image"
-    echo "      -i                -- image file was built elsewhere, don't
-                                     create"
+    echo "      -i                -- image file was built elsewhere, don't"
+    echo "                           create"
     echo "      -n                -- don't automatically start the VM"
     echo "      --use-existing-vm -- use existing VM"
     echo
