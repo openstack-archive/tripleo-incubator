@@ -1,0 +1,108 @@
+#!/bin/bash
+#
+# Copyright 2013 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+set -e
+
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+PATH=$PATH:/usr/sbin:/sbin
+
+# Some defaults
+ARCH=i386
+BRIDGE=brbm
+export IMAGE_NAME=seed
+LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] <element> [<element> ...]"
+    echo
+    echo "Create a VM definition for the seed VM."
+    echo "See ../scripts/devtest.sh"
+    echo
+    echo "Options:"
+    echo "      -a i386|amd64     -- set the architecture of the VM (i386)"
+    echo "      -o name           -- set the name of the VM and image file"
+    echo "                           (seed) - must match that from setup-seed-vm"
+    echo "      -b bridge         -- define a baremetal bridge to use"
+    echo "      -e engine         -- set the virt engine to use"
+    echo "                           (defaults to kvm if available, otherwise"
+    echo "                           qemu)"
+    echo
+    exit $1
+}
+
+TEMP=`getopt -o ha:o:b:e: -n $SCRIPT_NAME -- "$@"`
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -a) export ARCH=$2; shift 2 ;;
+        -o) export IMAGE_NAME=$2; shift 2 ;;
+        -b) export BRIDGE=$2; shift 2 ;;
+        -e) export ENGINE=$2; shift 2 ;;
+        -h) show_options 0;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+EXTRA_ARGS=${1:-''}
+
+if [ -n "$EXTRA_ARGS" ]; then
+    show_options 1
+fi
+
+if [[ -z "$ENGINE" ]]; then
+    if [ -d /sys/module/kvm ]; then
+        ENGINE=kvm
+    else
+        ENGINE=qemu
+        if test -r /proc/cpuinfo && grep -q "vmx\|svm" /proc/cpuinfo; then
+            echo 'CPU supports virtualization but the kvm module is not loaded.'
+        fi
+        echo 'Using qemu as virtualization engine. Warning!: things will be extremely slow.'
+    fi
+fi
+
+SEED_ARCH=
+
+case $ARCH in
+    i386) SEED_ARCH='i686'; ;;
+    amd64) SEED_ARCH='x86_64'; ;;
+    *) echo "Unsupported arch $ARCH!" ; exit 1 ;;
+esac
+
+which virsh >/dev/null || die "Error: virsh not found in path"
+sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
+sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not defined"
+sudo touch /var/lib/libvirt/images/$IMAGE_NAME.qcow2
+
+configure-vm \
+       --name $IMAGE_NAME \
+       --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
+       --baremetal-interface $BRIDGE \
+       --engine $ENGINE \
+       --arch $SEED_ARCH \
+       --libvirt-nic-driver $LIBVIRT_NIC_DRIVER \
+       --seed
+
+MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+echo "Seed VM created with MAC ${MAC}"
