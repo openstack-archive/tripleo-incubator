@@ -203,7 +203,7 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 ##    ::
 ## 
 ##         export NODE_DIST=ubuntu
-##
+## 
 ##    for Fedora set SELinux permissive mode.
 ##    ::
 ## 
