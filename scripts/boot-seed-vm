@@ -30,6 +30,7 @@ export DIB_IMAGE_SIZE=30
 CREATE_IMAGE=yes
 ALWAYS_ELEMENTS="vm local-config boot-stack nova-baremetal seed-stack-config remove-serial-console $DIB_COMMON_ELEMENTS"
 EXTRA_ELEMENTS=${EXTRA_ELEMENTS:-cloud-init-nocloud}
+export VM_IP=""
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options] <element> [<element> ...]"
@@ -47,11 +48,14 @@ function show_options () {
     echo "      -c                -- use a image cache for seed image"
     echo "      -i                -- image file was built elsewhere, don't"
     echo "                           create"
+    echo "      --ip IP           -- set the IP address the seed will start on,"
+    echo "                           this is useful for remote VM's where MAC probing"
+    echo "                           would fail"
     echo
     exit 0
 }
 
-TEMP=`getopt -o hcia:o:s: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o hcia:o:s: -l ip: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -65,6 +69,7 @@ while true ; do
         -h) show_options;;
         -c) export IMAGE_CACHE_USE=1; shift ;;
         -i) export CREATE_IMAGE=; shift ;;
+        --ip) export VM_IP=$2; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -113,9 +118,12 @@ if [ $CREATE_IMAGE  ]; then
 fi
 
 function poll_vm {
-  MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
-  VM_IP=$(arp -n | grep $MAC | awk '{print $1}')
+  if [ -z "$VM_IP" ]; then
+    MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+    VM_IP=$(arp -n | grep $MAC | awk '{print $1}')
+  fi
   [ -z $VM_IP ] && return 1
+  ping -c 1 $VM_IP || return 1
   return 0
 }
 export -f poll_vm
