@@ -261,6 +261,12 @@ export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
 ##    ::
 setup-network
 
+## #. Configure a seed VM. This VM has a disk image manually configured by
+##    later scripts, and hosts the statically configured seed which is used
+##    to bootstrap a full dynamically configured baremetal cloud.
+##    ::
+setup-seed-vm -a $NODE_ARCH
+
 ## #. Choose the deploy image element to be used. `deploy-kexec` will relieve you of
 ##    the need to wait for long hardware POST times, however it has known stability
 ##    issues (please see https://bugs.launchpad.net/diskimage-builder/+bug/1240933).
