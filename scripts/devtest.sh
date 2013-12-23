@@ -228,6 +228,10 @@ export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
 ##    ::
 export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
 
+## #. Set a list of image elements that should be included in all image builds.
+##    ::
+export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"pypi-openstack pip-cache stackuser"}
+
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
 ##    ::

@@ -31,7 +31,7 @@ export DIB_IMAGE_SIZE=30
 CONFIGURE_VM=yes
 CREATE_IMAGE=yes
 START_VM=yes
-ALWAYS_ELEMENTS='vm local-config stackuser boot-stack nova-baremetal seed-stack-config remove-serial-console'
+ALWAYS_ELEMENTS="vm local-config boot-stack nova-baremetal seed-stack-config remove-serial-console $DIB_COMMON_ELEMENTS"
 EXTRA_ELEMENTS=${EXTRA_ELEMENTS:-cloud-init-nocloud}
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 

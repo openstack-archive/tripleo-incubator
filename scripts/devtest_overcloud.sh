@@ -43,7 +43,8 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
         boot-stack cinder os-collect-config neutron-network-node \
-        dhcp-all-interfaces stackuser swift-proxy swift-storage ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
+        dhcp-all-interfaces swift-proxy swift-storage \
+        $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
 
@@ -62,7 +63,7 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then 
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
         nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-        dhcp-all-interfaces stackuser ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
+        dhcp-all-interfaces $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
