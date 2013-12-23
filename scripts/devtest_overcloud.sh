@@ -19,6 +19,7 @@ FLOATING_CIDR=${7:-${FLOATING_CIDR:-'192.0.2.0/24'}}
 ADMIN_USERS=${8:-${ADMIN_USERS:-''}}
 USERS=${9:-${USERS:-''}}
 USE_CACHE=${USE_CACHE:-0}
+DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 # This will stop being a parameter once rebuild --preserve-ephemeral is fully
 # merged. For now, it requires manual effort to use, so it should be opt-in.
 # Since it's not an end-user thing yet either, we don't document it in the
