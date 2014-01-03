@@ -26,6 +26,7 @@ PATH=$PATH:/usr/sbin:/sbin
 ARCH=i386
 BRIDGE=brbm
 OVSBRIDGE=
+SEEDOWNER=
 export IMAGE_NAME=seed
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
@@ -44,11 +45,12 @@ function show_options () {
     echo "      -e engine         -- set the virt engine to use"
     echo "                           (defaults to kvm if available, otherwise"
     echo "                           qemu)"
+    echo "      -u user           -- set the owner of the qcow2 seed image"
     echo
     exit $1
 }
 
-TEMP=`getopt -o ha:o:b:p:e: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o ha:o:b:p:e:u: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -61,6 +63,7 @@ while true ; do
         -b) export BRIDGE=$2; shift 2 ;;
         -p) export OVSBRIDGE=$2; shift 2 ;;
         -e) export ENGINE=$2; shift 2 ;;
+        -u) export SEEDOWNER=$2; shift 2 ;;
         -h) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -96,7 +99,11 @@ esac
 which virsh >/dev/null || die "Error: virsh not found in path"
 sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
 sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not defined"
+
 sudo touch /var/lib/libvirt/images/$IMAGE_NAME.qcow2
+if [ -n "$SEEDOWNER" ] ; then
+    sudo chown $SEEDOWNER /var/lib/libvirt/images/$IMAGE_NAME.qcow2
+fi
 
 EXTRAOPTS=
 if [ -n "$OVSBRIDGE" ] ; then
