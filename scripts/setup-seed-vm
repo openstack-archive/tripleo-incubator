@@ -25,6 +25,7 @@ PATH=$PATH:/usr/sbin:/sbin
 # Some defaults
 ARCH=i386
 BRIDGE=brbm
+OVSBRIDGE=
 export IMAGE_NAME=seed
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
@@ -39,6 +40,7 @@ function show_options () {
     echo "      -o name           -- set the name of the VM and image file"
     echo "                           (seed) - must match that from setup-seed-vm"
     echo "      -b bridge         -- define a baremetal bridge to use"
+    echo "      -p bridge         -- define an ovs bridge to use for the public interface"
     echo "      -e engine         -- set the virt engine to use"
     echo "                           (defaults to kvm if available, otherwise"
     echo "                           qemu)"
@@ -46,7 +48,7 @@ function show_options () {
     exit $1
 }
 
-TEMP=`getopt -o ha:o:b:e: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o ha:o:b:p:e: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -57,6 +59,7 @@ while true ; do
         -a) export ARCH=$2; shift 2 ;;
         -o) export IMAGE_NAME=$2; shift 2 ;;
         -b) export BRIDGE=$2; shift 2 ;;
+        -p) export OVSBRIDGE=$2; shift 2 ;;
         -e) export ENGINE=$2; shift 2 ;;
         -h) show_options 0;;
         --) shift ; break ;;
@@ -95,7 +98,11 @@ sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
 sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not defined"
 sudo touch /var/lib/libvirt/images/$IMAGE_NAME.qcow2
 
-configure-vm \
+EXTRAOPTS=
+if [ -n "$OVSBRIDGE" ] ; then
+    EXTRAOPTS="--ovsbridge $OVSBRIDGE"
+fi
+configure-vm $EXTRAOPTS \
        --name $IMAGE_NAME \
        --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
        --baremetal-interface $BRIDGE \
