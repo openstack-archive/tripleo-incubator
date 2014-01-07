@@ -230,7 +230,7 @@ export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.
 
 ## #. Set a list of image elements that should be included in all image builds.
 ##    ::
-export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser pypi-openstack pip-cache"}
+export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
 
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
