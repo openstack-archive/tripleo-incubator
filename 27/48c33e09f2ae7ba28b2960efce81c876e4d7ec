@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Code-Review+2: Jan Provaznik <jan.provaznik@gmail.com>
+Approved+1: Ladislav Smola <lsmola@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 08 Jan 2014 11:13:32 +0000
+Reviewed-on: https://review.openstack.org/65451
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
