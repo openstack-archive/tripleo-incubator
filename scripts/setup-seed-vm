@@ -38,7 +38,7 @@ function show_options () {
     echo "Options:"
     echo "      -a i386|amd64     -- set the architecture of the VM (i386)"
     echo "      -o name           -- set the name of the VM and image file"
-    echo "                           (seed) - must match that from setup-seed-vm"
+    echo "                           (seed) - must match that from boot-seed-vm"
     echo "      -b bridge         -- define a baremetal bridge to use"
     echo "      -p bridge         -- define an ovs bridge to use for the public interface"
     echo "      -e engine         -- set the virt engine to use"
