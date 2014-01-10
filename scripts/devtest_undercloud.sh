@@ -11,10 +11,8 @@ USE_CACHE=${USE_CACHE:-0}
 
 
 ## #. Create your undercloud image. This is the image that the seed nova
-##    will deploy to become the baremetal undercloud. Note that stackuser is only
-##    there for debugging support - it is not suitable for a production network.
-##    $UNDERCLOUD_DIB_EXTRA_ARGS is meant to be used to pass additional arguments
-##    to disk-image-create.
+##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
+##    meant to be used to pass additional arguments to disk-image-create.
 ##    ::
 
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs

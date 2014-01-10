@@ -35,9 +35,8 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 
 ## #. Create your overcloud control plane image. This is the image the undercloud
 ##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
-##    Note that stackuser is only there for debugging support - it is not
-##    suitable for a production network. $OVERCLOUD_DIB_EXTRA_ARGS is meant to be
-##    used to pass additional build-time specific arguments to disk-image-create.
+##    $OVERCLOUD_DIB_EXTRA_ARGS is meant to be used to pass additional build-time
+##    specific arguments to disk-image-create.
 ##    ::
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
@@ -55,9 +54,7 @@ fi #nodocs
 OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 
 ## #. Create your overcloud compute image. This is the image the undercloud
-##    deploys to host KVM (or QEMU, Xen, etc.) instances. Note that stackuser 
-##    is only there for debugging support - it is not suitable for a production
-##    network.
+##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs

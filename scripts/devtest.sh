@@ -96,8 +96,8 @@ fi
 ## 
 ## NOTE: Likewise, setup a pypi mirror and use the pypi element, or use the
 ##       pip-cache element. (See diskimage-builder documentation for both of
-##       these). Add the relevant element name to the disk-image-builder and
-##       boot-seed-vm script invocations.
+##       these). Add the relevant element name to the DIB_COMMON_ELEMENTS
+##       variable.
 ## 
 ## NOTE: The CPU architecture specified in several places must be consistent.
 ##       The examples here use 32-bit arch for the reduced memory footprint.  If
@@ -229,6 +229,9 @@ export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
 export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
 
 ## #. Set a list of image elements that should be included in all image builds.
+##    Note that stackuser is only for debugging support - it is not suitable for
+##    a production network. This is also the place to include elements such as
+##    pip-cache or pypi-openstack if you intend to use them.
 ##    ::
 export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
 
