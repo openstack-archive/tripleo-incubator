@@ -85,7 +85,8 @@ fi
 ## **(Note: all of the following commands should be run on your host machine, not inside the seed VM)**
 
 ## #. Before you start, check to see that your machine supports hardware
-##    virtualization, otherwise performance of the test environment will be poor.
+##    virtualization, otherwise performance of the test environment will be
+##    poor. The command `kvm-ok` can be used to check this.
 ##    We are currently bringing up an LXC based alternative testing story, which
 ##    will mitigate this, though the deployed instances will still be full virtual
 ##    machines and so performance will be significantly less there without
