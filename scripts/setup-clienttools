@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+
 set -eu
 
 BASE=$(readlink -f $(dirname $0)/..)
@@ -11,7 +12,7 @@ set +u
 set -u
 pip install -U python-cinderclient python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient python-ironicclient
 
-for tool in `echo cinder nova glance heat keystone neutron swift ironic`; do
+for tool in cinder nova glance heat keystone neutron swift ironic; do
   ln -sf $BASE/openstack-tools/bin/$tool $BASE/scripts/$tool ;
 done
 echo "Installed openstack client tool symlinks in $BASE/scripts"
