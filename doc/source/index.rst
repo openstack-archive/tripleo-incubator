@@ -5,6 +5,8 @@ TripleO Incubator
    :maxdepth: 1
 
    devtest
+   devtest_setup
+   devtest_ramdisk
    devtest_seed
    devtest_undercloud
    devtest_overcloud
