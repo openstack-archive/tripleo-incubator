@@ -81,7 +81,11 @@ fi
 ## Next Steps:
 ## -----------
 ## 
+## #. :doc:`devtest_variables`
+## 
 ## #. :doc:`devtest_setup`
+## 
+## #. :doc:`devtest_testenv`
 ## 
 ## #. :doc:`devtest_ramdisk`
 ## 
