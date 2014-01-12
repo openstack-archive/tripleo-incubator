@@ -103,8 +103,8 @@ fi
 #      accumulating and store it in files or something, rather than using
 #      source?
 source devtest_variables.sh
-source devtest_setup.sh $CONTINUE
-source devtest_testenv.sh $TE_DATAFILE
+devtest_setup.sh $CONTINUE
+devtest_testenv.sh $TE_DATAFILE
 devtest_ramdisk.sh
 source devtest_seed.sh
 source devtest_undercloud.sh
