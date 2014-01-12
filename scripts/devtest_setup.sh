@@ -248,4 +248,10 @@ setup-network
 ##    ::
 setup-seed-vm -a $NODE_ARCH
 
+## #. Create baremetal nodes for the test cluster. The final parameter to
+##    create-nodes is the number of VMs to create.
+
+export SEED_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 1)
+export UNDERCLOUD_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 2)
+
 ### --end
