@@ -83,7 +83,11 @@ fi
 ## Next Steps:
 ## -----------
 ## 
+## #. :doc:`devtest_variables`
+## 
 ## #. :doc:`devtest_setup`
+## 
+## #. :doc:`devtest_testenv`
 ## 
 ## #. :doc:`devtest_ramdisk`
 ## 
@@ -101,6 +105,8 @@ fi
 #      accumulating and store it in files or something, rather than using
 #      source?
 source devtest_setup.sh $CONTINUE
+source devtest_variables.sh
+source devtest_testenv.sh $TE_DATAFILE
 source devtest_ramdisk.sh
 source devtest_seed.sh
 source devtest_undercloud.sh
