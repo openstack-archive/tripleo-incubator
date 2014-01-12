@@ -99,7 +99,7 @@ fi
 #      accumulating and store it in files or something, rather than using
 #      source?
 source devtest_setup.sh $CONTINUE
-source devtest_ramdisk.sh
+devtest_ramdisk.sh
 source devtest_seed.sh
 source devtest_undercloud.sh
 source devtest_overcloud.sh
