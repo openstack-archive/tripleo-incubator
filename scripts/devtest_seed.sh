@@ -86,14 +86,12 @@ user-config
 
 setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 
-## #. Create a 'baremetal' node out of a KVM virtual machine and collect
-##    its MAC address.
+## #. Create a 'baremetal' node out of a KVM virtual machine.
 ##    Nova will PXE boot this VM as though it is physical hardware.
 ##    If you want to create the VM yourself, see footnote [#f2]_ for details on
-##    its requirements. The parameter to create-nodes is VM count.
+##    its requirements.
 ##    ::
 
-export SEED_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 1)
 setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
