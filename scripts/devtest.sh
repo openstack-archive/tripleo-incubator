@@ -107,7 +107,7 @@ fi
 source devtest_setup.sh $CONTINUE
 source devtest_variables.sh
 source devtest_testenv.sh $TE_DATAFILE
-source devtest_ramdisk.sh
+devtest_ramdisk.sh
 source devtest_seed.sh
 source devtest_undercloud.sh
 source devtest_overcloud.sh
