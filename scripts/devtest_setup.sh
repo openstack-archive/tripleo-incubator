@@ -82,6 +82,30 @@ fi
 ##       replace i386 => amd64 in all the commands below. You
 ##       will of course need amd64 capable hardware to do this.
 
+## Devtest test environment configuration
+## --------------------------------------
+
+## Devtest uses a JSON file to describe the test environment that OpenStack will
+## run within. The JSON file path is given by $TE_DATAFILE. The JSON file contains
+## the following keys:
+
+## #. host-ip: The IP address of the host which will run the seed VM using virsh.
+
+## #. seed-ip: The IP address of the seed VM (if known). If not known, it is
+##    looked up locally in the ARP table.
+
+## #. ssh-key: The private part of an SSH key to be used when performing virsh
+##    commands on $host-ip.
+
+## #. ssh-user: The SSH username to use when performing virsh commands on
+##    $host-ip.
+
+## #. node-macs: A space separated string containing the MAC addresses of eth0 of
+##    each of the emulated bare metal VMs.
+
+## XXX: We're currently migrating to that structure - some code still uses
+##      environment variables instead.
+
 ## Detailed instructions
 ## ---------------------
 
