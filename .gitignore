@@ -17,6 +17,7 @@ scripts/ironic
 scripts/keystone
 scripts/nova
 scripts/neutron
+scripts/os-apply-config
 scripts/swift
 stackrc
 
