@@ -21,6 +21,7 @@ scripts/os-apply-config
 scripts/swift
 stackrc
 
+testenv.json
 tripleo-passwords
 tripleorc
 
