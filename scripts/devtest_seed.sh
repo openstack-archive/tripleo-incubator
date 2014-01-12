@@ -92,6 +92,7 @@ setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 ##    its requirements.
 ##    ::
 
+SEED_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | awk '{ print $1 }')
 setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.

@@ -175,21 +175,4 @@ if [ "$USE_CACHE" == "0" ] ; then #nodocs
     pull-tools
 fi #nodocs
 
-## #. Configure a network for your test environment.
-##    This configures an openvswitch bridge and teaches libvirt about it.
-##    ::
-setup-network
-
-## #. Configure a seed VM. This VM has a disk image manually configured by
-##    later scripts, and hosts the statically configured seed which is used
-##    to bootstrap a full dynamically configured baremetal cloud.
-##    ::
-setup-seed-vm -a $NODE_ARCH
-
-## #. Create baremetal nodes for the test cluster. The final parameter to
-##    create-nodes is the number of VMs to create.
-
-export SEED_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 1)
-export UNDERCLOUD_MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 2)
-
 ### --end
