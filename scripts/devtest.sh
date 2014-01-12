@@ -104,9 +104,9 @@ fi
 #FIXME: This is a little weird. Perhaps we should identify whatever state we're
 #      accumulating and store it in files or something, rather than using
 #      source?
-source $(dirname $0)/devtest_setup.sh $CONTINUE
-source devtest_variables.sh
-source devtest_testenv.sh $TE_DATAFILE
+source $(dirname $0)/devtest_variables.sh
+$(dirname $0)/devtest_setup.sh $CONTINUE
+devtest_testenv.sh $TE_DATAFILE
 devtest_ramdisk.sh
 source devtest_seed.sh
 source devtest_undercloud.sh
