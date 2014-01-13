@@ -37,9 +37,9 @@ fi #nodocs
 ##    you can log into it with 'ssh stack@192.0.2.1'.
 ## 
 ##    The IP address of the VM is printed out at the end of boot-seed-vm, or
-##    you can use the get-vm-ip script::
+##    you can query the testenv json which is updated by boot-seed-vm::
 
-export SEED_IP=`get-vm-ip seed`
+SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type netaddress)
 
 ## #. Add a route to the baremetal bridge via the seed node (we do this so that
 ##    your host is isolated from the networking of the test environment.
