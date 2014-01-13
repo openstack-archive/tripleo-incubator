@@ -16,6 +16,7 @@
 # under the License.
 
 set -e
+set -o pipefail
 
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
@@ -41,6 +42,11 @@ function show_options () {
     echo "the local operating environment."
     echo "See ../scripts/devtest.sh"
     echo
+    echo "The environment variable TE_DATAFILE must be set, pointing at a test"
+    echo "environment JSON file. If seed-ip is present in the JSON then that is"
+    echo "used for the VM IP address, otherwise it is discovered by probing the"
+    echo "ARP table and then saved back into the JSON file."
+    echo 
     echo "Options:"
     echo "      -a i386|amd64     -- set the architecture of the VM (i386)"
     echo "      -o name           -- set the name of the VM and image file"
@@ -49,9 +55,6 @@ function show_options () {
     echo "      -c                -- use a image cache for seed image"
     echo "      -i                -- image file was built elsewhere, don't"
     echo "                           create"
-    echo "      --ip IP           -- set the IP address the seed will start on,"
-    echo "                           this is useful for remote VM's where MAC probing"
-    echo "                           would fail"
     echo "      -r VM_HOST        -- Use a VM on a remote host. This causes the image to"
     echo "                           be copied to that host via rsync, and a remote virsh"
     echo "                           URI to be used. VM_HOST can be an ssh [user@]host."
@@ -60,7 +63,7 @@ function show_options () {
     echo "                           the ability to run virsh as the selected user are"
     echo "                           requirements"
     echo
-    exit 0
+    exit $1
 }
 
 TEMP=`getopt -o hcia:o:r:s: -l ip: -n $SCRIPT_NAME -- "$@"`
@@ -74,10 +77,9 @@ while true ; do
         -a) export ARCH=$2; shift 2 ;;
         -o) export IMAGE_NAME=$2; shift 2 ;;
         -s) export DIB_IMAGE_SIZE=$2; shift 2 ;;
-        -h) show_options;;
+        -h) show_options 0;;
         -c) export IMAGE_CACHE_USE=1; shift ;;
         -i) export CREATE_IMAGE=; shift ;;
-        --ip) export VM_IP=$2; shift 2 ;;
         -r) export VM_HOST=$2; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -93,6 +95,11 @@ case $ARCH in
     amd64) SEED_ARCH='x86_64'; ;;
     *) echo "Unsupported arch $ARCH!" ; exit 1 ;;
 esac
+
+if [ -z "$TE_DATAFILE" ]; then
+    echo "Error: TE_DATAFILE not set."
+    show_options 1
+fi
 
 if [ $CREATE_IMAGE  ]; then
 
@@ -146,6 +153,7 @@ if [ -n "$VM_HOST" ]; then
   export VIRSH_DEFAULT_CONNECT_URI=qemu+ssh://${VM_HOST}/system
   export LIBVIRT_DEFAULT_URI=qemu+ssh://${VM_HOST}/system
   virsh start $IMAGE_NAME
+  VM_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type raw --key-default '')
 else
   sudo virsh start $IMAGE_NAME
 fi
@@ -179,4 +187,5 @@ echo "element(s): $ALWAYS_ELEMENTS $EXTRA_ELEMENTS booted and ready."
 echo "SEED_IP=$VM_IP"
 echo
 echo "to login:   ssh root@$VM_IP"
-export VM_IP
+NEW_JSON=$(jq '.["seed-ip"]="'${VM_IP}'"' $TE_DATAFILE)
+echo $NEW_JSON > $TE_DATAFILE
