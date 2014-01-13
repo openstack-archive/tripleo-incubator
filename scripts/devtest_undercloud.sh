@@ -56,16 +56,14 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
 ## #. Get the undercloud IP from 'nova list'
 ##    ::
 
-echo "Waiting for seed nova to configure undercloud node..." #nodocs
-wait_for 60 10 "nova list | grep ctlplane" #nodocs
+echo "Waiting for the undercloud stack to be ready" #nodocs
+wait_for 220 10 stack-ready undercloud
 export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
-echo "Waiting for undercloud node to configure br-ctlplane..." #nodocs
-wait_for 60 10 "echo | nc -w 1 $UNDERCLOUD_IP 22" #nodocs
-ssh-keygen -R $UNDERCLOUD_IP
+## #. We don't (yet) preserve ssh keys on rebuilds.
+##    ::
 
-echo "Waiting for cloud-init to configure/restart sshd"  #nodocs
-wait_for 10 5 ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no -t heat-admin@$UNDERCLOUD_IP  echo "" #nodocs
+ssh-keygen -R $UNDERCLOUD_IP
 
 ## #. Source the undercloud configuration:
 ##    ::
@@ -90,8 +88,6 @@ setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --nova-password $UNDERCLOUD_NOVA_PASSWORD
 keystone role-create --name heat_stack_user
 
-echo "Waiting for nova to initialise..."
-wait_for 30 10 nova list
 user-config
 
 setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplane
