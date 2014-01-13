@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+1: Joe Gordon <joe.gordon0@gmail.com>
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Approved+1: Clint "SpamapS" Byrum <clint@ubuntu.com>
+Code-Review+2: Clint "SpamapS" Byrum <clint@ubuntu.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 13 Jan 2014 22:32:56 +0000
+Reviewed-on: https://review.openstack.org/66113
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
