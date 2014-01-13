@@ -100,6 +100,10 @@ fi
 ## #. node-macs: A space separated string containing the MAC addresses of eth0 of
 ##    each of the emulated bare metal VMs.
 
+## #. seed-route-dev: What device to route traffic for the initial undercloud
+##    network. As our test network is unrouteable we require an explicit device
+##    to avoid accidentally routing it onto live networks. Defaults to virbr0.
+
 ## XXX: We're currently migrating to that structure - some code still uses
 ##      environment variables instead.
 
