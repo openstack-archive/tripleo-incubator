@@ -35,6 +35,7 @@ function show_options () {
     echo "    --cinder-password       -- Specify a password for cinder."
     echo "    --glance-password       -- Specify a password for glance."
     echo "    --heat-password         -- Specify a password for heat."
+    echo "    --ironic-password       -- Specify a password for ironic."
     echo "    --neutron-password      -- Specify a password for neutron."
     echo "    --nova-password         -- Specify a password for nova."
     echo "    --swift-password        -- Specify a password for swift"
@@ -50,13 +51,14 @@ CEILOMETER_PASSWORD=""
 CINDER_PASSWORD=""
 GLANCE_PASSWORD=""
 HEAT_PASSWORD=""
+IRONIC_PASSWORD=""
 NEUTRON_PASSWORD=""
 NOVA_PASSWORD=""
 SWIFT_PASSWORD=""
 ENABLE_HORIZON=""
 REGION="regionOne" #NB: This is the keystone default.
 
-TEMP=`getopt -o r: -l region:,debug,ceilometer-password:,cinder-password:,glance-password:,heat-password:,neutron-password:,nova-password:,swift-password:,enable-horizon -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o r: -l region:,debug,ceilometer-password:,cinder-password:,glance-password:,heat-password:,ironic-password:,neutron-password:,nova-password:,swift-password:,enable-horizon -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -70,6 +72,7 @@ while true ; do
         --cinder-password) export CINDER_PASSWORD=$2; shift 2 ;;
         --glance-password) export GLANCE_PASSWORD=$2; shift 2 ;;
         --heat-password) export HEAT_PASSWORD=$2; shift 2 ;;
+        --ironic-password) export IRONIC_PASSWORD=$2; shift 2 ;;
         --neutron-password) export NEUTRON_PASSWORD=$2; shift 2 ;;
         --nova-password) export NOVA_PASSWORD=$2; shift 2 ;;
         --swift-password) export SWIFT_PASSWORD=$2; shift 2 ;;
@@ -87,6 +90,7 @@ if [ -z "$HOST" -o -n "$EXTRA" ]; then
     show_options 1
 fi
 
+PASSWORD=$IRONIC_PASSWORD register-endpoint $DEBUG -r $REGION -d "Ironic Service" ironic baremetal http://$HOST:6385
 PASSWORD=$HEAT_PASSWORD register-endpoint $DEBUG -r $REGION -d "Heat Service" heat orchestration http://$HOST:8004
 PASSWORD=$NEUTRON_PASSWORD register-endpoint $DEBUG -r $REGION -d "Neutron Service" neutron network http://$HOST:9696
 PASSWORD=$GLANCE_PASSWORD register-endpoint $DEBUG -r $REGION -d "Glance Image Service" glance image http://$HOST:9292
