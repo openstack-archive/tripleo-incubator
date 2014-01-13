@@ -31,7 +31,6 @@ export DIB_IMAGE_SIZE=30
 CREATE_IMAGE=yes
 ALWAYS_ELEMENTS="vm local-config boot-stack nova-baremetal seed-stack-config remove-serial-console $DIB_COMMON_ELEMENTS"
 EXTRA_ELEMENTS=${EXTRA_ELEMENTS:-cloud-init-nocloud}
-VM_HOST=""
 export VM_IP=""
 
 function show_options () {
@@ -46,6 +45,14 @@ function show_options () {
     echo "environment JSON file. If seed-ip is present in the JSON then that is"
     echo "used for the VM IP address, otherwise it is discovered by probing the"
     echo "ARP table and then saved back into the JSON file."
+    echo
+    echo "If host-ip (and possibly ssh-user) is set in the JSON then those details"
+    echo "are used to construct a remote libvirt URL and spawn the VM remotely."
+    echo "Note that seed-ip *must* be present when doing this. When spawning remotely"
+    echo "the image is copied to that host via rsync, and a remote virsh URI is used."
+    echo "However SSH access with rsync write access to /var/lib/libvirt/images/,"
+    echo "permission to chattr, and the ability to run virsh as the selected user are"
+    echo "requirements."
     echo 
     echo "Options:"
     echo "      -a i386|amd64     -- set the architecture of the VM (i386)"
@@ -55,13 +62,6 @@ function show_options () {
     echo "      -c                -- use a image cache for seed image"
     echo "      -i                -- image file was built elsewhere, don't"
     echo "                           create"
-    echo "      -r VM_HOST        -- Use a VM on a remote host. This causes the image to"
-    echo "                           be copied to that host via rsync, and a remote virsh"
-    echo "                           URI to be used. VM_HOST can be an ssh [user@]host."
-    echo "                           However SSH access with rsync write access to"
-    echo "                           /var/lib/libvirt/images/, permission to chattr, and "
-    echo "                           the ability to run virsh as the selected user are"
-    echo "                           requirements"
     echo
     exit $1
 }
@@ -80,7 +80,6 @@ while true ; do
         -h) show_options 0;;
         -c) export IMAGE_CACHE_USE=1; shift ;;
         -i) export CREATE_IMAGE=; shift ;;
-        -r) export VM_HOST=$2; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -99,6 +98,16 @@ esac
 if [ -z "$TE_DATAFILE" ]; then
     echo "Error: TE_DATAFILE not set."
     show_options 1
+fi
+
+HOST_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key host-ip --type netaddress --key-default '')
+if [ -n "$HOST_IP" ]; then
+  SSH_USER=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default '')
+  if [ -n "$SSH_USER" ]; then
+    SSH_USER="${SSH_USER}@"
+  fi
+  VM_HOST=${SSH_USER}${HOST_IP}
+  echo $VM_HOST
 fi
 
 if [ $CREATE_IMAGE  ]; then
