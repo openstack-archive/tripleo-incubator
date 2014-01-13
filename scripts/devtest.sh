@@ -14,21 +14,27 @@ function show_options () {
     echo "Test the core TripleO story."
     echo
     echo "Options:"
-    echo "    --trash-my-machine -- make nontrivial destructive changes to the machine."
-    echo "                          For details read the source."
-    echo "    -c                 -- re-use existing source/images if they exist."
+    echo "    --trash-my-machine     -- make nontrivial destructive changes to the machine."
+    echo "                              For details read the source."
+    echo "    -c                     -- re-use existing source/images if they exist."
+    echo "    --existing-environment -- use an existing test environment. The JSON file"
+    echo "                              for it may be overridden via the TE_DATAFILE"
+    echo "                              environment variable."
     echo
-    echo "Note that this script just chains devtest_setup, devtest_seed, devtest_ramdisk"
-    echo "devtest_undercloud, devtest_overcloud, devtest_end. If you want to run less"
-    echo "than all of them just source each step in order after sourcing ~/.devtestrc."
+    echo "Note that this script just chains devtest_variables, devtest_setup,"
+    echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
+    echo "devtest_overcloud, devtest_end. If you want to run less than all of them just"
+    echo "run the steps you want in order after sourcing ~/.devtestrc and"
+    echo "devtest_variables.sh"
     echo
     exit $1
 }
 
 CONTINUE=
 USE_CACHE=0
+RESET_TESTENV=1
 
-TEMP=`getopt -o h,c -l trash-my-machine -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o h,c -l existing-environment,trash-my-machine -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -37,6 +43,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
+        --existing-environment) RESET_TESTENV=; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
@@ -106,7 +113,9 @@ fi
 #      source?
 source devtest_variables.sh
 devtest_setup.sh $CONTINUE
+if [ -n "RESET_TESTENV" ]; then #nodocs
 devtest_testenv.sh $TE_DATAFILE
+fi #nodocs
 devtest_ramdisk.sh
 source devtest_seed.sh
 source devtest_undercloud.sh
