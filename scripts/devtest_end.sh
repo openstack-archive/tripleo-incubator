@@ -14,6 +14,9 @@ write-tripleorc --overwrite
 
 ## #. If you need to recover the environment, you can source tripleorc.
 ##    ::
+## 
+##      source tripleorc
+## 
 
 echo "devtest.sh completed." #nodocs
 echo source tripleorc to restore all values #nodocs

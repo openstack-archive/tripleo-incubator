@@ -15,11 +15,13 @@ set -o pipefail
 ##    issues (please see https://bugs.launchpad.net/diskimage-builder/+bug/1240933).
 ##    If stability is preferred over speed, use `deploy` image element (default).
 ##    ::
+
 DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy}
 
 ## #. Create a deployment ramdisk + kernel. These are used by the seed cloud and
 ##    the undercloud for deployment to bare metal.
 ##    ::
+
 ### --end
 if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
      ! -e $TRIPLEO_ROOT/deploy-ramdisk.initramfs -o \

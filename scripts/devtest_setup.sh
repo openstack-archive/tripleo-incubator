@@ -128,12 +128,14 @@ fi
 ##    connections from virbr0 -  VirtPowerManager will boot VMs by sshing into the
 ##    host machine and issuing libvirt/virsh commands. The user these instructions
 ##    use is your own, but you can also setup a dedicated user if you choose.
+##    ::
 
 mkdir -p $TRIPLEO_ROOT
 cd $TRIPLEO_ROOT
 
 ## #. git clone this repository to your local machine.
 ##    ::
+
 ### --end
 if [ "$USE_CACHE" == "0" ] ; then
   if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then
@@ -154,6 +156,7 @@ fi
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
 ##    ::
+
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
     install-dependencies
 fi #nodocs
@@ -161,7 +164,9 @@ fi #nodocs
 ## #. Run cleanup-env to ensure VM's and storage pools from previous devtest
 ##    runs are removed.
 ##    ::
+## 
 ##         cleanup-env
+
 ### --end
 if [ "${TRIPLEO_CLEANUP:-1}" = "1"  ]; then
     echo "Cleaning up vm's/storage from previous devtest runs"
@@ -171,8 +176,70 @@ fi
 
 ## #. Clone/update the other needed tools which are not available as packages.
 ##    ::
+
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
     pull-tools
 fi #nodocs
 
 ### --end
+
+### --include
+
+## .. rubric:: Footnotes
+## .. [#f3] Setting Up Squid Proxy
+## 
+##    * Install squid proxy
+##      ::
+## 
+##          apt-get install squid
+## 
+##    * Set `/etc/squid3/squid.conf` to the following
+##      ::
+## 
+##          acl localhost src 127.0.0.1/32 ::1
+##          acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
+##          acl localnet src 10.0.0.0/8 # RFC1918 possible internal network
+##          acl localnet src 172.16.0.0/12  # RFC1918 possible internal network
+##          acl localnet src 192.168.0.0/16 # RFC1918 possible internal network
+##          acl SSL_ports port 443
+##          acl Safe_ports port 80      # http
+##          acl Safe_ports port 21      # ftp
+##          acl Safe_ports port 443     # https
+##          acl Safe_ports port 70      # gopher
+##          acl Safe_ports port 210     # wais
+##          acl Safe_ports port 1025-65535  # unregistered ports
+##          acl Safe_ports port 280     # http-mgmt
+##          acl Safe_ports port 488     # gss-http
+##          acl Safe_ports port 591     # filemaker
+##          acl Safe_ports port 777     # multiling http
+##          acl CONNECT method CONNECT
+##          http_access allow manager localhost
+##          http_access deny manager
+##          http_access deny !Safe_ports
+##          http_access deny CONNECT !SSL_ports
+##          http_access allow localnet
+##          http_access allow localhost
+##          http_access deny all
+##          http_port 3128
+##          cache_dir aufs /var/spool/squid3 5000 24 256
+##          maximum_object_size 1024 MB
+##          coredump_dir /var/spool/squid3
+##          refresh_pattern ^ftp:       1440    20% 10080
+##          refresh_pattern ^gopher:    1440    0%  1440
+##          refresh_pattern -i (/cgi-bin/|\?) 0 0%  0
+##          refresh_pattern (Release|Packages(.gz)*)$      0       20%     2880
+##          refresh_pattern .       0   20% 4320
+##          refresh_all_ims on
+## 
+##    * Restart squid
+##      ::
+## 
+##          sudo service squid3 restart
+## 
+##    * Set http_proxy environment variable
+##      ::
+## 
+##          http_proxy=http://your_ip_or_localhost:3128/
+## 
+## 
+### --end 
