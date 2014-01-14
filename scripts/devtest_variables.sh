@@ -3,6 +3,9 @@
 # Variable definition for devtest.
 
 ### --include
+## devtest_variables
+## =================
+
 ## #. The devtest scripts require access to the libvirt system URI.
 ##    If running against a different libvirt URI you may encounter errors.
 ##    Export LIBVIRT_DEFAULT_URI to prevent devtest using qemu:///system
@@ -24,6 +27,7 @@ export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
 ## #. Choose a base location to put all of the source code.
 ##    ::
+## 
 ##         # exports are ephemeral - new shell sessions, or reboots, and you need
 ##         # to redo them, or use $TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc
 ##         # and then source the generated tripleorc file.
@@ -44,6 +48,7 @@ export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 ##    hardware with the devtest scripts. This setting controls the
 ##    power manager used in both the seed VM and undercloud.
 ##    ::
+
 export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
 
 ## #. Set a list of image elements that should be included in all image builds.
@@ -51,6 +56,7 @@ export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.
 ##    a production network. This is also the place to include elements such as
 ##    pip-cache or pypi-openstack if you intend to use them.
 ##    ::
+
 export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
 
 ## #. Set HW resources for VMs used as 'baremetal' nodes. NODE_CPU is cpu count,
@@ -63,37 +69,43 @@ export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
 ##    are nova baremetal nodes (seed an undercloud) and these need to be 2G or
 ##    larger. The hypervisor host in the overcloud also needs to be a decent size
 ##    or it cannot host more than one VM.
-##
-##    32bit VMs::
-##
+## 
+##    32bit VMs
+##    ::
+## 
 ##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=i386
+## 
 export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-20} NODE_ARCH=${NODE_ARCH:-i386} #nodocs
 
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint::
-##
+## 
 ##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=amd64
-##
+## 
 
 ## #. Set distribution used for VMs (fedora, ubuntu).
 ##    ::
-##
+## 
 ##         export NODE_DIST=ubuntu
-##
+## 
 ##    for Fedora set SELinux permissive mode.
 ##    ::
-##
+## 
 ##         export NODE_DIST="fedora selinux-permissive"
-source $(dirname $0)/set-os-type
-export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
+## 
+
+source $(dirname $0)/set-os-type #nodocs
+export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"} #nodocs
 
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
+
 export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
 
 ## #. Set the datafile to use to describe the 'hardware' in the devtest
 ##    environment. If this file already exists, you should skip running
-##    devtest_testenv.sh as it writes to the file::
+##    devtest_testenv.sh as it writes to the file
+##    ::
 
 export TE_DATAFILE=${TE_DATAFILE:-"$TRIPLEO_ROOT/testenv.json"}
 

@@ -40,16 +40,20 @@ if [ -z "$JSONFILE" -o -n "$EXTRA_ARGS" ]; then
 fi
 
 ### --include
+## devtest_testenv
+## ===============
 
 ## #. Configure a network for your test environment.
 ##    This configures an openvswitch bridge and teaches libvirt about it.
 ##    ::
+
 setup-network
 
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
 ##    to bootstrap a full dynamically configured baremetal cloud.
 ##    ::
+
 setup-seed-vm -a $NODE_ARCH
 
 ## #. Create baremetal nodes for the test cluster. The final parameter to
@@ -57,15 +61,18 @@ setup-seed-vm -a $NODE_ARCH
 ##    you can either run clean-env and then recreate with more nodes, or
 ##    use create-nodes to make more nodes then add their macs to your
 ##    testenv.json.
+##    ::
 
 export MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 3 | tr '\r\n' ' ')
 
 ## #. What IP address to ssh to for virsh operations.
+##    ::
 
 export HOSTIP=${HOSTIP:-192.168.122.1}
 
 ## #. If a static SEEDIP is in use, define it here. If not defined it will be
 ##    looked up in the ARP table by the seed MAC address during seed deployment.
+##    ::
 
 export SEEDIP=${SEEDIP:-''}
 
