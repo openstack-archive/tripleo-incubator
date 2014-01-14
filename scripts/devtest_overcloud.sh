@@ -18,6 +18,7 @@ FLOATING_END=${6:-${FLOATING_END:-'192.0.2.64'}}
 FLOATING_CIDR=${7:-${FLOATING_CIDR:-'192.0.2.0/24'}}
 ADMIN_USERS=${8:-${ADMIN_USERS:-''}}
 USERS=${9:-${USERS:-''}}
+STACKNAME=${10:-overcloud}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 # This will stop being a parameter once rebuild --preserve-ephemeral is fully
@@ -86,7 +87,7 @@ NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
 ### --end
 
-if heat stack-show overcloud > /dev/null; then
+if heat stack-show $STACKNAME > /dev/null; then
     HEAT_OP=stack-update
 else
     HEAT_OP=stack-create
@@ -108,7 +109,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
 
 heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE};ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY};notcomputeImage=${OVERCLOUD_CONTROL_ID};NovaImage=${OVERCLOUD_COMPUTE_ID}" \
-    overcloud
+    $STACKNAME
 
 ### --include
 
@@ -128,7 +129,8 @@ fi #nodocs
 ##    ::
 
 echo "Waiting for the overcloud stack to be ready" #nodocs
-wait_for 220 10 stack-ready overcloud
+wait_for 220 10 stack-ready $STACKNAME #nodocs
+##         wait_for 220 10 stack-ready $STACKNAME
 export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
@@ -201,7 +203,8 @@ wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'ena
 ## #. Wait for L2 Agent On Nova Compute
 ##    ::
 
-wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep '":-).*Open vSwitch agent.*overcloud-novacompute"'
+wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*$STACKNAME-novacompute\"" #nodocs
+##         wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*$STACKNAME-novacompute\""
 
 ## #. Log in as a user.
 ##    ::
