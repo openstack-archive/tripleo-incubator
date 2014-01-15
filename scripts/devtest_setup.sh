@@ -22,7 +22,7 @@ function show_options () {
 }
 
 CONTINUE=0
-USE_CACHE=${USE_CACHE:-0}
+USE_CACHE=0
 
 TEMP=`getopt -o h,c -l trash-my-machine -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
