@@ -76,6 +76,6 @@ export HOSTIP=${HOSTIP:-192.168.122.1}
 
 export SEEDIP=${SEEDIP:-''}
 
-echo "{\"host-ip\":\"$HOSTIP\", \"seed-ip\":\"$SEEDIP\", \"node-macs\":\"$MACS\"}" > $JSONFILE
+echo "{\"host-ip\":\"$HOSTIP\", \"seed-ip\":\"$SEEDIP\", \"node-macs\":\"$MACS\"}" > ${JSONFILE:-$TE_DATAFILE}
 
 ### --end
