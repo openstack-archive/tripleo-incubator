@@ -76,6 +76,12 @@ export HOSTIP=${HOSTIP:-192.168.122.1}
 
 export SEEDIP=${SEEDIP:-''}
 
+## #. When run as a script, JSONFILE is set from a script parameter.  For manual
+##    runs use TE_DATAFILE.
+##    ::
+
+JSONFILE=${JSONFILE:-$TE_DATAFILE}
+
 echo "{\"host-ip\":\"$HOSTIP\", \"seed-ip\":\"$SEEDIP\", \"node-macs\":\"$MACS\"}" > $JSONFILE
 
 ### --end
