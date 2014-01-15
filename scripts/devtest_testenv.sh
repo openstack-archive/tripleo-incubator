@@ -14,6 +14,8 @@ function show_options () {
     echo "Setup a TripleO devtest environment."
     echo
     echo "JSON-filename -- the path to write the environment description to."
+    echo "The path may also be specified in an environment variable named"
+    echo "TE_DATAFILE."
     echo
     exit $1
 }
@@ -32,10 +34,10 @@ while true ; do
     esac
 done
 
-JSONFILE=${1:-''}
+TE_DATAFILE=${1:-${TE_DATAFILE:-''}}
 EXTRA_ARGS=${2:-''}
 
-if [ -z "$JSONFILE" -o -n "$EXTRA_ARGS" ]; then
+if [ -z "$TE_DATAFILE" -o -n "$EXTRA_ARGS" ]; then
     show_options 1
 fi
 
@@ -76,6 +78,6 @@ export HOSTIP=${HOSTIP:-192.168.122.1}
 
 export SEEDIP=${SEEDIP:-''}
 
-echo "{\"host-ip\":\"$HOSTIP\", \"seed-ip\":\"$SEEDIP\", \"node-macs\":\"$MACS\"}" > $JSONFILE
+echo "{\"host-ip\":\"$HOSTIP\", \"seed-ip\":\"$SEEDIP\", \"node-macs\":\"$MACS\"}" > $TE_DATAFILE
 
 ### --end
