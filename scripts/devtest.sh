@@ -113,7 +113,7 @@ fi
 #      source?
 source $(dirname $0)/devtest_variables.sh
 $(dirname $0)/devtest_setup.sh $CONTINUE
-if [ -n "RESET_TESTENV" ]; then #nodocs
+if [ -n "$RESET_TESTENV" ]; then #nodocs
 devtest_testenv.sh $TE_DATAFILE
 fi #nodocs
 devtest_ramdisk.sh
