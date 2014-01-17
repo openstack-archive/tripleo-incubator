@@ -41,8 +41,11 @@ function show_options () {
     echo "    --swift-password        -- Specify a password for swift"
     echo "    --enable-horizon        -- Enable horizon"
     echo "    --debug                 -- Debug the API calls made."
+    echo "    --ssl                   -- Use SSL public endpoints. Takes the hostname to"
+    echo "                               use for the public endpoints."
     echo
     echo "For instance: $SCRIPT_NAME 192.0.2.1"
+    echo "For instance(ssl): $SCRIPT_NAME --ssl mysite.org 192.0.2.1"
     exit $1
 }
 
@@ -56,9 +59,10 @@ NEUTRON_PASSWORD=""
 NOVA_PASSWORD=""
 SWIFT_PASSWORD=""
 ENABLE_HORIZON=""
+SSL=""
 REGION="regionOne" #NB: This is the keystone default.
 
-TEMP=`getopt -o r: -l region:,debug,ceilometer-password:,cinder-password:,glance-password:,heat-password:,ironic-password:,neutron-password:,nova-password:,swift-password:,enable-horizon -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o r: -l region:,debug,ceilometer-password:,cinder-password:,glance-password:,heat-password:,ironic-password:,neutron-password:,nova-password:,swift-password:,enable-horizon,ssl: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -77,6 +81,7 @@ while true ; do
         --nova-password) export NOVA_PASSWORD=$2; shift 2 ;;
         --swift-password) export SWIFT_PASSWORD=$2; shift 2 ;;
         --enable-horizon) export ENABLE_HORIZON=--enable-horizon; shift 1;;
+	--ssl) export SSL=$2; shift 2 ;;
         -h) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -90,24 +95,61 @@ if [ -z "$HOST" -o -n "$EXTRA" ]; then
     show_options 1
 fi
 
-PASSWORD=$HEAT_PASSWORD register-endpoint $DEBUG -r $REGION -d "Heat Service" heat orchestration http://$HOST:8004
-PASSWORD=$NEUTRON_PASSWORD register-endpoint $DEBUG -r $REGION -d "Neutron Service" neutron network http://$HOST:9696
-PASSWORD=$GLANCE_PASSWORD register-endpoint $DEBUG -r $REGION -d "Glance Image Service" glance image http://$HOST:9292
-register-endpoint $DEBUG -r $REGION -d "EC2 Compatibility Layer" ec2 ec2 http://$HOST:8773
-PASSWORD=$NOVA_PASSWORD register-endpoint $DEBUG -r $REGION -d "Nova Compute Service" nova compute http://$HOST:8774
-PASSWORD=$NOVA_PASSWORD register-endpoint $DEBUG -r $REGION -d "Nova Compute Service v3" nova computev3 http://$HOST:8774
+INTERNAL_HOST=http://${HOST}:
+
+if [ -n "$SSL" ]; then
+    PUBLIC_HOST=https://${SSL}:
+else
+    PUBLIC_HOST=$INTERNAL_HOST
+fi
+
+# Skip Heat for now... see heat bug https://launchpad.net/bugs/1235555
+NORMAL_PORT=8004
+SSL_PORT=8004
+PASSWORD=$HEAT_PASSWORD register-endpoint $DEBUG -r $REGION -d "Heat Service" heat orchestration -i ${INTERNAL_HOST}${NORMAL_PORT} ${INTERNAL_HOST}${SSL_PORT}
+
+NORMAL_PORT=9696
+SSL_PORT=${SSL:+13696}
+SSL_PORT=${SSL_PORT:-$NORMAL_PORT}
+PASSWORD=$NEUTRON_PASSWORD register-endpoint $DEBUG -r $REGION -d "Neutron Service" neutron network -i ${INTERNAL_HOST}{$NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
+
+NORMAL_PORT=9292
+SSL_PORT=${SSL:+13292}
+SSL_PORT=${SSL_PORT:-$NORMAL_PORT}
+PASSWORD=$GLANCE_PASSWORD register-endpoint $DEBUG -r $REGION -d "Glance Image Service" glance image -i ${INTERNAL_HOST}${NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
+
+NORMAL_PORT=8773
+SSL_PORT=${SSL:+13773}
+SSL_PORT=${SSL_PORT:-$NORMAL_PORT}
+register-endpoint $DEBUG -r $REGION -d "EC2 Compatibility Layer" ec2 ec2 -i ${INTERNAL_HOST}{$NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
+
+NORMAL_PORT=8774
+SSL_PORT=${SSL:+13774}
+SSL_PORT=${SSL_PORT:-$NORMAL_PORT}
+PASSWORD=$NOVA_PASSWORD register-endpoint $DEBUG -r $REGION -d "Nova Compute Service" nova compute -i ${INTERNAL_HOST}${NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
+PASSWORD=$NOVA_PASSWORD register-endpoint $DEBUG -r $REGION -d "Nova Compute Service v3" nova computev3 -i ${INTERNAL_HOST}${NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
+
 if [ -n "$CEILOMETER_PASSWORD" ]; then
+# XXX: SSL not wired up yet.
   PASSWORD=$CEILOMETER_PASSWORD register-endpoint $DEBUG -r $REGION -d "Ceilometer Service" ceilometer metering http://$HOST:8777
 fi
 if [ -n "$CINDER_PASSWORD" ]; then
-  PASSWORD=$CINDER_PASSWORD register-endpoint $DEBUG -r $REGION -d "Cinder Volume Service" cinder volume http://$HOST:8776
+  NORMAL_PORT=8776
+  SSL_PORT=${SSL:+13776}
+  SSL_PORT=${SSL_PORT:-$NORMAL_PORT}
+  PASSWORD=$CINDER_PASSWORD register-endpoint $DEBUG -r $REGION -d "Cinder Volume Service" cinder volume -i ${INTERNAL_HOST}${NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
 fi
 if [ -n "$SWIFT_PASSWORD" ]; then
-  PASSWORD=$SWIFT_PASSWORD register-endpoint $DEBUG -r $REGION -d "Swift Object Storage Service" swift object-store http://$HOST:8080
+  NORMAL_PORT=8080
+  SSL_PORT=${SSL:+13080}
+  SSL_PORT=${SSL_PORT:-$NORMAL_PORT}
+  PASSWORD=$SWIFT_PASSWORD register-endpoint $DEBUG -r $REGION -d "Swift Object Storage Service" swift object-store -i ${INTERNAL_HOST}${NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
 fi
 if [ -n "$ENABLE_HORIZON" ]; then
-    register-endpoint $DEBUG -r $REGION -d "OpenStack Dashboard" horizon dashboard http://$HOST
+    # XXX: SSL not wired up yet.
+    register-endpoint $DEBUG -r $REGION -d "OpenStack Dashboard" horizon dashboard -i ${INTERNAL_HOST} ${INTERNAL_HOST}
 fi
 if [ -n "$IRONIC_PASSWORD" ]; then
+  # XXX: SSL not wired up yet.
   PASSWORD=$IRONIC_PASSWORD register-endpoint $DEBUG -r $REGION -d "Ironic Service" ironic baremetal http://$HOST:6385
 fi
