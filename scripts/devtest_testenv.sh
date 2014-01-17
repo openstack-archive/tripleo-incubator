@@ -76,6 +76,12 @@ export HOSTIP=${HOSTIP:-192.168.122.1}
 
 export SEEDIP=${SEEDIP:-''}
 
+## #. Whether to operate on the local machine only, or perform remote
+##    operations when starting VMs and copying disk images.
+##    ::
+
+export REMOTE_OPERATION=
+
 echo "{\"host-ip\":\"$HOSTIP\", \"seed-ip\":\"$SEEDIP\", \"node-macs\":\"$MACS\"}" > $JSONFILE
 
 ### --end

@@ -101,6 +101,7 @@ if [ -z "$TE_DATAFILE" ]; then
 fi
 
 HOST_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key host-ip --type netaddress --key-default '')
+REMOTE_OPERATIONS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key remote-operations --type raw --key-default '')
 if [ -n "$HOST_IP" ]; then
   SSH_USER=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default '')
   if [ -n "$SSH_USER" ]; then
@@ -137,7 +138,7 @@ if [ $CREATE_IMAGE  ]; then
         echo "Using cached seed image : $IMAGE_CACHE_FILE"
     fi
 
-    if [ -n "$VM_HOST" ]; then
+    if [ -n "$REMOTE_OPERATIONS" ]; then
       rsync $IMAGE_CACHE_FILE.qcow2 ${VM_HOST}:/var/lib/libvirt/images/$IMAGE_NAME.qcow2
       ssh ${VM_HOST} chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
     else
@@ -157,7 +158,7 @@ function poll_vm {
 }
 export -f poll_vm
 
-if [ -n "$VM_HOST" ]; then
+if [ -n "$REMOTE_OPERATIONS" ]; then
   # Different libvirts seem to use different URIs. Yay.
   export VIRSH_DEFAULT_CONNECT_URI=qemu+ssh://${VM_HOST}/system
   export LIBVIRT_DEFAULT_URI=qemu+ssh://${VM_HOST}/system
