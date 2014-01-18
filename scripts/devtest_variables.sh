@@ -94,7 +94,7 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 ##         export NODE_DIST="fedora selinux-permissive"
 ## 
 
-source $(dirname $0)/set-os-type #nodocs
+source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
 export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"} #nodocs
 
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
