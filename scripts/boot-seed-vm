@@ -110,6 +110,8 @@ if [ -n "$HOST_IP" ]; then
   echo $VM_HOST
 fi
 
+ENV_NUM=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key env-num --type int --key-default 0)
+
 if [ $CREATE_IMAGE  ]; then
 
     ELEMENTS_PATH=${ELEMENTS_PATH:-$SCRIPT_HOME/../../tripleo-image-elements/elements}
@@ -138,8 +140,7 @@ if [ $CREATE_IMAGE  ]; then
     fi
 
     if [ -n "$VM_HOST" ]; then
-      rsync $IMAGE_CACHE_FILE.qcow2 ${VM_HOST}:/var/lib/libvirt/images/$IMAGE_NAME.qcow2
-      ssh ${VM_HOST} chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
+      dd if=$IMAGE_CACHE_FILE.qcow2 | ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} copyseed $ENV_NUM
     else
       sudo cp $IMAGE_CACHE_FILE.qcow2 /var/lib/libvirt/images/$IMAGE_NAME.qcow2
       sudo chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
@@ -158,10 +159,7 @@ function poll_vm {
 export -f poll_vm
 
 if [ -n "$VM_HOST" ]; then
-  # Different libvirts seem to use different URIs. Yay.
-  export VIRSH_DEFAULT_CONNECT_URI=qemu+ssh://${VM_HOST}/system
-  export LIBVIRT_DEFAULT_URI=qemu+ssh://${VM_HOST}/system
-  virsh start $IMAGE_NAME
+  ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh start ${IMAGE_NAME}_$ENV_NUM
   VM_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type netaddress --key-default '')
 else
   sudo virsh start $IMAGE_NAME
