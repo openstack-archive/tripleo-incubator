@@ -107,6 +107,9 @@ fi
 ##    network. As our test network is unrouteable we require an explicit device
 ##    to avoid accidentally routing it onto live networks. Defaults to virbr0.
 
+## #. env-num: An opaque key used by the test environment hosts for identifying
+##    which environment seed images are being copied into.
+
 ## XXX: We're currently migrating to that structure - some code still uses
 ##      environment variables instead.
 
