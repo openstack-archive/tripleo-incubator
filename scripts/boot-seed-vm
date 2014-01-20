@@ -164,10 +164,7 @@ function poll_vm {
 export -f poll_vm
 
 if [ -n "$REMOTE_OPERATIONS" ]; then
-  # Different libvirts seem to use different URIs. Yay.
-  export VIRSH_DEFAULT_CONNECT_URI=qemu+ssh://${VM_HOST}/system
-  export LIBVIRT_DEFAULT_URI=qemu+ssh://${VM_HOST}/system
-  virsh start $IMAGE_NAME
+  ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh start ${IMAGE_NAME}_$ENV_NUM
   VM_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type netaddress --key-default '')
 else
   sudo virsh start $IMAGE_NAME
