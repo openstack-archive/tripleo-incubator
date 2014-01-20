@@ -141,8 +141,11 @@ if [ $CREATE_IMAGE  ]; then
     fi
 
     if [ -n "$REMOTE_OPERATIONS" ]; then
-      rsync $IMAGE_CACHE_FILE.qcow2 ${VM_HOST}:/var/lib/libvirt/images/$IMAGE_NAME.qcow2
-      ssh ${VM_HOST} chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
+      # rsync could be used here which may have been more efficient but using a
+      # custom command "copyseed" should be easier to restrict. Also we can
+      # take multiple steps on the server in this single command meaning we
+      # don't have to open up the ssh access even further.
+      dd if=$IMAGE_CACHE_FILE.qcow2 | ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} copyseed $ENV_NUM
     else
       sudo cp $IMAGE_CACHE_FILE.qcow2 /var/lib/libvirt/images/$IMAGE_NAME.qcow2
       sudo chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
