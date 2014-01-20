@@ -97,7 +97,10 @@ setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplan
 ##    ::
 
 UNDERCLOUD_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | awk '{ print $2 " " $3 }')
-setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$UNDERCLOUD_MACS" undercloud
+UNDERCLOUD_PM_IPS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-ips --type raw | awk '{ print $2 " " $3 }')
+UNDERCLOUD_PM_USERS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-users --type raw | awk '{ print $2 " " $3 }')
+UNDERCLOUD_PM_PASSWORDS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-passwords --type raw | awk '{ print $2 " " $3  }')
+setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$UNDERCLOUD_MACS" undercloud "$UNDERCLOUD_PM_IPS" "$UNDERCLOUD_PM_USERS" "$UNDERCLOUD_PM_PASSWORDS"
 
 ## #. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
 ##    ::
