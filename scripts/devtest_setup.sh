@@ -111,6 +111,9 @@ fi
 ##    perform remote operations when starting VMs and copying disk images.
 ##    A non-empty string means true, the default is '', which means false.
 
+## #. env-num: An opaque key used by the test environment hosts for identifying
+##    which environment seed images are being copied into.
+
 ## XXX: We're currently migrating to that structure - some code still uses
 ##      environment variables instead.
 
