@@ -128,6 +128,14 @@ if [ $CREATE_IMAGE  ]; then
 
 fi
 
+# Shutdown any running VM - writing to the image file of a running VM is a
+# great way to get a corrupt image file.
+if [ -n "$REMOTE_OPERATIONS" ]; then
+    ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
+else
+    virsh destroy $NAME || true
+fi
+
 if [ $CREATE_IMAGE  ]; then
 
     mkdir -p $IMAGE_CACHE_DIR
