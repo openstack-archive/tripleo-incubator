@@ -141,6 +141,9 @@ if [ $CREATE_IMAGE  ]; then
     fi
 
     if [ -n "$REMOTE_OPERATIONS" ]; then
+      # destroy the seed domain if it is already running
+      ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
+
       # rsync could be used here which may have been more efficient but using a
       # custom command "copyseed" should be easier to restrict. Also we can
       # take multiple steps on the server in this single command meaning we
