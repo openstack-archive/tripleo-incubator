@@ -87,6 +87,27 @@ fi
 ## This document is extracted from devtest.sh, our automated bring-up story for
 ## CI/experimentation.
 
+## Stability Warning
+## -----------------
+
+## Note that every effort is made to keep the published set of these instructions
+## updated for use with only the master branches of the TripleO projects. There is
+## **NO** guaranteed stability in master. There is also no guaranteed stable
+## upgrade path from release to release or from one stable branch to a later
+## stable branch. The stable branches are a point in time and make no
+## guarantee about deploying older or newer branches of OpenStack projects
+## correctly.
+
+## If you wish to use the stable branches, you should instead checkout and clone
+## the stable branch of tripleo-incubator you want, and then build the
+## instructions yourself via::
+
+##      git clone https://git.openstack.org/openstack/tripleo-incubator
+##      cd triple-incubator
+##      git checkout <stable-branch>
+##      tox -evenv python setup.py build_sphinx
+##      # View doc/build/html/devtest.html in your browser and proceed from there
+
 ## Next Steps:
 ## -----------
 ## 
