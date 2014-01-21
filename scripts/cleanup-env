@@ -26,6 +26,16 @@ function show_options() {
 
 [ $# -gt 0 ] && show_options
 
+# If we are running toci on the remote environment we need to ssh to the TE host and destroy a running seed
+REMOTE_OPERATIONS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key remote-operations --type raw --key-default '')
+if [ -n "$REMOTE_OPERATIONS" ]; then
+    ENV_NUM=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key env-num --type int --key-default 0)
+    HOST_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key host-ip --type netaddress --key-default '')
+    SSH_USER=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default 'root')
+    ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${SSH_USER}@${HOST_IP} virsh destroy seed_$ENV_NUM || true
+    exit 0
+fi
+
 for NAME in $(sudo virsh list --name --all | grep "^\(seed\(.*\|\)\|baremetal\(\|brbm.*\)_.*\)$"); do
   sudo virsh destroy $NAME
   sudo virsh undefine --remove-all-storage $NAME
