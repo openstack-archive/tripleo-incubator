@@ -79,7 +79,7 @@ if [ "$os" = "suse" ]; then
   sudo zypper --non-interactive install \
     python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
     python-devel gcc audit python-virtualenv openvswitch-switch python-PyYAML net-tools \
-    lsb-release jq
+    lsb-release libxslt-devel
   sudo service libvirtd restart
   sudo service openvswitch-switch restart
 fi
