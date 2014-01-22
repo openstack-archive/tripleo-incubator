@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Approved+1: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Jan Provaznik <jan.provaznik@gmail.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 22 Jan 2014 10:13:18 +0000
+Reviewed-on: https://review.openstack.org/68291
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
