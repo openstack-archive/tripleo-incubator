@@ -33,15 +33,17 @@ function show_options () {
     echo "Options:"
     echo "    -r, --region      -- Override the default region 'regionOne'."
     echo "    -p, --password    -- Choose the admin user password."
+    echo "    --ssl             -- Use a SSL public endpoint."
     echo
     echo "For instance: $SCRIPT_NAME -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1"
+    echo "For instance(SSL): $SCRIPT_NAME -p unset --ssl mysite.org unset 192.0.2.1 admin@example.com root@192.0.2.1"
     exit $1
 }
 
 REGION="regionOne" #NB: This is the keystone default.
 PASSWORD="" # Default to making a random one.
 
-TEMP=`getopt -o hr:p: -l help,region:,password: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o hr:p: -l help,region:,password:,ssl: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -52,6 +54,7 @@ while true ; do
         -r | --region) REGION=$2; shift 2 ;;
         -p | --password) PASSWORD=$2; shift 2 ;;
         -h) show_options 0;;
+	--ssl) SSL=$2; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -96,4 +99,7 @@ ADMIN_USER_ID=$(keystone user-create --name=admin \
 # User Roles
 keystone user-role-add --user-id $ADMIN_USER_ID --role-id $ADMIN_ROLE_ID --tenant-id $ADMIN_TENANT_ID
 
-register-endpoint -r $REGION -d "Keystone Identity Service" keystone identity http://$ENDPOINT:5000 -a http://$ENDPOINT:35357
+INTERNAL_URL=http://$ENDPOINT:5000
+PUBLIC_URL=${SSL:+https://$SSL:13000}
+PUBLIC_URL=${PUBLIC_URL:-$INTERNAL_URL}
+register-endpoint -r $REGION -d "Keystone Identity Service" keystone identity -i http://$ENDPOINT:5000 -a http://$ENDPOINT:35357 $PUBLIC_URL
