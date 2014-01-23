@@ -37,6 +37,7 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 # nova: I6bf01e52589c5894eb043f2b57e915d52e81ebc3
 # python-novaclient: Ib1511653904d4f95ab03fb471669175127004582
 OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
+OVERCLOUD_ALL_IN_ONE=${OVERCLOUD_ALL_IN_ONE:-0}
 
 ### --include
 ## devtest_overcloud
@@ -50,36 +51,58 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 ##    set to openstack-ssl in that situation.
 ##    ::
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
-        boot-stack cinder-api cinder-volume os-collect-config \
-        neutron-network-node dhcp-all-interfaces swift-proxy swift-storage \
-        $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} ${SSL_ELEMENT:-} 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-control.log
-fi #nodocs
+if [ "$OVERCLOUD_ALL_IN_ONE" == "0" ] ; then #nodocs
+
+    if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
+            boot-stack cinder-api cinder-volume os-collect-config neutron-network-node \
+            dhcp-all-interfaces swift-proxy swift-storage \
+            $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} ${SSL_ELEMENT:-} 2>&1 | \
+            tee $TRIPLEO_ROOT/dib-overcloud-control.log
+    fi #nodocs
 
 ## #. Load the image into Glance:
 ##    ::
 
-OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
+    OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
-        nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-        dhcp-all-interfaces $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-compute.log
-fi #nodocs
+    if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
+            nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
+            dhcp-all-interfaces $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
+            tee $TRIPLEO_ROOT/dib-overcloud-compute.log
+    fi #nodocs
 
 ## #. Load the image into Glance:
 ##    ::
 
-OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
+    OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
+
+### --end
+else
+
+    # All in one is undocumented
+    if [ ! -e $TRIPLEO_ROOT/overcloud-all-in-one.qcow2 -o "$USE_CACHE" == "0" ] ; then
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-all-in-one \
+            boot-stack cinder-api cinder-volume nova-compute nova-kvm neutron-openvswitch-agent \
+            stackuser neutron-network-node os-collect-config \
+            neutron-network-node dhcp-all-interfaces swift-proxy swift-storage \
+            $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} ${SSL_ELEMENT:-} 2>&1 | \
+            tee $TRIPLEO_ROOT/dib-overcloud-control.log
+
+    fi #nodocs
+
+    OVERCLOUD_ALL_IN_ONE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-all-in-one.qcow2) #nodocs
+
+fi #nodocs
+### --include
 
 ## #. For running an overcloud in VM's::
 ##    ::
@@ -117,9 +140,19 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
 
 ### --end
 
-heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-    -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE};ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY};notcomputeImage=${OVERCLOUD_CONTROL_ID};NovaImage=${OVERCLOUD_COMPUTE_ID};SSLCertificate=${OVERCLOUD_SSL_CERT};SSLKey=${OVERCLOUD_SSL_KEY}" \
-    $STACKNAME
+if [ "$OVERCLOUD_ALL_IN_ONE" = "0" ] ; then #nodocs
+
+    heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
+        -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE};ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY};notcomputeImage=${OVERCLOUD_CONTROL_ID};NovaImage=${OVERCLOUD_COMPUTE_ID};SSLCertificate=${OVERCLOUD_SSL_CERT};SSLKey=${OVERCLOUD_SSL_KEY}" \
+        $STACKNAME
+
+else #nodocs
+
+    heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud-all-in-one.yaml \
+        -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE};ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY};Image=${OVERCLOUD_ALL_IN_ONE_ID};SSLCertificate=${OVERCLOUD_SSL_CERT};SSLKey=${OVERCLOUD_SSL_KEY}" \
+        $STACKNAME #nodocs
+
+fi #nodocs
 
 ### --include
 
@@ -141,7 +174,13 @@ fi #nodocs
 echo "Waiting for the overcloud stack to be ready" #nodocs
 wait_for 220 10 stack-ready $STACKNAME #nodocs
 ##         wait_for 220 10 stack-ready overcloud
-export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+##         wait_for 220 10 stack-ready overcloud
+if [ "$OVERCLOUD_ALL_IN_ONE" = "0" ] ; then #nodocs
+    export OVERCLOUD_IP=$(nova list | grep notcompute.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+else #nodocs
+    export OVERCLOUD_IP=$(nova list | grep allinone.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/") #nodocs
+fi #nodocs
+
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
 # the public endpoint for APIs.
@@ -215,7 +254,11 @@ wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'ena
 ## #. Wait for L2 Agent On Nova Compute
 ##    ::
 
-wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*$STACKNAME-novacompute\"" #nodocs
+if [ "$OVERCLOUD_ALL_IN_ONE" = "0" ] ; then #nodocs
+    wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*$STACKNAME-novacompute\"" #nodocs
+else #nodocs
+    wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*$STACKNAME-allinone\"" #nodocs
+fi #nodocs
 ##         wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*overcloud-novacompute\""
 
 ## #. Log in as a user.
