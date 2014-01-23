@@ -83,15 +83,18 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 ##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=amd64
 ## 
 
-## #. Set distribution used for VMs (fedora, ubuntu).
-##    ::
-## 
-##         export NODE_DIST=ubuntu
-## 
+## #. Set distribution used for VMs (fedora, opensuse, ubuntu).
 ##    for Fedora set SELinux permissive mode.
 ##    ::
 ## 
 ##         export NODE_DIST="fedora selinux-permissive"
+##    for openSUSE:
+##    ::
+## 
+##         export NODE_DIST="opensuse"
+##    ::
+## 
+##         export NODE_DIST="ubuntu"
 ## 
 
 source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
