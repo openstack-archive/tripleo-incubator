@@ -23,8 +23,13 @@ STACKNAME=${10:-overcloud}
 # inclusion of openstack-ssl in the build and pass the contents of the files to heat.
 # Note that PUBLIC_API_URL ($12) must also be set for SSL to actually be used.
 SSLBASE=${11:-''}
-OVERCLOUD_SSL_CERT=$(<$SSLBASE.crt)
-OVERCLOUD_SSL_KEY=$(<$SSLBASE.key)
+if [ -n "$SSLBASE" ]; then
+    OVERCLOUD_SSL_CERT=$(<$SSLBASE.crt)
+    OVERCLOUD_SSL_KEY=$(<$SSLBASE.key)
+else
+    OVERCLOUD_SSL_CERT=''
+    OVERCLOUD_SSL_KEY=''
+fi
 PUBLIC_API_URL=${12:-''}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
 USE_CACHE=${USE_CACHE:-0}
