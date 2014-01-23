@@ -85,19 +85,27 @@ setup-clienttools
 # libvirtd group
 LIBVIRTD_GROUP='libvirtd'
 
-if [ "$(lsb_release -i -s)" = 'Debian' ]; then
+if [ "$os" = 'Debian' -o "$os" = "suse" ]; then
     LIBVIRTD_GROUP='libvirt'
 fi
 
-grep $LIBVIRTD_GROUP /etc/group || sudo groupadd $LIBVIRTD_GROUP
-if ! id | grep $LIBVIRTD_GROUP; then
+if [ "$os" = "suse" ]; then
+    # libvirtd on SUSE starts qemu as user qemu by default, however
+    # /dev/kvm doesn not have a posix ACL to allow access for anything
+    # other than session users
+
+    sudo chown qemu /dev/kvm
+fi
+
+getent group $LIBVIRTD_GROUP || sudo groupadd $LIBVIRTD_GROUP
+if ! id | grep -qw $LIBVIRTD_GROUP; then
    echo "adding $USER to group $LIBVIRTD_GROUP"
    sudo usermod -a -G $LIBVIRTD_GROUP $USER
 
    if [ "$os" = "redhat" -o "$os" = "suse" ]; then
        libvirtd_file=/etc/libvirt/libvirtd.conf
        if ! sudo grep  "^unix_sock_group" $libvirtd_file > /dev/null; then
-           sudo sed -i 's/^#unix_sock_group.*/unix_sock_group = "libvirtd"/g' $libvirtd_file
+           sudo sed -i "s/^#unix_sock_group.*/unix_sock_group = \"$LIBVIRTD_GROUP\"/g" $libvirtd_file
            sudo sed -i 's/^#auth_unix_rw.*/auth_unix_rw = "none"/g' $libvirtd_file
            sudo sed -i 's/^#unix_sock_rw_perms.*/unix_sock_rw_perms = "0770"/g' $libvirtd_file
            sudo service libvirtd restart
