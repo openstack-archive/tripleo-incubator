@@ -32,7 +32,7 @@ function show_options () {
 
 CONTINUE=
 USE_CACHE=0
-RESET_TESTENV=1
+TRIPLEO_CLEANUP=1
 
 TEMP=`getopt -o h,c -l existing-environment,trash-my-machine -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
@@ -43,7 +43,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
-        --existing-environment) RESET_TESTENV=; shift 1;;
+        --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
@@ -113,7 +113,7 @@ fi
 #      source?
 source $(dirname $0)/devtest_variables.sh
 $(dirname $0)/devtest_setup.sh $CONTINUE
-if [ -n "$RESET_TESTENV" ]; then #nodocs
+if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
 devtest_testenv.sh $TE_DATAFILE
 fi #nodocs
 devtest_ramdisk.sh
