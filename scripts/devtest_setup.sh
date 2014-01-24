@@ -172,14 +172,14 @@ if [ "$USE_CACHE" == "0" ] ; then #nodocs
     install-dependencies
 fi #nodocs
 
-## #. Run cleanup-env to ensure VM's and storage pools from previous devtest
-##    runs are removed.
+## #. (Optional) Run cleanup-env to ensure VM's and storage pools from previous
+##    devtest runs. Use this if you are creating a new test environment.
 ##    ::
 ## 
 ##         cleanup-env
 
 ### --end
-if [ "${TRIPLEO_CLEANUP:-1}" = "1"  ]; then
+if [ "${TRIPLEO_CLEANUP:-0}" = "1"  ]; then
     echo "Cleaning up vm's/storage from previous devtest runs"
     cleanup-env
 fi
