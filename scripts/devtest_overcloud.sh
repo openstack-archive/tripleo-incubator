@@ -228,9 +228,8 @@ source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc-user
 
 if [ "stack-create" = "$HEAT_OP" ] ; then #nodocs
 user-config
-fi #nodocs
 
-## #. Deploy a VM.
+## #. So that you can deploy a VM.
 ##    ::
 
 nova boot --key-name default --flavor m1.tiny --image user demo
@@ -240,7 +239,7 @@ nova boot --key-name default --flavor m1.tiny --image user demo
 
 wait_for 10 5 neutron port-list -f csv -c id --quote none \| grep id
 PORT=$(neutron port-list -f csv -c id --quote none | tail -n1)
-neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}"
+FLOATINGIP=$(neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}" | awk '$2="floating_ip_address" {print $}')
 
 ## #. And allow network access to it.
 ##    ::
@@ -250,7 +249,17 @@ neutron security-group-rule-create default --protocol icmp \
 neutron security-group-rule-create default --protocol tcp \
     --direction ingress --port-range-min 22 --port-range-max 22
 
-## 
+### --end
+else
+FLOATINGIP=$(nova floating-ip-list | awk '$8="ext-net" {print $2}')
+fi
+### --include
+
+## #. After which, you should be able to ping it
+##    ::
+
+wait_for 30 10 ping -c 1 $FLOATINGIP
+
 ### --end
 
 if [ -n "$ADMIN_USERS" ]; then
