@@ -89,5 +89,9 @@ else
     ROLE="Member"
 fi
 ROLE_ID=$(keystone role-get $ROLE | awk '$2=="id" {print $4}')
-keystone user-role-add --user-id $USER_ID --role-id $ROLE_ID --tenant-id $TENANT_ID
+if keystone user-role-list --user-id $USER_ID --tenant-id $TENANT_ID | grep "${ROLE_ID}.*${ROLE}.*${USER_ID}" ; then
+    echo "User already has role '$ROLE'"
+else
+    keystone user-role-add --user-id $USER_ID --role-id $ROLE_ID --tenant-id $TENANT_ID
+fi
 echo "User $USERCODE configured."
