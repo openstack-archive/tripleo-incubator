@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Approved+1: Clint "SpamapS" Byrum <clint@ubuntu.com>
+Code-Review+2: Clint "SpamapS" Byrum <clint@ubuntu.com>
+Submitted-by: Jenkins
+Submitted-at: Sun, 26 Jan 2014 06:13:20 +0000
+Reviewed-on: https://review.openstack.org/69167
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
