@@ -59,6 +59,10 @@ export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.
 
 export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
 
+## #. These elements are required for tripleo in all images we build.
+
+export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
+
 ## #. Set HW resources for VMs used as 'baremetal' nodes. NODE_CPU is cpu count,
 ##    NODE_MEM is memory (MB), NODE_DISK is disk size (GB), NODE_ARCH is
 ##    architecture (i386, amd64). NODE_ARCH is used also for the seed VM.
