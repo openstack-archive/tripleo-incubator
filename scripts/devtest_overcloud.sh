@@ -239,7 +239,7 @@ nova boot --key-name default --flavor m1.tiny --image user demo
 
 wait_for 10 5 neutron port-list -f csv -c id --quote none \| grep id
 PORT=$(neutron port-list -f csv -c id --quote none | tail -n1)
-FLOATINGIP=$(neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}" | awk '$2="floating_ip_address" {print $}')
+FLOATINGIP=$(neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}" | awk '$2="floating_ip_address" {print $4}')
 
 ## #. And allow network access to it.
 ##    ::
