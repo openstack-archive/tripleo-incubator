@@ -42,4 +42,6 @@ for TOOL in $TOOLS; do
             echo "***************************************"
         fi
     fi
+    echo -n $TRIPLEO_ROOT/$TOOL_BASE:
+    git log $TRIPLEO_ROOT/$TOOL_BASE | head -n 1
 done
