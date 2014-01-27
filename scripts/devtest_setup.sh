@@ -3,7 +3,7 @@
 # Idempotent one-time setup for devtest.
 # This can be run for CI purposes, by passing --trash-my-machine to it.
 # Without that parameter, the script will error.
-set -eu
+set -eux
 set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
