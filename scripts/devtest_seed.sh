@@ -54,7 +54,7 @@ sudo ip route add 192.0.2.0/24 dev $ROUTE_DEV via $SEED_IP
 ##    ::
 
 set +u #nodocs
-export no_proxy=$no_proxy,192.0.2.1,$SEED_IP
+export no_proxy=$no_proxy,192.0.2.1
 set -u #nodocs
 
 ## #. If you downloaded a pre-built seed image you will need to log into it
