@@ -177,9 +177,10 @@ Caveats/Limitations:
 
 ### tripleo-heat-templates
 
-These templates provide the rules describing how to deploy the baremetal 
-undercloud and virtual overclouds.  Downloadable from
-https://git.openstack.org/cgit/openstack/tripleo-heat-templates.
+These templates provide the rules describing how to deploy the baremetal
+undercloud and virtual overclouds. This also includes a python module used
+for merging templates to allow template snippet re-use.  Downloadable from
+https://git.openstack.org/cgit/openstack/tripleo-heat-templates 
 
 Deploying
 ---------
