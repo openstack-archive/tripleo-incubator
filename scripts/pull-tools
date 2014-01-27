@@ -51,5 +51,5 @@ for TOOL in $TOOLS; do
     fi
     echo -n $TRIPLEO_ROOT/$TOOL_BASE:
     cd $TRIPLEO_ROOT/$TOOL_BASE
-    git log -1 --pretty=oneline
+    git --no-pager log -1 --pretty=oneline
 done
