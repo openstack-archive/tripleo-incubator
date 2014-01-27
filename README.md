@@ -168,9 +168,6 @@ yet setup for full HA. Downloadable from
 https://git.openstack.org/cgit/openstack/tripleo-image-elements.
 
 Caveats/Limitations:
- - No support for image based updates yet. (Requires separating out updateable
-   configuration and persistent data from the image contents - which depends
-   on cinder for baremetal).
  - Full HA is not yet implemented
    https://bugs.launchpad.net/neutron/+bug/1174132
  - Bootstrap removal is not yet implemented (depends on full HA).
