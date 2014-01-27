@@ -21,6 +21,13 @@ set -eu
 
 TOOLS="https://git.openstack.org/openstack/diskimage-builder https://git.openstack.org/openstack/tripleo-image-elements https://git.openstack.org/openstack/tripleo-heat-templates https://git.openstack.org/openstack/tripleo-incubator"
 
+ZUUL_REF=${ZUUL_REF:-''}
+
+if [ -n "$ZUUL_REF" ]; then
+    echo "SKIPPING pull-tools as ZUUL_REF is present."
+    exit 0
+fi
+
 for TOOL in $TOOLS; do
     TOOL_BASE=$(basename $TOOL)
     echo pulling/updating $TOOL_BASE

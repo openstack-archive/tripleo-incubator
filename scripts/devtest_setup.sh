@@ -153,7 +153,7 @@ if [ "$USE_CACHE" == "0" ] ; then
 ### --include
     git clone https://git.openstack.org/openstack/tripleo-incubator
 ### --end
-  else
+  elif [ -z "${ZUUL_REF:-''}" ]; then
     cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
   fi
 fi
