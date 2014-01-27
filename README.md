@@ -216,9 +216,9 @@ in a seed cloud just big enough to deploy the undercloud. Then the undercloud
 Heat instance deploys the overcloud.
 
 We use this self contained bare metal cloud to deploy a kvm (or Xen or
-whatever) OpenStack instance as a tenant of the bare metal cloud. In future we
-would like to consolidate this into one cloud, but there are technical and
-security issues to overcome first.
+whatever) OpenStack instance as a tenant of the bare metal cloud. In the
+future we would like to consolidate this into one cloud, but there are
+technical and security issues to overcome first.
 
 So this gives us three clouds:
 
