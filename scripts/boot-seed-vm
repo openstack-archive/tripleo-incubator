@@ -133,7 +133,7 @@ fi
 if [ -n "$REMOTE_OPERATIONS" ]; then
     ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
 else
-    virsh destroy $NAME || true
+    virsh destroy $IMAGE_NAME || true
 fi
 
 if [ $CREATE_IMAGE  ]; then
