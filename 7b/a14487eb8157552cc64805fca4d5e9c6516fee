@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Approved+1: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+1: Joe Gordon <joe.gordon0@gmail.com>
+Code-Review+2: lifeless <robertc@robertcollins.net>
+Code-Review+2: Chris Jones <cmsj@tenshu.net>
+Code-Review+1: Jay Dobies <jason.dobies@redhat.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 28 Jan 2014 15:43:49 +0000
+Reviewed-on: https://review.openstack.org/69439
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
