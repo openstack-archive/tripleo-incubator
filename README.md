@@ -125,8 +125,8 @@ Caveats / limitations:
 Heat is the orchestration layer in TripleO - it glues the various services
 together in the cluster, arbitrates deployments and reconfiguration.
 
-Heat is quite usable in Grizzly, though some additional planned features will
-make the TripleO story easier and more robust. Heat depends on the Nova API to
+Heat is mature, though some additional planned features will make the
+TripleO story easier and more robust. Heat depends on the Nova API to
 provision and remove instances in the cluster it is managing.
 
 Caveats / limitations:
