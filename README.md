@@ -139,7 +139,7 @@ Caveats / limitations:
    rather than also coordinating with monitoring systems. Workaround by 
    tying your monitoring back into Heat to trigger rollbacks.
 
-### os-apply-config/os-refresh-config
+### os-apply-config/os-refresh-config/os-collect-config
 
 These tools work with the Heat delivered metadata to create configuration
 files on disk (os-apply-config), and to trigger in-instance reconfiguration
@@ -149,8 +149,13 @@ but very simple and very focused.
 os-apply-config reads a JSON metadata file and generates templates. It can be
 used with any orchestration layer that generates a JSON metadata file on disk.
 
-os-refresh-config subscribes to the Heat metadata we're using, and then invokes
-hooks - it can be used to drive os-apply-config, or Chef/Puppet/Salt or other
+os-refresh-config runs scripts grouped by common stages of system state
+and ordered by lexical sorting. It can be used to drive any tool set, and
+in TripleO is used to drive os-apply-config as well as service-specific
+state management and migration scripts.
+
+os-collect-config subscribes to the Heat metadata we're using, and then invokes
+hooks - it can be used to drive os-refresh-config, or Chef/Puppet/Salt or other
 configuration management tools.
 
 ### tripleo-image-elements
