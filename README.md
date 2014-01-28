@@ -114,8 +114,6 @@ Caveats / limitations:
  - HA support is rudimentary at the moment : need to use corosync+pacemaker
    (work is in progress to have multiple bare-metal compute hosts dynamically
     take over each others configuration)
- - File injection is required due to the PXE boot configuration conflicting
-   with Nova-network/Neutron DHCP (work is in progress to resolve this)
  - Dynamic VLAN support is not yet implemented (but was specced at the Havana
    summit). Workaround is to manually configure it via Nova userdata.
    https://bugs.launchpad.net/tripleo/+bug/1174149
