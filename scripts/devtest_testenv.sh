@@ -63,7 +63,7 @@ setup-seed-vm -a $NODE_ARCH
 ##    testenv.json.
 ##    ::
 
-export MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 3 | tr '\r\n' ' ')
+export MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH 4 | tr '\r\n' ' ')
 
 ## #. What IP address to ssh to for virsh operations.
 ##    ::
