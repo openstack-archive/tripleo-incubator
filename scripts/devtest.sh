@@ -138,7 +138,9 @@ if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
 devtest_testenv.sh $TE_DATAFILE
 fi #nodocs
 devtest_ramdisk.sh
-source devtest_seed.sh
+devtest_seed.sh
+export no_proxy=$no_proxy,192.0.2.1
+source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 source devtest_undercloud.sh
 source devtest_overcloud.sh
 source devtest_end.sh
