@@ -53,6 +53,7 @@ while [ $i -lt $LOOPS ]; do
     OUTPUT=$(eval $COMMAND) && exit 0 || true
     sleep $SLEEPTIME
 done
-echo "Timing out - last probe output:"
-echo $OUTPUT
+SECONDS=$((LOOPS * SLEEPTIME))
+printf 'Timing out after %d seconds:\nCOMMAND=%s\nOUTPUT=%s\n' \
+    "$SECONDS" "$COMMAND" "$OUTPUT"
 exit 1
