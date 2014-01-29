@@ -1,6 +1,6 @@
 export NOVA_VERSION=1.1
-export OS_PASSWORD=$UNDERCLOUD_ADMIN_PASSWORD
-export OS_AUTH_URL=http://$UNDERCLOUD_IP:5000/v2.0
+export OS_PASSWORD=$(os-apply-config -m $TE_DATAFILE --type raw undercloud.password)
+export OS_AUTH_URL=$(os-apply-config -m $TE_DATAFILE --type raw undercloud.endpoint)
 export OS_USERNAME=admin
 export OS_TENANT_NAME=admin
 export COMPUTE_API_VERSION=1.1
