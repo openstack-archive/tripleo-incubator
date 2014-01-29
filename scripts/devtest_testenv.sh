@@ -74,8 +74,8 @@ export HOSTIP=${HOSTIP:-192.168.122.1}
 ##    looked up in the ARP table by the seed MAC address during seed deployment.
 ##    ::
 
-export SEEDIP=${SEEDIP:-''}
+export SEED_IP=${SEED_IP:-''}
 
-echo "{\"host-ip\":\"$HOSTIP\", \"seed-ip\":\"$SEEDIP\", \"node-macs\":\"$MACS\"}" > $JSONFILE
+echo "{\"host-ip\":\"$HOSTIP\", \"seed-ip\":\"$SEED_IP\", \"node-macs\":\"$MACS\"}" > $TE_DATAFILE
 
 ### --end
