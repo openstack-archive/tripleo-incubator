@@ -95,6 +95,7 @@ case "$os" in
         LIBVIRTD_GROUP='libvirtd'
         ;;
 esac
+getent group $LIBVIRTD_GROUP || sudo groupadd $LIBVIRTD_GROUP
 
 if [ "$os" = "suse" ]; then
     # kvm_intel/amd is autoloaded on SUSE, but without
@@ -106,20 +107,19 @@ if [ "$os" = "suse" ]; then
     fi
 fi
 
+if [ "$os" = "redhat" ]; then
+    libvirtd_file=/etc/libvirt/libvirtd.conf
+    if ! sudo grep -q "^unix_sock_group" $libvirtd_file; then
+        sudo sed -i "s/^#unix_sock_group.*/unix_sock_group = \"$LIBVIRTD_GROUP\"/g" $libvirtd_file
+        sudo sed -i 's/^#auth_unix_rw.*/auth_unix_rw = "none"/g' $libvirtd_file
+        sudo sed -i 's/^#unix_sock_rw_perms.*/unix_sock_rw_perms = "0770"/g' $libvirtd_file
+        sudo service libvirtd restart
+    fi
+fi
+
 if ! id | grep -qw $LIBVIRTD_GROUP; then
-   getent group $LIBVIRTD_GROUP || sudo groupadd $LIBVIRTD_GROUP
    echo "adding $USER to group $LIBVIRTD_GROUP"
    sudo usermod -a -G $LIBVIRTD_GROUP $USER
-
-   if [ "$os" = "redhat" ]; then
-       libvirtd_file=/etc/libvirt/libvirtd.conf
-       if ! sudo grep  "^unix_sock_group" $libvirtd_file > /dev/null; then
-           sudo sed -i "s/^#unix_sock_group.*/unix_sock_group = \"$LIBVIRTD_GROUP\"/g" $libvirtd_file
-           sudo sed -i 's/^#auth_unix_rw.*/auth_unix_rw = "none"/g' $libvirtd_file
-           sudo sed -i 's/^#unix_sock_rw_perms.*/unix_sock_rw_perms = "0770"/g' $libvirtd_file
-           sudo service libvirtd restart
-       fi
-   fi
 
    exec sudo su -l $USER -c "PATH=$PATH $0"
 fi
