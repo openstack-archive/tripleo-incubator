@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Approved+1: Imre Farkas <ifarkas@redhat.com>
+Code-Review+2: Imre Farkas <ifarkas@redhat.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 29 Jan 2014 07:55:31 +0000
+Reviewed-on: https://review.openstack.org/69627
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
