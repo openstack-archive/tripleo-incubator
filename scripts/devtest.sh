@@ -141,6 +141,8 @@ devtest_ramdisk.sh
 devtest_seed.sh
 export no_proxy=${no_proxy:-},192.0.2.1
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
-source devtest_undercloud.sh
+devtest_undercloud.sh $TE_DATAFILE
+export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
+source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 source devtest_overcloud.sh
 source devtest_end.sh
