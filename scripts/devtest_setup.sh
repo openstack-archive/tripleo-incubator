@@ -114,6 +114,15 @@ fi
 ## #. env-num: An opaque key used by the test environment hosts for identifying
 ##    which environment seed images are being copied into.
 
+## #. undercloud: an object with metadata for connecting to the undercloud in
+##    the environment.
+
+## #. undercloud.password: The password for the currently deployed undercloud.
+
+## #. undercloud.endpoint: The Keystone endpoint URL for the undercloud.
+
+## #. undercloud.endpointhost: The host of the endpoint - used for noproxy settings.
+
 ## XXX: We're currently migrating to that structure - some code still uses
 ##      environment variables instead.
 
