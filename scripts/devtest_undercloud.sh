@@ -4,6 +4,7 @@ set -eu
 set -o pipefail
 
 USE_CACHE=${USE_CACHE:-0}
+TE_DATAFILE=${1:?"A test environment description is required as $$1."}
 
 ### --include
 ## devtest_undercloud
@@ -66,17 +67,24 @@ export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*
 
 ssh-keygen -R $UNDERCLOUD_IP
 
-## #. Source the undercloud configuration:
-##    ::
-
-source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
-
 ## #. Exclude the undercloud from proxies:
 ##    ::
 
 set +u #nodocs
 export no_proxy=$no_proxy,$UNDERCLOUD_IP
 set -u #nodocs
+
+## #. Export the undercloud endpoint and credentials to your test environment.
+##    ::
+
+UNDERCLOUD_ENDPOINT="http://$UNDERCLOUD_IP:5000/v2.0"
+NEW_JSON=$(jq '.undercloud.password="'${UNDERCLOUD_ADMIN_PASSWORD}'" | .undercloud.endpoint="'${UNDERCLOUD_ENDPOINT}'" | .undercloud.endpointhost="'${UNDERCLOUD_IP}'"' $TE_DATAFILE)
+echo $NEW_JSON > $TE_DATAFILE
+
+## #. Source the undercloud configuration:
+##    ::
+
+source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 ## #. Perform setup of your undercloud.
 ##    ::
