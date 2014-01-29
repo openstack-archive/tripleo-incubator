@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Approved+1: Derek Higgins <derekh@redhat.com>
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Code-Review+2: Imre Farkas <ifarkas@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 29 Jan 2014 01:24:49 +0000
+Reviewed-on: https://review.openstack.org/69286
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
