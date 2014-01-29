@@ -139,7 +139,7 @@ devtest_testenv.sh $TE_DATAFILE
 fi #nodocs
 devtest_ramdisk.sh
 devtest_seed.sh
-export no_proxy=$no_proxy,192.0.2.1
+export no_proxy=${no_proxy:-},192.0.2.1
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 source devtest_undercloud.sh
 source devtest_overcloud.sh
