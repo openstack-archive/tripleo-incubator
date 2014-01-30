@@ -96,7 +96,8 @@ setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplan
 ## #. Register two baremetal nodes with your undercloud.
 ##    ::
 
-UNDERCLOUD_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | awk '{ print $2 " " $3 }')
+MAC_RANGE="2-$(( $OVERCLOUD_COMPUTESCALE + 2 ))"
+UNDERCLOUD_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | cut -d' ' -f $MAC_RANGE )
 setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$UNDERCLOUD_MACS" undercloud
 
 ## #. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
