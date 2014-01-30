@@ -178,6 +178,19 @@ If you require VLANs you should create a diskimage-builder element to
 add the vlan package and vlan configuration to /etc/network/interfaces
 as a first-boot rule.
 
+New seed image creation returns tmpfs space errors (systems with < 9GB of RAM)
+------------------------------------------------------------------------------
+
+Creating a new seed image takes up to 4.5GB of space inside a /tmp/imageXXXXX
+directory. tmpfs can take up to 50% of RAM and systems with less than 9GB of
+RAM will fail in this step. When using 'diskimage-builder' directly, you can
+prevent the space errors by:
+
+- avoiding tmpfs with --no-tmpfs or
+- specifying a minimum tmpfs size required with --min-tmpf
+
+If you are using 'boot-seed-vm', set the environment variable DIB_NO_TMPFS=1.
+
 Example deployments (possible today)
 ====================================
 
