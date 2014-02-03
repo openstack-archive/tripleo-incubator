@@ -111,38 +111,67 @@ fi
 ## Next Steps:
 ## -----------
 
-## #. :doc:`devtest_variables`
-
-## #. :doc:`devtest_setup`
-
-## #. :doc:`devtest_testenv`
-
-## #. :doc:`devtest_ramdisk`
-
-## #. :doc:`devtest_seed`
-
-## #. :doc:`devtest_undercloud`
-
-## #. :doc:`devtest_overcloud`
-
-## #. :doc:`devtest_end`
+## When run as a standalone script, devtest.sh runs the following commands
+## to configure the devtest environment, bootstrap a seed, deploy under and
+## overclouds. Many of these commands are also part of our documentation.
+## Readers may choose to either run the commands given here, or instead follow
+## the documentation for each command and walk through it step by step to see
+## what is going on. This choice can be made on a case by case basis - for
+## instance, if bootstrapping is not interesting, run that as devtest does,
+## then step into the undercloud setup for granular details of bringing up a
+## baremetal cloud.
 
 ### --end
 
 #FIXME: This is a little weird. Perhaps we should identify whatever state we're
 #      accumulating and store it in files or something, rather than using
 #      source?
+
+### --include
+
+## #. See :doc:`devtest_variables` for documentation::
+
 source $(dirname $0)/devtest_variables.sh
+
+## #. See :doc:`devtest_setup` for documentation.
+##    $CONTINUE should be set to '--trash-my-machine' to have it execute
+##    unattended.
+##    ::
+
 $(dirname $0)/devtest_setup.sh $CONTINUE
+
+## #. See :doc:`devtest_testenv` for documentation. Note that you can make
+##    your test environment just once and reuse it thereafter.
+##    TE_DATAFILE should specify where you want your test environment JSON
+##    file created. (A default value is set in devtest_variables.sh).
+##    ::
+
 if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
 devtest_testenv.sh $TE_DATAFILE
 fi #nodocs
+
+## #. See :doc:`devtest_ramdisk` for documentation::
+
 devtest_ramdisk.sh
+
+## #. See :doc:`devtest_seed` for documentation::
+
 devtest_seed.sh
+
+## #. See :doc:`devtest_undercloud` for documentation::
+
 export no_proxy=${no_proxy:-},192.0.2.1
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 devtest_undercloud.sh $TE_DATAFILE
+
+## #. See :doc:`devtest_overcloud` for documentation::
+
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE undercloud.endpointhost)
 source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 source devtest_overcloud.sh
+
+## #. See :doc:`devtest_end` for documentation::
+
 source devtest_end.sh
+
+### --end
