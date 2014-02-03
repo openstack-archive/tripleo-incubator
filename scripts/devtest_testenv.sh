@@ -32,7 +32,19 @@ while true ; do
     esac
 done
 
+### --include
+## devtest_testenv
+## ===============
+
+#XXX: When updating, sync with the call in devtest.sh
+
+## This script is usually called from devtest.sh as
+## devtest_testenv.sh $TE_DATAFILE
+## ::
+ 
 JSONFILE=${1:-''}
+
+### --end
 EXTRA_ARGS=${2:-''}
 
 if [ -z "$JSONFILE" -o -n "$EXTRA_ARGS" ]; then
@@ -40,8 +52,6 @@ if [ -z "$JSONFILE" -o -n "$EXTRA_ARGS" ]; then
 fi
 
 ### --include
-## devtest_testenv
-## ===============
 
 ## #. Configure a network for your test environment.
 ##    This configures an openvswitch bridge and teaches libvirt about it.
