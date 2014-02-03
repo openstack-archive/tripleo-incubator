@@ -172,6 +172,6 @@ source devtest_overcloud.sh
 
 ## #. See :doc:`devtest_end` for documentation::
 
-source devtest_end.sh
+devtest_end.sh
 
 ### --end
