@@ -71,7 +71,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         -r|--region) export REGION=$2; shift 2 ;;
-        --debug) export DEBUG=--debug; shift 1;;
+        --debug) export DEBUG=--debug; set -x; shift 1;;
         --ceilometer-password) export CEILOMETER_PASSWORD=$2; shift 2 ;;
         --cinder-password) export CINDER_PASSWORD=$2; shift 2 ;;
         --glance-password) export GLANCE_PASSWORD=$2; shift 2 ;;
