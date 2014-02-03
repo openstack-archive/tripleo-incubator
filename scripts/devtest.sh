@@ -110,21 +110,21 @@ fi
 
 ## Next Steps:
 ## -----------
-## 
+
 ## #. :doc:`devtest_variables`
-## 
+
 ## #. :doc:`devtest_setup`
-## 
+
 ## #. :doc:`devtest_testenv`
-## 
+
 ## #. :doc:`devtest_ramdisk`
-## 
+
 ## #. :doc:`devtest_seed`
-## 
+
 ## #. :doc:`devtest_undercloud`
-## 
+
 ## #. :doc:`devtest_overcloud`
-## 
+
 ## #. :doc:`devtest_end`
 
 ### --end
