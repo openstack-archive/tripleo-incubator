@@ -147,6 +147,7 @@ $(dirname $0)/devtest_setup.sh $CONTINUE
 ##    ::
 
 if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
+#XXX: When updating, also update the header in devtest_testenv.sh #nodocs
 devtest_testenv.sh $TE_DATAFILE
 fi #nodocs
 
