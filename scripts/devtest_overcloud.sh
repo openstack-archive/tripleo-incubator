@@ -91,6 +91,12 @@ OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
 
 NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
+## #. If you want to permit VM's access to bare metal networks, you need
+##    to define flat-networks in Neutron::
+##    ::
+
+OVERCLOUD_FLAT_NETWORKS=${OVERCLOUD_FLAT_NETWORKS:-''}
+
 ## #. Choose whether to deploy or update. Use stack-update to update::
 
 ##         HEAT_OP=stack-create
@@ -117,6 +123,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCL
 ##             -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
 ##             -P "GlancePassword=${OVERCLOUD_GLANCE_PASSWORD}" \
 ##             -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
+##             -P "NeutronFlatNetworks=${OVERCLOUD_FLAT_NETWORKS}" \
 ##             -P "NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD}" \
 ##             -P "NovaPassword=${OVERCLOUD_NOVA_PASSWORD}" \
 ##             -P "NeutronPublicInterface=${NeutronPublicInterface}" \
@@ -137,6 +144,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
     -P "NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD}" \
     -P "NovaPassword=${OVERCLOUD_NOVA_PASSWORD}" \
+    -P "NeutronFlatNetworks=${OVERCLOUD_FLAT_NETWORKS}" \
     -P "NeutronPublicInterface=${NeutronPublicInterface}" \
     -P "NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP}" \
     -P "NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice}" \
