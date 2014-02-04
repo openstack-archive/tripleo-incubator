@@ -2,6 +2,8 @@
 
 import argparse
 import os.path
+import subprocess
+import xml.etree.ElementTree as et
 
 import libvirt
 
@@ -35,7 +37,13 @@ def main():
     args = parser.parse_args()
     with file(templatedir + '/vm.xml', 'rb') as f:
         source_template = f.read()
-    imagefile = '/var/lib/libvirt/images/seed.qcow2'
+
+    p = subprocess.Popen(['virsh', 'pool-dumpxml', 'default'], stdout=subprocess.PIPE)
+    output = p.communicate()[0]
+    root = et.fromstring(output)
+    pool_path = root.find('target').find('path').text
+    imagefile = os.path.join(pool_path, 'seed.qcow2')
+
     if args.image:
         imagefile = args.image
     imagefile = os.path.realpath(imagefile)

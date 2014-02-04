@@ -96,7 +96,8 @@ esac
 which virsh >/dev/null || die "Error: virsh not found in path"
 sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
 sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not defined"
-sudo touch /var/lib/libvirt/images/$IMAGE_NAME.qcow2
+POOL_PATH=`virsh pool-dumpxml default | grep path | sed -e 's,.*<path>\([^<]*\)</path>.*,\1,g'`
+sudo touch $POOL_PATH/$IMAGE_NAME.qcow2
 
 EXTRAOPTS=
 if [ -n "$OVSBRIDGE" ] ; then
@@ -104,7 +105,7 @@ if [ -n "$OVSBRIDGE" ] ; then
 fi
 configure-vm $EXTRAOPTS \
        --name $IMAGE_NAME \
-       --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
+       --image $POOL_PATH/$IMAGE_NAME.qcow2 \
        --baremetal-interface $BRIDGE \
        --engine $ENGINE \
        --arch $SEED_ARCH \
