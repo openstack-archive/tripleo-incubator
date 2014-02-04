@@ -50,7 +50,7 @@ function show_options () {
     echo "are used to construct a remote libvirt URL and spawn the VM remotely."
     echo "Note that seed-ip *must* be present when doing this. When spawning remotely"
     echo "the image is copied to that host via rsync, and a remote virsh URI is used."
-    echo "However SSH access with rsync write access to /var/lib/libvirt/images/,"
+    echo "However SSH access with rsync write access to the path of the default pool,"
     echo "permission to chattr, and the ability to run virsh as the selected user are"
     echo "requirements."
     echo
@@ -155,8 +155,9 @@ if [ $CREATE_IMAGE  ]; then
       # don't have to open up the ssh access even further.
       dd if=$IMAGE_CACHE_FILE.qcow2 | ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} copyseed $ENV_NUM
     else
-      sudo cp $IMAGE_CACHE_FILE.qcow2 /var/lib/libvirt/images/$IMAGE_NAME.qcow2
-      sudo chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
+      POOL_PATH=`virsh pool-dumpxml default | grep path | sed -e 's,.*<path>\([^<]*\)</path>.*,\1,g'`
+      sudo cp $IMAGE_CACHE_FILE.qcow2 $POOL_PATH/$IMAGE_NAME.qcow2
+      sudo chattr +C $POOL_PATH/$IMAGE_NAME.qcow2 || true
     fi
 fi
 

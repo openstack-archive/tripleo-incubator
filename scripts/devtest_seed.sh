@@ -15,7 +15,7 @@ USE_CACHE=${USE_CACHE:-0}
 ##    suitable paths and options to create and start a VM that contains an
 ##    all-in-one OpenStack cloud with the baremetal driver enabled, and
 ##    preconfigures it for a development environment. Note that the seed has
-##    minimal variation in it's configuration: the goal is to bootstrap with
+##    minimal variation in its configuration: the goal is to bootstrap with
 ##    a known-solid config.
 ##    ::
 

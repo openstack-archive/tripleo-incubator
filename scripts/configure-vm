@@ -35,7 +35,8 @@ def main():
     args = parser.parse_args()
     with file(templatedir + '/vm.xml', 'rb') as f:
         source_template = f.read()
-    imagefile = '/var/lib/libvirt/images/seed.qcow2'
+    POOL_PATH=`virsh pool-dumpxml default | grep path | sed -e 's,.*<path>\([^<]*\)</path>.*,\1,g'`
+    imagefile = $POOL_PATH/seed.qcow2
     if args.image:
         imagefile = args.image
     imagefile = os.path.realpath(imagefile)
