@@ -81,10 +81,10 @@ fi #nodocs
 
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
 
-## #. For running an overcloud in VM's::
+## #. For running an overcloud in VM's. For Physical machines, set to kvm:
 ##    ::
 
-OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-";NovaComputeLibvirtType=qemu"}
+OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
 
 ## #. Set the public interface of overcloud network node::
 ##    ::
@@ -112,13 +112,43 @@ source tripleo-overcloud-passwords
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml
 ##         heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-##             -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE};SSLCertificate=${OVERCLOUD_SSL_CERT};SSLKey=${OVERCLOUD_SSL_KEY}" \
+##             -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
+##             -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
+##             -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
+##             -P "GlancePassword=${OVERCLOUD_GLANCE_PASSWORD}" \
+##             -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
+##             -P "NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD}" \
+##             -P "NovaPassword=${OVERCLOUD_NOVA_PASSWORD}" \
+##             -P "NeutronPublicInterface=${NeutronPublicInterface}" \
+##             -P "SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD}" \
+##             -P "SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}" \
+##             -P "NovaComputeLibvirtType=${OVERCLOUD_LIBVIRT_TYPE}" \
+##             -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
+##             -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
 ##             overcloud
 
 ### --end
 
 heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-    -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN};AdminPassword=${OVERCLOUD_ADMIN_PASSWORD};CinderPassword=${OVERCLOUD_CINDER_PASSWORD};GlancePassword=${OVERCLOUD_GLANCE_PASSWORD};HeatPassword=${OVERCLOUD_HEAT_PASSWORD};NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD};NovaPassword=${OVERCLOUD_NOVA_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP};NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice};NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute};SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD};SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}${OVERCLOUD_LIBVIRT_TYPE};ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY};notcomputeImage=${OVERCLOUD_CONTROL_ID};NovaImage=${OVERCLOUD_COMPUTE_ID};SSLCertificate=${OVERCLOUD_SSL_CERT};SSLKey=${OVERCLOUD_SSL_KEY}" \
+    -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
+    -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
+    -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
+    -P "GlancePassword=${OVERCLOUD_GLANCE_PASSWORD}" \
+    -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
+    -P "NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD}" \
+    -P "NovaPassword=${OVERCLOUD_NOVA_PASSWORD}" \
+    -P "NeutronPublicInterface=${NeutronPublicInterface}" \
+    -P "NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP}" \
+    -P "NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice}" \
+    -P "NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute}" \
+    -P "SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD}" \
+    -P "SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}" \
+    -P "NovaComputeLibvirtType=${OVERCLOUD_LIBVIRT_TYPE}" \
+    -P "ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY}" \
+    -P "notcomputeImage=${OVERCLOUD_CONTROL_ID}" \
+    -P "NovaImage=${OVERCLOUD_COMPUTE_ID}" \
+    -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
+    -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
     $STACKNAME
 
 ### --include
