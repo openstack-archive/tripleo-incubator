@@ -26,6 +26,7 @@ PATH=$PATH:/usr/sbin:/sbin
 ARCH=i386
 BRIDGE=brbm
 OVSBRIDGE=
+MEMORY=2097152
 export IMAGE_NAME=seed
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
@@ -39,6 +40,7 @@ function show_options () {
     echo "      -a i386|amd64     -- set the architecture of the VM (i386)"
     echo "      -o name           -- set the name of the VM and image file"
     echo "                           (seed) - must match that from boot-seed-vm"
+    echo "      -m memory         -- define amount of memory to use"
     echo "      -b bridge         -- define a baremetal bridge to use"
     echo "      -p bridge         -- define an ovs bridge to use for the public interface"
     echo "      -e engine         -- set the virt engine to use"
@@ -48,7 +50,7 @@ function show_options () {
     exit $1
 }
 
-TEMP=`getopt -o ha:o:b:p:e: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o ha:o:m:b:p:e: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -58,6 +60,7 @@ while true ; do
     case "$1" in
         -a) export ARCH=$2; shift 2 ;;
         -o) export IMAGE_NAME=$2; shift 2 ;;
+        -m) export MEMORY=$2; shift 2 ;;
         -b) export BRIDGE=$2; shift 2 ;;
         -p) export OVSBRIDGE=$2; shift 2 ;;
         -e) export ENGINE=$2; shift 2 ;;
@@ -108,6 +111,7 @@ configure-vm $EXTRAOPTS \
        --baremetal-interface $BRIDGE \
        --engine $ENGINE \
        --arch $SEED_ARCH \
+       --memory $MEMORY \
        --libvirt-nic-driver $LIBVIRT_NIC_DRIVER \
        --seed
 
