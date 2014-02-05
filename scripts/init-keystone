@@ -74,7 +74,13 @@ export SERVICE_ENDPOINT=http://$ENDPOINT:35357/v2.0
 export SERVICE_TOKEN
 # Setup PKI
 
-ssh -o StrictHostKeyChecking=no -t $HOST sudo keystone-manage pki_setup --keystone-user keystone --keystone-group keystone
+KEYSTONE_USER=keystone
+if ssh -o StrictHostKeyChecking=no -t $HOST getent passwd openstack-keystone >/dev/null; then
+    KEYSTONE_USER=openstack-keystone
+fi
+
+ssh -o StrictHostKeyChecking=no -t $HOST sudo keystone-manage pki_setup \
+    --keystone-user $KEYSTONE_USER --keystone-group $KEYSTONE_USER
 
 # Tenants
 echo "Waiting for keystone to initialise..."
