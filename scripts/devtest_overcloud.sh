@@ -177,8 +177,8 @@ fi #nodocs
 ##    ::
 
 echo "Waiting for the overcloud stack to be ready" #nodocs
-wait_for 220 10 stack-ready $STACKNAME #nodocs
-##         wait_for 220 10 stack-ready overcloud
+wait_for 300 10 stack-ready $STACKNAME #nodocs
+##         wait_for 300 10 stack-ready overcloud
 export OVERCLOUD_IP=$(nova list | grep notCompute0.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
