@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Approved+1: James Slagle <jslagle@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+2: Jan Provaznik <jan.provaznik@gmail.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 06 Feb 2014 22:17:27 +0000
+Reviewed-on: https://review.openstack.org/70846
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
