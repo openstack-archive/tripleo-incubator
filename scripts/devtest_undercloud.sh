@@ -26,7 +26,7 @@ fi #nodocs
 ## #. Load the undercloud image into Glance:
 ##    ::
 
-UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
+load-image $TRIPLEO_ROOT/undercloud.qcow2
 
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    (tripleo-passwords by default) that you need to source into your shell
@@ -41,6 +41,11 @@ UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 
 setup-undercloud-passwords
 source tripleo-undercloud-passwords
+
+## #. Retrieve the undercloud image id:
+##    ::
+
+UNDERCLOUD_ID=$(glance image-list --name undercloud | grep undercloud | awk '{print $2}')
 
 ## #. Deploy an undercloud
 ##    ::

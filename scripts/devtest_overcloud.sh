@@ -62,7 +62,7 @@ fi #nodocs
 ## #. Load the image into Glance:
 ##    ::
 
-OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
+load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2
 
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
@@ -79,7 +79,7 @@ fi #nodocs
 ## #. Load the image into Glance:
 ##    ::
 
-OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
+load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2
 
 ## #. For running an overcloud in VM's::
 ##    ::
@@ -104,6 +104,12 @@ else
 fi
 
 ### --include
+
+## #. Retrieve the overcloud image ids:
+##    ::
+
+OVERCLOUD_COMPUTE_ID=$(glance image-list --name overcloud-compute | grep overcloud-compute | awk '{print $2}')
+OVERCLOUD_CONTROL_ID=$(glance image-list --name overcloud-control | grep overcloud-control | awk '{print $2}')
 
 ## #. Deploy an overcloud::
 
