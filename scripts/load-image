@@ -50,13 +50,16 @@ function remove_image() {
 
 function load_image() {
     FILE=$(readlink -f $1)
+    DIR=$(dirname ${FILE})
+    GLANCE_IMAGE_NAME=$(basename ${FILE%.*})
+    RAMDISK="${DIR}/${GLANCE_IMAGE_NAME}.initrd"
+    KERNEL="${DIR}/${GLANCE_IMAGE_NAME}.vmlinuz"
 
     if [ ! -e "$FILE" ]; then
         echo "Error: specified file $FILE not found"
         exit 1
     fi
 
-    GLANCE_IMAGE_NAME=$(basename ${FILE%.*})
     CURRENT_CHECKSUM=$(glance image-show $GLANCE_IMAGE_NAME 2> /dev/null | awk '/ checksum / {print $4}')
     NEW_CHECKSUM=$(md5sum $FILE | awk '{print $1}')
     if [ "$CURRENT_CHECKSUM" = "$NEW_CHECKSUM" ]; then
@@ -65,11 +68,18 @@ function load_image() {
         return
     fi
 
-    export TMP_IMAGE_DIR=$(mktemp -t -d --tmpdir=${TMP_DIR:-/tmp} image.XXXXXXXX)
-    [ $? -eq 0 ] || die "Failed to create tmp directory"
-    trap cleanup EXIT
+    if [ ! -e "$KERNEL" -o ! -e "$RAMDISK" ] ; then
+        echo "Warning: Kernel ($KERNEL) or initrd ($RAMDISK) for specified file $FILE not found."
+        echo "         Trying to extract them with disk-image-get-kernel now."
+        echo "         Please add the \"baremetal\" element to your image-build."
+        export TMP_IMAGE_DIR=$(mktemp -t -d --tmpdir=${TMP_DIR:-/tmp} image.XXXXXXXX)
+        [ $? -eq 0 ] || die "Failed to create tmp directory"
+        trap cleanup EXIT
 
-    $DIGK -d ${TMP_IMAGE_DIR} -o 'tmp' -i $FILE
+        $DIGK -d ${TMP_IMAGE_DIR} -o 'tmp' -i $FILE
+        KERNEL=$TMP_IMAGE_DIR/tmp-vmlinuz
+        RAMDISK=$TMP_IMAGE_DIR/tmp-initrd
+    fi
 
     if [ "$REMOVE_OLD_IMAGES" ]; then
         remove_image "${GLANCE_IMAGE_NAME}-vmlinuz"
@@ -77,10 +87,16 @@ function load_image() {
         remove_image "${GLANCE_IMAGE_NAME}"
     fi
 
-    kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" --public --disk-format aki < "$TMP_IMAGE_DIR/tmp-vmlinuz" \
-                | grep ' id ' | awk '{print $4}')
-    ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd"  --public --disk-format ari < "$TMP_IMAGE_DIR/tmp-initrd" \
-                 | grep ' id ' | awk '{print $4}')
+    kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" \
+                                    --public \
+                                    --disk-format aki \
+                                    --file "$KERNEL" \
+                                    | grep ' id ' | awk '{print $4}')
+    ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd" \
+                                     --public \
+                                     --disk-format ari \
+                                     --file "$RAMDISK" \
+                                     | grep ' id ' | awk '{print $4}')
 
     # >&3 sends to the original stdout as this is what we are after
     glance image-create --name $GLANCE_IMAGE_NAME \
