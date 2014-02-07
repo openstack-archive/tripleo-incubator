@@ -100,20 +100,20 @@ fi
 ## #. ssh-user: The SSH username to use when performing virsh commands on
 ##    $host-ip.
 
-## #. node-macs: A space separated string containing the MAC addresses of eth0
-##    each of the emulated bare metal VMs.
+## #. node-macs: A space separated string containing the MAC addresses of the
+##    primary interface for each VM or bare metal machine.
 
 ## #. node-pm-ips: A space separated string containing the power management
 ##    IP address of each bare metal machine. Useful when using real bare
-##    metal hardware.
+##    metal hardware. *OPTIONAL*
 
 ## #. node-pm-users: A space separated string containing the power management
 ##    user ID of each bare metal machine. Useful when using real bare
-##    metal hardware.
+##    metal hardware. *OPTIONAL*
 
 ## #. node-pm-passwords: A space separated string containing the power
 ##    management password of each bare metal machine.
-##    Useful when using real bare metal hardware.
+##    Useful when using real bare metal hardware. *OPTIONAL*
 
 ## #. seed-route-dev: What device to route traffic for the initial undercloud
 ##    network. As our test network is unrouteable we require an explicit device
