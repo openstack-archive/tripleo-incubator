@@ -50,28 +50,38 @@ function remove_image() {
 
 function load_image() {
     FILE=$(readlink -f $1)
+    DIR=$(dirname ${FILE})
+    GLANCE_IMAGE_NAME=$(basename ${FILE%.*})
+    RAMDISK="${DIR}/${GLANCE_IMAGE_NAME}.initrd"
+    KERNEL="${DIR}/${GLANCE_IMAGE_NAME}.vmlinuz"
 
     if [ ! -e "$FILE" ]; then
         echo "Error: specified file $FILE not found"
         exit 1
     fi
 
-    export TMP_IMAGE_DIR=$(mktemp -t -d --tmpdir=${TMP_DIR:-/tmp} image.XXXXXXXX)
-    [ $? -eq 0 ] || die "Failed to create tmp directory"
-    trap cleanup EXIT
+    if [ ! -e "$KERNEL" -o ! -e "$RAMDISK" ] ; then
+        echo "Warning: Kernel ($KERNEL) or initrd ($RAMDISK) for specified file $FILE not found."
+        echo "         Trying to extract them with disk-image-get-kernel now."
+        echo "         Please add the \"baremetal\" element to your image-build."
+        export TMP_IMAGE_DIR=$(mktemp -t -d --tmpdir=${TMP_DIR:-/tmp} image.XXXXXXXX)
+        [ $? -eq 0 ] || die "Failed to create tmp directory"
+        trap cleanup EXIT
 
-    $DIGK -d ${TMP_IMAGE_DIR} -o 'tmp' -i $FILE
+        $DIGK -d ${TMP_IMAGE_DIR} -o 'tmp' -i $FILE
+        KERNEL=$TMP_IMAGE_DIR/tmp-vmlinuz
+        RAMDISK=$TMP_IMAGE_DIR/tmp-initrd
+    fi
 
-    GLANCE_IMAGE_NAME=$(basename ${FILE%.*})
     if [ "$REMOVE_OLD_IMAGES" ]; then
         remove_image "${GLANCE_IMAGE_NAME}-vmlinuz"
         remove_image "${GLANCE_IMAGE_NAME}-initrd"
         remove_image "${GLANCE_IMAGE_NAME}"
     fi
 
-    kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" --public --disk-format aki < "$TMP_IMAGE_DIR/tmp-vmlinuz" \
+    kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" --public --disk-format aki < "$KERNEL" \
                 | grep ' id ' | awk '{print $4}')
-    ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd"  --public --disk-format ari < "$TMP_IMAGE_DIR/tmp-initrd" \
+    ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd"  --public --disk-format ari < "$RAMDISK" \
                  | grep ' id ' | awk '{print $4}')
 
     # >&3 sends to the original stdout as this is what we are after
