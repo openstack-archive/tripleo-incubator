@@ -102,6 +102,13 @@ NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
 OVERCLOUD_FLAT_NETWORKS=${OVERCLOUD_FLAT_NETWORKS:-''}
 
+## #. If you are using SSL, your compute nodes will need static mappings to your
+##    endpoint in /etc/hosts (because we don't do dynamic undercloud DNS yet).
+##    set this to the DNS name you're using for your SSL certificate - the heat
+##    template looks up the controller address within the cloud.
+
+OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
+
 ## #. Choose whether to deploy or update. Use stack-update to update::
 
 ##         HEAT_OP=stack-create
@@ -126,6 +133,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCL
 ##             -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
 ##             -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
 ##             -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
+##             -P "CloudName=${OVERCLOUD_NAME}" \
 ##             -P "GlancePassword=${OVERCLOUD_GLANCE_PASSWORD}" \
 ##             -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
 ##             -P "NeutronFlatNetworks=${OVERCLOUD_FLAT_NETWORKS}" \
@@ -145,6 +153,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
     -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
     -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
+    -P "CloudName=${OVERCLOUD_NAME}" \
     -P "GlancePassword=${OVERCLOUD_GLANCE_PASSWORD}" \
     -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
     -P "NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD}" \
