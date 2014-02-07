@@ -87,19 +87,14 @@ user-config
 
 setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 
-## #. Register "bare metal" nodes with nova and setup Nova baremetal flavors.
-##    When using VMs Nova will PXE boot them as though they use physical
-##    hardware.
-##    If you want to create the VM yourself see footnote [#f2]_ for details
-##    on its requirements.
-##    If you want to use real baremetal see footnote [#f3]_ for details.
+## #. Create a 'baremetal' node out of a KVM virtual machine.
+##    Nova will PXE boot this VM as though it is physical hardware.
+##    If you want to create the VM yourself, see footnote [#f2]_ for details on
+##    its requirements.
 ##    ::
 
 SEED_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | awk '{ print $1 }')
-SEED_PM_IPS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-ips --type raw | awk '{ print $1 }')
-SEED_PM_USERS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-users --type raw | awk '{ print $1 }')
-SEED_PM_PASSWORDS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-passwords --type raw | awk '{ print $1 }')
-setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed "$SEED_PM_IPS" "$SEED_PM_USERS" "$SEED_PM_PASSWORDS"
+setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
 ## 
@@ -149,8 +144,8 @@ ssh root@192.0.2.1 "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/a
 ## 
 ##    If you want to use real bare metal see the following.
 ## 
-##    * When calling setup-baremetal you can set the MAC, IP address, user,
-##      and password parameters which should all be space delemited lists
+##    * When calling setup-baremetal you can set MACS, PM_IPS, PM_USERS,
+##      and PM_PASSWORDS parameters which should all be space delemited lists
 ##      that correspond to the MAC addresses and power management commands
 ##      your real baremetal machines require. See scripts/setup-baremetal
 ##      for details.
