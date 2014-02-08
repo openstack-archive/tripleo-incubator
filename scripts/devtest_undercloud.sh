@@ -4,7 +4,7 @@ set -eu
 set -o pipefail
 
 USE_CACHE=${USE_CACHE:-0}
-TE_DATAFILE=${1:?"A test environment description is required as $$1."}
+TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 
 ### --include
 ## devtest_undercloud
