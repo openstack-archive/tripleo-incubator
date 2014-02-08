@@ -30,6 +30,12 @@ fi #nodocs
 
 UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 
+
+## #. Set the public interface of the undercloud network node:
+##    ::
+
+NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
+
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    (tripleo-undercloud-passwords by default) that you need to source into
 ##    your shell environment.
@@ -70,6 +76,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
     -P "undercloudImage=${UNDERCLOUD_ID}" \
     -P "PowerSSHPrivateKey=${POWER_KEY}" \
     -P "PowerSSHHost=${POWER_HOST}" \
+    -P "NeutronPublicInterface=${NeutronPublicInterface}" \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
