@@ -29,6 +29,12 @@ fi #nodocs
 
 UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 
+
+## #. Set the public interface of the undercloud network node::
+##    ::
+
+NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
+
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    (tripleo-undercloud-passwords by default) that you need to source into
 ##    your shell environment.
@@ -49,7 +55,7 @@ source tripleo-undercloud-passwords
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};PowerManager=$POWER_MANAGER;undercloudImage=${UNDERCLOUD_ID}" \
+    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NeutronPublicInterface=${NeutronPublicInterface};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};PowerManager=$POWER_MANAGER;undercloudImage=${UNDERCLOUD_ID}" \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
