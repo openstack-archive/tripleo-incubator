@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013 Hewlett-Packard Development Company, L.P.
+# Copyright 2013-2014 Hewlett-Packard Development Company, L.P.
 # All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -18,7 +18,6 @@
 set -e
 
 SCRIPT_NAME=$(basename $0)
-SCRIPT_HOME=$(dirname $0)
 
 # save stdout for later then make fd 1 stderr
 exec 3>&1 >&2
@@ -33,10 +32,6 @@ function show_options () {
     echo "      -h            -- print this help"
     echo
     exit 0
-}
-
-function cleanup() {
-    rm -rf $TMP_IMAGE_DIR
 }
 
 function remove_image() {
@@ -56,12 +51,6 @@ function load_image() {
         exit 1
     fi
 
-    export TMP_IMAGE_DIR=$(mktemp -t -d --tmpdir=${TMP_DIR:-/tmp} image.XXXXXXXX)
-    [ $? -eq 0 ] || die "Failed to create tmp directory"
-    trap cleanup EXIT
-
-    $DIGK -d ${TMP_IMAGE_DIR} -o 'tmp' -i $FILE
-
     GLANCE_IMAGE_NAME=$(basename ${FILE%.*})
     if [ "$REMOVE_OLD_IMAGES" ]; then
         remove_image "${GLANCE_IMAGE_NAME}-vmlinuz"
@@ -69,9 +58,9 @@ function load_image() {
         remove_image "${GLANCE_IMAGE_NAME}"
     fi
 
-    kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" --public --disk-format aki < "$TMP_IMAGE_DIR/tmp-vmlinuz" \
+    kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" --public --disk-format aki < "${GLANCE_IMAGE_NAME}.vmlinuz" \
                 | grep ' id ' | awk '{print $4}')
-    ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd"  --public --disk-format ari < "$TMP_IMAGE_DIR/tmp-initrd" \
+    ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd"  --public --disk-format ari < "${GLANCE_IMAGE_NAME}.initrd" \
                  | grep ' id ' | awk '{print $4}')
 
     # >&3 sends to the original stdout as this is what we are after
@@ -82,9 +71,6 @@ function load_image() {
                         --property kernel_id=$kernel_id \
                         --property ramdisk_id=$ramdisk_id \
                         --file $FILE | awk '/ id / { print $4 }' >&3
-
-    cleanup
-    trap EXIT
 }
 
 
@@ -111,18 +97,10 @@ fi
 
 which glance >/dev/null || ( echo "Error: unable to locate glance"; exit 1 )
 
-DIB_PATH=${DIB_PATH:-$SCRIPT_HOME/../../diskimage-builder}
-DIGK=$(which disk-image-get-kernel || echo $DIB_PATH/bin/disk-image-get-kernel)
-if [ ! -e $DIGK ]; then
-    echo "Error: unable to locate disk-image-get-kernel"
-    exit 1
-fi
-
 # Attempt to get the OS credentials, or die.
 [ -z "$OS_AUTH_URL" ] && [ -z "$OS_USERNAME" ] && [ -z "$OS_PASSWORD" ] && \
     (  ( [ -e ~/stackrc ] && source ~/stackrc ) \
     || ( echo "Error: OS credentials not found. Please save them to ~/stackrc." && exit 1 ) )
-
 
 # Load the images now
 for FILE in $FILES; do
