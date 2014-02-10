@@ -32,7 +32,7 @@ function show_options () {
 
 CONTINUE=
 USE_CACHE=0
-TRIPLEO_CLEANUP=1
+export TRIPLEO_CLEANUP=1
 
 TEMP=`getopt -o h,c -l existing-environment,trash-my-machine -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
