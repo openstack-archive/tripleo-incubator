@@ -25,6 +25,18 @@ sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
 sed -i "s/\"power_manager\":.*,/\"power_manager\": \"$POWER_MANAGER\",/" config.json
 
+### --end
+# If running in a CI environment then the user and ip address should be read
+# from the json describing the environment
+REMOTE_OPERATIONS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key remote-operations --type raw --key-default '')
+if [ -n "$REMOTE_OPERATIONS" ] ; then
+    HOST_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key host-ip --type netaddress --key-default '')
+    SSH_USER=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default 'root')
+    sed -i "s/\"192.168.122.1\"/\"$HOST_IP\"/" config.json
+    sed -i "s/\"user\": \".*\?\",/\"user\": \"$SSH_USER\",/" config.json
+fi
+### --include
+
 cd $TRIPLEO_ROOT
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
     boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
