@@ -30,8 +30,9 @@ fi #nodocs
 UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 
 ## #. Create secrets for the cloud. The secrets will be written to a file
-##    (tripleo-passwords by default) that you need to source into your shell
-##    environment.  Note that you can also make or change these later and
+##    (tripleo-undercloud-passwords by default) that you need to source into
+##    your shell environment.
+##    Note that you can also make or change these later and
 ##    update the heat stack definition to inject them - as long as you also
 ##    update the keystone recorded password. Note that there will be a window
 ##    between updating keystone and instances where they will disagree and
