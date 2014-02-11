@@ -104,6 +104,14 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
 export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"} #nodocs
 
+## #. Select qpidd boot-stack if OS family is Red Hat
+##    ::
+MESSAGING_BACKEND='rabbitmq-server'
+if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
+    MESSAGING_BACKEND='qpidd'
+fi
+export MESSAGING_BACKEND
+
 ## #. Set number of compute nodes for the overcloud
 ##    ::
 

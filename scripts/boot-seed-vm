@@ -29,7 +29,7 @@ export IMAGE_NAME=seed
 IMAGE_CACHE_DIR=${IMAGE_CACHE_DIR:-~/.cache/image-create/image-file-cache}
 export DIB_IMAGE_SIZE=30
 CREATE_IMAGE=yes
-ALWAYS_ELEMENTS="vm local-config boot-stack nova-baremetal seed-stack-config remove-serial-console $DIB_COMMON_ELEMENTS"
+ALWAYS_ELEMENTS="vm local-config boot-stack $MESSAGING_BACKEND nova-baremetal seed-stack-config remove-serial-console $DIB_COMMON_ELEMENTS"
 EXTRA_ELEMENTS=${EXTRA_ELEMENTS:-cloud-init-nocloud}
 export VM_IP=""
 
@@ -143,6 +143,13 @@ if [ $CREATE_IMAGE  ]; then
 
     # Create the image if it doesn't exist or we're not using image cache
     if [ ! -e "$IMAGE_CACHE_FILE.qcow2" -o -z "$IMAGE_CACHE_USE" ] ; then
+
+	if [ "$MESSAGING_BACKEND" = "qpidd" ]; then
+	    sed -i "s/\"rabbit\"/\"qpid\"/" $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config/config.json
+	else
+	    sed -i "s/\"qpid\"/\"rabbit\"/" $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config/config.json
+	fi
+
         $DIB -x -u -a $ARCH $ALWAYS_ELEMENTS $EXTRA_ELEMENTS -o $IMAGE_CACHE_FILE 2>&1 | tee $IMAGE_CACHE_FILE.log
     else
         echo "Using cached seed image : $IMAGE_CACHE_FILE"

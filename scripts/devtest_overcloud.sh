@@ -55,6 +55,7 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
         boot-stack cinder-api cinder-volume os-collect-config \
         neutron-network-node dhcp-all-interfaces swift-proxy swift-storage \
+        $MESSAGING_BACKEND \ 
         $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
@@ -117,6 +118,13 @@ setup-overcloud-passwords
 source tripleo-overcloud-passwords
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCLOUD_COMPUTESCALE
+
+if [ "$MESSAGING_BACKEND" = "qpidd" ]; then
+    sed -i "s/rabbit:/qpid:/" $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml
+else
+    sed -i "s/qpid:/rabbit:/" $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml
+fi
+
 ##         heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
 ##             -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
