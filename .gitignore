@@ -21,7 +21,8 @@ scripts/os-apply-config
 scripts/swift
 stackrc
 
-tripleo-passwords
+tripleo-undercloud-passwords
+tripleo-overcloud-passwords
 tripleorc
 
 .tox
