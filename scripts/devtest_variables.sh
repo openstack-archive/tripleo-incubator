@@ -51,18 +51,6 @@ export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
 export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
 
-## #. Set a list of image elements that should be included in all image builds.
-##    Note that stackuser is only for debugging support - it is not suitable for
-##    a production network. This is also the place to include elements such as
-##    pip-cache or pypi-openstack if you intend to use them.
-##    ::
-
-export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
-
-## #. These elements are required for tripleo in all images we build.
-
-export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
-
 ## #. Set HW resources for VMs used as 'baremetal' nodes. NODE_CPU is cpu count,
 ##    NODE_MEM is memory (MB), NODE_DISK is disk size (GB), NODE_ARCH is
 ##    architecture (i386, amd64). NODE_ARCH is used also for the seed VM.
@@ -103,6 +91,29 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 
 source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
 export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"} #nodocs
+
+## #. Select a backend for messaging.
+##    Default is rabbitmq-server.
+##    qpidd is selected if the OS family is Red Hat.
+##    ::
+
+if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
+    export MESSAGING_BACKEND=${MESSAGING_BACKEND:-'qpidd'}
+else
+    export MESSAGING_BACKEND=${MESSAGING_BACKEND:-'rabbitmq-server'}
+fi
+
+## #. Set a list of image elements that should be included in all image builds.
+##    Note that stackuser is only for debugging support - it is not suitable for
+##    a production network. This is also the place to include elements such as
+##    pip-cache or pypi-openstack if you intend to use them.
+##    ::
+
+export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
+
+## #. These elements are required for tripleo in all images we build.
+
+export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} ${MESSAGING_BACKEND} use-ephemeral"
 
 ## #. Set number of compute nodes for the overcloud
 ##    ::
