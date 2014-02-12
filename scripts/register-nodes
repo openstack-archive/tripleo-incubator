@@ -11,19 +11,49 @@ PM_IPS=( $6 )
 PM_USERS=( $7 )
 PM_PASSWORDS=( $8 )
 
-# Ensure nova's baremetal service has fully initialised before proceeding with real nodes
-wait_for 60 10 nova baremetal-node-create devtest_canary 1 1 1 11:22:33:44:55:66
-nova baremetal-node-delete $(nova baremetal-node-list | awk '/devtest_canary/ {print $2}')
+if [[ $USE_IRONIC -eq 0 ]]; then
+    # Ensure nova's baremetal service has fully initialised before proceeding with real nodes
+    wait_for 60 10 nova baremetal-node-create devtest_canary 1 1 1 11:22:33:44:55:66
+    nova baremetal-node-delete $(nova baremetal-node-list | awk '/devtest_canary/ {print $2}')
+else
+    # Ensure Ironic Service has fully initialised before proceeding
+    wait_for 60 10 ironic chassis-create -d 'devtest_canary'
+    ironic chassis-delete $(ironic chassis-list | awk '/devtest_canary/ {print $2}')
+fi
 
 count=0
 for MAC in $MACS; do
 
-    if [ -n "${PM_IPS:-}" -a -n "${PM_USERS:-}" -a -n "${PM_PASSWORDS:-}" ]; then
-        nova baremetal-node-create --pm_address=${PM_IPS[$count]} --pm_user=${PM_USERS[$count]} --pm_password=${PM_PASSWORDS[$count]} $SERVICE_HOST $CPU $MEM $DISK $MAC
+    # TODO(NobodyCam): Remove OR (||) once Ironic is worked into seed vm
+    if [[ $USE_IRONIC -eq 0 || $SERVICE_HOST == "seed" ]]; then
+        # Nova Baremetal
+        if [ -n "${PM_IPS:-}" -a -n "${PM_USERS:-}" -a -n "${PM_PASSWORDS:-}" ]; then
+            nova baremetal-node-create --pm_address=${PM_IPS[$count]} --pm_user=${PM_USERS[$count]} --pm_password=${PM_PASSWORDS[$count]} $SERVICE_HOST $CPU $MEM $DISK $MAC
+        else
+            nova baremetal-node-create $SERVICE_HOST $CPU $MEM $DISK $MAC
+        fi
     else
-        nova baremetal-node-create $SERVICE_HOST $CPU $MEM $DISK $MAC
+        # Ironic
+        # check node driver per node
+        if [ -n "${PM_IPS:-}" -a -n "${PM_USERS:-}" -a -n "${PM_PASSWORDS:-}" ]; then
+            IRONIC_NODE_DRIVER="pxe_ssh"
+        else
+            IRONIC_NODE_DRIVER="pxe_ipmitool"
+        fi
+        IRONIC_NODE_ID=`ironic node-create -d ${IRONIC_NODE_DRIVER} | awk -F"|" '/ uuid/ { print $3 }' | tr -d ' '`
+        ironic node-update $IRONIC_NODE_ID add -p cpus=$CPU -p memory_mb=$MEM -p local_gb=$DISK cpu_arch=${NODE_ARCH}
+        ironic port-create -a $MAC -n $IRONIC_NODE_ID
+        if [ -n "${PM_IPS:-}" -a -n "${PM_USERS:-}" -a -n "${PM_PASSWORDS:-}" ]; then
+            # Ipmi
+            ironic node-update $IRONIC_NODE_ID add -i ipmi_username=$PM_USERS -i ipmi_password=$PM_PASSWORDS -i ipmi_address=$PM_IPS
+        else
+            # ssh
+            ssh_user=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default '' | awk '{ print $1 }')
+            ssh_key="/mnt/state/var/lib/ironic/virtual-power-key"
+            ssh_host=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key host-ip --type raw --key-default '' | awk '{ print $1 }')
+            ssh_type=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key virt_type --type raw --key-default '' | awk '{ print $1 }')
+            ironic node-update $IRONIC_NODE_ID add -i ssh_address=$ssh_host -i ssh_key_filename=$ssh_key -i ssh_virt_type=$ssh_type -i ssh_username=$ssh_user
     fi
-
     count=$((count + 1))
 
 done
