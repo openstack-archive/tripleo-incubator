@@ -10,6 +10,24 @@ UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 ## devtest_undercloud
 ## ==================
 
+## #. Specify whether to use the nova-baremetal or nova-ironic drivers
+##    for provisioning within the undercloud.
+##    ::
+
+if [ "$USE_IRONIC" = "0" ] ; then #nodocs
+    PROVISION_ELEMENT='nova-baremetal'
+else #nodocs
+    PROVISION_ELEMENT='nova-ironic'
+
+## #. Until the nova-ironic driver lands upstream, you will need to set these
+##    extra options to pull the code from gerrit.
+##    ::
+
+    export DIB_REPOLOCATION_nova=https://review.openstack.org/openstack/nova
+    export DIB_REPOREF_nova=refs/changes/28/51328/21
+
+fi #nodocs
+
 
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
@@ -19,8 +37,8 @@ UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-        boot-stack nova-baremetal os-collect-config dhcp-all-interfaces \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud $PROVISION_ELEMENT \
+        boot-stack os-collect-config dhcp-all-interfaces \
         neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-undercloud.log
 fi #nodocs
@@ -53,12 +71,27 @@ POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
 POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
 POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
+## #. Nova-baremetal and Ironic require different Heat templates
+##    and different options. Set the following for Nova-baremetal
+##    ::
+
+if [ "$USE_IRONIC" = "0" ] ; then #nodocs
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
+    HEAT_UNDERCLOUD_EXTRA_OPTS="-P \"PowerUserName=${POWER_USER}\" -P \"PowerManager=${POWER_MANAGER}\" -P \"PowerSSHPrivateKey=${POWER_KEY}\" -P \"PowerSSHHost=${POWER_HOST}\" "
+
+##    and set these for Ironic
+##    ::
+
+else #nodocs
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
+    HEAT_UNDERCLOUD_EXTRA_OPTS="-P \"IronicPassword=${UNDERCLOUD_IRONIC_PASSWORD}\" "
+fi #nodocs
+
 ## #. Deploy an undercloud.
 ##    ::
 
-make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
-heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=${POWER_USER}" \
+make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
+heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
     -P "AdminToken=${UNDERCLOUD_ADMIN_TOKEN}" \
     -P "AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
     -P "GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD}" \
@@ -66,10 +99,8 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
     -P "NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD}" \
     -P "NovaPassword=${UNDERCLOUD_NOVA_PASSWORD}" \
     -P "BaremetalArch=${NODE_ARCH}" \
-    -P "PowerManager=${POWER_MANAGER}" \
     -P "undercloudImage=${UNDERCLOUD_ID}" \
-    -P "PowerSSHPrivateKey=${POWER_KEY}" \
-    -P "PowerSSHHost=${POWER_HOST}" \
+    $HEAT_UNDERCLOUD_EXTRA_OPTS \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
@@ -112,10 +143,13 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
     $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
-setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+setup-endpoints $UNDERCLOUD_IP \
+    --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+    --ironic-password $UNDERCLOUD_IRONIC_PASSWORD \
     --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
     --nova-password $UNDERCLOUD_NOVA_PASSWORD
+
 keystone role-create --name heat_stack_user
 
 user-config
