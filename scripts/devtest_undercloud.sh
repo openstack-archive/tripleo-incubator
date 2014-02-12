@@ -44,12 +44,21 @@ UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 setup-undercloud-passwords
 source tripleo-undercloud-passwords
 
-## #. Deploy an undercloud
+## #. Pull out needed variables from the test environment definition.
+##    ::
+
+POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
+POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
+POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
+POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
+
+## #. Deploy an undercloud.
 ##    ::
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};PowerManager=$POWER_MANAGER;undercloudImage=${UNDERCLOUD_ID}" \
+    -P "PowerUserName=${POWER_USER};AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};PowerManager=${POWER_MANAGER};undercloudImage=${UNDERCLOUD_ID};PowerSSHPrivateKey=${POWER_KEY};PowerSSHHost=${POWER_HOST}" \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE

@@ -15,6 +15,9 @@ function show_options () {
     echo
     echo "JSON-filename -- the path to write the environment description to."
     echo
+    echo "Note: This adds a unique key to your authorised_keys file to permit "
+    echo "virtual-power-managment calls to be made."
+    echo
     exit $1
 }
 
@@ -87,6 +90,26 @@ export HOSTIP=${HOSTIP:-192.168.122.1}
 
 export SEEDIP=${SEEDIP:-''}
 
-echo "{\"host-ip\":\"$HOSTIP\", \"seed-ip\":\"$SEEDIP\", \"node-macs\":\"$MACS\"}" > $JSONFILE
+## #. Ensure we can ssh into the host machine to turn VMs on and off.
+##    The private key we create will be embedded in the seed VM, and delivered
+##    dynamically by heat to the undercloud VM.
+##    ::
+
+# generate ssh authentication keys if they don't exist
+if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
+    ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
+fi
+
+# make the local id_rsa_virt_power.pub be in .ssh/authorized_keys before
+# that is copied into images via local-config
+if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
+    cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
+    chmod 0600 ~/.ssh/authorized_keys
+fi
+
+## #. Finally wrap this all up into JSON.
+##    ::
+
+python -c "import json, sys, os; json.dump({'arch':'$NODE_ARCH', 'host-ip':'$HOSTIP', 'power_manager':'$POWER_MANAGER', 'seed-ip':'$SEEDIP', 'node-macs':'$MACS', 'ssh-key': open(os.path.expanduser('~/.ssh/id_rsa_virt_power'), 'rt').read(), 'ssh-user':'`whoami`'}, sys.stdout)" > $JSONFILE
 
 ### --end

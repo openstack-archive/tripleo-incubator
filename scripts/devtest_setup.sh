@@ -89,6 +89,8 @@ fi
 ## run within. The JSON file path is given by $TE_DATAFILE. The JSON file contains
 ## the following keys:
 
+## #. arch: The CPU arch which Nova-BM nodes will be registered with.
+
 ## #. host-ip: The IP address of the host which will run the seed VM using virsh.
 
 ## #. seed-ip: The IP address of the seed VM (if known). If not known, it is
@@ -114,6 +116,8 @@ fi
 ## #. node-pm-passwords: A space separated string containing the power
 ##    management password of each bare metal machine.
 ##    Useful when using real bare metal hardware. *OPTIONAL*
+
+## #. power_manager: The class path for a Nova Baremetal power manager.
 
 ## #. seed-route-dev: What device to route traffic for the initial undercloud
 ##    network. As our test network is unrouteable we require an explicit device
