@@ -104,6 +104,12 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
 export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"} #nodocs
 
+## #. Set messaging backend
+##    Default is rabbitmq-server.
+##    ::
+
+export MESSAGING_BACKEND=${MESSAGING_BACKEND:-'rabbitmq-server'}
+
 ## #. Set number of compute nodes for the overcloud
 ##    ::
 

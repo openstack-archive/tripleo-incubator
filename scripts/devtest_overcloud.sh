@@ -55,7 +55,7 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
         boot-stack cinder-api cinder-volume os-collect-config \
         neutron-network-node dhcp-all-interfaces swift-proxy swift-storage \
-        $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} ${SSL_ELEMENT:-} 2>&1 | \
+        $MESSAGING_BACKEND $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
 
