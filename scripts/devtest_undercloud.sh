@@ -20,6 +20,7 @@ if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
         boot-stack nova-baremetal os-collect-config dhcp-all-interfaces \
+        $MESSAGING_BACKEND \
         neutron-dhcp-agent $DIB_COMMON_ELEMENTS ${UNDERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-undercloud.log
 fi #nodocs
@@ -47,6 +48,13 @@ source tripleo-undercloud-passwords
 ##    ::
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
+
+if [ "$MESSAGING_BACKEND" = "qpidd" ]; then
+    sed -i "s/rabbit:/qpid:/" $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml
+else
+    sed -i "s/qpid:/rabbit:/" $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml
+fi
+
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
     -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};PowerManager=$POWER_MANAGER;undercloudImage=${UNDERCLOUD_ID}" \
     undercloud
