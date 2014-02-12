@@ -10,6 +10,24 @@ TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 ## devtest_undercloud
 ## ==================
 
+## #. Specify whether to use the nova-baremetal or nova-ironic drivers
+##    for provisioning within the undercloud.
+##    ::
+
+if [ $USE_IRONIC == "0" ] ; then #nodocs
+    PROVISION_ELEMENT='nova-baremetal'
+else #nodocs
+    PROVISION_ELEMENT='nova-ironic'
+
+## #. Until the nova-ironic driver lands upstream, you will need to set these
+##    extra options to pull the code from gerrit.
+##    ::
+
+    export DIB_REPOLOCATION_nova=https://review.openstack.org/openstack/nova
+    export DIB_REPOREF_nova=refs/changes/28/51328/21
+
+fi #nodocs
+
 
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
@@ -18,8 +36,8 @@ TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-        boot-stack nova-baremetal os-collect-config dhcp-all-interfaces \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud $PROVISION_ELEMENT \
+        boot-stack os-collect-config dhcp-all-interfaces \
         neutron-dhcp-agent $DIB_COMMON_ELEMENTS ${UNDERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-undercloud.log
 fi #nodocs
@@ -47,10 +65,21 @@ source tripleo-undercloud-passwords
 ## #. Deploy an undercloud
 ##    ::
 
-make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
-heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};PowerManager=$POWER_MANAGER;undercloudImage=${UNDERCLOUD_ID}" \
-    undercloud
+if [ "$USE_IRONIC" == "0" ] ; then #nodocs
+    make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
+    heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
+        -P "PowerUserName=$(whoami);AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};PowerManager=$POWER_MANAGER;undercloudImage=${UNDERCLOUD_ID}" \
+        undercloud
+
+##    If using Ironic, deploy your undercloud like this instead
+##    ::
+
+else #nodocs
+    make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm-ironic.yaml
+    heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm-ironic.yaml \
+        -P "AdminToken=${UNDERCLOUD_ADMIN_TOKEN};AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD};GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD};HeatPassword=${UNDERCLOUD_HEAT_PASSWORD};NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD};NovaPassword=${UNDERCLOUD_NOVA_PASSWORD};BaremetalArch=${NODE_ARCH};IronicPassword=${UNDERCLOUD_IRONIC_PASSWORD};undercloudImage=${UNDERCLOUD_ID}" \
+        undercloud
+fi #nodocs
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, it will reboot into the
@@ -92,10 +121,13 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
     $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
-setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+setup-endpoints $UNDERCLOUD_IP \
+    --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+    --ironic-password $UNDERCLOUD_IRONIC_PASSWORD \
     --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
     --nova-password $UNDERCLOUD_NOVA_PASSWORD
+
 keystone role-create --name heat_stack_user
 
 user-config
