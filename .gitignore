@@ -19,10 +19,6 @@ scripts/nova
 scripts/neutron
 scripts/os-apply-config
 scripts/swift
-stackrc
-
-tripleo-passwords
-tripleorc
 
 .tox
 doc/build
