@@ -41,12 +41,20 @@ export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo} #nodocs
 
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
+## #. Choose whether to use the Nova "baremetal" driver or Ironic.
+##    Note that Ironic is presently only supported in the Undercloud;
+##    this setting will not effect the seed.
+##    ::
+
+export USE_IRONIC=${USE_IRONIC:-0}
+
 ## #. Set the default bare metal power manager. By default devtest uses
 ##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
 ##    support a fully virtualized TripleO test environment. You may
 ##    optionally customize this setting if you are using real baremetal
 ##    hardware with the devtest scripts. This setting controls the
 ##    power manager used in both the seed VM and undercloud.
+##    (This setting has no effect on Ironic.)
 ##    ::
 
 export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
