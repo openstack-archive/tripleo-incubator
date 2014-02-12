@@ -29,6 +29,9 @@ PUBLIC_API_URL=${12:-''}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
+# We really need to get this into a parameter !
+# This line causes an early error if TE_DATAFILE is not exported.
+TE_DATAFILE=$TE_DATAFILE
 # This will stop being a parameter once rebuild --preserve-ephemeral is fully
 # merged. For now, it requires manual effort to use, so it should be opt-in.
 # Since it's not an end-user thing yet either, we don't document it in the
@@ -50,6 +53,7 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 ##    set to openstack-ssl in that situation.
 ##    ::
 
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
@@ -68,6 +72,7 @@ OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
