@@ -20,10 +20,15 @@ USE_CACHE=${USE_CACHE:-0}
 ##    ::
 
 cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
-sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
-# If you use 64bit VMs (NODE_ARCH=amd64), update also architecture.
-sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
-sed -i "s/\"power_manager\":.*,/\"power_manager\": \"$POWER_MANAGER\",/" config.json
+# Sets:
+# - bm node arch
+# - bm power manager
+# - ssh power host
+# - ssh power key
+# - ssh power user
+TMP=`mktemp`
+jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))| .[0]' config.json $TE_DATAFILE > $TMP
+mv $TMP config.json
 
 ### --end
 # If running in a CI environment then the user and ip address should be read
@@ -111,6 +116,7 @@ SEED_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type 
 SEED_PM_IPS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-ips --type raw --key-default '' | awk '{ print $1 }')
 SEED_PM_USERS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-users --type raw --key-default '' | awk '{ print $1 }')
 SEED_PM_PASSWORDS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-passwords --type raw --key-default '' | awk '{ print $1 }')
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed "$SEED_PM_IPS" "$SEED_PM_USERS" "$SEED_PM_PASSWORDS"
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.

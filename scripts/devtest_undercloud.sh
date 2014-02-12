@@ -16,6 +16,7 @@ TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 ##    meant to be used to pass additional arguments to disk-image-create.
 ##    ::
 
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
@@ -44,11 +45,20 @@ UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 setup-undercloud-passwords
 source tripleo-undercloud-passwords
 
-## #. Deploy an undercloud
+## #. Pull out needed variables from the test environment definition.
+##    ::
+
+POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
+POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
+POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
+POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
+
+## #. Deploy an undercloud.
 ##    ::
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
+<<<<<<< HEAD
     -P "PowerUserName=$(whoami)" \
     -P "AdminToken=${UNDERCLOUD_ADMIN_TOKEN}" \
     -P "AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
@@ -59,6 +69,8 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
     -P "BaremetalArch=${NODE_ARCH}" \
     -P "PowerManager=$POWER_MANAGER" \
     -P "undercloudImage=${UNDERCLOUD_ID}" \
+    -P "PowerSSHPrivateKey=${POWER_KEY}" \
+    -P "PowerSSHHost=${POWER_HOST}" \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
