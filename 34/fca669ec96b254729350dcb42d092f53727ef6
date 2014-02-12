@@ -1,0 +1,12 @@
+Verified+2: Jenkins
+Approved+1: lifeless <robertc@robertcollins.net>
+Code-Review+2: lifeless <robertc@robertcollins.net>
+Code-Review+2: Imre Farkas <ifarkas@redhat.com>
+Code-Review+1: Richard Su <rwsu@redhat.com>
+Code-Review+1: Jay Dobies <jason.dobies@redhat.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 12 Feb 2014 02:25:12 +0000
+Reviewed-on: https://review.openstack.org/72520
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
