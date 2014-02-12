@@ -24,6 +24,7 @@ sed -i "s/\"user\": \"stack\",/\"user\": \"`whoami`\",/" config.json
 # If you use 64bit VMs (NODE_ARCH=amd64), update also architecture.
 sed -i "s/\"arch\": \"i386\",/\"arch\": \"$NODE_ARCH\",/" config.json
 sed -i "s/\"power_manager\":.*,/\"power_manager\": \"$POWER_MANAGER\",/" config.json
+sed -i "s/\"PUTAPRIVATEKEYHERE\"/\"$(cat ~/.ssh/id_rsa_virt_power | base64 -w 0)\"/" config.json
 
 ### --end
 # If running in a CI environment then the user and ip address should be read
