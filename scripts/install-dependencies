@@ -3,16 +3,20 @@ set -eu
 
 ## This script should die: https://bugs.launchpad.net/tripleo/+bug/1195046.
 
-# generate ssh authentication keys if they don't exist
-if [ ! -f ~/.ssh/id_rsa ]; then
-  ssh-keygen -t rsa -N ""  -f ~/.ssh/id_rsa
-fi
+# This host needs a key pair and we also need one to be placed into nova baremetal
+# images so it can be used as a private key for the virtual power driver
+for KEY in "" _virt_power ; do
+    # generate ssh authentication keys if they don't exist
+    if [ ! -f ~/.ssh/id_rsa$KEY ]; then
+        ssh-keygen -t rsa -N ""  -f ~/.ssh/id_rsa$KEY
+    fi
 
-# make the local id_rsa.pub be in .ssh/authorized_keys before that is copied
-# into images via local-config
-if ! grep "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys >/dev/null; then
-  cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-fi
+    # make the local id_rsa.pub be in .ssh/authorized_keys before that is copied
+    # into images via local-config
+    if ! grep "$(cat ~/.ssh/id_rsa$KEY.pub)" ~/.ssh/authorized_keys >/dev/null; then
+        cat ~/.ssh/id_rsa$KEY.pub >> ~/.ssh/authorized_keys
+    fi
+done
 
 # Make sure permissions are correct for ssh authorized_keys file.
 chmod 0600 ~/.ssh/authorized_keys
