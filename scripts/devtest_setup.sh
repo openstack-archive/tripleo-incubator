@@ -76,18 +76,23 @@ fi
 ##       these). Add the relevant element name to the DIB_COMMON_ELEMENTS
 ##       variable.
 
-## NOTE: The CPU architecture specified in several places must be consistent.
-##       The examples here use 32-bit arch for the reduced memory footprint.  If
-##       you are running on real hardware, or want to test with 64-bit arch,
-##       replace i386 => amd64 in all the commands below. You
-##       will of course need amd64 capable hardware to do this.
-
 ## Devtest test environment configuration
 ## --------------------------------------
 
 ## Devtest uses a JSON file to describe the test environment that OpenStack will
 ## run within. The JSON file path is given by $TE_DATAFILE. The JSON file contains
 ## the following keys:
+
+## #. arch: The CPU arch which Nova-BM nodes will be registered with.
+##    This must be consistent when VM's are created (in devtest_testenv.sh)
+##    and when disk images are created (in devtest_seed / undercloud /
+##    overcloud. The images are controlled by this testenv key, and VMs
+##    are created by the same code that sets this key in the test environment
+##    description, so you should only need to change/set it once, when creating
+##    the test environment. We use 32-bit by default for the reduced memory
+##    footprint. If you are running on real hardware, or want to test with
+##    64-bit arch, replace i386 => amd64 in all the commands below. You will of
+##    course need amd64 capable hardware to do this.
 
 ## #. host-ip: The IP address of the host which will run the seed VM using virsh.
 
@@ -114,6 +119,8 @@ fi
 ## #. node-pm-passwords: A space separated string containing the power
 ##    management password of each bare metal machine.
 ##    Useful when using real bare metal hardware. *OPTIONAL*
+
+## #. power_manager: The class path for a Nova Baremetal power manager.
 
 ## #. seed-route-dev: What device to route traffic for the initial undercloud
 ##    network. As our test network is unrouteable we require an explicit device
