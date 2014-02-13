@@ -10,6 +10,14 @@ UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 ## devtest_undercloud
 ## ==================
 
+## #. Pull out needed variables from the test environment definition.
+##    ::
+
+POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
+POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
+POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
+POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
@@ -44,14 +52,6 @@ UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 
 setup-undercloud-passwords
 source tripleo-undercloud-passwords
-
-## #. Pull out needed variables from the test environment definition.
-##    ::
-
-POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
-POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
-POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
-POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 ## #. Deploy an undercloud.
 ##    ::
@@ -126,10 +126,13 @@ setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplan
 ##    ::
 
 MAC_RANGE="2-$(( $OVERCLOUD_COMPUTESCALE + 2 ))"
-UNDERCLOUD_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | cut -d' ' -f $MAC_RANGE )
+UNDERCLOUD_MACS=$(jq -r '.nodes[] | .mac[0]' | tail -n $OVERCLOUD_COMPUTESCALE | tr '\n' ' ')
+if [ "$UNDERCLOUD_MACS" = "null" ]; then
+    UNDERCLOUD_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | cut -d' ' -f $MAC_RANGE )
+fi
 UNDERCLOUD_PM_IPS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-ips --type raw --key-default '' | cut -d' ' -f $MAC_RANGE )
 UNDERCLOUD_PM_USERS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-users --type raw --key-default '' | cut -d' ' -f $MAC_RANGE )
 UNDERCLOUD_PM_PASSWORDS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-passwords --type raw --key-default '' | cut -d' ' -f $MAC_RANGE )
-setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$UNDERCLOUD_MACS" undercloud "$UNDERCLOUD_PM_IPS" "$UNDERCLOUD_PM_USERS" "$UNDERCLOUD_PM_PASSWORDS"
+setup-baremetal "$UNDERCLOUD_MACS" undercloud "$UNDERCLOUD_PM_IPS" "$UNDERCLOUD_PM_USERS" "$UNDERCLOUD_PM_PASSWORDS"
 
 ### --end

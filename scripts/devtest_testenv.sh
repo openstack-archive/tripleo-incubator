@@ -77,7 +77,7 @@ setup-seed-vm -a $NODE_ARCH
 ##    ::
 
 NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
-MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT | tr '\r\n' ' ')
+NODES=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT)
 
 ## #. What IP address to ssh to for virsh operations.
 ##    ::
@@ -110,6 +110,6 @@ fi
 ## #. Finally wrap this all up into JSON.
 ##    ::
 
-python -c "import json, sys, os; json.dump({'arch':'$NODE_ARCH', 'host-ip':'$HOSTIP', 'power_manager':'$POWER_MANAGER', 'seed-ip':'$SEEDIP', 'node-macs':'$MACS', 'ssh-key': open(os.path.expanduser('~/.ssh/id_rsa_virt_power'), 'rt').read(), 'ssh-user':'`whoami`'}, sys.stdout)" > $JSONFILE
+python -c "import json, sys, os; json.dump({'arch':'$NODE_ARCH', 'host-ip':'$HOSTIP', 'power_manager':'$POWER_MANAGER', 'seed-ip':'$SEEDIP', 'nodes':$NODES, 'ssh-key': open(os.path.expanduser('~/.ssh/id_rsa_virt_power'), 'rt').read(), 'ssh-user':'`whoami`'}, sys.stdout)" > $JSONFILE
 
 ### --end
