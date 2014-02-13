@@ -126,10 +126,13 @@ setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplan
 ##    ::
 
 MAC_RANGE="2-$(( $OVERCLOUD_COMPUTESCALE + 2 ))"
-UNDERCLOUD_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | cut -d' ' -f $MAC_RANGE )
+UNDERCLOUD_MACS=$(jq -r '.nodes[] | .mac[0]' | tail -n $OVERCLOUD_COMPUTESCALE | tr '\n' ' ')
+if [ "$UNDERCLOUD_MACS" = "null" ]; then
+    UNDERCLOUD_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | cut -d' ' -f $MAC_RANGE )
+fi
 UNDERCLOUD_PM_IPS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-ips --type raw --key-default '' | cut -d' ' -f $MAC_RANGE )
 UNDERCLOUD_PM_USERS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-users --type raw --key-default '' | cut -d' ' -f $MAC_RANGE )
 UNDERCLOUD_PM_PASSWORDS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-passwords --type raw --key-default '' | cut -d' ' -f $MAC_RANGE )
-setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$UNDERCLOUD_MACS" undercloud "$UNDERCLOUD_PM_IPS" "$UNDERCLOUD_PM_USERS" "$UNDERCLOUD_PM_PASSWORDS"
+setup-baremetal "$UNDERCLOUD_MACS" undercloud "$UNDERCLOUD_PM_IPS" "$UNDERCLOUD_PM_USERS" "$UNDERCLOUD_PM_PASSWORDS"
 
 ### --end
