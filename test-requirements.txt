@@ -1,2 +1,2 @@
-oslo.sphinx
+oslosphinx
 sphinx>=1.1.2,<1.2
