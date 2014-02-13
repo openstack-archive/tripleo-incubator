@@ -29,6 +29,7 @@ if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
      ! -e $TRIPLEO_ROOT/deploy-ramdisk.initramfs -o \
      "$USE_CACHE" == "0" ] ; then
 ### --include
+    NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
     $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
         $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk 2>&1 | \
         tee $TRIPLEO_ROOT/dib-deploy.log

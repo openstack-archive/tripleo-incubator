@@ -42,6 +42,11 @@ if [ -n "$REMOTE_OPERATIONS" ] ; then
 fi
 ### --include
 
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
+NODE_CPU=$(os-apply-config -m $TE_DATAFILE --key node-cpu --type raw)
+NODE_MEM=$(os-apply-config -m $TE_DATAFILE --key node-mem --type raw)
+NODE_DISK=$(os-apply-config -m $TE_DATAFILE --key node-disk --type raw)
+
 cd $TRIPLEO_ROOT
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
     boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \

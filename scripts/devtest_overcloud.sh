@@ -40,6 +40,7 @@ TE_DATAFILE=$TE_DATAFILE
 # nova: I6bf01e52589c5894eb043f2b57e915d52e81ebc3
 # python-novaclient: Ib1511653904d4f95ab03fb471669175127004582
 OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
 ### --include
 ## devtest_overcloud

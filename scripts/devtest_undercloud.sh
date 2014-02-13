@@ -10,6 +10,17 @@ TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 ## devtest_undercloud
 ## ==================
 
+## #. Pull out needed variables from the test environment definition.
+##    ::
+
+POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
+NODE_CPU=$(os-apply-config -m $TE_DATAFILE --key node-cpu --type raw)
+NODE_MEM=$(os-apply-config -m $TE_DATAFILE --key node-mem --type raw)
+NODE_DISK=$(os-apply-config -m $TE_DATAFILE --key node-disk --type raw)
+POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
+POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
+POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
@@ -44,14 +55,6 @@ UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 
 setup-undercloud-passwords
 source tripleo-undercloud-passwords
-
-## #. Pull out needed variables from the test environment definition.
-##    ::
-
-POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
-POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
-POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
-POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 ## #. Deploy an undercloud.
 ##    ::
