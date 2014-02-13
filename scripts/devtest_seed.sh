@@ -42,6 +42,8 @@ if [ -n "$REMOTE_OPERATIONS" ] ; then
 fi
 ### --include
 
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
+
 cd $TRIPLEO_ROOT
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
     boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
@@ -112,12 +114,14 @@ setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 ##    If you want to use real baremetal see footnote [#f3]_ for details.
 ##    ::
 
-SEED_MACS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | awk '{ print $1 }')
+SEED_MAC=$(jq -r '.nodes[0] | .mac[0]' $TE_DATAFILE)
+if [ -z "$SEED_MAC" ]; then
+    SEED_MAC=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-macs --type raw | awk '{ print $1 }')
+fi
 SEED_PM_IPS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-ips --type raw --key-default '' | awk '{ print $1 }')
 SEED_PM_USERS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-users --type raw --key-default '' | awk '{ print $1 }')
 SEED_PM_PASSWORDS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-passwords --type raw --key-default '' | awk '{ print $1 }')
-NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
-setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed "$SEED_PM_IPS" "$SEED_PM_USERS" "$SEED_PM_PASSWORDS"
+setup-baremetal "$SEED_MAC" seed "$SEED_PM_IPS" "$SEED_PM_USERS" "$SEED_PM_PASSWORDS"
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
 
