@@ -14,7 +14,10 @@ case $4 in
 esac
 
 TOTAL=$(($5 - 1))
-BRIDGE=${6:-""}
+SSH_USER=$6
+HOSTIP=$7
+TE_DATAFILE=$8
+BRIDGE=${9:-""}
 
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
@@ -26,6 +29,8 @@ PREALLOC=
 if [ -f /etc/debian_version ]; then
   PREALLOC="--prealloc-metadata"
 fi
+
+JSON=$(jq .nodes=[] $TE_DATAFILE)
 
 for idx in $(seq 0 $TOTAL) ; do
   vm_name="baremetal${BRIDGE}_$idx"
@@ -40,5 +45,7 @@ for idx in $(seq 0 $TOTAL) ; do
     BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE"
   fi
   configure-vm --bootdev network --name $vm_name --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
-  get-vm-mac $vm_name
+  mac=$(get-vm-mac $vm_name)
+  JSON=$(jq ".nodes=(.nodes + [{mac:[\"$mac\"], cpu:\"$CPU\", memory:\"$2\", disk:\"$DISK\", arch:\"$4\", pm_user:\"$SSH_USER\", pm_addr:\"$HOSTIP\", pm_password:.[\"ssh-key\"], virt_type:\"virsh\"}])" <<< $JSON)
 done
+jq . <<< $JSON > $TE_DATAFILE
