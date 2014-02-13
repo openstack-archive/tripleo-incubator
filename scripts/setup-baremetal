@@ -2,15 +2,15 @@
 set -eu
 set -o pipefail
 
-CPU=$1
-MEM=$2
-DISK=$3
-ARCH=$4
-MACS="$5"
-SERVICE_HOST="$6"
-PM_IPS="${7:-}"
-PM_USERS="${8:-}"
-PM_PASSWORDS="${9:-}"
+CPU=$(jq '.nodes[0] | .cpu' $TE_DATAFILE)
+MEM=$(jq '.nodes[0] | .memory' $TE_DATAFILE)
+DISK=$(jq '.nodes[0] | .disk' $TE_DATAFILE)
+ARCH=$(jq '.nodes[0] | .arch' $TE_DATAFILE)
+MACS="$1"
+SERVICE_HOST="$2"
+PM_IPS="${3:-}"
+PM_USERS="${4:-}"
+PM_PASSWORDS="${5:-}"
 
 # Perhaps make this always recreate the nodes for repeatability?
 register-nodes $CPU $MEM $DISK "$MACS" $SERVICE_HOST "$PM_IPS" "$PM_USERS" "$PM_PASSWORDS"

@@ -62,6 +62,30 @@ fi
 
 setup-network
 
+## #. Set HW resources for VMs used as 'baremetal' nodes. NODE_CPU is cpu count,
+##    NODE_MEM is memory (MB), NODE_DISK is disk size (GB), NODE_ARCH is
+##    architecture (i386, amd64). NODE_ARCH is also used for the seed VM.
+##    A note on memory sizing: TripleO images in raw form are currently
+##    ~2.7Gb, which means that a tight node will end up with a thrashing page
+##    cache during glance -> local + local -> raw operations. This significantly
+##    impairs performance. Of the four minimum VMs for TripleO simulation, two
+##    are nova baremetal nodes (seed and undercloud) and these need to be 2G or
+##    larger. The hypervisor host in the overcloud also needs to be a decent
+##    size or it cannot host more than one VM.
+## 
+##    32bit VMs
+##    ::
+## 
+##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=i386
+## 
+NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-20} NODE_ARCH=${NODE_ARCH:-i386} #nodocs
+
+##    For 64bit it is better to create VMs with more memory and storage because of
+##    increased memory footprint::
+## 
+##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=amd64
+## 
+
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
 ##    to bootstrap a full dynamically configured baremetal cloud.
@@ -77,7 +101,7 @@ setup-seed-vm -a $NODE_ARCH
 ##    ::
 
 NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
-MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT | tr '\r\n' ' ')
+NODES=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT)
 
 ## #. What IP address to ssh to for virsh operations.
 ##    ::
@@ -110,6 +134,6 @@ fi
 ## #. Finally wrap this all up into JSON.
 ##    ::
 
-python -c "import json, sys, os; json.dump({'arch':'$NODE_ARCH', 'host-ip':'$HOSTIP', 'power_manager':'$POWER_MANAGER', 'seed-ip':'$SEEDIP', 'node-macs':'$MACS', 'ssh-key': open(os.path.expanduser('~/.ssh/id_rsa_virt_power'), 'rt').read(), 'ssh-user':'`whoami`'}, sys.stdout)" > $JSONFILE
+python -c "import json, sys, os; json.dump({'arch':'$NODE_ARCH', 'host-ip':'$HOSTIP', 'power_manager':'$POWER_MANAGER', 'seed-ip':'$SEEDIP', 'nodes':'$NODES', 'ssh-key': open(os.path.expanduser('~/.ssh/id_rsa_virt_power'), 'rt').read(), 'ssh-user':'`whoami`'}, sys.stdout)" > $JSONFILE
 
 ### --end
