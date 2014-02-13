@@ -69,15 +69,10 @@ setup-network
 
 setup-seed-vm -a $NODE_ARCH
 
-## #. Create baremetal nodes for the test cluster. The final parameter to
-##    create-nodes is the number of VMs to create. To change this in future
-##    you can either run clean-env and then recreate with more nodes, or
-##    use create-nodes to make more nodes then add their macs to your
-##    testenv.json.
-##    ::
+## #. What user will be used to ssh to run virt commands to control our
+##    emulated baremetal machines.
 
-NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
-MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT | tr '\r\n' ' ')
+SSH_USER=$(whoami)
 
 ## #. What IP address to ssh to for virsh operations.
 ##    ::
@@ -107,9 +102,17 @@ if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
     chmod 0600 ~/.ssh/authorized_keys
 fi
 
-## #. Finally wrap this all up into JSON.
+## #. Wrap this all up into JSON.
 ##    ::
 
-python -c "import json, sys, os; json.dump({'arch':'$NODE_ARCH', 'host-ip':'$HOSTIP', 'power_manager':'$POWER_MANAGER', 'seed-ip':'$SEEDIP', 'node-macs':'$MACS', 'ssh-key': open(os.path.expanduser('~/.ssh/id_rsa_virt_power'), 'rt').read(), 'ssh-user':'`whoami`'}, sys.stdout)" > $JSONFILE
+python -c "import json, sys, os; json.dump({'arch':'$NODE_ARCH', 'host-ip':'$HOSTIP', 'power_manager':'$POWER_MANAGER', 'seed-ip':'$SEEDIP', 'ssh-key': open(os.path.expanduser('~/.ssh/id_rsa_virt_power'), 'rt').read(), 'ssh-user':'$SSH_USER'}, sys.stdout)" > $JSONFILE
+
+## #. Create baremetal nodes for the test cluster. The final parameter to
+##    create-nodes is the number of VMs to create. To change this in future
+##    you can run clean-env and then recreate with more nodes.
+##    ::
+
+NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
 
 ### --end
