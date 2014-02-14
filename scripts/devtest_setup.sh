@@ -185,12 +185,12 @@ if [ "$USE_CACHE" == "0" ] ; then
     cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
   fi
 fi
-### --include
 
 if [ "$NODE_DIST" == 'unsupported' ]; then
     echo 'Unsupported OS distro.'
     exit 1
 fi
+### --include
 
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
