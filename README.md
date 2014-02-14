@@ -25,7 +25,7 @@ This is combined with Continuous Integration / Continuous Deployment (CICD) of
 the environment to reduce the opportunity for failures to sneak into
 production.
 
-Finally end user services such as Openstack compute virtual machine hosts, or
+Finally end user services such as OpenStack compute virtual machine hosts, or
 Hadoop are deployed as tenants of the self hosted bare metal cloud. These can
 be deployed using any orchestration layer desired. In the specific case of
 deploying an OpenStack virtual compute cloud, the Heat orchestration rules
