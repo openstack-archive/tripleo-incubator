@@ -60,6 +60,7 @@ export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.
 export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
 
 ## #. These elements are required for tripleo in all images we build.
+##    ::
 
 export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
 
@@ -88,18 +89,18 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 ## 
 
 ## #. Set distribution used for VMs (fedora, opensuse, ubuntu).
+## 
 ##    For Fedora, set SELinux permissive mode::
 ## 
 ##         export NODE_DIST="fedora selinux-permissive"
 
 ##    For openSUSE, use::
-##
+## 
 ##         export NODE_DIST="opensuse"
 
 ##    For Ubuntu, use::
-##
-##         export NODE_DIST="ubuntu"
 ## 
+##         export NODE_DIST="ubuntu"
 
 source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
 export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"} #nodocs
