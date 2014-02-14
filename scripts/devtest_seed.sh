@@ -120,11 +120,6 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed "$SEED_PM_IPS" "$SEED_PM_USERS" "$SEED_PM_PASSWORDS"
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
-## 
-## #. Allow the VirtualPowerManager to ssh into your host machine to power on vms:
-##    ::
-
-ssh root@192.0.2.1 "cat /opt/stack/boot-stack/virtual-power-key.pub" >> ~/.ssh/authorized_keys
 
 ## .. rubric:: Footnotes
 ## 
