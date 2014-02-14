@@ -3,6 +3,24 @@ set -eu
 
 ## This script should die: https://bugs.launchpad.net/tripleo/+bug/1195046.
 
+# generate ssh authentication keys if they don't exist
+if [ ! -f ~/.ssh/id_rsa ]; then
+    ssh-keygen -t rsa -N ""  -f ~/.ssh/id_rsa
+fi
+
+# Ensure the local id_rsa.pub is in .ssh/authorized_keys before that is copied
+# into images via local-config. We are opening up ssh access to the host with
+# a key that the user might not want, we should find another way to place the
+# key onto the image. See https://bugs.launchpad.net/tripleo/+bug/1280052 for
+# more details.
+if ! grep "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys >/dev/null; then
+    echo "Adding public key to ~/.ssh/authorized_keys"
+    cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+fi
+
+# Make sure permissions are correct for ssh authorized_keys file.
+chmod 0600 ~/.ssh/authorized_keys
+
 # packages
 os=unsupported
 if [ -f /etc/redhat-release ]; then
