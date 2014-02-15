@@ -29,7 +29,7 @@ OVSBRIDGE=
 MEMORY=2097152
 CPUS=1
 export IMAGE_NAME=seed
-LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
+LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options] <element> [<element> ...]"
