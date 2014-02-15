@@ -29,6 +29,8 @@ PUBLIC_API_URL=${12:-''}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
+OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-''}
+OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
 # We really need to get this into a parameter !
 # This line causes an early error if TE_DATAFILE is not exported.
 TE_DATAFILE=$TE_DATAFILE
@@ -47,8 +49,9 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 
 ## #. Create your overcloud control plane image. This is the image the undercloud
 ##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
-##    $OVERCLOUD_DIB_EXTRA_ARGS is meant to be used to pass additional build-time
-##    specific arguments to disk-image-create.
+##    $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS and $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS are
+##    meant to be used to pass additional build-time specific arguments to
+##    disk-image-create.
 ##    SSL_ELEMENT is used when building a cloud with SSL endpoints - it should be
 ##    set to openstack-ssl in that situation.
 ##    ::
@@ -59,7 +62,7 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
         boot-stack cinder-api cinder-volume os-collect-config \
         neutron-network-node dhcp-all-interfaces swift-proxy swift-storage \
-        $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} ${SSL_ELEMENT:-} 2>&1 | \
+        $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
 
@@ -77,7 +80,7 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then 
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
         nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-        dhcp-all-interfaces $DIB_COMMON_ELEMENTS ${OVERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
+        dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
