@@ -5,7 +5,7 @@ set -o pipefail
 
 USE_CACHE=${USE_CACHE:-0}
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
-
+UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 ### --include
 ## devtest_undercloud
 ## ==================
@@ -16,12 +16,13 @@ TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 ##    meant to be used to pass additional arguments to disk-image-create.
 ##    ::
 
+
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
         boot-stack nova-baremetal os-collect-config dhcp-all-interfaces \
-        neutron-dhcp-agent $DIB_COMMON_ELEMENTS ${UNDERCLOUD_DIB_EXTRA_ARGS:-} 2>&1 | \
+        neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-undercloud.log
 fi #nodocs
 
