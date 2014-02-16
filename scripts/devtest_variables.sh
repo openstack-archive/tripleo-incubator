@@ -63,6 +63,15 @@ export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
 
 export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
 
+## #. A messaging backend is required for the seed, undercloud, and overcloud
+##    control node. It is not required for overcloud computes. The backend is
+##    set through the *EXTRA_ARGS.
+
+export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
+export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
+export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
+
 ## #. Set HW resources for VMs used as 'baremetal' nodes. NODE_CPU is cpu count,
 ##    NODE_MEM is memory (MB), NODE_DISK is disk size (GB), NODE_ARCH is
 ##    architecture (i386, amd64). NODE_ARCH is used also for the seed VM.
