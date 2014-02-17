@@ -77,18 +77,18 @@ setup-seed-vm -a $NODE_ARCH
 ##    ::
 
 NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
-export MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT | tr '\r\n' ' ')
+MACS=$(create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT | tr '\r\n' ' ')
 
 ## #. What IP address to ssh to for virsh operations.
 ##    ::
 
-export HOSTIP=${HOSTIP:-192.168.122.1}
+HOSTIP=${HOSTIP:-192.168.122.1}
 
 ## #. If a static SEEDIP is in use, define it here. If not defined it will be
 ##    looked up in the ARP table by the seed MAC address during seed deployment.
 ##    ::
 
-export SEEDIP=${SEEDIP:-''}
+SEEDIP=${SEEDIP:-''}
 
 ## #. Ensure we can ssh into the host machine to turn VMs on and off.
 ##    The private key we create will be embedded in the seed VM, and delivered
