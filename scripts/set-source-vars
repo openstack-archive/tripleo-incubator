@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+# Script to make git repository selection simple
+set -eu
+set -o pipefail
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] local_repo [...]"
+    echo
+    echo "Export source-repositories element environment variables"
+    echo
+    echo "Options:"
+    echo "    -h, --help                     -- print this help."
+    echo "    -l, --local                    -- clone the local repository."
+    echo "    -n, --no-echo                  -- do not echo the variables exported."
+    echo "    -r <remote>, --remote <remote> -- use the given remote to get repository location."
+    echo
+    echo "Set the appropriate environment variables to use a local git repository"
+    echo "for the input into image building via the source-repositories element"
+    echo
+    exit $1
+}
+
+TEMP=`getopt -o h,l,n,r: -l help,local,no-echo,no_echo,remote: -n $SCRIPT_NAME -- "$@"`
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -h|--help) show_options 0;;
+        -l|--local) USE_LOCAL=1; shift 1;;
+        -n|--no[-_]echo) NO_ECHO=1; shift 1;;
+        -r|--remote) REMOTE=$2; shift 2;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+export REPOS=( "${@}" )
+
+if (( $# <= 0 )); then echo "Local repository location is required"; show_options 0; fi
+export REMOTE=${REMOTE:-origin}
+export NO_ECHO=${NO_ECHO:-}
+
+get_location() {
+    local remote_name=${1:-origin}
+    if [[ -n "${USE_LOCAL}" ]]; then
+        pwd
+    else
+        git config --get remote.${remote_name}.url
+    fi
+}
+
+get_ref() {
+    git rev-parse HEAD
+}
+
+get_name() {
+    local remote_name=${1:-origin}
+    name=$(get_location ${remote_name})
+    echo $(basename ${name##*:} .git)
+}
+
+declare -A a
+
+for dir in "${REPOS[@]}"
+do
+    pushd ${dir} > /dev/null 2>&1
+    REPONAME=$(get_name ${REMOTE})
+    a[DIB_REPOLOCATION_${REPONAME//-/_}]=$(get_location ${REMOTE})
+    export DIB_REPOLOCATION_${REPONAME//-/_}=${a[DIB_REPOLOCATION_${REPONAME//-/_}]}
+    a[DIB_REPOREF_${REPONAME//-/_}]=$(get_ref)
+    export DIB_REPOREF_${REPONAME//-/_}=${a[DIB_REPOREF_${REPONAME//-/_}]}
+    if [[ -z "${NO_ECHO}" ]]; then
+        echo "export DIB_REPOLOCATION_${REPONAME//-/_}=${a[DIB_REPOLOCATION_${REPONAME//-/_}]}"
+        echo "export DIB_REPOREF_${REPONAME//-/_}=${a[DIB_REPOREF_${REPONAME//-/_}]}"
+    fi
+    popd > /dev/null 2>&1
+done
+
