@@ -1,0 +1,117 @@
+#!/bin/bash
+#
+# Script to make git repository selection simple
+set -eu
+set -o pipefail
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] local_repo [...]"
+    echo
+    echo "Export source-repositories element environment variables"
+    echo
+    echo "Options:"
+    echo "    -h, --help                     -- print this help."
+    echo "    -l, --local                    -- use the local path to clone the repository"
+    echo "    -n, --no-echo                  -- do not echo the variables exported."
+    echo "    -r <remote>, --remote <remote> -- remote of the local repo to use to get the repo url"
+    echo
+    echo "Echo the appropriate environment variables to use a local git repository"
+    echo "for the input into image building via the source-repositories element"
+    echo
+    echo "Using the -l flag will result in the full path to the local repository being used"
+    echo "as the location for that repository in diskimage-builder"
+    echo
+    echo "Specifying a remote via the -r flag will result in the url associated with that remote"
+    echo "in the local repositiory being used for the repository location"
+    echo
+    exit $1
+}
+
+TEMP=`getopt -o h,l,n,r: -l help,local,no-echo,no_echo,remote: -n $SCRIPT_NAME -- "$@"`
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -h|--help) show_options 0;;
+        -l|--local) USE_LOCAL=1; shift 1;;
+        -n|--no[-_]echo) NO_ECHO=1; shift 1;;
+        -r|--remote) REMOTE=$2; shift 2;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+REPOS=( "${@}" )
+
+if (( $# <= 0 )); then echo "Local repository location is required"; show_options 0; fi
+
+USE_LOCAL=${USE_LOCAL:-0}
+REMOTE=${REMOTE:-""}
+NO_ECHO=${NO_ECHO:-}
+
+if [[ "${USE_LOCAL}" == "0" && -z "${REMOTE}" ]] ||\
+    [[ "${USE_LOCAL}" == "1" && -n "${REMOTE}" ]]; then
+    echo "Choose to either clone the local path (-l)"
+    echo "OR"
+    echo "to use the remote (-r <remote>) defined in the local repo to lookup the repo URL"
+    show_options 0
+fi
+
+get_location() {
+    local remote_name=${1:-""}
+    if [[ -n "${remote_name}" ]] ; then
+        git config --get remote.${remote_name}.url
+    elif [[ "${USE_LOCAL}" == "1" ]]; then
+        # Find the .git directory
+        local dir="$(pwd)"
+        while [[ "${dir}" != "/" ]]
+        do
+            if [[ -d "${dir}/.git" ]]
+            then
+                echo ${dir}
+                break
+            fi
+            dir="$(dirname $dir})"
+        done
+    else
+        echo -n "Internal Error: get_location called with [${remote_name}]"
+        echo " and USE_LOCAL is ${USE_LOCAL}"
+        exit 1
+    fi
+}
+
+get_ref() {
+    git rev-parse HEAD
+}
+
+get_name() {
+    local remote_name=${1:-origin}
+    name=$(get_location ${remote_name})
+    echo $(basename ${name##*:} .git)
+}
+
+declare -A a
+
+for dir in "${REPOS[@]}"
+do
+    if [[ ! -d ${dir} ]] ; then
+        echo "Not a directory: ${dir}"
+        exit 1
+    fi
+    pushd ${dir} > /dev/null 2>&1
+    REPONAME=$(get_name ${REMOTE})
+    REPONAME_VAR=${REPONAME//-/_}
+    a[DIB_REPOLOCATION_${REPONAME_VAR}]=$(get_location ${REMOTE})
+    a[DIB_REPOREF_${REPONAME_VAR}]=$(get_ref)
+    if [[ -z "${NO_ECHO}" ]]; then
+        echo "export DIB_REPOLOCATION_${REPONAME_VAR}=${a[DIB_REPOLOCATION_${REPONAME_VAR}]}"
+        echo "export DIB_REPOREF_${REPONAME_VAR}=${a[DIB_REPOREF_${REPONAME_VAR}]}"
+    fi
+    popd > /dev/null 2>&1
+done
+
