@@ -4,6 +4,7 @@ set -eux
 set -o pipefail
 
 USE_CACHE=${USE_CACHE:-0}
+DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 
 ### --include
 ## devtest_ramdisk
@@ -30,7 +31,8 @@ if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
      "$USE_CACHE" == "0" ] ; then
 ### --include
     $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-        $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk 2>&1 | \
+        $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk \
+        $DIB_COMMON_ELEMENTS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-deploy.log
 ### --end
 fi
