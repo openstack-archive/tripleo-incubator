@@ -34,10 +34,10 @@ for idx in $(seq 0 $TOTAL) ; do
   # Pre-touch the VM to set +C, as it can only be set on empty files.
   sudo touch "$volume_path"
   sudo chattr +C "$volume_path" || true
-  if [ -z $BRIDGE ]; then
-    configure-vm --bootdev network --name baremetal_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER >&2
-  else
-    configure-vm --bootdev network --name baremetal${BRIDGE}_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER --baremetal-interface ${BRIDGE} >&2
+  BAREMETAL_INTERFACE=
+  if [ -n "$BRIDGE" ]; then
+    BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE"
   fi
+  configure-vm --bootdev network --name baremetal${BRIDGE}_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
   get-vm-mac baremetal${BRIDGE}_$idx
 done
