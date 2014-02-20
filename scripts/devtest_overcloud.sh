@@ -123,6 +123,10 @@ OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
 
 if heat stack-show $STACKNAME > /dev/null; then
     HEAT_OP=stack-update
+    if (heat stack-show $STACKNAME | grep -q FAILED); then
+        echo "Cannot update a failed stack" >&2
+        exit 1
+    fi
 else
     HEAT_OP=stack-create
 fi
