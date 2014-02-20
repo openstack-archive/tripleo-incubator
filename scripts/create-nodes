@@ -13,7 +13,7 @@ case $4 in
     *) echo "Unsupported arch $4!" ; exit 1 ;;
 esac
 
-TOTAL=$5
+TOTAL=$(($5 - 1))
 BRIDGE=${6:-""}
 
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
@@ -27,7 +27,7 @@ if [ -f /etc/debian_version ]; then
   PREALLOC="--prealloc-metadata"
 fi
 
-for (( count=idx=0; count<TOTAL; ++idx )) ; do
+for idx in $(seq 0 $TOTAL) ; do
   (virsh list --all | grep -q baremetal${BRIDGE}_$idx) && continue
   virsh vol-create-as default baremetal${BRIDGE}-$idx.qcow2 ${DISK}G --format qcow2 $PREALLOC >&2
   volume_path=$(virsh vol-path --pool default baremetal${BRIDGE}-$idx.qcow2)
@@ -40,5 +40,4 @@ for (( count=idx=0; count<TOTAL; ++idx )) ; do
     configure-vm --bootdev network --name baremetal${BRIDGE}_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER --baremetal-interface ${BRIDGE} >&2
   fi
   get-vm-mac baremetal${BRIDGE}_$idx
-  (( ++count ))
 done
