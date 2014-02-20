@@ -70,6 +70,7 @@ if [ "$os" = "redhat" ]; then
 
   sudo service libvirtd restart
   sudo service openvswitch restart
+  sudo systemctl enable openvswitch || true
 fi
 
 if [ "$os" = "suse" ]; then
