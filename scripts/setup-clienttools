@@ -10,6 +10,7 @@ set -u
 
 # Need setuptools>=1.0 to manage connections when
 # downloading from pypi using http_proxy and https_proxy
+pip install -U pip
 pip install -U 'setuptools>=1.0'
 pip install -U python-cinderclient python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient python-ironicclient os-apply-config
 
