@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+1: Dan Prince <dprince@redhat.com>
+Approved+1: Clint "SpamapS" Byrum <clint@ubuntu.com>
+Code-Review+2: Clint "SpamapS" Byrum <clint@ubuntu.com>
+Code-Review+2: Jan Provaznik <jan.provaznik@gmail.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 20 Feb 2014 23:13:35 +0000
+Reviewed-on: https://review.openstack.org/74274
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
