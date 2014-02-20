@@ -113,6 +113,14 @@ fi
 
 ENV_NUM=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key env-num --type int --key-default 0)
 
+# Shutdown any running VM - writing to the image file of a running VM is a
+# great way to get a corrupt image file.
+if [ -n "$REMOTE_OPERATIONS" ]; then
+    ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
+else
+    virsh destroy $IMAGE_NAME || true
+fi
+
 if [ $CREATE_IMAGE  ]; then
 
     ELEMENTS_PATH=${ELEMENTS_PATH:-$SCRIPT_HOME/../../tripleo-image-elements/elements}
@@ -125,18 +133,6 @@ if [ $CREATE_IMAGE  ]; then
         echo "Error: unable to locate disk-image-create"
         exit 1
     fi
-
-fi
-
-# Shutdown any running VM - writing to the image file of a running VM is a
-# great way to get a corrupt image file.
-if [ -n "$REMOTE_OPERATIONS" ]; then
-    ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
-else
-    virsh destroy $IMAGE_NAME || true
-fi
-
-if [ $CREATE_IMAGE  ]; then
 
     IMAGE_CACHE_FILE=$TRIPLEO_ROOT/seed
 
