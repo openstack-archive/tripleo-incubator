@@ -102,6 +102,11 @@ echo "Waiting for nova to initialise..."
 wait_for 30 10 nova list
 user-config
 
+echo "Waiting for Nova Compute to be available"
+wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'enabled.*\ up\ '
+echo "Waiting for neutron API and L2 agent to be available"
+wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*\"" #nodocs
+
 setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 
 ## #. Register "bare metal" nodes with nova and setup Nova baremetal flavors.
