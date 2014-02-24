@@ -15,6 +15,7 @@ esac
 
 TOTAL=$(($5 - 1))
 BRIDGE=${6:-""}
+CREATE_NODES_EXTRA_ARGS=${CREATE_NODES_EXTRA_ARGS:-""}
 
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
@@ -38,6 +39,6 @@ for idx in $(seq 0 $TOTAL) ; do
   if [ -n "$BRIDGE" ]; then
     BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE"
   fi
-  configure-vm --bootdev network --name baremetal${BRIDGE}_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
+  configure-vm --bootdev network --name baremetal${BRIDGE}_$idx --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE $CREATE_NODES_EXTRA_ARGS >&2
   get-vm-mac baremetal${BRIDGE}_$idx
 done
