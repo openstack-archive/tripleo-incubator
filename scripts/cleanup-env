@@ -28,6 +28,7 @@ function show_options() {
 
 for NAME in $(sudo virsh list --name --all | grep "^\(seed\(.*\|\)\|baremetal\(\|brbm.*\)_.*\)$"); do
   sudo virsh destroy $NAME
+  sudo virsh managedsave-remove $NAME
   sudo virsh undefine --remove-all-storage $NAME
 done
 
