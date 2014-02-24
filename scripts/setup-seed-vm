@@ -101,6 +101,7 @@ esac
 
 which virsh >/dev/null || die "Error: virsh not found in path"
 sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
+sudo virsh managedsave-remove $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM has no managed save"
 sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not defined"
 sudo touch /var/lib/libvirt/images/$IMAGE_NAME.qcow2
 
