@@ -29,16 +29,22 @@ function show_options() {
     echo "of attempts exceeds LOOPS_NUMBER value. After each failure"
     echo "pause for SLEEP_TIME seconds."
     echo
+    echo "An optional FAIL_MATCH_OUTPUT variable may also be set to control "
+    echo "if the loop exits early if the commands stdout/stderr matches the "
+    echo "supplied regex string."
+    echo
     echo "Examples:"
     echo "    wait_for 30 10 ping -c 1 192.0.2.2"
     echo "    wait_for 10 1 ls file_we_are_waiting_for"
     echo "    wait_for 10 3 date \| grep 8"
+    echo "    FAIL_MATCH_OUTPUT=CREATE_FAILED wait_for 30 10 stack-ready undercloud"
     exit 1
 }
 
 
 LOOPS=${1:-""}
 SLEEPTIME=${2:-""}
+FAIL_MATCH_OUTPUT=${FAIL_MATCH_OUTPUT:-""}
 shift 2 || true
 COMMAND="$@"
 
@@ -50,7 +56,11 @@ fi
 i=0
 while [ $i -lt $LOOPS ]; do
     i=$((i + 1))
-    OUTPUT=$(eval $COMMAND) && exit 0 || true
+    OUTPUT=$($COMMAND 2>&1) && exit 0 || true
+    if [[ -n "$FAIL_MATCH_OUTPUT" ]] && [[ $OUTPUT =~ $FAIL_MATCH_OUTPUT ]]; then
+        echo "Command output matched '$FAIL_MATCH_OUTPUT'. Exiting..."
+        exit 1
+    fi
     sleep $SLEEPTIME
 done
 SECONDS=$((LOOPS * SLEEPTIME))
