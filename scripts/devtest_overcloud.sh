@@ -57,6 +57,7 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 ##    ::
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
+
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \
@@ -75,7 +76,6 @@ OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
-NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute hosts \
