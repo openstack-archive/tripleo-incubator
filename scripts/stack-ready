@@ -28,6 +28,11 @@ STACK_STATUS=$(heat stack-show $STACK_NAME | awk '/ stack_status / { print $4 }'
 
 if [ "CREATE_COMPLETE" = "$STACK_STATUS" -o "UPDATE_COMPLETE" = "$STACK_STATUS" ]; then
     exit 0
+elif [ "CREATE_FAILED" = "$STACK_STATUS" ]; then
+    # The stack will never be ready so notify the wait_for command of this
+    echo "The stack has failed to start and will never be ready."
+    echo "STACK_STATUS=$STACK_STATUS"
+    exit 2
 else
     exit 1
 fi

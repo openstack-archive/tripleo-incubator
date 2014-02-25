@@ -50,7 +50,15 @@ fi
 i=0
 while [ $i -lt $LOOPS ]; do
     i=$((i + 1))
-    OUTPUT=$(eval $COMMAND) && exit 0 || true
+    OUTPUT=$(eval $COMMAND) && exit 0
+    STATUS=$?
+    if [ $STATUS -gt 1 ]; then
+        echo "Comand failed with status greater then 1. Not waiting for it."
+        echo "COMAND=$COMMAND"
+        echo "EXIT STATUS=$STATUS"
+        echo "OUTPUT=$OUTPUT"
+        exit 1
+    fi
     sleep $SLEEPTIME
 done
 SECONDS=$((LOOPS * SLEEPTIME))
