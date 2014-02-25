@@ -99,7 +99,7 @@ setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutro
 keystone role-create --name heat_stack_user
 
 echo "Waiting for nova to initialise..."
-wait_for 30 10 nova list
+wait_for 50 10 nova list
 user-config
 
 setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
