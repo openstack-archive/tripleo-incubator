@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013 Hewlett-Packard Development Company, L.P.
+# Copyright 2014 Hewlett-Packard Development Company, L.P.
 # All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,19 +15,23 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-set -eu
+set -e
+set -u
 
-STACK_NAME=${1:-''}
+SCRIPT_NAME=$(basename $0)
 
-if [ -z "$STACK_NAME" ]; then
-    echo "No stack name supplied" >&2
+LOOPS=${1:-""}
+SLEEPTIME=${2:-""}
+STACK_NAME=${3:-""}
+if [ -z "$LOOPS" -o -z "$SLEEPTIME" -o -z "$STACK_NAME" ]; then
+    echo "Usage: $SCRIPT_NAME LOOPS_NUMBER SLEEP_TIME STACK_NAME"
     exit 1
 fi
 
-STACK_STATUS=$(heat stack-show $STACK_NAME | awk '/ stack_status / { print $4 }')
+SUCCESSFUL_MATCH_OUTPUT="(CREATE|UPDATE)_COMPLETE"
+FAIL_MATCH_OUTPUT="CREATE_FAILED"
 
-if [ "CREATE_COMPLETE" = "$STACK_STATUS" -o "UPDATE_COMPLETE" = "$STACK_STATUS" ]; then
-    exit 0
-else
-    exit 1
-fi
+SUCCESSFUL_MATCH_OUTPUT=$SUCCESSFUL_MATCH_OUTPUT \
+    FAIL_MATCH_OUTPUT=$FAIL_MATCH_OUTPUT \
+    wait_for $1 $2 \
+        "heat stack-show $STACK_NAME | awk '/stack_status / { print \$4 }'"
