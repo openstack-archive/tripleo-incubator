@@ -235,6 +235,7 @@ fi #nodocs
 ##    * Set `/etc/squid3/squid.conf` to the following
 ##      ::
 ## 
+##          acl manager proto cache_object
 ##          acl localhost src 127.0.0.1/32 ::1
 ##          acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
 ##          acl localnet src 10.0.0.0/8 # RFC1918 possible internal network
