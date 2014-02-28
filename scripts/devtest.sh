@@ -98,6 +98,10 @@ fi
 ## guarantee about deploying older or newer branches of OpenStack projects
 ## correctly.
 
+## Currently, these scripts are CI tested against (and thus known to work on)
+## Ubuntu Trusty (Fedora is coming soon). Modications may be needed to make
+## them work correctly on other platforms.
+
 ## If you wish to use the stable branches, you should instead checkout and clone
 ## the stable branch of tripleo-incubator you want, and then build the
 ## instructions yourself via::
