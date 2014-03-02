@@ -3,6 +3,12 @@ set -eu
 
 ## This script should die: https://bugs.launchpad.net/tripleo/+bug/1195046.
 
+# generate ssh key directory if it doesn't exist
+if [ ! -d ~/.ssh/ ]; then
+    mkdir ~/.ssh
+fi
+
+
 # generate ssh authentication keys if they don't exist
 if [ ! -f ~/.ssh/id_rsa ]; then
     ssh-keygen -t rsa -N ""  -f ~/.ssh/id_rsa
