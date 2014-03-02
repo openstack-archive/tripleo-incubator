@@ -158,6 +158,11 @@ DEVTEST_RD_START=$(date +%s) #nodocs
 devtest_ramdisk.sh
 DEVTEST_RD_END=$(date +%s) #nodocs
 
+## #. See :doc:`devtest_images` for documentation::
+
+CACHE_OPTION="" && [ "$USE_CACHE" == "1" ] && CACHE_OPTION="-c" #nodocs
+devtest_images.sh -d $TE_DATAFILE $CACHE_OPTION
+
 ## #. See :doc:`devtest_seed` for documentation::
 
 DEVTEST_SD_START=$(date +%s) #nodocs
