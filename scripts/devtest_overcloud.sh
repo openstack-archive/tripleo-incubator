@@ -26,12 +26,6 @@ SSLBASE=${11:-''}
 OVERCLOUD_SSL_CERT=${SSLBASE:+$(<$SSLBASE.crt)}
 OVERCLOUD_SSL_KEY=${SSLBASE:+$(<$SSLBASE.key)}
 PUBLIC_API_URL=${12:-''}
-SSL_ELEMENT=${SSLBASE:+openstack-ssl}
-USE_CACHE=${USE_CACHE:-0}
-DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
-OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
-OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
-TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
 # This will stop being a parameter once rebuild --preserve-ephemeral is fully
 # merged. For now, it requires manual effort to use, so it should be opt-in.
 # Since it's not an end-user thing yet either, we don't document it in the
@@ -45,44 +39,12 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 ## devtest_overcloud
 ## =================
 
-## #. Create your overcloud control plane image. This is the image the undercloud
-##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
-##    $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS and $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS are
-##    meant to be used to pass additional build-time specific arguments to
-##    disk-image-create.
-##    SSL_ELEMENT is used when building a cloud with SSL endpoints - it should be
-##    set to openstack-ssl in that situation.
-##    ::
-
-NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
-
-if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \
-        baremetal boot-stack cinder-api cinder-volume os-collect-config horizon \
-        neutron-network-node dhcp-all-interfaces swift-proxy swift-storage \
-        $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-control.log
-fi #nodocs
-
-## #. Load the image into Glance:
+## #. Load the overcloud-control image into Glance:
 ##    ::
 
 OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 
-## #. Create your overcloud compute image. This is the image the undercloud
-##    deploys to host KVM (or QEMU, Xen, etc.) instances.
-##    ::
-
-if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute hosts \
-        baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-        dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-compute.log
-fi #nodocs
-
-## #. Load the image into Glance:
+## #. Load the overcloud-compute image into Glance:
 ##    ::
 
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
@@ -196,14 +158,6 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##    You can watch the console via virsh/virt-manager to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, the machines will reboot
 ##    and be available.
-
-## #. While we wait for the stack to come up, build an end user disk image and
-##    register it with glance.::
-
-if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
-fi #nodocs
 
 ## #. Get the overcloud IP from 'nova list'
 ##    ::

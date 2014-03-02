@@ -196,8 +196,11 @@ if [ "$USE_CACHE" == "0" ] ; then
     git clone https://git.openstack.org/openstack/tripleo-incubator
 ### --end
   elif [ -z "${ZUUL_REF:-''}" ]; then
-    cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
+    echo "TOMTEST: Overriding to skip pull of tripleo-incubator."
+    #cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
   fi
+else
+    echo "TOMTEST: Skipping pull of tripleo-incubator."
 fi
 
 if [ "$NODE_DIST" == 'unsupported' ]; then
@@ -231,8 +234,12 @@ fi
 ##    ::
 
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
-    pull-tools
+    echo "TOMTEST: Overriding to skip pull of other tools"
+    #pull-tools
+else
+    echo "TOMTEST: Skipping pull of other tools"
 fi #nodocs
+exit 0
 
 ### --end
 
