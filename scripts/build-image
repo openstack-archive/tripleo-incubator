@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# Copyright 2014 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+set -e
+set -o pipefail
+
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $(readlink -e ${0}))
+
+PATH=/usr/sbin:/sbin:$PATH
+
+# Some defaults
+ARCH=i386
+UNCOMPRESS_OPT=""
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] <element> [<element> ...]"
+    echo
+    echo "Build image combining the specified elements with the"
+    echo "specified architecture and name."
+    echo
+    echo "Options:"
+    echo "      -a i386|amd64     -- set the architecture of the VM (i386)"
+    echo "      -o name           -- set the name of the VM and image file"
+    echo "      -u                -- uncompressed."
+    echo
+    exit $1
+}
+
+TEMP=$(getopt -o hcua:o: -l offline -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -a) export ARCH=$2; shift 2 ;;
+        -o) export IMAGE_NAME=$2; shift 2 ;;
+        -u) UNCOMPRESS_OPT="-u"; shift ;;
+        -h) show_options 0;;
+        --offline) shift; export DIB_OFFLINE=1;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+if [ -z "$NODE_DIST" ]; then
+    echo "Error: NODE_DIST not set."
+    exit 1
+fi
+
+case $ARCH in
+    i386|amd64) echo "Using arch=$ARCH" ;;
+    *) echo "Error: Unsupported arch $ARCH!" ; exit 1 ;;
+esac
+
+# Check that disk-image-create tool is available
+ELEMENTS_PATH=${ELEMENTS_PATH:-$SCRIPT_HOME/../../tripleo-image-elements/elements}
+export ELEMENTS_PATH
+
+DIB_PATH=${DIB_PATH:-$SCRIPT_HOME/../../diskimage-builder}
+DIB=$(which disk-image-create || echo $DIB_PATH/bin/disk-image-create)
+
+if [ ! -e $DIB ]; then
+    echo "Error: unable to locate disk-image-create"
+    exit 1
+fi
+
+# Build the image
+IMAGE_PATH=$TRIPLEO_ROOT/$IMAGE_NAME
+echo "Building $IMAGE_NAME image"
+$DIB -x $UNCOMPRESS_OPT -a $ARCH -o $IMAGE_PATH $NODE_DIST $@ 2>&1 | tee $IMAGE_PATH.log
+echo "Finished building $IMAGE_NAME image"
