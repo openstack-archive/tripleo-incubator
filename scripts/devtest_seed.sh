@@ -3,8 +3,6 @@
 set -eux
 set -o pipefail
 
-USE_CACHE=${USE_CACHE:-0}
-
 ### --include
 ## devtest_seed
 ## ============
@@ -44,12 +42,7 @@ fi
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
 cd $TRIPLEO_ROOT
-if [ "$USE_CACHE" == "0" ] ; then #nodocs
-    boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-seed.log
-else #nodocs
-    boot-seed-vm -c -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | tee $TRIPLEO_ROOT/dib-seed.log #nodocs
-fi #nodocs
+boot-seed-vm  2>&1 | tee $TRIPLEO_ROOT/dib-seed.log #nodocs
 
 ##    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
 ##    you can log into it with 'ssh stack@192.0.2.1'.
