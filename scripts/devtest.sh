@@ -155,6 +155,10 @@ fi #nodocs
 
 devtest_ramdisk.sh
 
+## #. See :doc:`devtest_images` for documentation::
+
+devtest_images.sh -d $TE_DATAFILE
+
 ## #. See :doc:`devtest_seed` for documentation::
 
 devtest_seed.sh
