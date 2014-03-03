@@ -34,6 +34,8 @@ CONTINUE=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 
+DEVTEST_START=$(date +%s)
+
 TEMP=`getopt -o h,c -l existing-environment,trash-my-machine -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
@@ -153,26 +155,45 @@ fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
 
+DEVTEST_RD_START=$(date +%s)
 devtest_ramdisk.sh
+DEVTEST_RD_END=$(date +%s)
 
 ## #. See :doc:`devtest_seed` for documentation::
 
+DEVTEST_SD_START=$(date +%s)
 devtest_seed.sh
+DEVTEST_SD_END=$(date +%s)
 
 ## #. See :doc:`devtest_undercloud` for documentation::
 
 export no_proxy=${no_proxy:-},192.0.2.1
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
+DEVTEST_UC_START=$(date +%s)
 devtest_undercloud.sh $TE_DATAFILE
+DEVTEST_UC_END=$(date +%s)
 
 ## #. See :doc:`devtest_overcloud` for documentation::
 
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
 source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
+DEVTEST_OC_START=$(date +%s)
 source devtest_overcloud.sh
+DEVTEST_OC_END=$(date +%s)
 
 ## #. See :doc:`devtest_end` for documentation::
 
 devtest_end.sh
+
+DEVTEST_END=$(date +%s)
+DEVTEST_PERF_LOG="${SCRIPT_HOME}/devtest_perf.log"
+exec 3>>${DEVTEST_PERF_LOG}
+TIMESTAMP=$(date "+[%Y-%m-%d %H:%M:%S]")
+echo "${TIMESTAMP} Total runtime: $((${DEVTEST_END}-${DEVTEST_START})) s" | tee /dev/fd/3
+echo "${TIMESTAMP}  ramdisk    : $((${DEVTEST_RD_END}-${DEVTEST_RD_START})) s" >&3
+echo "${TIMESTAMP}  seed       : $((${DEVTEST_SD_END}-${DEVTEST_SD_START})) s" >&3
+echo "${TIMESTAMP}  undercloud : $((${DEVTEST_UC_END}-${DEVTEST_UC_START})) s" >&3
+echo "${TIMESTAMP}  overcloud  : $((${DEVTEST_OC_END}-${DEVTEST_OC_START})) s" >&3
+echo "${TIMESTAMP} DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS}" >&3
 
 ### --end
