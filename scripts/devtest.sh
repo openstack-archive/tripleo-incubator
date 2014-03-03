@@ -34,6 +34,8 @@ CONTINUE=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 
+DEVTEST_START=$(date +%s) #nodocs
+
 TEMP=`getopt -o h,c -l existing-environment,trash-my-machine -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
@@ -153,26 +155,44 @@ fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
 
+DEVTEST_RD_START=$(date +%s) #nodocs
 devtest_ramdisk.sh
+DEVTEST_RD_END=$(date +%s) #nodocs
 
 ## #. See :doc:`devtest_seed` for documentation::
 
+DEVTEST_SD_START=$(date +%s) #nodocs
 devtest_seed.sh
+DEVTEST_SD_END=$(date +%s) #nodocs
 
 ## #. See :doc:`devtest_undercloud` for documentation::
 
 export no_proxy=${no_proxy:-},192.0.2.1
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
+DEVTEST_UC_START=$(date +%s) #nodocs
 devtest_undercloud.sh $TE_DATAFILE
+DEVTEST_UC_END=$(date +%s) #nodocs
 
 ## #. See :doc:`devtest_overcloud` for documentation::
 
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
 source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
+DEVTEST_OC_START=$(date +%s) #nodocs
 source devtest_overcloud.sh
+DEVTEST_OC_END=$(date +%s) #nodocs
 
 ## #. See :doc:`devtest_end` for documentation::
 
 devtest_end.sh
 
 ### --end
+
+DEVTEST_END=$(date +%s) #nodocs
+DEVTEST_PERF_LOG="${TRIPLEO_ROOT}/devtest_perf.log" #nodocs
+TIMESTAMP=$(date "+[%Y-%m-%d %H:%M:%S]") #nodocs
+echo "${TIMESTAMP} Total runtime: $((DEVTEST_END - DEVTEST_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
+echo "${TIMESTAMP}  ramdisk    : $((DEVTEST_RD_END - DEVTEST_RD_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
+echo "${TIMESTAMP}  seed       : $((DEVTEST_SD_END - DEVTEST_SD_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
+echo "${TIMESTAMP}  undercloud : $((DEVTEST_UC_END - DEVTEST_UC_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
+echo "${TIMESTAMP}  overcloud  : $((DEVTEST_OC_END - DEVTEST_OC_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
+echo "${TIMESTAMP} DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS}" >> ${DEVTEST_PERF_LOG} #nodocs
