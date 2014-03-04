@@ -105,25 +105,10 @@ fi
 ## #. ssh-user: The SSH username to use when performing virsh commands on
 ##    $host-ip.
 
-## #. node-macs: A space separated string containing the MAC addresses of the
-##    primary interface for each VM or bare metal machine. *DEPRECATED*
-
 ## #. nodes: A list of node metadata. Each node has "memory" in K, "cpu" in
 ##    threads, "arch" (one of i386/amd64/etc), "disk" in GB, mac, a list of
 ##    MAC addresses for the node and "pm_user", "pm_addr", "pm_password" fields.
 ##    Future iterations will add Ironic power and deploy driver selection here.
-
-## #. node-pm-ips: A space separated string containing the power management
-##    IP address of each bare metal machine. Useful when using real bare
-##    metal hardware. *OPTIONAL* *DEPRECATED*
-
-## #. node-pm-users: A space separated string containing the power management
-##    user ID of each bare metal machine. Useful when using real bare
-##    metal hardware. *OPTIONAL* *DEPRECATED*
-
-## #. node-pm-passwords: A space separated string containing the power
-##    management password of each bare metal machine.
-##    Useful when using real bare metal hardware. *OPTIONAL* *DEPRECATED*
 
 ## #. power_manager: The class path for a Nova Baremetal power manager.
 
