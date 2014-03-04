@@ -132,6 +132,6 @@ setup-neutron 192.0.2.5 192.0.2.24 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplan
 ## #. Register two baremetal nodes with your undercloud.
 ##    ::
 
-setup-baremetal $TE_DATAFILE --service-host undercloud --not-first
+setup-baremetal --service-host undercloud --nodes <(jq '.nodes - [.nodes[0]]' $TE_DATAFILE)
 
 ### --end
