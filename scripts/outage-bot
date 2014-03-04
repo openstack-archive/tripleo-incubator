@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#
+# Copyright 2014 Red Hat
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# Script to spam tripleo-cd-admin on #tripleo while there is a outage of
+# the tripleo-ci cloud. Send messages to irc with irc messages from
+# https://etherpad.openstack.org/p/cloud-outage, each time the irc message
+# changes or every 30 minutes if no changes occurs.
+
+
+if [ -z "$1" ] ; then
+    echo "Supply channel name"
+    exit 1
+fi
+
+SCRIPTDIR=$(dirname $0)
+CURRENT=/var/tmp/outage-bot.current
+LAST=/var/tmp/outage-bot.last
+NEXTMESSAGE=0
+CHANNEL=$1
+
+touch $LAST
+
+function sendmessage(){
+    PEOPLE=$(cut -d , -f 1 $SCRIPTDIR/../tripleo-cloud/tripleo-cd-admins | xargs echo)
+    $SCRIPTDIR/send-irc $CHANNEL CLOUDOUTAGE "$PEOPLE $(sed -e 's/^ircmessage: \?//g' $CURRENT | xargs -0 -I LINE echo -n " --" LINE)"
+    NEXTMESSAGE=$(( $(date +%s) + 1800 ))
+}
+
+while true ; do
+    sleep 60
+    curl https://etherpad.openstack.org/p/cloud-outage/export/txt | grep "^ircmessage:" > $CURRENT
+
+    if [ ! -s $CURRENT ] ; then
+        continue
+    fi
+
+    if ! diff $CURRENT $LAST &> /dev/null ; then
+        sendmessage
+    fi
+
+    if [ $NEXTMESSAGE -lt $(date +%s) ] ; then
+        sendmessage
+    fi
+
+    cp $CURRENT $LAST
+done
