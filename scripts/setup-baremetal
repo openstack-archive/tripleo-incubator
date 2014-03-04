@@ -22,7 +22,7 @@ SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
 function show_options () {
-    echo "Usage: $SCRIPT_NAME [options] $TE_DATAFILE"
+    echo "Usage: $SCRIPT_NAME [options]"
     echo
     echo "Reads a JSON file describing machines for a baremetal cluster and"
     echo "registers them all with Nova baremetal. Excess machines are removed"
@@ -33,16 +33,15 @@ function show_options () {
     echo "Options:"
     echo "      -h             -- this help"
     echo "      --service-host -- nova bm service host to register nodes with"
-    echo "      --first        -- only select the first node"
-    echo "      --not-first    -- select all but the first node"
+    echo "      --nodes        -- JSON list of nodes to register"
     echo
     exit $1
 }
 
 SERVICE_HOST=""
-NODE_SELECTION=0
+JSON_PATH=
 
-TEMP=`getopt -o h -l help,service-host:,first,not-first -n $SCRIPT_NAME -- "$@"`
+TEMP=$(getopt -o h -l help,service-host:,nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -52,82 +51,23 @@ while true ; do
     case "$1" in
         -h | --help) show_options 0;;
         --service-host) SERVICE_HOST="$2"; shift 2 ;;
-        --first) NODE_SELECTION=1 ; shift ;;
-        --not-first) NODE_SELECTION=-1 ; shift ;;
+        --nodes) JSON_PATH="$2"; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
 done
 
-BACKWARDS_COMPAT=${1:-''}
 if [ -z "$SERVICE_HOST" ]; then
     echo "Ironic not supported, please specify --service-host."
     exit 1
 fi
-
-if [ -n "$BACKWARDS_COMPAT" ]; then
-    # We have a backwards compat file, but we might have a new testenv - probe
-    # to see.
-    PROBE=$(jq -r '.nodes[0].cpu' $BACKWARDS_COMPAT)
-    if [ "$PROBE" = "null" ]; then
-        # No CPU data in the first node (may imply no first node..) so assume
-        # we're working with a older CI testenv.
-        # In that environment we use the environment variables
-        CPU=$NODE_CPU
-        MEM=$NODE_MEM
-        DISK=$NODE_DISK
-        ARCH=$NODE_ARCH
-        # Plus MAC addresses and PM from the whole testenv file.
-        if [ $NODE_SELECTION -eq 1 ]; then
-            FIELDS="1"
-        elif [ $NODE_SELECTION -eq -1 ]; then
-            FIELDS="2-"
-        else
-            FIELDS="1-"
-        fi
-        MACS=$(OS_CONFIG_FILES=$BACKWARDS_COMPAT os-apply-config --key node-macs --type raw | cut -d' ' -f$FIELDS)
-        PM_IPS=$(OS_CONFIG_FILES=$BACKWARDS_COMPAT os-apply-config --key node-pm-ips --type raw --key-default '' | cut -d' ' -f$FIELDS)
-        PM_USERS=$(OS_CONFIG_FILES=$BACKWARDS_COMPAT os-apply-config --key node-pm-users --type raw --key-default '' | cut -d' ' -f$FIELDS)
-        PM_PASSWORDS=$(OS_CONFIG_FILES=$BACKWARDS_COMPAT os-apply-config --key node-pm-passwords --type raw --key-default '' | cut -d' ' -f$FIELDS)
-        MODE="legacy"
-    else
-        MODE="new"
-    fi
-else
-    echo "A test environment file is required."
+if [ -z "$JSON_PATH" ]; then
+    echo "A node list is required."
     exit 1
 fi
 
-echo $MODE
-if [ "new" = "$MODE" ]; then
-    if [ $NODE_SELECTION -eq 1 ]; then
-        NODES=$(jq '[.nodes[0]]' $BACKWARDS_COMPAT)
-    elif [ $NODE_SELECTION -eq -1 ]; then
-        NODES=$(jq '.nodes - [.nodes[0]]' $BACKWARDS_COMPAT)
-    else
-        NODES=$(jq '.nodes' $BACKWARDS_COMPAT)
-    fi
-    # Backwards compat until we fix register-nodes / subsume it / whatever.
-    # At that point heterogeneous node support becomes trivial.
-    CPU=$(jq -r '.[0].cpu' <<< $NODES)
-    MEM=$(jq -r '.[0].memory' <<< $NODES)
-    DISK=$(jq -r '.[0].disk' <<< $NODES)
-    ARCH=$(jq -r '.[0].arch' <<< $NODES)
-    # Note: this takes only the first MAC - another legacy limit until we
-    # refactor register-nodes.
-    MACS=$(jq -r '.[] | .mac[0]' <<< $NODES)
-    PM_IPS=$(jq -r '.[] | .pm_addr' <<< $NODES)
-    PM_USERS=$(jq -r '.[] | .pm_user' <<< $NODES)
-    PM_PASSWORDS=$(jq -r '.[] | .pm_password' <<< $NODES)
-fi
-
-# After we delete the backwards compat mode, register-nodes should have it's
-# interface changed to just take the node vector - collapsing this script down
-# to:
-# register-nodes
-# setup flavors
-# register deploy ramdisk
-register-nodes $CPU $MEM $DISK "$MACS" $SERVICE_HOST "$PM_IPS" "$PM_USERS" "$PM_PASSWORDS"
+NODES=$(cat $JSON_PATH)
+register-nodes $SERVICE_HOST <(echo $NODES)
 
 deploy_kernel=$TRIPLEO_ROOT/deploy-ramdisk.kernel
 deploy_ramdisk=$TRIPLEO_ROOT/deploy-ramdisk.initramfs
@@ -154,6 +94,10 @@ cleanup_flavor 'm1.xlarge'
 cleanup_flavor 'baremetal'
 # XXX(lifeless) this should be a loop making sure every node is represented
 # with a flavor.
+MEM=$(jq -r ".[0][\"memory\"]" <<< $NODES)
+DISK=$(jq -r ".[0][\"disk\"]" <<< $NODES)
+CPU=$(jq -r ".[0][\"cpu\"]" <<< $NODES)
+ARCH=$(jq -r ".[0][\"arch\"]" <<< $NODES)
 nova flavor-create baremetal auto $MEM $DISK $CPU
 nova flavor-key baremetal set "cpu_arch"="$ARCH" \
     "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
