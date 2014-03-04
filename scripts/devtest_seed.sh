@@ -94,7 +94,7 @@ source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 echo "Waiting for seed node to configure br-ctlplane..." #nodocs
 wait_for 30 10 ping -c 1 192.0.2.1
 ssh-keyscan -t rsa 192.0.2.1 >>~/.ssh/known_hosts
-init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
+init-keystone -p unset -a unset unset 192.0.2.1 admin@example.com root@192.0.2.1
 setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
 keystone role-create --name heat_stack_user
 
