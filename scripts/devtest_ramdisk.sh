@@ -26,6 +26,7 @@ DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy}
 ##    ::
 
 ### --end
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch)
 if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
      ! -e $TRIPLEO_ROOT/deploy-ramdisk.initramfs -o \
      "$USE_CACHE" == "0" ] ; then
