@@ -36,6 +36,10 @@ if [ $USE_IRONIC -eq 0 ]; then
 else
     SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-ironic"
 fi
+
+if [[ $DIB_COMMON_ELEMENTS != *serial-console* ]]; then
+    SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS remove-serial-console"
+fi
 export VM_IP=""
 
 function show_options () {
