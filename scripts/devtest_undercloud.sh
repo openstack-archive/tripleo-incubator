@@ -77,6 +77,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
     -P "PowerSSHPrivateKey=${POWER_KEY}" \
     -P "PowerSSHHost=${POWER_HOST}" \
     -P "NeutronPublicInterface=${NeutronPublicInterface}" \
+    -P "HeatStackDomainAdminPassword=${UNDERCLOUD_HEAT_STACK_DOMAIN_ADMIN_PASSWORD}" \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
@@ -117,7 +118,8 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 ## #. Perform setup of your undercloud.
 ##    ::
 
-init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
+init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD -a $UNDERCLOUD_HEAT_STACK_DOMAIN_ADMIN_PASSWORD 
+    $UNDERCLOUD_ADMIN_TOKEN \
     $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
 setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --heat-password $UNDERCLOUD_HEAT_PASSWORD \
