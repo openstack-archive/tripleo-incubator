@@ -94,6 +94,9 @@ elif [ "orchestration" = "$TYPE" ]; then
 elif [ "identity" = "$TYPE" ]; then
     SUFFIX="/v2.0"
     ADMIN_SUFFIX="$SUFFIX"
+elif [ "identity-v3" = "$TYPE" ]; then
+    SUFFIX="/v3"
+    ADMIN_SUFFIX="$SUFFIX"
 elif [ "network" = "$TYPE" ]; then
     SUFFIX="/"
     ADMIN_SUFFIX="$SUFFIX"
@@ -132,7 +135,7 @@ if [ -z "$ADMIN_URL" ]; then
     ADMIN_URL="$INTERNAL_URL"
 fi
 
-ADMIN_ROLE=$(keystone $DEBUG role-list | awk '/ admin / {print $2}')
+ADMIN_ROLE=$(openstack $DEBUG role list | awk '/ admin / {print $2}')
 if [ -z "$ADMIN_ROLE" ]; then
     echo "Could not find admin role" >&2
     exit 1
@@ -140,21 +143,28 @@ fi
 
 # Some services don't need a user
 if [ "dashboard" != "$TYPE" ]; then
-    SERVICE_TENANT=$(keystone $DEBUG tenant-list | awk '/ service / {print $2}')
+    SERVICE_PROJECT=$(openstack $DEBUG project list | awk '/ service / {print $2}')
     PASSWORD=${PASSWORD:-$(os-make-password)}
 
     # Some services have multiple endpoints, the user doesn't need to be recreated
-    USER_ID=$(keystone user-get $NAME | awk '$2=="id" { print $4 }')
+    USER_ID=$(openstack user show $NAME | awk '$2=="id" { print $4 }')
     if [ -z "$USER_ID" ]; then
-        SVC_USER=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
-        keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
-                               --user-id $SVC_USER \
-                               --role-id $ADMIN_ROLE
+        SVC_USER=$(openstack $DEBUG user create --password=$PASSWORD --project $SERVICE_PROJECT --email=nobody@example.com $NAME | awk ' / id / {print $4}')
+        openstack $DEBUG \
+            role add \
+            --project $SERVICE_PROJECT \
+            --user $SVC_USER \
+            $ADMIN_ROLE
+
     fi
 fi
-SERVICE_ID=$(keystone $DEBUG service-create --name=$NAME --type=$TYPE "$DESCRIPTION" | awk '/ id / {print $4}')
-keystone endpoint-create $DEBUG --region "$REGION" --service-id $SERVICE_ID \
-    --publicurl   "${PUBLIC_URL}${SUFFIX}" \
-    --adminurl    "${ADMIN_URL}${ADMIN_SUFFIX}" \
+SERVICE_ID=$(openstack $DEBUG service create \
+    $NAME \
+    --type $TYPE \
+    | awk '/ id / {print $4}')
+openstack endpoint create $DEBUG --region "$REGION" \
+    $SERVICE_ID  \
+    --publicurl "${PUBLIC_URL}${SUFFIX}" \
+    --adminurl "${ADMIN_URL}${SUFFIX}" \
     --internalurl "${INTERNAL_URL}${SUFFIX}"
 echo "Service $TYPE created"
