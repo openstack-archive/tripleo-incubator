@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-set -e
+set -ex
 
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
@@ -107,6 +107,9 @@ sudo touch /var/lib/libvirt/images/$IMAGE_NAME.qcow2
 EXTRAOPTS=
 if [ -n "$OVSBRIDGE" ] ; then
     EXTRAOPTS="--ovsbridge $OVSBRIDGE"
+fi
+if [ "$USE_SERIAL_CONSOLE" != "0" ]; then
+    EXTRAOPTS="${EXTRAOPTS} --serial-console"
 fi
 configure-vm $EXTRAOPTS \
        --name $IMAGE_NAME \
