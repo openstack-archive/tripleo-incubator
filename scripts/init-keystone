@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-set -eu
+set -eux
 set -o pipefail
 
 SCRIPT_NAME=$(basename $0)
@@ -33,6 +33,7 @@ function show_options () {
     echo "Options:"
     echo "    -r, --region      -- Override the default region 'regionOne'."
     echo "    -p, --password    -- Choose the admin user password."
+    echo "    -a                -- Choose the Heat Stack Domain Admin User password."
     echo "    --ssl             -- Use a SSL public endpoint."
     echo
     echo "For instance: $SCRIPT_NAME -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1"
@@ -42,8 +43,9 @@ function show_options () {
 
 REGION="regionOne" #NB: This is the keystone default.
 PASSWORD="" # Default to making a random one.
+DOMAIN_ADMIN_PASSWORD="" # Default to making a random one.
 
-TEMP=`getopt -o hr:p: -l help,region:,password:,ssl: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o hr:p:a: -l help,region:,password:,ssl: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -53,25 +55,27 @@ while true ; do
     case "$1" in
         -r | --region) REGION=$2; shift 2 ;;
         -p | --password) PASSWORD=$2; shift 2 ;;
+        -a) DOMAIN_ADMIN_PASSWORD=$2; shift 2 ;;
         -h) show_options 0;;
-	--ssl) SSL=$2; shift 2 ;;
+        --ssl) SSL=$2; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
 done
 
-SERVICE_TOKEN=${1:-""}
+OS_TOKEN=${1:-""}
 ENDPOINT=${2:-""}
 ADMIN_EMAIL=${3:-""}
 HOST=${4:-""}
 EXTRA=${5:-""}
 
-if [ -z "$SERVICE_TOKEN" -o -z "$ENDPOINT" -o -z "$ADMIN_EMAIL" -o -z "$HOST" -o -n "$EXTRA" ]; then
+if [ -z "$OS_TOKEN" -o -z "$ENDPOINT" -o -z "$ADMIN_EMAIL" -o -z "$HOST" -o -n "$EXTRA" ]; then
     show_options 1
 fi
 
-export SERVICE_ENDPOINT=http://$ENDPOINT:35357/v2.0
-export SERVICE_TOKEN
+export OS_URL=http://$ENDPOINT:35357/v3
+export OS_TOKEN
+export OS_SERVICE_TOKEN=$OS_TOKEN
 # Setup PKI
 
 # Determine the keystone user. For openSUSE with packages
@@ -88,26 +92,43 @@ ssh -o StrictHostKeyChecking=no -t $HOST sudo keystone-manage pki_setup \
 # Tenants
 echo "Waiting for keystone to initialise..."
 # FIXME: when undercloud uses wait conditions, this wait can be removed.
-wait_for 60 10 "keystone tenant-create --name=admin"
-ADMIN_TENANT_ID=$(keystone tenant-get admin | awk '$2=="id" {print $4}')
-SERVICE_TENANT_ID=$(keystone tenant-create --name=service | awk '$2=="id" {print $4}')
+wait_for 60 10 "openstack --os-identity-api-version 3 project create admin"
+ADMIN_PROJECT_ID=$(openstack --os-identity-api-version 3 project show admin | awk '$2=="id" {print $4}')
+SERVICE_PROJECT_ID=$(openstack --os-identity-api-version 3 project create service | awk '$2=="id" {print $4}')
 
 # Roles
-ADMIN_ROLE_ID=$(keystone role-create --name=admin | awk '$2=="id" {print $4}')
-MEMBER_ROLE_ID=$(keystone role-create --name=Member | awk '$2=="id" {print $4}')
+ADMIN_ROLE_ID=$(openstack --os-identity-api-version 3 role create admin | awk '$2=="id" {print $4}')
+MEMBER_ROLE_ID=$(openstack --os-identity-api-version 3 role create Member | awk '$2=="id" {print $4}')
 
 # Creating these roles to be used by tenants using swift
-keystone role-create --name=swiftoperator
-keystone role-create --name=ResellerAdmin
+openstack --os-identity-api-version 3 role create swiftoperator
+openstack --os-identity-api-version 3 role create ResellerAdmin
 
 # Users
-ADMIN_USER_ID=$(keystone user-create --name=admin \
-    --pass="$PASSWORD" \
-    --email="$ADMIN_EMAIL" | awk '$2=="id" {print $4}')
+ADMIN_USER_ID=$(openstack --os-identity-api-version 3 user create \
+    --password="$PASSWORD" \
+    --email="$ADMIN_EMAIL" \
+    admin \
+    | awk '$2=="id" {print $4}')
+
+# Heat Domain
+HEAT_DOMAIN_ID=$(openstack --os-identity-api-version 3 domain create heat \
+    --os-identity-api-version=3 \
+    --description "Owns users and projects created by heat" \
+    | grep ' id ' | awk '$2=="id" {print $4}')
+HEAT_DOMAIN_ADMIN_USER_ID=$(openstack --os-identity-api-version 3 user create --password "$DOMAIN_ADMIN_PASSWORD" \
+    --domain $HEAT_DOMAIN_ID \
+    --description "Manages users and projects created by heat" \
+    heat_domain_admin \
+    | grep ' id ' | awk '$2=="id" {print $4}')
+openstack --os-identity-api-version 3 role add \
+    --user $HEAT_DOMAIN_ADMIN_USER_ID --domain $HEAT_DOMAIN_ID admin
 
 # User Roles
-keystone user-role-add --user-id $ADMIN_USER_ID --role-id $ADMIN_ROLE_ID --tenant-id $ADMIN_TENANT_ID
-
+openstack --os-identity-api-version 3 role add \
+    --user $ADMIN_USER_ID \
+    --project $ADMIN_PROJECT_ID \
+    $ADMIN_ROLE_ID
 INTERNAL_URL=http://$ENDPOINT:5000
 PUBLIC_URL=${SSL:+https://$SSL:13000}
 PUBLIC_URL=${PUBLIC_URL:-$INTERNAL_URL}
