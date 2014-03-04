@@ -67,6 +67,7 @@ setup-network
 ##    to bootstrap a full dynamically configured baremetal cloud.
 ##    ::
 
+echo USC $USE_SERIAL_CONSOLE
 setup-seed-vm -a $NODE_ARCH
 
 ## #. Create baremetal nodes for the test cluster. The final parameter to
