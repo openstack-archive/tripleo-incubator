@@ -28,7 +28,7 @@ function show_options() {
 
 for NAME in $(sudo virsh list --name --all | grep "^\(seed\(.*\|\)\|baremetal\(\|brbm.*\)_.*\)$"); do
   sudo virsh destroy $NAME
-  sudo virsh undefine --remove-all-storage $NAME
+  sudo virsh undefine --managed-save --remove-all-storage $NAME
 done
 
 for NAME in $(sudo virsh vol-list default 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\(seed\(.*\|\)|baremetal\(\|brbm.*\)-\)" ); do

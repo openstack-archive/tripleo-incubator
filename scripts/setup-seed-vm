@@ -100,8 +100,8 @@ case $ARCH in
 esac
 
 which virsh >/dev/null || die "Error: virsh not found in path"
-sudo virsh destroy  $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
-sudo virsh undefine $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not defined"
+sudo virsh destroy $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
+sudo virsh undefine $IMAGE_NAME --managed-save 2>/dev/null || echo "$IMAGE_NAME VM not defined"
 sudo touch /var/lib/libvirt/images/$IMAGE_NAME.qcow2
 
 EXTRAOPTS=
