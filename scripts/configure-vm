@@ -51,6 +51,8 @@ def main():
         help='Place the seed public interface on this ovs bridge.')
     parser.add_argument('--libvirt-nic-driver', default='virtio',
         help='The libvirt network driver to use')
+    parser.add_argument('--enable-serial-console', action="store_true",
+            help='Enable a serial console')
     args = parser.parse_args()
     with file(templatedir + '/vm.xml', 'rb') as f:
         source_template = f.read()
@@ -68,6 +70,7 @@ def main():
         'cpus': args.cpus,
         'bootdev': args.bootdev,
         'network': '',
+        'enable-serial_console': '',
         }
     if args.image is not None:
         params['imagefile'] = args.image
@@ -109,6 +112,16 @@ def main():
         <model type='%(nicdriver)s'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
       </interface>""" % nicparams
+
+    if args.enable_serial_console:
+        params['enable_serial_console'] = """
+        <serial type='pty'>
+          <target port='0'/>
+        </serial>
+        <console type='pty'>
+          <target type='serial' port='0'/>
+        </console>
+        """
 
     libvirt_template = source_template % params
     conn=libvirt.open("qemu:///system")
