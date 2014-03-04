@@ -23,12 +23,16 @@ SCRIPT_HOME=$(dirname $0)
 
 PATH=$PATH:/usr/sbin:/sbin
 
+USE_SERIAL_CONSOLE=${USE_SERIAL_CONSOLE:-1}
 # Some defaults
 ARCH=i386
 export IMAGE_NAME=seed
 export DIB_IMAGE_SIZE=30
 CREATE_IMAGE=yes
-ALWAYS_ELEMENTS="vm cloud-init-nocloud local-config boot-stack nova-baremetal seed-stack-config remove-serial-console"
+ALWAYS_ELEMENTS="vm cloud-init-nocloud local-config boot-stack nova-baremetal seed-stack-config"
+if [ "${USE_SERIAL_CONSOLE}" == "1" ] then
+  ALWAYS_ELEMENTS="${ALWAYS_ELEMENTS} remove-serial-console"
+fi
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-''}
 SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 export VM_IP=""
