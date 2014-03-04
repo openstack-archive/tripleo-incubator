@@ -23,6 +23,7 @@ SCRIPT_HOME=$(dirname $0)
 
 PATH=$PATH:/usr/sbin:/sbin
 
+export USE_SERIAL_CONSOLE=${USE_SERIAL_CONSOLE:-0}
 # Some defaults
 ARCH=i386
 export IMAGE_NAME=seed
@@ -35,6 +36,10 @@ if [ $USE_IRONIC -eq 0 ]; then
     SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-baremetal"
 else
     SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-ironic"
+fi
+
+if [[ $DIB_COMMON_ELEMENTS != *serial-console* ]]; then
+    SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS remove-serial-console"
 fi
 export VM_IP=""
 
