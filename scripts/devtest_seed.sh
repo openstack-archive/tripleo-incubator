@@ -118,7 +118,7 @@ setup-neutron 192.0.2.2 192.0.2.20 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 ##    If you want to use real baremetal see footnote [#f3]_ for details.
 ##    ::
 
-setup-baremetal $TE_DATAFILE --service-host seed --first
+setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
 
