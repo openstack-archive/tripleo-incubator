@@ -19,6 +19,14 @@ set -eu
 
 # This is a cheap mr/cm-alike. Perhaps we should use mr/cm.
 
+: ${DIB_REPOLOCATION_diskimage_builder:="https://git.openstack.org/openstack/diskimage-builder"}
+: ${DIB_REPOREF_diskimage_builder:=master}
+: ${DIB_REPOLOCATION_tripleo_image_elements:="https://git.openstack.org/openstack/tripleo-image-elements"}
+: ${DIB_REPOREF_tripleo_image_elements:=master}
+: ${DIB_REPOLOCATION_tripleo_heat_templates:="https://git.openstack.org/openstack/tripleo-heat-templates"}
+: ${DIB_REPOREF_tripleo_heat_templates:=master}
+: ${DIB_REPOLOCATION_tripleo_incubator:="https://git.openstack.org/openstack/tripleo-incubator"}
+: ${DIB_REPOREF_tripleo_incubator:=master}
 TOOLS="https://git.openstack.org/openstack/diskimage-builder https://git.openstack.org/openstack/tripleo-image-elements https://git.openstack.org/openstack/tripleo-heat-templates https://git.openstack.org/openstack/tripleo-incubator"
 
 ZUUL_REF=${ZUUL_REF:-''}
@@ -31,12 +39,14 @@ fi
 for TOOL in $TOOLS; do
     TOOL_BASE=$(basename $TOOL)
     echo pulling/updating $TOOL_BASE
+    eval LOCATION=\$DIB_REPOLOCATION_${TOOL_BASE//[^A-Za-z0-9_]/_}
+    eval REF=\$DIB_REPOREF_${TOOL_BASE//[^A-Za-z0-9_]/_}
     if [ ! -d $TRIPLEO_ROOT/$TOOL_BASE ] ; then
         cd $TRIPLEO_ROOT
-        git clone $TOOL
+        git clone -b $REF $LOCATION
     else
         cd $TRIPLEO_ROOT/$TOOL_BASE
-        if [ "$(git symbolic-ref -q HEAD | rev | cut -d "/" -f 1 | rev || :)" = "master" ] ; then
+        if [ "$(git symbolic-ref -q HEAD | rev | cut -d "/" -f 1 | rev || :)" = "$REF" ] ; then
             if ! git pull --ff-only ; then
                     echo "***************************************************"
                     echo "* Perhaps you want to 'git rebase origin/master'? *"
@@ -45,7 +55,7 @@ for TOOL in $TOOLS; do
             fi
         else
             echo "***************************************"
-            echo "* Not on master branch, skipping pull *"
+            echo "* Not on $REF branch, skipping pull *"
             echo "***************************************"
         fi
     fi
