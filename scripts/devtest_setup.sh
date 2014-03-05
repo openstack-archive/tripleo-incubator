@@ -187,14 +187,20 @@ mkdir -p $TRIPLEO_ROOT
 cd $TRIPLEO_ROOT
 
 ## #. git clone this repository to your local machine.
+##    The DIB_REPOLOCATION_tripleo_incubator and DIB_REPOREF_tripleo_incubator
+##    environment variables will be honoured, if set.
 ##    ::
 
 ### --end
 if [ "$USE_CACHE" == "0" ] ; then
   if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then
 ### --include
-    git clone https://git.openstack.org/openstack/tripleo-incubator
+    git clone ${DIB_REPOLOCATION_tripleo_incubator:-"https://git.openstack.org/openstack/tripleo-incubator"} tripleo-incubator
+    pushd tripleo-incubator
+    git checkout ${DIB_REPOREF_tripleo_incubator:-master}
+    popd
 ### --end
+
   elif [ -z "${ZUUL_REF:-''}" ]; then
     cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
   fi
@@ -228,6 +234,9 @@ fi
 ### --include
 
 ## #. Clone/update the other needed tools which are not available as packages.
+##    The DIB_REPOLOCATION_* and DIB_REPOREF_* environment variables will be used,
+##    if set, to select the diskimage_builder, tripleo_image_elements and
+##    tripleo_heat_templates to check out.
 ##    ::
 
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
