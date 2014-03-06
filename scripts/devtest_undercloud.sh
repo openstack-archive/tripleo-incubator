@@ -62,6 +62,8 @@ POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 ## #. Deploy an undercloud.
 ##    ::
 
+echo "Waiting for baremetal node on seed to be available"
+wait_for 12 10 'baremetal_ready.sh --cpu $NODE_CPU --disk $NODE_DISK --mem $NODE_MEM'
 make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
     -P "PowerUserName=${POWER_USER}" \
