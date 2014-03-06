@@ -122,7 +122,14 @@ SEED_PM_IPS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-ips --t
 SEED_PM_USERS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-users --type raw --key-default '' | awk '{ print $1 }')
 SEED_PM_PASSWORDS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key node-pm-passwords --type raw --key-default '' | awk '{ print $1 }')
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
-setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" seed "$SEED_PM_IPS" "$SEED_PM_USERS" "$SEED_PM_PASSWORDS"
+SERVICE_HOST=seed
+setup-baremetal $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH "$SEED_MACS" $SERVICE_HOST "$SEED_PM_IPS" "$SEED_PM_USERS" "$SEED_PM_PASSWORDS"
+# When using cached images, subsequent immediate undercloud deploy will fail if baremetal
+# node is not available.
+if [ "$USE_CACHE" == "1" ] ; then
+    echo "Waiting for baremetal node on seed to be available"
+    wait_for 12 10 'nova baremetal-node-list | grep "${SERVICE_HOST}.*${NODE_CPU}.*${NODE_MEM}.*${NODE_DISK}"'
+fi
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
 
