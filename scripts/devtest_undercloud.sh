@@ -62,6 +62,10 @@ POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 ## #. Deploy an undercloud.
 ##    ::
 
+## #. Wait for the BM cloud to register BM nodes with the scheduler.
+echo "Waiting for baremetal nodes to be registered with the scheduler." #nodocs
+wait_for 60 1 [ "$(nova hypervisor-stats | awk '$2=="count" { print $4}')" != "0" ]
+
 make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
     -P "PowerUserName=${POWER_USER}" \

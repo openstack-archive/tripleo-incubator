@@ -131,6 +131,10 @@ fi
 
 ### --include
 
+## #. Wait for the BM cloud to register BM nodes with the scheduler.
+echo "Waiting for baremetal nodes to be registered with the scheduler." #nodocs
+wait_for 60 1 [ "$(nova hypervisor-stats | awk '$2=="count" { print $4}')" != "0" ]
+
 ## #. Deploy an overcloud::
 
 setup-overcloud-passwords
