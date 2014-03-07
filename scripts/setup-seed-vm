@@ -120,4 +120,4 @@ configure-vm $EXTRAOPTS \
        --seed
 
 MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
-echo "Seed VM created with MAC ${MAC}"
+echo "{\"mac\":\"$MAC\", \"arch\":\"$SEED_ARCH\", \"cpu\":\"$CPUS\", \"mem\":\"$(($MEMORY / 1024))\"}"
