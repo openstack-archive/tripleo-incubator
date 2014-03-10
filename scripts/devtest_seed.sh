@@ -109,7 +109,7 @@ wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'ena
 echo "Waiting for neutron API and L2 agent to be available"
 wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*\"" #nodocs
 
-setup-neutron 192.0.2.2 192.0.2.3 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
+setup-neutron 192.0.2.2 192.0.2.20 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
 
 ## #. Register "bare metal" nodes with nova and setup Nova baremetal flavors.
 ##    When using VMs Nova will PXE boot them as though they use physical
