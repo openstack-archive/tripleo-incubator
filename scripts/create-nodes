@@ -5,7 +5,9 @@ CPU=$1
 MEM=$(( 1024 * $2 ))
 # extra G to allow fuzz for partition table : flavor size and registered size
 # need to be different to actual size.
-DISK=$(( $3 + 1))
+DISK=$3
+NODE_DISK=$(( $DISK + 1))
+
 
 case $4 in
     i386) ARCH='i686' ;;
@@ -35,7 +37,7 @@ JSON=$(jq .nodes=[] $TE_DATAFILE)
 for idx in $(seq 0 $TOTAL) ; do
   vm_name="baremetal${BRIDGE}_$idx"
   (virsh list --all | grep -q $vm_name) && continue
-  virsh vol-create-as default $vm_name.qcow2 ${DISK}G --format qcow2 $PREALLOC >&2
+  virsh vol-create-as default $vm_name.qcow2 ${NODE_DISK}G --format qcow2 $PREALLOC >&2
   volume_path=$(virsh vol-path --pool default $vm_name.qcow2)
   # Pre-touch the VM to set +C, as it can only be set on empty files.
   sudo touch "$volume_path"
