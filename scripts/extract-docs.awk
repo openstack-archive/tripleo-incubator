@@ -33,8 +33,10 @@
             break
         if (match(line, ".* #nodocs$"))
             continue
+        if (line ~ /dirname..0/)
+            sub(/..dirname..0./, ".", line)
         if (substr(line, 0, 3) == "## ") {
-            line = substr(line, 4)
+            line = substr(line, 4);
         } else if (line != "") {
             line = "        "line
         }
