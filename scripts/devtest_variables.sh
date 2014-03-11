@@ -39,6 +39,13 @@ export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo} #nodocs
 ##    - you need to add that to the PATH.
 ##    ::
 
+## If devtest_setup.sh has never been run in this environment, #nodocs
+## $TRIPLEO_ROOT/tripleo-incubator/scripts probably won't exist, so we #nodocs
+## can't rely on being able to run devtest_seutp.sh from there
+
+if [ ! -e $TRIPLEO_ROOT ]; then #nodocs
+  export PATH=$(readlink -e $(dirname ${BASH_SOURCE[0]})):$PATH #nodocs
+fi #nodocs
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
 ## #. Set the default bare metal power manager. By default devtest uses
