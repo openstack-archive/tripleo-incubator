@@ -132,6 +132,9 @@ fi
 # great way to get a corrupt image file.
 if [ -n "$REMOTE_OPERATIONS" ]; then
     ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
+    for NUM in $(seq 0 3) ; do
+       ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy baremetalbrbm${ENV_NUM}_${NUM} || true
+    done
 else
     virsh destroy $IMAGE_NAME || true
 fi
