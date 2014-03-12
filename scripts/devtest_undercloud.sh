@@ -88,7 +88,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
 
 echo "Waiting for the undercloud stack to be ready" #nodocs
 wait_for 220 10 stack-ready undercloud
-export UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
 ## #. We don't (yet) preserve ssh keys on rebuilds.
 ##    ::

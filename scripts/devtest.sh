@@ -164,12 +164,14 @@ devtest_seed.sh
 export no_proxy=${no_proxy:-},192.0.2.1
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 devtest_undercloud.sh $TE_DATAFILE
+export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
+source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 ## #. See :doc:`devtest_overcloud` for documentation::
 
-export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
-source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
-source devtest_overcloud.sh
+devtest_overcloud.sh
+export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key overcloud.endpointhost)
+source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
 
 ## #. See :doc:`devtest_end` for documentation::
 
