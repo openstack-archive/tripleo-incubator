@@ -207,7 +207,7 @@ fi #nodocs
 echo "Waiting for the overcloud stack to be ready" #nodocs
 wait_for 300 10 stack-ready $STACKNAME #nodocs
 ##         wait_for 300 10 stack-ready overcloud
-export OVERCLOUD_IP=$(nova list | grep notCompute0.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+OVERCLOUD_IP=$(nova list | grep notCompute0.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
 # the public endpoint for APIs.
@@ -221,6 +221,13 @@ fi
 ##    ::
 
 ssh-keygen -R $OVERCLOUD_IP
+
+## #. Export the overcloud endpoint and credentials to your test environment.
+##    ::
+
+OVERCLOUD_ENDPOINT="http://$OVERCLOUD_IP:5000/v2.0"
+NEW_JSON=$(jq '.overcloud.password="'${OVERCLOUD_ADMIN_PASSWORD}'" | .overcloud.endpoint="'${OVERCLOUD_ENDPOINT}'" | .overcloud.endpointhost="'${OVERCLOUD_IP}'"' $TE_DATAFILE)
+echo $NEW_JSON > $TE_DATAFILE
 
 ## #. Source the overcloud configuration::
 
