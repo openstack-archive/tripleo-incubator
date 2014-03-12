@@ -27,8 +27,7 @@ cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
 # - ssh power key
 # - ssh power user
 TMP=`mktemp`
-jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))| .[0]' config.json $TE_DATAFILE > $TMP
-mv $TMP config.json
+jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))| .[0]' config.json $TE_DATAFILE > local.json
 
 ### --end
 # If running in a CI environment then the user and ip address should be read
@@ -37,8 +36,8 @@ REMOTE_OPERATIONS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key remote-op
 if [ -n "$REMOTE_OPERATIONS" ] ; then
     HOST_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key host-ip --type netaddress --key-default '')
     SSH_USER=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default 'root')
-    sed -i "s/\"192.168.122.1\"/\"$HOST_IP\"/" config.json
-    sed -i "s/\"user\": \".*\?\",/\"user\": \"$SSH_USER\",/" config.json
+    sed -i "s/\"192.168.122.1\"/\"$HOST_IP\"/" local.json
+    sed -i "s/\"user\": \".*\?\",/\"user\": \"$SSH_USER\",/" local.json
 fi
 ### --include
 
