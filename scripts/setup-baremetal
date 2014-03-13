@@ -98,7 +98,7 @@ else
     exit 1
 fi
 
-echo $MODE
+echo "JSON compatibility mode : $MODE"
 if [ "new" = "$MODE" ]; then
     if [ $NODE_SELECTION -eq 1 ]; then
         NODES=$(jq '[.nodes[0]]' $BACKWARDS_COMPAT)
