@@ -147,6 +147,15 @@ fi
 
 ## #. undercloud.endpointhost: The host of the endpoint - used for noproxy settings.
 
+## #. overcloud: an object with metadata for connecting to the overcloud in
+##    the environment.
+
+## #. overcloud.password: The admin password for the currently deployed overcloud.
+
+## #. overcloud.endpoint: The Keystone endpoint URL for the overcloud.
+
+## #. overcloud.endpointhost: The host of the endpoint - used for noproxy settings.
+
 ## XXX: We're currently migrating to that structure - some code still uses
 ##      environment variables instead.
 
