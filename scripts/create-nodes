@@ -32,6 +32,8 @@ if [ -f /etc/debian_version ]; then
   PREALLOC="--prealloc-metadata"
 fi
 
+# Create empty json file if it doesn't exist
+[ -s $TE_DATAFILE ] || echo "{}" > $TE_DATAFILE
 JSON=$(jq .nodes=[] $TE_DATAFILE)
 
 for idx in $(seq 0 $TOTAL) ; do
