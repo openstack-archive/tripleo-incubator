@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+1: Jon-Paul Sullivan <jonpaul.sullivan@hp.com>
+Approved+1: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Clint "SpamapS" Byrum <clint@ubuntu.com>
+Code-Review+1: Michael Kerrin <michael.kerrin@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 14 Mar 2014 10:20:44 +0000
+Reviewed-on: https://review.openstack.org/77564
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
