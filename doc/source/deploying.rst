@@ -235,12 +235,25 @@ HOWTO
 -  Build the images you need (add any local elements you need to the
    commands)
 
--  Edit tripleo-image-elements/elements-boot-stack.config.json and
+-  Copy tripleo-image-elements/elements/seed-stack-config/config.json to
+   tripleo-image-elements/elements/seed-stack-config/local.json and
    change the virtual power manager to 'nova...impi.IPMI'.
    https://bugs.launchpad.net/tripleo/+bug/1178547::
 
-    disk-image-create -o bootstrap vm boot-stack ubuntu
+    disk-image-create -o bootstrap vm boot-stack local-config ubuntu
     disk-image-create -o ubuntu ubuntu
+
+   The ``local-config`` element will copy your ssh key and your HTTP proxy
+   settings in the disk image during the creation process.
+
+   The ``stackuser`` element will create a stack user with the stack password.
+
+   ``disk-image-create`` will create a image with a very small disk size
+   that at to be resized for example by cloud-init. To simplify the initial
+   bootstrap, you can use ``DIB_IMAGE_SIZE`` to increase this initial
+   size::
+
+    DIB_IMAGE_SIZE=30 disk-image-create -o bootstrap vm boot-stack local-config ubuntu
 
 -  Setup a VM using bootstrap.qcow2 on your existing machine, with eth1
    bridged into your datacentre LAN.
@@ -256,17 +269,20 @@ HOWTO
    bootstack creates. https://bugs.launchpad.net/tripleo/+bug/1178094
 
 -  Enroll your vanilla image into the glance of that install. Be sure to
-   use tripleo-incubator/scripts/load-image as that will extract the
+   use ``tripleo-incubator/scripts/load-image`` as that will extract the
    kernel and ramdisk and register them appropriately with glance.
 
 -  Enroll your other datacentre machines into that nova baremetal
    install. A script that takes your machine inventory and prints out
-   something like: nova baremetal-node-create --pm\_user XXX
-   --pm\_address YYY --pm\_password ZZZ COMPUTEHOST 24 98304 2048 MAC
+   something like::
+
+    nova baremetal-node-create --pm_user XXX --pm_address YYY --pm_password ZZZ COMPUTEHOST 24 98304 2048 MAC
+
    can be a great help - and can be run from outside the environment.
 
--  Setup admin users with SSH keypairs etc. e.g. nova keypair-add
-   --pub-key .ssh/authorized\_keys default
+-  Setup admin users with SSH keypairs etc. e.g.::
+
+    nova keypair-add --pub-key .ssh/authorized_keys default
 
 -  Boot them using the ubuntu.qcow2 image, with appropriate user data to
    connect to your Chef/Puppet/Salt environments.
@@ -378,36 +394,38 @@ Follow the 'devtest' guide but edit the seed config.json to:
 
 - setup proxy arp (this and the related bits are used to avoid messing about
   with the public NIC and bridging: you may choose to use that approach
-  instead...):
+  instead...)::
 
-  sudo sysctl  net/ipv4/conf/all/proxy_arp=1
-  arp -s <seedip> -i <external_interface> -D <external_interface> pub
-  ip addr add <seediplink>/32 dev brbm
-  ip route add <seedip>/32 dev brbm src <seediplink>
+    sudo sysctl  net/ipv4/conf/all/proxy_arp=1
+    arp -s <seedip> -i <external_interface> -D <external_interface> pub
+    ip addr add <seediplink>/32 dev brbm
+    ip route add <seedip>/32 dev brbm src <seediplink>
 
-- setup ec2 metadata support:
+- setup ec2 metadata support::
 
-  iptables -t nat -A PREROUTING -d 169.254.169.254/32 -i <external_interface> -p tcp -m tcp --dport 80 -j DNAT --to-destination <seedip>:8775
+    iptables -t nat -A PREROUTING -d 169.254.169.254/32 -i <external_interface> -p tcp -m tcp --dport 80 -j DNAT --to-destination <seedip>:8775
 
 - setup DHCP relay:
   sudo apt-get install dhcp-helper and configure it with
   "-s <seedip>"
   Note that isc-dhcp-relay fails to forward responses correctly, so dhcp-helper is preferred.
     https://bugs.launchpad.net/ubuntu/+bug/1233953
-  Also note that dnsmasq may have to be stopped as they both listen to \*:dhcps
+:  Also note that dnsmasq may have to be stopped as they both listen to \*:dhcps
     https://bugs.launchpad.net/ubuntu/+bug/1233954
-  Disable the filter-bootps cronjob (./etc/cron.d/filter-bootp) inside the seed vm and reset the table:
+  Disable the filter-bootps cronjob (./etc/cron.d/filter-bootp) inside the seed vm and reset the table::
+
     sudo iptables  -F FILTERBOOTPS
 
-  edit /etc/init/novabm-dnsmasq.conf:
-  exec dnsmasq --conf-file= \
-  --keep-in-foreground \
-  --port=0 \
-  --dhcp-boot=pxelinux.0,<seedip>,<seedip> \
-  --bind-interfaces \
-  --pid-file=/var/run/dnsmasq.pid \
-  --interface=br-ctlplane \
-  --dhcp-range=<seed_deploy_start>,<seed_deploy_end>,<network_cidr>
+  edit /etc/init/novabm-dnsmasq.conf::
+
+    exec dnsmasq --conf-file= \
+    --keep-in-foreground \
+    --port=0 \
+    --dhcp-boot=pxelinux.0,<seedip>,<seedip> \
+    --bind-interfaces \
+    --pid-file=/var/run/dnsmasq.pid \
+    --interface=br-ctlplane \
+    --dhcp-range=<seed_deploy_start>,<seed_deploy_end>,<network_cidr>
 
 - When you setup the seed, use <seedip> instead of 192.0.2.1, and you may need to edit seedrc.
 
@@ -456,9 +474,9 @@ Once it's booted:
 
 - configure the undercloud per devtest.
 
-- upgrade your quotas:
-  nova quota-update --cores node_size*machine_count \
-  --instances machine_count --ram node_size*machine_count admin-tenant-id
+- upgrade your quotas::
+
+    nova quota-update --cores node_size*machine_count --instances machine_count --ram node_size*machine_count admin-tenant-id
 
 
 Deploy Overcloud
