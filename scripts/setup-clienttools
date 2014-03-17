@@ -8,10 +8,45 @@ set +u
 . $BASE/openstack-tools/bin/activate
 set -u
 
+# If there's a specified a PYPI_MIRROR_URL, use it here.
+if [[ -n "$PYPI_MIRROR_URL" ]] ; then
+  PYPI_MIRROR="--index-url $PYPI_MIRROR_URL"
+  if [ -e ~/.pydistutils.cfg ]; then
+    mv ~/.pydistutils.cfg{,.orig}
+  else
+    rm -f ~/.pydistutils.cfg.orig
+  fi
+
+  cat <<-EOF > ~/.pydistutils.cfg
+	[easy_install]
+	index_url = $PYPI_MIRROR_URL
+	EOF
+else
+  PYPI_MIRROR=""
+fi
+
+# Ensure the OS-installed pip is replaced with the
+# latest version.
+pip install $PYPI_MIRROR -U pip
+
 # Need setuptools>=1.0 to manage connections when
 # downloading from pypi using http_proxy and https_proxy
-pip install -U 'setuptools>=1.0'
-pip install -U python-cinderclient python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient python-ironicclient os-apply-config
+pip install $PYPI_MIRROR -U 'setuptools>=1.0'
+
+# Work around bug #1288942
+pip install $PYPI_MIRROR -U 'six>=1.5.2'
+
+pip install $PYPI_MIRROR -U python-cinderclient python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient python-ironicclient os-apply-config
+
+if [[ -n "$PYPI_MIRROR_URL" ]] ; then
+
+  if [ -e ~/.pydistutils.cfg.orig ]; then
+    mv ~/.pydistutils.cfg{.orig,}
+  else
+    rm ~/.pydistutils.cfg
+  fi
+
+fi
 
 for tool in os-apply-config cinder nova glance heat keystone neutron swift ironic; do
   ln -sf $BASE/openstack-tools/bin/$tool $BASE/scripts/$tool ;
