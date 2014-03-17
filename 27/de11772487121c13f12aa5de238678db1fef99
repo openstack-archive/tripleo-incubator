@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Approved+1: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 17 Mar 2014 15:32:58 +0000
+Reviewed-on: https://review.openstack.org/80538
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
