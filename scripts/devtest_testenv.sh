@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Test environment creation for devtest.
-# This creates the bridge and VM's - it won't be used in CI.
+# This creates the bridge and VM's
 
 set -eu
 set -o pipefail
@@ -21,7 +21,10 @@ function show_options () {
     exit $1
 }
 
-TEMP=`getopt -o h,c -n $SCRIPT_NAME -- "$@"`
+NUM=
+OVSBRIDGE=
+
+TEMP=$(getopt -o h,n:,b: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -30,6 +33,8 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         -h) show_options 0;;
+        -n) NUM="$2" ; shift 2 ;;
+        -b) OVSBRIDGE="$2" ; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -60,14 +65,18 @@ fi
 ##    This configures an openvswitch bridge and teaches libvirt about it.
 ##    ::
 
-setup-network
+setup-network $NUM
 
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
 ##    to bootstrap a full dynamically configured baremetal cloud.
 ##    ::
 
-setup-seed-vm -a $NODE_ARCH
+SEED_ARGS="-a $NODE_ARCH"
+if [ -n "$NUM" -a -n "$OVSBRIDGE" ]; then
+    SEED_ARGS="$SEED_ARGS -o seed_${NUM} -b brbm${NUM} -p $OVSBRIDGE"
+fi
+setup-seed-vm $SEED_ARGS
 
 ## #. What user will be used to ssh to run virt commands to control our
 ##    emulated baremetal machines.
