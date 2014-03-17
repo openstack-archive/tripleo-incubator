@@ -237,10 +237,10 @@ HOWTO
 
 -  Edit tripleo-image-elements/elements-boot-stack.config.json and
    change the virtual power manager to 'nova...impi.IPMI'.
-   https://bugs.launchpad.net/tripleo/+bug/1178547
+   https://bugs.launchpad.net/tripleo/+bug/1178547::
 
-   disk-image-create -o bootstrap vm boot-stack ubuntu disk-image-create
-   -o ubuntu ubuntu
+    disk-image-create -o bootstrap vm boot-stack ubuntu
+    disk-image-create -o ubuntu ubuntu
 
 -  Setup a VM using bootstrap.qcow2 on your existing machine, with eth1
    bridged into your datacentre LAN.
@@ -290,10 +290,10 @@ HOWTO
 ~~~~~
 
 -  Build the images you need (add any local elements you need to the
-   commands)
+   commands)::
 
-   disk-image-create -o bootstrap vm boot-stack ubuntu heat-api
-   disk-image-create -o ubuntu ubuntu cfn-tools
+    disk-image-create -o bootstrap vm boot-stack ubuntu heat-api
+    disk-image-create -o ubuntu ubuntu cfn-tools
 
 -  Setup a VM using bootstrap.qcow2 on your existing machine, with eth1
    bridged into your datacentre LAN.
