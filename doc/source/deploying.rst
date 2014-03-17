@@ -188,8 +188,8 @@ prevent the space errors by:
 
 - avoiding tmpfs with --no-tmpfs or
 - specifying a minimum tmpfs size required with --min-tmpfs (which can be used
-in conjunction with setting the environment variable TMP_DIR to override the
-default temporary directory)
+  in conjunction with setting the environment variable TMP_DIR to override the
+  default temporary directory)
 
 If you are using 'boot-seed-vm', set the environment variable DIB_NO_TMPFS=1.
 
@@ -409,9 +409,11 @@ Follow the 'devtest' guide but edit the seed config.json to:
   sudo apt-get install dhcp-helper and configure it with
   "-s <seedip>"
   Note that isc-dhcp-relay fails to forward responses correctly, so dhcp-helper is preferred.
-    https://bugs.launchpad.net/ubuntu/+bug/1233953
-:  Also note that dnsmasq may have to be stopped as they both listen to \*:dhcps
-    https://bugs.launchpad.net/ubuntu/+bug/1233954
+  https://bugs.launchpad.net/ubuntu/+bug/1233953
+
+  Also note that dnsmasq may have to be stopped as they both listen to ``*:dhcps``
+  https://bugs.launchpad.net/ubuntu/+bug/1233954
+
   Disable the filter-bootps cronjob (./etc/cron.d/filter-bootp) inside the seed vm and reset the table::
 
     sudo iptables  -F FILTERBOOTPS
