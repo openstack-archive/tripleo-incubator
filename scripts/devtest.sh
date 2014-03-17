@@ -130,18 +130,16 @@ fi
 
 ### --include
 
-## #. See :doc:`devtest_variables` for documentation. Assuming you're still at
-##    the root of your checkout::
+## #. See :doc:`devtest_variables` for documentation::
 
-##        source scripts/devtest_variables.sh
-source $(dirname $0)/devtest_variables.sh  #nodocs
+source $(dirname $0)/devtest_variables.sh
 
 ## #. See :doc:`devtest_setup` for documentation.
 ##    $CONTINUE should be set to '--trash-my-machine' to have it execute
 ##    unattended.
 ##    ::
 
-devtest_setup.sh $CONTINUE
+$(dirname $0)/devtest_setup.sh $CONTINUE
 
 ## #. See :doc:`devtest_testenv` for documentation. Note that you can make
 ##    your test environment just once and reuse it thereafter.
