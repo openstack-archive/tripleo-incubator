@@ -131,6 +131,10 @@ fi
 ##    network. As our test network is unrouteable we require an explicit device
 ##    to avoid accidentally routing it onto live networks. Defaults to virbr0.
 
+## #. seed: an object that describes the seed VM, containing the MAC address,
+##    IP address, "memory" in K, "cpu" in threads, "arch" (one of
+##    i386/amd64/etc), "disk" in GB, and the device to route over.
+
 ## #. remote-operations: Whether to operate on the local machine only, or
 ##    perform remote operations when starting VMs and copying disk images.
 ##    A non-empty string means true, the default is '', which means false.
