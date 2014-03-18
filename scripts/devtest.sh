@@ -191,7 +191,7 @@ devtest_end.sh
 DEVTEST_END=$(date +%s) #nodocs
 DEVTEST_PERF_LOG="${TRIPLEO_ROOT}/devtest_perf.log" #nodocs
 TIMESTAMP=$(date "+[%Y-%m-%d %H:%M:%S]") #nodocs
-echo "${TIMESTAMP} Run comment  : ${DEVTEST_PERF_COMMENT}" >> ${DEVTEST_PERF_LOG} #nodocs
+echo "${TIMESTAMP} Run comment  : ${DEVTEST_PERF_COMMENT:-"No Comment"}" >> ${DEVTEST_PERF_LOG} #nodocs
 echo "${TIMESTAMP} Total runtime: $((DEVTEST_END - DEVTEST_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
 echo "${TIMESTAMP}   ramdisk    : $((DEVTEST_RD_END - DEVTEST_RD_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
 echo "${TIMESTAMP}   seed       : $((DEVTEST_SD_END - DEVTEST_SD_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
