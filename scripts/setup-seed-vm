@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013 Hewlett-Packard Development Company, L.P.
+# Copyright 2013-2014 Hewlett-Packard Development Company, L.P.
 # All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -30,6 +30,7 @@ MEMORY=2097152
 CPUS=1
 export IMAGE_NAME=seed
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
+ROUTE_DEV=${ROUTE_DEV:-"virbr0"}
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options] <element> [<element> ...]"
@@ -52,7 +53,7 @@ function show_options () {
     exit $1
 }
 
-TEMP=`getopt -o ha:o:m:c:b:p:e: -n $SCRIPT_NAME -- "$@"`
+TEMP=$(getopt -o ha:o:m:c:b:p:e: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -73,6 +74,12 @@ while true ; do
     esac
 done
 
+JSON_FILE=${1:-''}
+if [ -z "$JSON_FILE" ]; then
+    echo "A file to write out the seed description is required."
+    exit 1
+fi
+shift
 EXTRA_ARGS=${1:-''}
 
 if [ -n "$EXTRA_ARGS" ]; then
@@ -120,4 +127,13 @@ configure-vm $EXTRAOPTS \
        --seed
 
 MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+jq "." <<EOF > $JSON_FILE
+{
+    "mac":["$MAC"],
+    "cpu":"$CPUS",
+    "memory":"$(($MEMORY / 1024))",
+    "arch":"$ARCH"
+    "route-dev":"$ROUTE_DEV"
+}
+EOF
 echo "Seed VM created with MAC ${MAC}"

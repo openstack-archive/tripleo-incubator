@@ -97,7 +97,7 @@ fi
 ## #. host-ip: The IP address of the host which will run the seed VM using virsh.
 
 ## #. seed-ip: The IP address of the seed VM (if known). If not known, it is
-##    looked up locally in the ARP table.
+##    looked up locally in the ARP table. *DEPRECATED*
 
 ## #. ssh-key: The private part of an SSH key to be used when performing virsh
 ##    commands on $host-ip.
@@ -130,6 +130,11 @@ fi
 ## #. seed-route-dev: What device to route traffic for the initial undercloud
 ##    network. As our test network is unrouteable we require an explicit device
 ##    to avoid accidentally routing it onto live networks. Defaults to virbr0.
+##    *DEPRECATED*
+
+## #. seed: an object that describes the seed VM, containing the MAC address,
+##    IP address, "memory" in K, "cpu" in threads, "arch" (one of
+##    i386/amd64/etc), "disk" in GB, and the device to route over.
 
 ## #. remote-operations: Whether to operate on the local machine only, or
 ##    perform remote operations when starting VMs and copying disk images.
