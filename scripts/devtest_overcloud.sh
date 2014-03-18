@@ -133,7 +133,8 @@ fi
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler.
 
-wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
+expected_nodes=$((1+$OVERCLOUD_COMPUTESCALE))
+wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" -ge $expected_nodes ]
 
 ## #. Deploy an overcloud::
 
