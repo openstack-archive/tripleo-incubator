@@ -73,6 +73,12 @@ while true ; do
     esac
 done
 
+JSON_FILE=${1:-''}
+if [ -z "$JSON_FILE" ]; then
+    echo "A file to write out the seed description is required."
+    exit 1
+fi
+shift
 EXTRA_ARGS=${1:-''}
 
 if [ -n "$EXTRA_ARGS" ]; then
@@ -120,4 +126,5 @@ configure-vm $EXTRAOPTS \
        --seed
 
 MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+jq ".={mac:[\"$MAC\"], cpu:\"$CPUS\", memory:\"$(($MEMORY / 1024))\", arch:\"$ARCH\"}" $JSON_FILE
 echo "Seed VM created with MAC ${MAC}"
