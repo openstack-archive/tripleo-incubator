@@ -105,11 +105,13 @@ setup-network $NUM
 ##    to bootstrap a full dynamically configured baremetal cloud.
 ##    ::
 
-SEED_ARGS="-a $NODE_ARCH"
+SEED_JSON_FILE=$(mktemp)
+SEED_ARGS="$SEED_JSON_FILE -a $NODE_ARCH"
 if [ -n "$NUM" -a -n "$OVSBRIDGE" ]; then
     SEED_ARGS="$SEED_ARGS -o seed_${NUM} -b brbm${NUM} -p $OVSBRIDGE"
 fi
 setup-seed-vm $SEED_ARGS
+trap "rm $SEED_JSON_FILE" EXIT
 
 ## #. What user will be used to ssh to run virt commands to control our
 ##    emulated baremetal machines.
@@ -127,6 +129,7 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 ##    ::
 
 SEEDIP=${SEEDIP:-''}
+SEED_JSON=$(jq ".ip=\"$SEEDIP\"" $SEED_JSON_FILE)
 
 ## #. Ensure we can ssh into the host machine to turn VMs on and off.
 ##    The private key we create will be embedded in the seed VM, and delivered
@@ -153,6 +156,7 @@ jq "." <<EOF > $JSONFILE
     "arch":"$NODE_ARCH",
     "host-ip":"$HOSTIP",
     "power_manager":"$POWER_MANAGER",
+    "seed":$SEED_JSON,
     "seed-ip":"$SEEDIP",
     "ssh-key":"$(cat ~/.ssh/id_rsa_virt_power)",
     "ssh-user":"$SSH_USER"
