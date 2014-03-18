@@ -110,7 +110,9 @@ setup-network $NUM
 ##    ::
 
 BRIDGE=
-SEED_ARGS="-a $NODE_ARCH"
+SEED_JSON_FILE=$(mktemp)
+trap "rm $SEED_JSON_FILE" EXIT
+SEED_ARGS="$SEED_JSON_FILE -a $NODE_ARCH"
 if [ -n "$NUM" -a -n "$OVSBRIDGE" ]; then
     BRIDGE="brbm${NUM}"
     SEED_ARGS="$SEED_ARGS -o seed_${NUM} -b $BRIDGE -p $OVSBRIDGE"
@@ -133,6 +135,7 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 ##    ::
 
 SEEDIP=${SEEDIP:-''}
+SEED_JSON=$(jq ".ip=\"$SEEDIP\"" $SEED_JSON_FILE)
 
 ## #. Set the default bare metal power manager. By default devtest uses
 ##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
@@ -169,6 +172,7 @@ jq "." <<EOF > $JSONFILE
     "arch":"$NODE_ARCH",
     "host-ip":"$HOSTIP",
     "power_manager":"$POWER_MANAGER",
+    "seed":$SEED_JSON,
     "seed-ip":"$SEEDIP",
     "ssh-key":"$(cat ~/.ssh/id_rsa_virt_power)",
     "ssh-user":"$SSH_USER"
