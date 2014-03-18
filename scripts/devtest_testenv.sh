@@ -67,7 +67,8 @@ setup-network
 ##    to bootstrap a full dynamically configured baremetal cloud.
 ##    ::
 
-setup-seed-vm -a $NODE_ARCH
+SEED_JSON=$(mktemp)
+setup-seed-vm -a $NODE_ARCH $SEED_JSON
 
 ## #. What user will be used to ssh to run virt commands to control our
 ##    emulated baremetal machines.
@@ -84,6 +85,7 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 ##    ::
 
 SEEDIP=${SEEDIP:-''}
+jq ".ip=\"$SEEDIP\"" $SEED_JSON
 
 ## #. Ensure we can ssh into the host machine to turn VMs on and off.
 ##    The private key we create will be embedded in the seed VM, and delivered
@@ -110,12 +112,12 @@ jq "." <<EOF > $JSONFILE
     "arch":"$NODE_ARCH",
     "host-ip":"$HOSTIP",
     "power_manager":"$POWER_MANAGER",
+    "seed":$SEED_JSON,
     "seed-ip":"$SEEDIP",
     "ssh-key":"$(cat ~/.ssh/id_rsa_virt_power)",
     "ssh-user":"$SSH_USER"
 }
 EOF
-
 
 ## #. Create baremetal nodes for the test cluster. The final parameter to
 ##    create-nodes is the number of VMs to create. To change this in future
