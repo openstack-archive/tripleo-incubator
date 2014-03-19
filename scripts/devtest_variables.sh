@@ -129,7 +129,7 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 ##         export NODE_DIST="ubuntu"
 
 ### --end
-source $(dirname ${BASH_SOURCE[0]})/set-os-type
+source $(dirname ${BASH_SOURCE[0]:-$0})/set-os-type
 if [ -z "${NODE_DIST:-}" ]; then
     if [ "$TRIPLEO_OS_DISTRO" = "fedora" ]; then
         export NODE_DIST="fedora selinux-permissive"
