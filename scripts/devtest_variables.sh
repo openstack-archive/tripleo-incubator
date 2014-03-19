@@ -39,7 +39,8 @@ export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo} #nodocs
 ##    - you need to add that to the PATH.
 ##    ::
 
-export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
+SCRIPTS_DIR=$TRIPLEO_ROOT/tripleo-incubator/scripts
+export PATH=${SCRIPTS_DIR}:$PATH
 
 ## #. Set the default bare metal power manager. By default devtest uses
 ##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
@@ -118,7 +119,7 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 ## 
 ##         export NODE_DIST="ubuntu"
 
-source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
+source ${SCRIPTS_DIR}/set-os-type #nodocs
 export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"} #nodocs
 
 ## #. Set number of compute nodes for the overcloud
