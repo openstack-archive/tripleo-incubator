@@ -105,7 +105,17 @@ fi
 ## #. Wrap this all up into JSON.
 ##    ::
 
-python -c "import json, sys, os; json.dump({'arch':'$NODE_ARCH', 'host-ip':'$HOSTIP', 'power_manager':'$POWER_MANAGER', 'seed-ip':'$SEEDIP', 'ssh-key': open(os.path.expanduser('~/.ssh/id_rsa_virt_power'), 'rt').read(), 'ssh-user':'$SSH_USER'}, sys.stdout)" > $JSONFILE
+jq "." <<EOF > $JSONFILE
+{
+    "arch":"$NODE_ARCH",
+    "host-ip":"$HOSTIP",
+    "power_manager":"$POWER_MANAGER",
+    "seed-ip":"$SEEDIP",
+    "ssh-key":"$(cat ~/.ssh/id_rsa_virt_power)",
+    "ssh-user":"$SSH_USER"
+}
+EOF
+
 
 ## #. Create baremetal nodes for the test cluster. The final parameter to
 ##    create-nodes is the number of VMs to create. To change this in future
