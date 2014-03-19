@@ -19,7 +19,10 @@ set -eu
 
 # This is a cheap mr/cm-alike. Perhaps we should use mr/cm.
 
-TOOLS="https://git.openstack.org/openstack/diskimage-builder https://git.openstack.org/openstack/tripleo-image-elements https://git.openstack.org/openstack/tripleo-heat-templates https://git.openstack.org/openstack/tripleo-incubator"
+TOOLS="${DIB_REPOLOCATION_diskimage_builder:-https://git.openstack.org/openstack/diskimage-builder}
+ ${DIB_REPOLOCATION_tripleo_image_elements:-https://git.openstack.org/openstack/tripleo-image-elements}
+ ${DIB_REPOLOCATION_tripleo_heat_templates:-https://git.openstack.org/openstack/tripleo-heat-templates}
+ ${DIB_REPOLOCATION_tripleo_incubator:-https://git.openstack.org/openstack/tripleo-incubator}"
 
 ZUUL_REF=${ZUUL_REF:-''}
 
