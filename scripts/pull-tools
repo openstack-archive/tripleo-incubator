@@ -31,21 +31,29 @@ fi
 for TOOL in $TOOLS; do
     TOOL_BASE=$(basename $TOOL)
     echo pulling/updating $TOOL_BASE
+    eval LOCATION=\$DIB_REPOLOCATION_${TOOL_BASE//[^A-Za-z0-9_]/_}
+    : ${LOCATION:=$TOOL}
+    eval REF=\$DIB_REPOREF_${TOOL_BASE//[^A-Za-z0-9_]/_}
+    : ${REF:=$master}
     if [ ! -d $TRIPLEO_ROOT/$TOOL_BASE ] ; then
         cd $TRIPLEO_ROOT
-        git clone $TOOL
+        git clone $LOCATION
+        pushd $TOOL_BASE
+        git checkout $REF  # for a branch or SHA1
+        popd
     else
         cd $TRIPLEO_ROOT/$TOOL_BASE
-        if [ "$(git symbolic-ref -q HEAD | rev | cut -d "/" -f 1 | rev || :)" = "master" ] ; then
+        if echo "/$(git symbolic-ref -q HEAD)" | grep -q "/${REF}\$" ; then
             if ! git pull --ff-only ; then
                     echo "***************************************************"
-                    echo "* Perhaps you want to 'git rebase origin/master'? *"
+                    echo "* Perhaps you want to 'git rebase origin/$REF'? *"
                     echo "***************************************************"
                     exit 1
             fi
         else
             echo "***************************************"
-            echo "* Not on master branch, skipping pull *"
+            echo "* $REF doesn't look like a branch, or *"
+            echo "* it's not checked out; skipping pull *"
             echo "***************************************"
         fi
     fi
