@@ -28,9 +28,15 @@ ARCH=i386
 export IMAGE_NAME=seed
 export DIB_IMAGE_SIZE=30
 CREATE_IMAGE=yes
-ALWAYS_ELEMENTS="vm cloud-init-nocloud local-config boot-stack nova-baremetal seed-stack-config remove-serial-console"
+ALWAYS_ELEMENTS="vm cloud-init-nocloud local-config boot-stack seed-stack-config remove-serial-console"
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-''}
 SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+if [ $USE_IRONIC -eq 0 ]; then
+    SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-baremetal"
+else
+    SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-ironic"
+fi
+
 export VM_IP=""
 
 function show_options () {

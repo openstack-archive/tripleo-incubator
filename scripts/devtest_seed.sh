@@ -18,17 +18,20 @@ USE_CACHE=${USE_CACHE:-0}
 ##    minimal variation in it's configuration: the goal is to bootstrap with
 ##    a known-solid config.
 ##    ::
-
 cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
-# Sets:
-# - bm node arch
-# - bm power manager
-# - ssh power host
-# - ssh power key
-# - ssh power user
-TMP=`mktemp`
-jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))| .[0]' config.json $TE_DATAFILE > local.json
-
+if [ $USE_IRONIC -eq 0 ]; then
+    # Sets:
+    # - bm node arch
+    # - bm power manager
+    # - ssh power host
+    # - ssh power key
+    # - ssh power user
+    TMP=`mktemp`
+    jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))| .[0]' config.json $TE_DATAFILE > local.json
+else
+    # setup config.json for ironic
+    cp config.json.ironic config.json
+fi
 ### --end
 # If running in a CI environment then the user and ip address should be read
 # from the json describing the environment
@@ -48,7 +51,8 @@ if [ "$USE_CACHE" == "0" ] ; then #nodocs
     boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
         tee $TRIPLEO_ROOT/dib-seed.log
 else #nodocs
-    boot-seed-vm -c -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | tee $TRIPLEO_ROOT/dib-seed.log #nodocs
+    boot-seed-vm -c -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
+        tee $TRIPLEO_ROOT/dib-seed.log #nodocs
 fi #nodocs
 
 ##    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
@@ -96,7 +100,11 @@ echo "Waiting for seed node to configure br-ctlplane..." #nodocs
 wait_for 30 10 ping -c 1 192.0.2.1
 ssh-keyscan -t rsa 192.0.2.1 >>~/.ssh/known_hosts
 init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
-setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
+if [ $USE_IRONIC -eq 0 ]; then
+    setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
+else
+    setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset --ironic-password unset
+fi
 keystone role-create --name heat_stack_user
 
 echo "Waiting for nova to initialise..."
