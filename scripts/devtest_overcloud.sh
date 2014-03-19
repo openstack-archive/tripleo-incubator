@@ -190,6 +190,10 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "NovaImage=${OVERCLOUD_COMPUTE_ID}" \
     -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
     -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
+    -P "undercloudUserName=${OS_USERNAME}" \
+    -P "undercloudTenantName=${OS_TENANT_NAME}" \
+    -P "undercloudPassword=${OS_PASSWORD}" \
+    -P "undercloudHost=${UNDERCLOUD_IP}" \
     $STACKNAME
 
 ### --include
