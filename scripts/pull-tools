@@ -31,10 +31,11 @@ fi
 for TOOL in $TOOLS; do
     TOOL_BASE=$(basename $TOOL)
     echo pulling/updating $TOOL_BASE
-    eval LOCATION=\$DIB_REPOLOCATION_${TOOL_BASE//[^A-Za-z0-9_]/_}
-    : ${LOCATION:=$TOOL}
-    eval REF=\$DIB_REPOREF_${TOOL_BASE//[^A-Za-z0-9_]/_}
-    : ${REF:=$master}
+    REPOREF_OVERRIDE=DIB_REPOREF_${TOOL_BASE//[^A-Za-z0-9]/_}
+    LOCATION=${!REPOREF_OVERRIDE:-$TOOL}
+    REF=master
+    REPOREF_OVERRIDE=DIB_REPOREF_${TOOL_BASE//[^A-Za-z0-9]/_}
+    REF=${!REPOREF_OVERRIDE:-$REF}
     if [ ! -d $TRIPLEO_ROOT/$TOOL_BASE ] ; then
         cd $TRIPLEO_ROOT
         git clone $LOCATION
