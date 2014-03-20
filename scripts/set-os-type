@@ -12,7 +12,7 @@ if [ -f /etc/redhat-release ]; then
     TRIPLEO_OS_DISTRO='centos'
   fi
   if $(grep -Eqs 'Fedora' /etc/redhat-release); then
-    TRIPLEO_OS_DISTRO='fedora'
+    TRIPLEO_OS_DISTRO='fedora selinux-permissive'
   fi
 fi
 
