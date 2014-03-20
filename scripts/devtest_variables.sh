@@ -106,7 +106,7 @@ export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:
 
 ## #. Set distribution used for VMs (fedora, opensuse, ubuntu).
 ## 
-##    For Fedora, set SELinux permissive mode::
+##    For Fedora, set SELinux permissive mode(currently the default when using Fedora)::
 ## 
 ##         export NODE_DIST="fedora selinux-permissive"
 
