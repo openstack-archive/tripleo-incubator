@@ -83,6 +83,8 @@ export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rab
 ## #. Set HW resources for VMs used as 'baremetal' nodes. NODE_CPU is cpu count,
 ##    NODE_MEM is memory (MB), NODE_DISK is disk size (GB), NODE_ARCH is
 ##    architecture (i386, amd64). NODE_ARCH is used also for the seed VM.
+##    EPHEMERAL_PART is the size of the ephemeral partition which defaults to 0 (GB).
+##    EPHEMERAL_PART must be smaller than NODE_DISK.
 ##    A note on memory sizing: TripleO images in raw form are currently
 ##    ~2.7Gb, which means that a tight node will end up with a thrashing page
 ##    cache during glance -> local + local -> raw operations. This significantly
@@ -97,6 +99,7 @@ export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rab
 ##         export NODE_CPU=1 NODE_MEM=2048 NODE_DISK=20 NODE_ARCH=i386
 ## 
 export NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-20} NODE_ARCH=${NODE_ARCH:-i386} #nodocs
+export EPHEMERAL_PART=${EPHEMERAL_PART:-0}
 
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint::

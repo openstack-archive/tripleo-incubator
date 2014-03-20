@@ -154,7 +154,13 @@ cleanup_flavor 'm1.xlarge'
 cleanup_flavor 'baremetal'
 # XXX(lifeless) this should be a loop making sure every node is represented
 # with a flavor.
-nova flavor-create baremetal auto $MEM $DISK $CPU
+if [ $EPHEMERAL_PART -gt 0 ]
+then
+    nova flavor-create baremetal auto $MEM $((DISK - EPHEMERAL_PART)) $CPU --ephemeral ${EPHEMERAL_PART}
+else
+    nova flavor-create baremetal auto $MEM $DISK $CPU
+fi
+
 nova flavor-key baremetal set "cpu_arch"="$ARCH" \
     "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
     "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id"
