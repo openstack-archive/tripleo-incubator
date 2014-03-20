@@ -41,16 +41,6 @@ export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo} #nodocs
 
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
-## #. Set the default bare metal power manager. By default devtest uses
-##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
-##    support a fully virtualized TripleO test environment. You may
-##    optionally customize this setting if you are using real baremetal
-##    hardware with the devtest scripts. This setting controls the
-##    power manager used in both the seed VM and undercloud.
-##    ::
-
-export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
-
 ## #. Set a list of image elements that should be included in all image builds.
 ##    Note that stackuser is only for debugging support - it is not suitable for
 ##    a production network. This is also the place to include elements such as
