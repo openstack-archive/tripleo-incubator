@@ -33,9 +33,15 @@ cleanup_flavor 'm1.medium'
 cleanup_flavor 'm1.large'
 cleanup_flavor 'm1.xlarge'
 
-# Ensure nova's baremetal service has fully initialised before proceeding with real nodes
-wait_for 60 10 nova baremetal-node-create devtest_canary 1 1 1 11:22:33:44:55:66
-nova baremetal-node-delete $(nova baremetal-node-list | awk '/devtest_canary/ {print $2}')
+if [ $USE_IRONIC -eq 0 ]; then
+    # Ensure nova's baremetal service has fully initialised before proceeding with real nodes
+    wait_for 60 10 nova baremetal-node-create devtest_canary 1 1 1 11:22:33:44:55:66
+    nova baremetal-node-delete $(nova baremetal-node-list | awk '/devtest_canary/ {print $2}')
+else
+    # Ensure Ironic Service has fully initialised before proceeding
+    wait_for 60 10 ironic chassis-create -d 'devtest_canary'
+    ironic chassis-delete $(ironic chassis-list | awk '/devtest_canary/ {print $2}')
+fi
 
 node_count=$(($(jq length <<< $NODES) - 1))
 for pos in $(seq 0 $node_count); do
@@ -44,11 +50,32 @@ for pos in $(seq 0 $node_count); do
     nova flavor-key baremetal${pos} set "cpu_arch"=$(jq .[$pos][\"arch\"] <<< $NODES) \
         "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
         "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id"
-    id=$(nova baremetal-node-create $SERVICE_HOST $(jq -r "\"--pm-addresses=\" + .[$pos][\"pm_addr\"] + \" --pm_user=\" + .[$pos][\"pm_user\"] + \" --pm_password=\" + .[$pos][\"pm_password\"] + " " + .[$pos][\"cpu\"] + " " + .[$pos][\"memory\"] + " " + .[$pos][\"disk\"] + " " + .[$pos][\"mac\"][0]" <<< $NODES) | awk '/ id / {print $4}')
-    for mac in $(jq .[$pos][\"mac\"] - .[$pos][\"mac\"][0]); do
-        nova baremetal-interface-add $id $mac
-    done
+    if [ $USE_IRONIC -eq 0 ]; then
+        # setup nova-baremetal nodes
+        id=$(nova baremetal-node-create $SERVICE_HOST $(jq -r "\"--pm-addresses=\" + .[$pos][\"pm_addr\"] + \" --pm_user=\" + .[$pos][\"pm_user\"] + \" --pm_password=\" + .[$pos][\"pm_password\"] + " " + .[$pos][\"cpu\"] + " " + .[$pos][\"memory\"] + " " + .[$pos][\"disk\"] + " " + .[$pos][\"mac\"][0]" <<< $NODES) | awk '/ id / {print $4}')
+        for mac in $(jq .[$pos][\"mac\"] - .[$pos][\"mac\"][0]); do
+            nova baremetal-interface-add $id $mac
+       done
+    else
+        # setup Ironic nodes
+        ironic_deploy_pm_type=$(jq -r ".[$pos][\"pm_type\"]" <<< $NODES)
+        id=$(ironic node-create -d pxe_$ironic_deploy_pm_type | awk -F"|" '/ uuid/ { print $3 }' | tr -d ' ')
+
+        ironic node-update $id add $(jq -r "\"properties/cpus=\".[$pos][\"cpu\"] + \" properties/memory_mb=\" + .[$pos][\"memory\"] + \" properties/local_gb=\" + .[$pos][\"disk\"] + \" properties/cpu_arch=\" + .[$pos][\"arch\"]" <<< $NODES)
+
+        for mac in $(jq .[$pos][\"mac\"] - .[$pos][\"mac\"][0]); do
+            ironic port-create -a $mac -n $id
+        done
+        if [[ $ironic_deploy_pm_type == *ipmi* ]]; then
+            # ipmi power control
+            ironic node-update $id add $(jq -r "\"driver_info/ipmi_address=\" + .[$pos][\"pm_addr\"] + \" driver_info/ipmi_username=\" + .[$pos][\"pm_user\"] + \" driver_info/ipmi_password=\" + .[$pos][\"pm_password\"]" <<< $NODES)
+        else
+            # ssh power control
+            ironic node-update $id add $(jq -r "\"driver_info/ssh_address=\" + .[$pos][\"pm_addr\"] + \" driver_info/ssh_username=\" + .[$pos][\"pm_user\"] + \" driver_info/ssh_key_filename=/mnt/state/opt/stack/boot-stack/virtual-power-key\"] + \" driver_info/ssh_virt_type=\" + .[$pos][\"virt_type\"]" <<< $NODES)
+            ironic node-update $id add $ssh_host $ssh_key $ssh_type $ssh_user
+        fi
 done
 
 date
 echo "Nodes will be available in 60 seconds from now."
+

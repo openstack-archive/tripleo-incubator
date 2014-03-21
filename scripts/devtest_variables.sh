@@ -27,20 +27,28 @@ export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
 ## #. Choose a base location to put all of the source code.
 ##    ::
-## 
+##
 ##         # exports are ephemeral - new shell sessions, or reboots, and you need
 ##         # to redo them, or use $TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc
 ##         # and then source the generated tripleorc file.
 ##         export TRIPLEO_ROOT=~/tripleo
 export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo} #nodocs
 
-## 
+##
 ## #. Nova tools will get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts
 ##    - you need to add that to the PATH.
 ##    ::
 
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
+## #. Choose whether to use the Nova "baremetal" driver or Ironic for deploys.
+##    - 0 = Nova baremetal / 1 = Ironic
+##    Note that Ironic is presently only supported in the Seed vm and Undercloud;
+##    ::
+
+export USE_IRONIC=${USE_IRONIC:-0}
+
+if [ $USE_IRONIC -eq 0 ]; then #nodocs
 ## #. Set the default bare metal power manager. By default devtest uses
 ##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
 ##    support a fully virtualized TripleO test environment. You may
@@ -49,7 +57,9 @@ export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 ##    power manager used in both the seed VM and undercloud.
 ##    ::
 
-export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
+    export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
+
+fi
 
 ## #. Set a list of image elements that should be included in all image builds.
 ##    Note that stackuser is only for debugging support - it is not suitable for
@@ -73,26 +83,25 @@ export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
 
 ## #. A messaging backend is required for the seed, undercloud, and overcloud
 ##    control node. It is not required for overcloud computes. The backend is
-##    set through the ``*EXTRA_ARGS``.
+##    set through the *EXTRA_ARGS.
 ##    rabbitmq-server is the default backend. Another option is qpidd.
-##    ::
 
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 
 ## #. Set distribution used for VMs (fedora, opensuse, ubuntu).
-## 
+##
 ##    For Fedora, set SELinux permissive mode::
-## 
+##
 ##         export NODE_DIST="fedora selinux-permissive"
 
 ##    For openSUSE, use::
-## 
+##
 ##         export NODE_DIST="opensuse"
 
 ##    For Ubuntu, use::
-## 
+##
 ##         export NODE_DIST="ubuntu"
 
 source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
@@ -116,3 +125,4 @@ export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
 export TE_DATAFILE=${TE_DATAFILE:-"$TRIPLEO_ROOT/testenv.json"}
 
 ### --end
+

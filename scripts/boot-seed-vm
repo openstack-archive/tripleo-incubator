@@ -28,9 +28,14 @@ ARCH=i386
 export IMAGE_NAME=seed
 export DIB_IMAGE_SIZE=30
 CREATE_IMAGE=yes
-ALWAYS_ELEMENTS="vm cloud-init-nocloud local-config boot-stack nova-baremetal seed-stack-config remove-serial-console"
+ALWAYS_ELEMENTS="vm cloud-init-nocloud local-config boot-stack seed-stack-config remove-serial-console"
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-''}
 SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+if [ $USE_IRONIC -eq 0 ]; then
+    SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-baremetal"
+else
+    SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-ironic"
+fi
 export VM_IP=""
 
 function show_options () {
@@ -214,9 +219,26 @@ echo
 # Remove the 192.0.2.1 hostkey, new instance == new key.
 ssh-keygen -R 192.0.2.1 || true
 
+# Ironic uses a ssh key file currently, until this changes (https://review.openstack.org/#/c/80376)
+# The Ironic public ssh key needs to be added to the authorized_keys file of $VM_HOST
+if [ $USE_IRONIC -eq 1 ]; then
+    # get the Ironic ssh key
+    # we may need to wait for the key to be created on the seed vm
+    echo "Waiting for Ironic SSH host key."
+    SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+    until ssh $SSH_ARGS root@$VM_IP "cat /mnt/state/opt/stack/boot-stack/virtual-power-key.pub" 2>&1 > /dev/null; do
+        sleep 3
+    done
+    echo
+    IRONIC_PUB_SSH_KEY=$(ssh $SSH_ARGS root@$VM_IP "cat /mnt/state/opt/stack/boot-stack/virtual-power-key.pub")
+    # now add the key to $VM_HOST
+    $(echo "$IRONIC_PUB_SSH_KEY" >> ~/.ssh/authorized_keys)
+fi
+
 echo "element(s): $ALWAYS_ELEMENTS $DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS booted and ready."
 echo "SEED_IP=$VM_IP"
 echo
 echo "to login:   ssh root@$VM_IP"
 NEW_JSON=$(jq '.["seed-ip"]="'${VM_IP}'"' $TE_DATAFILE)
 echo $NEW_JSON > $TE_DATAFILE
+
