@@ -119,7 +119,7 @@ fi
 
 ## #. node-pm-users: A space separated string containing the power management
 ##    user ID of each bare metal machine. Useful when using real bare
-##    metal hardware. *OPTIONAL* *DEPRECATED
+##    metal hardware. *OPTIONAL* *DEPRECATED*
 
 ## #. node-pm-passwords: A space separated string containing the power
 ##    management password of each bare metal machine.
