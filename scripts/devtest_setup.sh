@@ -107,10 +107,16 @@ fi
 
 ## #. nodes: A list of node metadata. Each node has "memory" in K, "cpu" in
 ##    threads, "arch" (one of i386/amd64/etc), "disk" in GB, mac, a list of
-##    MAC addresses for the node and "pm_user", "pm_addr", "pm_password" fields.
-##    Future iterations will add Ironic power and deploy driver selection here.
+##    MAC addresses for the node and "pm_type", "pm_user", "pm_addr", and
+##    "pm_password" fields.
+##    Future iterations may add more Ironic power and deploy driver selections
+##    here.
 
 ## #. power_manager: The class path for a Nova Baremetal power manager.
+##    Note that this is specific to operating with Nova Baremetal and is ignored
+##    for use with Ironic. However, since this describes the test environment,
+##    not the code under test, it should always be present while we support
+##    using Nova Baremetal.
 
 ## #. seed-route-dev: What device to route traffic for the initial undercloud
 ##    network. As our test network is unrouteable we require an explicit device
