@@ -6,6 +6,8 @@ set -o pipefail
 USE_CACHE=${USE_CACHE:-0}
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
+
 ### --include
 ## devtest_undercloud
 ## ==================
@@ -33,8 +35,11 @@ UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 
 ## #. Set the public interface of the undercloud network node:
 ##    ::
-
-NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
+if [ $TRIPLEO_OS_DISTRO == 'fedora' ]; then #nodoc
+    NeutronPublicInterface=${NeutronPublicInterface:-'em1'} #nodoc
+else #nodoc
+    NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
+fi #nodoc
 
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    (tripleo-undercloud-passwords by default) that you need to source into
