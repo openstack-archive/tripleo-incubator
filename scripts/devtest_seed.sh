@@ -20,15 +20,21 @@ USE_CACHE=${USE_CACHE:-0}
 ##    ::
 
 cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
+TMP=`mktemp`
+if [ $USE_IRONIC -eq 0 ]; then
 # Sets:
 # - bm node arch
 # - bm power manager
 # - ssh power host
 # - ssh power key
 # - ssh power user
-TMP=`mktemp`
-jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))| .[0]' config.json $TE_DATAFILE > local.json
-
+    jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))| .[0]' config.json $TE_DATAFILE > local.json
+else
+# Sets:
+# - ironic.virtual_power_ssh_key(needed until https://review.openstack.org/#/c/80376 lands).
+# - nova.compute_driver to ironic.nova.virt.ironic.driver.IronicDriver
+    jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"| .[0]' config.json $TE_DATAFILE > local.json
+fi
 ### --end
 # If running in a CI environment then the user and ip address should be read
 # from the json describing the environment
@@ -89,6 +95,15 @@ set -u #nodocs
 
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 
+## #. If Ironic is in use, we need to setup a user for it.
+##    ::
+
+if [ $USE_IRONIC -eq 0 ]; then
+  IRONIC_OPT=
+else
+  IRONIC_OPT="--ironic-password unset"
+fi
+
 ## #. Perform setup of your seed cloud.
 ##    ::
 
@@ -96,7 +111,7 @@ echo "Waiting for seed node to configure br-ctlplane..." #nodocs
 wait_for 30 10 ping -c 1 192.0.2.1
 ssh-keyscan -t rsa 192.0.2.1 >>~/.ssh/known_hosts
 init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
-setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
+setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
 keystone role-create --name heat_stack_user
 
 echo "Waiting for nova to initialise..."
