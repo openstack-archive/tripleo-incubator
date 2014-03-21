@@ -20,15 +20,20 @@ USE_CACHE=${USE_CACHE:-0}
 ##    ::
 
 cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
+TMP=`mktemp`
+if [ $USE_IRONIC -eq 0 ]; then
 # Sets:
 # - bm node arch
 # - bm power manager
 # - ssh power host
 # - ssh power key
 # - ssh power user
-TMP=`mktemp`
-jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))| .[0]' config.json $TE_DATAFILE > local.json
-
+    jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))| .[0]' config.json $TE_DATAFILE > local.json
+else
+# Sets:
+# - ironic.virtual_power_ssh_key(needed until https://review.openstack.org/#/c/80376 lands).
+    jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))| .[0]' config.json $TE_DATAFILE > local.json
+fi
 ### --end
 # If running in a CI environment then the user and ip address should be read
 # from the json describing the environment
