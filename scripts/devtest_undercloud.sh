@@ -39,13 +39,20 @@ NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    (tripleo-undercloud-passwords by default) that you need to source into
 ##    your shell environment.
-##    Note that you can also make or change these later and
-##    update the heat stack definition to inject them - as long as you also
-##    update the keystone recorded password. Note that there will be a window
-##    between updating keystone and instances where they will disagree and
-##    service will be down. Instead consider adding a new service account and
-##    changing everything across to it, then deleting the old account after
-##    the cluster is updated.
+##    
+##    .. note::
+##      
+##      You can also make or change these later and
+##      update the heat stack definition to inject them - as long as you also
+##      update the keystone recorded password.
+##      
+##    .. note::
+##      
+##      There will be a window between updating keystone and
+##      instances where they will disagree and service will be down. Instead
+##      consider adding a new service account and changing everything across
+##      to it, then deleting the old account after the cluster is updated.
+##      
 ##    ::
 
 setup-undercloud-passwords
@@ -59,7 +66,7 @@ POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
 POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
 POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
-## #. Wait for the BM cloud to register BM nodes with the scheduler.
+## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
 
@@ -83,11 +90,11 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
     -P "NeutronPublicInterface=${NeutronPublicInterface}" \
     undercloud
 
-##    You can watch the console via virsh/virt-manager to observe the PXE
+##    You can watch the console via ``virsh``/``virt-manager`` to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, it will reboot into the
 ##    image.
 ## 
-## #. Get the undercloud IP from 'nova list'
+## #. Get the undercloud IP from ``nova list``
 ##    ::
 
 echo "Waiting for the undercloud stack to be ready" #nodocs
