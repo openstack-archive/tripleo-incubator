@@ -145,7 +145,7 @@ The general sequence is:
    writing VLAN support requires baking the VLAN configuration into your
    built disk images.
 
--  Decide how much of TripleO you will adopt. See 'Example deployments'
+-  Decide how much of TripleO you will adopt. See `Example deployments (possible today)`_
    below.
 
 -  Install diskimage-builder somewhere and use it to build the disk
@@ -159,8 +159,10 @@ The general sequence is:
 Current caveats / workarounds
 =============================
 
-These are all documented in README.rst and in the [TripleO bugtracker]
-(https://launchpad.net/tripleo).
+These are all documented in README.rst and in the
+`TripleO bugtracker`_.
+
+.. _`TripleO bugtracker`: https://launchpad.net/tripleo
 
 No API driven persistent storage
 --------------------------------
@@ -183,15 +185,15 @@ New seed image creation returns tmpfs space errors (systems with < 9GB of RAM)
 
 Creating a new seed image takes up to 4.5GB of space inside a /tmp/imageXXXXX
 directory. tmpfs can take up to 50% of RAM and systems with less than 9GB of
-RAM will fail in this step. When using 'diskimage-builder' directly, you can
+RAM will fail in this step. When using ``diskimage-builder`` directly, you can
 prevent the space errors by:
 
-- avoiding tmpfs with --no-tmpfs or
-- specifying a minimum tmpfs size required with --min-tmpfs (which can be used
-  in conjunction with setting the environment variable TMP_DIR to override the
+- avoiding tmpfs with ``--no-tmpfs`` or
+- specifying a minimum tmpfs size required with ``--min-tmpfs`` (which can be used
+  in conjunction with setting the environment variable ``TMP_DIR`` to override the
   default temporary directory)
 
-If you are using 'boot-seed-vm', set the environment variable DIB_NO_TMPFS=1.
+If you are using ``boot-seed-vm``, set the environment variable ``DIB_NO_TMPFS=1``.
 
 Example deployments (possible today)
 ====================================
@@ -235,8 +237,8 @@ HOWTO
 -  Build the images you need (add any local elements you need to the
    commands)
 
--  Copy tripleo-image-elements/elements/seed-stack-config/config.json to
-   tripleo-image-elements/elements/seed-stack-config/local.json and
+-  Copy ``tripleo-image-elements/elements/seed-stack-config/config.json`` to
+   ``tripleo-image-elements/elements/seed-stack-config/local.json`` and
    change the virtual power manager to 'nova...impi.IPMI'.
    https://bugs.launchpad.net/tripleo/+bug/1178547::
 
@@ -385,9 +387,9 @@ Follow the 'devtest' guide but edit the seed config.json to:
   remove the virtual subsection.
 
 - register the undercloud machine with its details rather than generic virtual
-  ones - e.g.
+  ones - e.g::
 
-  setup-baremetal 24 98304 1500 amd64 $somemac undercloud $ipmi_ip $ipmi_user $ipmi_password
+    setup-baremetal 24 98304 1500 amd64 $somemac undercloud $ipmi_ip $ipmi_user $ipmi_password
 
 - setup proxy arp (this and the related bits are used to avoid messing about
   with the public NIC and bridging: you may choose to use that approach
@@ -402,16 +404,18 @@ Follow the 'devtest' guide but edit the seed config.json to:
 
     iptables -t nat -A PREROUTING -d 169.254.169.254/32 -i <external_interface> -p tcp -m tcp --dport 80 -j DNAT --to-destination <seedip>:8775
 
-- setup DHCP relay:
-  sudo apt-get install dhcp-helper and configure it with
-  "-s <seedip>"
-  Note that isc-dhcp-relay fails to forward responses correctly, so dhcp-helper is preferred.
-  https://bugs.launchpad.net/ubuntu/+bug/1233953
+- setup DHCP relay::
+
+    sudo apt-get install dhcp-helper
+
+  and configure it with ``-s <seedip>``
+  Note that isc-dhcp-relay fails to forward responses correctly, so dhcp-helper is preferred
+  ( https://bugs.launchpad.net/ubuntu/+bug/1233953 ).
 
   Also note that dnsmasq may have to be stopped as they both listen to ``*:dhcps``
-  https://bugs.launchpad.net/ubuntu/+bug/1233954
+  ( https://bugs.launchpad.net/ubuntu/+bug/1233954 ).
 
-  Disable the filter-bootps cronjob (./etc/cron.d/filter-bootp) inside the seed vm and reset the table::
+  Disable the ``filter-bootps`` cronjob (``./etc/cron.d/filter-bootp``) inside the seed vm and reset the table::
 
     sudo iptables  -F FILTERBOOTPS
 
@@ -432,42 +436,43 @@ Follow the 'devtest' guide but edit the seed config.json to:
   setup-neutron <start of seed deployment> <end of seed deployment> <cidr of network> <seedip> <metadata server> ctlplane
 
 - Validate networking:
-  From outside the seed host you should be able to ping <seedip>
-  From the seed VM you should be able to ping <all ipmi addresses>
-  From outside the seed host you should be able to get a response from the dnsmasq running on <seedip>
 
-- Create your deployment ramdisk with baremetal in mind:
+  - From outside the seed host you should be able to ping <seedip>
+  - From the seed VM you should be able to ping <all ipmi addresses>
+  - From outside the seed host you should be able to get a response from the dnsmasq running on <seedip>
 
-  $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST -a \
-  $NODE_ARCH -o $TRIPLEO_ROOT/undercloud  boot-stack nova-baremetal \
-  os-collect-config stackuser $DHCP_DRIVER -p linux-image-generic mellanox \
-  serial-console --offline
+- Create your deployment ramdisk with baremetal in mind::
+
+    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST -a \
+    $NODE_ARCH -o $TRIPLEO_ROOT/undercloud  boot-stack nova-baremetal \
+    os-collect-config stackuser $DHCP_DRIVER -p linux-image-generic mellanox \
+    serial-console --offline
 
 - If your hardware has something other than eth0 plugged into the network,
   fix your file injection template -
-  /opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template inside the
+  ``/opt/stack/nova/nova/virt/baremetal/net-static.ubuntu.template`` inside the
   seed vm, replacing the enumerated interface values with the right interface
   to use (e.g. auto eth2... iface eth2 inet static..)
 
 Deploy Undercloud
 ~~~~~~~~~~~~~~~~~
 
-Use 'heat stack-create' per the devtest documentation to boot your undercloud.
-But use the undercloud-bm.yaml file rather than undercloud-vm.yaml.
+Use ``heat stack-create`` per the devtest documentation to boot your undercloud.
+But use the ``undercloud-bm.yaml`` file rather ``than undercloud-vm.yaml``.
 
 Once it's booted:
 
-- modprobe 8021q
+- ``modprobe 8021q``
 
-- edit /etc/network/interfaces and define your vlan
+- edit ``/etc/network/interfaces`` and define your vlan
 
 - delete the default route on your internal network
 
 - add a targeted route to your management l3 range via the internal network router
 
-- add a targeted route to 169.254.169.254 via <seedip>
+- add a targeted route to ``169.254.169.254`` via <seedip>
 
-- ifup the vlan interface
+- ``ifup`` the vlan interface
 
 - fix your resolv.conf
 
@@ -492,5 +497,5 @@ VM seed + bare metal under cloud
 --------------------------------
 
 -  need to be aware nova metadata wont be available after booting as the
-   default rule assumes this host never initiates requests.
-   https://bugs.launchpad.net/tripleo/+bug/1178487
+   default rule assumes this host never initiates requests
+   ( https://bugs.launchpad.net/tripleo/+bug/1178487 ).
