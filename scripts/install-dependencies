@@ -127,17 +127,34 @@ if [ "$os" = "redhat" ]; then
     fi
 fi
 
-if ! id | grep -qw $LIBVIRTD_GROUP; then
-   echo "adding $USER to group $LIBVIRTD_GROUP"
-   sudo usermod -a -G $LIBVIRTD_GROUP $USER
-
-   exec sudo su -l $USER -c "PATH=$PATH $0"
+REMOTE_OPERATIONS=${REMOTE_OPERATIONS:-0}
+if [ "$REMOTE_OPERATIONS" != 1 -a -n "$TE_DATAFILE" -a -e "$TE_DATAFILE" ]; then
+  REMOTE_OPERATIONS=$(jq '.["remote-operations"]' $TE_DATAFILE)
+  REMOTE_OPERATIONS=${REMOTE_OPERATIONS//\"}
 fi
 
-echo "Check to see that you are in the $LIBVIRTD_GROUP group in your current shell before going on. You can check by running:"
-echo
-echo "id | grep $LIBVIRTD_GROUP"
-echo
-echo "If you are not, it's because this script added you. You can pick up the group by logging out and back in, or run:"
-echo
-echo "sudo su -l $USER"
+if [ $REMOTE_OPERATIONS != 1 ]; then
+  if ! id | grep -qw $LIBVIRTD_GROUP; then
+     echo "adding $USER to group $LIBVIRTD_GROUP"
+     sudo usermod -a -G $LIBVIRTD_GROUP $USER
+
+     echo "$USER was just added to the $LIBVIRTD_GROUP.  Devtest will not"
+     echo "be able to continue until you start a new session to pick up the"
+     echo "new group membership.  This can be done by either logging out and"
+     echo "back in, or running:"
+     echo
+     echo "sudo su -l $USER"
+     echo
+     echo "To verify that your group membership is correct, you can use the"
+     echo "following command:"
+     echo
+     echo "id | grep $LIBVIRTD_GROUP"
+     echo
+     echo "Once you have verified your group membership, you should be able to"
+     echo "re-run devtest and continue successfully."
+     # We have to exit non-zero so the calling script knows to stop.
+     exit 1
+  fi
+else
+  echo $TE_DATAFILE says to use remote operations\; not adding $USER to $LIBVIRTD_GROUP
+fi
