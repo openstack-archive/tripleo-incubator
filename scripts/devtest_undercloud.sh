@@ -131,7 +131,11 @@ keystone role-create --name heat_stack_user
 
 user-config
 
-setup-neutron 192.0.2.21 192.0.2.40 192.0.2.0/24 192.0.2.1 $UNDERCLOUD_IP ctlplane
+BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
+BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
+BM_NETWORK_UNDERCLOUD_RANGE_START=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-start --type raw --key-default '192.0.2.21')
+BM_NETWORK_UNDERCLOUD_RANGE_END=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-end --type raw --key-default '192.0.2.40')
+setup-neutron $BM_NETWORK_UNDERCLOUD_RANGE_START $BM_NETWORK_UNDERCLOUD_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $UNDERCLOUD_IP ctlplane
 
 ## #. Register two baremetal nodes with your undercloud.
 ##    ::

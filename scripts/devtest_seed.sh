@@ -64,15 +64,17 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 ##    ::
 
 # These are not persistent, if you reboot, re-run them.
+BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
 ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
-sudo ip route del 192.0.2.0/24 dev $ROUTE_DEV || true
-sudo ip route add 192.0.2.0/24 dev $ROUTE_DEV via $SEED_IP
+sudo ip route del $BM_NETWORK_CIDR dev $ROUTE_DEV || true
+sudo ip route add $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
 
 ## #. Mask the seed API endpoint out of your proxy settings
 ##    ::
 
+BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
 set +u #nodocs
-export no_proxy=$no_proxy,192.0.2.1
+export no_proxy=$no_proxy,$BM_NETWORK_SEED_IP
 set -u #nodocs
 
 ## #. If you downloaded a pre-built seed image you will need to log into it
@@ -92,11 +94,12 @@ source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 ## #. Perform setup of your seed cloud.
 ##    ::
 
+BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
 echo "Waiting for seed node to configure br-ctlplane..." #nodocs
-wait_for 30 10 ping -c 1 192.0.2.1
-ssh-keyscan -t rsa 192.0.2.1 >>~/.ssh/known_hosts
-init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
-setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
+wait_for 30 10 ping -c 1 $BM_NETWORK_SEED_IP
+ssh-keyscan -t rsa $BM_NETWORK_SEED_IP >>~/.ssh/known_hosts
+init-keystone -p unset unset $BM_NETWORK_SEED_IP admin@example.com root@$BM_NETWORK_SEED_IP
+setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset
 keystone role-create --name heat_stack_user
 
 echo "Waiting for nova to initialise..."
@@ -108,7 +111,9 @@ wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'ena
 echo "Waiting for neutron API and L2 agent to be available"
 wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*\"" #nodocs
 
-setup-neutron 192.0.2.2 192.0.2.20 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
+BM_NETWORK_SEED_RANGE_START=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.range-start --type raw --key-default '192.0.2.2')
+BM_NETWORK_SEED_RANGE_END=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.range-end --type raw --key-default '192.0.2.20')
+setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $BM_NETWORK_SEED_IP ctlplane
 
 ## #. Register "bare metal" nodes with nova and setup Nova baremetal flavors.
 ##    When using VMs Nova will PXE boot them as though they use physical
