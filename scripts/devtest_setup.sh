@@ -60,8 +60,8 @@ fi
 ## We use flat networking with all machines on one broadcast domain for dev-test.
 
 ## The eth1 of your seed instance should be connected to your bare metal cloud
-## LAN. The seed VM uses the rfc5735 TEST-NET-1 range - 192.0.2.0/24 for
-## bringing up nodes, and does its own DHCP etc, so do not connect it to a network
+## LAN. The seed VM uses this network to bringing up nodes, and does its own
+## DHCP etc, so do not connect it to a network
 ## shared with other DHCP servers or the like. The instructions in this document
 ## create a bridge device ('brbm') on your machine to emulate this with virtual
 ## machine 'bare metal' nodes.
@@ -111,6 +111,26 @@ fi
 ##    "pm_password" fields.
 ##    Future iterations may add more Ironic power and deploy driver selections
 ##    here.
+
+## #. baremetal-network:  A mapping of metadata describing the bare metal cloud
+##    network. This is a flat network which is used to bring up nodes via
+##    DHCP and transfer images. By default the rfc5735 TEST-NET-1 range -
+##    192.0.2.0/24 is used. The following fields are available (along
+##    with the default values for each field):
+##
+##    "baremetal-network": {
+##        "cidr": "192.0.2.0/24",
+##        "gateway-ip": "192.0.2.1",
+##        "seed": {
+##            "ip": "192.0.2.1",
+##            "range-start": "192.0.2.2",
+##            "range-end": "192.0.2.20"
+##        },
+##        "undercloud": {
+##            "range-start": "192.0.2.21",
+##            "range-end": "192.0.2.40"
+##        }
+##    }
 
 ## #. power_manager: The class path for a Nova Baremetal power manager.
 ##    Note that this is specific to operating with Nova Baremetal and is ignored
