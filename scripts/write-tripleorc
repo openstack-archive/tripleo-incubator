@@ -110,6 +110,8 @@ if [[ ! "\$ELEMENTS_PATH" =~ (^|:)"\$TIE_PATH"(:|$) ]]
 then
     export ELEMENTS_PATH=\$TIE_PATH\${ELEMENTS_PATH:+":\$ELEMENTS_PATH"}
 fi
+
+source devtest_variables.sh
 EOF
 
 fi
