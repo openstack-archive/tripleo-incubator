@@ -1,0 +1,12 @@
+Verified+2: Jenkins
+Code-Review+1: Dan Prince <dprince@redhat.com>
+Code-Review+2: lifeless <robertc@robertcollins.net>
+Code-Review+1: Ben Nemec <openstack@nemebean.com>
+Approved+1: Jan Provaznik <jan.provaznik@gmail.com>
+Code-Review+2: Jan Provaznik <jan.provaznik@gmail.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 24 Mar 2014 11:45:42 +0000
+Reviewed-on: https://review.openstack.org/81836
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
