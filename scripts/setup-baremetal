@@ -35,14 +35,16 @@ function show_options () {
     echo "      --service-host -- nova bm service host to register nodes with"
     echo "      --first        -- only select the first node"
     echo "      --not-first    -- select all but the first node"
+    echo "      --nodes        -- JSON list of nodes to register"
     echo
     exit $1
 }
 
 SERVICE_HOST=""
 NODE_SELECTION=0
+JSON_PATH=
 
-TEMP=`getopt -o h -l help,service-host:,first,not-first -n $SCRIPT_NAME -- "$@"`
+TEMP=$(getopt -o h -l help,service-host:,first,not-first,nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -52,6 +54,7 @@ while true ; do
     case "$1" in
         -h | --help) show_options 0;;
         --service-host) SERVICE_HOST="$2"; shift 2 ;;
+        --nodes) JSON_PATH="$2"; shift 2 ;;
         --first) NODE_SELECTION=1 ; shift ;;
         --not-first) NODE_SELECTION=-1 ; shift ;;
         --) shift ; break ;;
@@ -94,13 +97,19 @@ if [ -n "$BACKWARDS_COMPAT" ]; then
         MODE="new"
     fi
 else
-    echo "A test environment file is required."
-    exit 1
+    if [ -n "$JSON_PATH" ]; then
+        MODE="new"
+    else
+        echo "A test environment file is required."
+        exit 1
+    fi
 fi
 
 echo $MODE
 if [ "new" = "$MODE" ]; then
-    if [ $NODE_SELECTION -eq 1 ]; then
+    if [ -n "$JSON_PATH" ]; then
+        NODES=$(cat $JSON_PATH)
+    elif [ $NODE_SELECTION -eq 1 ]; then
         NODES=$(jq '[.nodes[0]]' $BACKWARDS_COMPAT)
     elif [ $NODE_SELECTION -eq -1 ]; then
         NODES=$(jq '.nodes - [.nodes[0]]' $BACKWARDS_COMPAT)
