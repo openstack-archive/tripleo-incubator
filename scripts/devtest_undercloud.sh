@@ -128,6 +128,9 @@ setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
     --nova-password $UNDERCLOUD_NOVA_PASSWORD
 keystone role-create --name heat_stack_user
+# Creating these roles to be used by tenants using swift
+keystone role-create --name=swiftoperator
+keystone role-create --name=ResellerAdmin
 
 user-config
 
