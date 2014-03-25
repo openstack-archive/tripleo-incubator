@@ -121,6 +121,12 @@ if [ -z "${NODE_DIST:-}" ]; then
 fi
 ### --include
 
+## #. Set size of root partition on our disk (GB). The remaining disk space
+##    will be used for the persistent ephemeral disk to store node state.
+##    ::
+
+export ROOT_DISK=${ROOT_DISK:-10}
+
 ## #. Set number of compute nodes for the overcloud
 ##    ::
 
