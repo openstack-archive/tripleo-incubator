@@ -172,8 +172,9 @@ Caveats/Limitations:
    https://bugs.launchpad.net/neutron/+bug/1174132
  - Bootstrap removal is not yet implemented (depends on full HA).
  - Currently assumes two clouds: under cloud and over cloud. Long term we would
-   like to be able to offer a single cloud, which is primarily (but not
-   entirely) configuration.
+   like to be able to offer a single cloud for environments where that makes
+   sense such as running a very minimal number of nodes but still wanting HA).
+   This is primarily (but not entirely) configuration.
 
 ### tripleo-heat-templates
 
@@ -268,8 +269,8 @@ deploying behind firewalls and other restricted networking environments.
 
 Enrollment of machines is manual, as is hardware setup including RAID.
 
-Stage 2
--------
+Stage 2 - being worked on
+-------------------------
 
 OpenStack on OpenStack with two distinct clouds. The seed cloud from stage 1
 is replaced by a full HA configuration in the undercloud, permitting it to
@@ -299,6 +300,101 @@ on that node will participate in their own Neutron defined networks.
 
 Infrastructure such as Glance, Swift and Keystone will be solely owned by the
 one cloud: there is no duplication needed.
+
+Developer introduction and guidelines
+=====================================
+
+Principles
+----------
+
+1. Developer tools (like disk-image-builder) should have a non-intrusive
+   footprint on the machine of users. Requiring changing of global settings
+   is poor form.
+1. Where possible we run upstream code and settings without modification - e.g.
+   we strongly prefer to use upstream defaults rather than our own. Only if
+   there is no right setting in production should we change things.
+1. We only prototype tools in tripleo-incubator: when they are ready for
+   production use with stable APIs, we move them to some appropriate
+   repository.
+1. We include everyone who wants to deploy OpenStack using OpenStack tooling
+   in the TripleO community - we support folk that want to use packages
+   rather than source, or Xen rather than KVM, or Puppet / chef / salt etc.
+1. Simple is hard to achieve but very valuable - and we value it. Things
+   that complect or confound concepts may need more design work to work well.
+1. We use OpenStack projects in preference to any others (even possibly to the
+   exclusion of alternative backends). For instance, we have a hard dependency
+   on Heat, rather than alternative cluster definition tools. This says nothing
+   about the quality of such tools, rather that we want a virtuous circle where
+   we can inform Heat about the needs of folk deploying cluster tools, and make
+   Heat better to meet our needs - and benefit when Heat improves due to the
+   effort of other people.
+
+Getting started
+---------------
+
+See the TripleO userguide for basic setup instructions - as a developer you
+need to be setup as a user too.
+
+Efficient development
+---------------------
+
+When working on overcloud features using virtual machines, just register all
+your nodes directly with the seed - the seed and the undercloud are
+functionally identical and can both deploy an overcloud.
+
+When building lots of images, be sure to pass -u and --offline into
+diskimage-builder. One way to do this is via DIB\_COMMON\_ELEMENTS though this
+doesn't affect the demo 'user' image we build at the end of
+``devtest_overcloud.sh``. To affect that, export NODE\_DIST - which will affect
+all images. e.g. ``ubuntu --offline -u``. --offline prevents all cache
+freshness checks and ensures the elements like ``pypi`` which use some online
+resources disable those resources (if possible).
+
+Always setup a network local distribution mirror - squid is great, but package
+metadata is typically not cacheable or highly mutable, and a local mirror will
+be a big timesaver.
+
+Also always setup a local pypi mirror - either with pypi-mirror (we have
+instructions in the diskimage-builder ``pypi`` element README.md) or
+bandersnatch. Using pypi-mirror consumes less bandwidth and builds a mirror of
+wheels as well, which provides further performance benefits.
+
+Run small steps - TripleO is composed of small composable tools. Do not use
+``devtest.sh`` as the entry point for development - it's a full run of the
+logic of TripleO end to end, but most folk will be working on e.g. just the
+overcloud, or undercloud deployment, or changing cinder scaling rules etc.
+
+For many tasks even the ``devtest_overcloud.sh`` scoped scripts may be too
+large and interfere with efficient development. Dive under and run the
+core tools directly - that's what they are for.
+
+Iterating on in-instance code
+-----------------------------
+
+There are broadly three sets of code for TripleO - the heat templates which
+define the cluster, the code that runs within instances to map heat metadata
+to configuration files, restart servies etc, and code that runs after deployment
+to customise the deployed cloud using APIs.
+
+The best way to experiment with in-instance code is to build images and deploy
+them but then if it fails ssh into the instance, tweak the state and re-run the
+code (e.g. by running ``os-refresh-config --force --one``).
+
+Iterating on heat templates
+---------------------------
+
+You can use heat stack-update to update a deployed stack which will take effect
+immediately as long as the image id's have not changed - this permits testing
+different metadata mappings without waiting for full initial deployments to take
+effect.
+
+Iterating on post-deploy code
+-----------------------------
+
+Generally speaking, just run API calls to put state back to whatever it would
+be before your code runs. E.g. if you are testing nova flavor management code
+you might delete all the flavors and recreate the initial defaults, then just
+run your specific code again.
 
 Caveats
 =======
