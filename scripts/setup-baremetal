@@ -96,9 +96,10 @@ cleanup_flavor 'baremetal'
 # with a flavor.
 MEM=$(jq -r ".[0][\"memory\"]" <<< $NODES)
 DISK=$(jq -r ".[0][\"disk\"]" <<< $NODES)
+EPHEMERAL_DISK=$(jq -r ".[0][\"ephemeral_disk\"]" <<< $NODES)
 CPU=$(jq -r ".[0][\"cpu\"]" <<< $NODES)
 ARCH=$(jq -r ".[0][\"arch\"]" <<< $NODES)
-nova flavor-create baremetal auto $MEM $DISK $CPU
+nova flavor-create baremetal --ephemeral $EPHEMERAL_DISK auto $MEM $DISK $CPU
 nova flavor-key baremetal set "cpu_arch"="$ARCH" \
     "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
     "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id"
