@@ -1,6 +1,14 @@
 #!/bin/bash
 set -eu
 
+cleanup_tools_folder() {
+  if [ -d "$BASE/openstack-tools" ]; then
+    rm -fr $BASE/openstack-tools/
+  fi
+}
+
+trap cleanup_tools_folder ERR
+
 BASE=$(readlink -f $(dirname $0)/..)
 
 virtualenv --setuptools $BASE/openstack-tools
