@@ -1,6 +1,14 @@
 #!/bin/bash
 set -eu
 
+remove_tools_folder() {
+  if [ -d "$BASE/openstack-tools" ]; then
+    rm -fr $BASE/openstack-tools/
+  fi
+}
+
+trap remove_tools_folder ERR
+
 BASE=$(readlink -f $(dirname $0)/..)
 
 virtualenv --setuptools $BASE/openstack-tools
