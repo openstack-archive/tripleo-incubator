@@ -4,6 +4,8 @@ TripleO Incubator
 .. toctree::
    :maxdepth: 1
 
+   userguide
+
    devtest
    devtest_variables
    devtest_setup
