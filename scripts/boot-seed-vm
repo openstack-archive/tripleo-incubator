@@ -73,7 +73,7 @@ function show_options () {
     exit $1
 }
 
-TEMP=$(getopt -o hcia:o:s: -l build-only -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o hcia:o:s:u -l build-only -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -88,6 +88,7 @@ while true ; do
         -h) show_options 0;;
         -c) export IMAGE_CACHE_USE=1; shift ;;
         -i) export CREATE_IMAGE=; shift ;;
+        -u) shift ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
