@@ -29,7 +29,25 @@ cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
 # - sets the ironic key to "" to disable configuration looking for Ironic
 #   settings.
 TMP=`mktemp`
-jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))|.[0].ironic=""| .[0]' config.json $TE_DATAFILE > local.json
+BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
+jq --arg slash_cidr ${BM_NETWORK_CIDR##*/} -s '.[1] as $config |
+($config["baremetal-network"].seed.ip // "192.0.2.1") as $bm_seed_ip |
+(.[0].nova.baremetal |= (
+    .virtual_power.user=$config["ssh-user"]|
+    .virtual_power.ssh_host=$config["host-ip"]|
+    .virtual_power.ssh_key=$config["ssh-key"]|
+    .arch=$config.arch|
+    .power_manager=$config.power_manager))|
+(.[0].heat |= (
+    .watch_server_url="http://" + $bm_seed_ip + ":8003"|
+    .waitcondition_server_url="http://" + $bm_seed_ip + ":8000/v1/waitcondition"|
+    .metadata_server_url="http://" + $bm_seed_ip + ":8000"))|
+(.[0].ironic = "")|
+(.[0]["local-ipv4"] = $bm_seed_ip)|
+(.[0].bootstack.public_interface_ip = $bm_seed_ip + "/" + $slash_cidr)|
+(.[0].bootstack.masquerade_networks = ($config["baremetal-network"].cidr // "192.0.2.0/24"))|
+ .[0]' config.json $TE_DATAFILE > local.json
+
 ### --end
 # If running in a CI environment then the user and ip address should be read
 # from the json describing the environment
@@ -65,7 +83,6 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 ##    ::
 
 # These are not persistent, if you reboot, re-run them.
-BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
 ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
 sudo ip route del $BM_NETWORK_CIDR dev $ROUTE_DEV || true
 sudo ip route add $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
