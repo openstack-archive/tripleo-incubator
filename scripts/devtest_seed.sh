@@ -66,8 +66,7 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 
 # These are not persistent, if you reboot, re-run them.
 ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
-sudo ip route del 192.0.2.0/24 dev $ROUTE_DEV || true
-sudo ip route add 192.0.2.0/24 dev $ROUTE_DEV via $SEED_IP
+sudo ip route replace 192.0.2.0/24 dev $ROUTE_DEV via $SEED_IP
 
 ## #. Mask the seed API endpoint out of your proxy settings
 ##    ::
