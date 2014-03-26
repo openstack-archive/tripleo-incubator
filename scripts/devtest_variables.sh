@@ -26,14 +26,16 @@ export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 
 ## #. Choose a base location to put all of the source code.
 ##    ::
-## 
-##         # exports are ephemeral - new shell sessions, or reboots, and you need
-##         # to redo them, or use $TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc
-##         # and then source the generated tripleorc file.
+
+##         # exports are ephemeral - they will be lost between new shell
+##         # sessions or reboots, and you will need to redo them. You can use
+##         # $TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc to write
+##         # them to a file ($TRIPLEO_ROOT/tripleorc by default) to be sourced
+##         # later.
 ##         export TRIPLEO_ROOT=~/tripleo
 export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo} #nodocs
 
-## 
+
 ## #. Nova tools will get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts
 ##    - you need to add that to the PATH.
 ##    ::
