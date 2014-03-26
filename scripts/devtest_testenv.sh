@@ -14,10 +14,13 @@ function show_options () {
     echo "Setup a TripleO devtest environment."
     echo
     echo "Options:"
-    echo "-n : Test environment number to add the seed to."
-    echo "-b : Name of an already existing OVS bridge to use for the public "
-    echo "     interface of the seed."
-    echo "-h : This help."
+    echo "    -b                     -- Name of an already existing OVS bridge to use for "
+    echo "                              the public interface of the seed."
+    echo "    -h                     -- This help."
+    echo "    -n                     -- Test environment number to add the seed to."
+    echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
+    echo "                              The schema for nodes can be found in the devtest_setup"
+    echo "                              documentation."
     echo
     echo "JSON-filename -- the path to write the environment description to."
     echo
@@ -27,10 +30,11 @@ function show_options () {
     exit $1
 }
 
+NODES_PATH=
 NUM=
 OVSBRIDGE=
 
-TEMP=$(getopt -o h,n:,b: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b: -l nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -38,9 +42,10 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --nodes) NODES_PATH="$1"; shift 2;;
+        -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
-        -b) OVSBRIDGE="$2" ; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -131,7 +136,12 @@ jq "." <<EOF > $JSONFILE
 }
 EOF
 
+## #. If you have an existing set of nodes to use, use them.
+##    ::
 
+if [ -n "$NODES_PATH" ]; then #nodocs
+jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH
+else #nodocs
 ## #. Create baremetal nodes for the test cluster. The final parameter to
 ##    create-nodes is the number of VMs to create. To change this in future
 ##    you can run clean-env and then recreate with more nodes.
@@ -139,5 +149,5 @@ EOF
 
 NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
-
 ### --end
+fi
