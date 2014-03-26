@@ -144,7 +144,7 @@ wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" 
 ## #. Deploy an overcloud::
 
 setup-overcloud-passwords
-source tripleo-overcloud-passwords
+source $TRIPLEO_ROOT/tripleo-incubator/tripleo-overcloud-passwords
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCLOUD_COMPUTESCALE
 ##         heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \

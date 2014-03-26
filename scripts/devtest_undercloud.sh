@@ -42,8 +42,8 @@ else #nodoc
 fi #nodoc
 
 ## #. Create secrets for the cloud. The secrets will be written to a file
-##    (tripleo-undercloud-passwords by default) that you need to source into
-##    your shell environment.
+##    ($TRIPLEO_ROOT/tripleo-incubator/tripleo-undercloud-passwords by default)
+##    that you need to source into your shell environment.
 ##    Note that you can also make or change these later and
 ##    update the heat stack definition to inject them - as long as you also
 ##    update the keystone recorded password. Note that there will be a window
@@ -54,7 +54,7 @@ fi #nodoc
 ##    ::
 
 setup-undercloud-passwords
-source tripleo-undercloud-passwords
+source $TRIPLEO_ROOT/tripleo-incubator/tripleo-undercloud-passwords
 
 ## #. Pull out needed variables from the test environment definition.
 ##    ::
