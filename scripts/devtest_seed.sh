@@ -28,7 +28,6 @@ cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
 # - ssh power user
 # - sets the ironic key to "" to disable configuration looking for Ironic
 #   settings.
-TMP=`mktemp`
 jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))|.[0].ironic=""| .[0]' config.json $TE_DATAFILE > local.json
 ### --end
 # If running in a CI environment then the user and ip address should be read
