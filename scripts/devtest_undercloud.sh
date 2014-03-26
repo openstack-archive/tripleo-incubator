@@ -47,8 +47,8 @@ UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
 NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
 ## #. Create secrets for the cloud. The secrets will be written to a file
-##    (tripleo-undercloud-passwords by default) that you need to source into
-##    your shell environment.
+##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
+##    that you need to source into your shell environment.
 ##    
 ##    .. note::
 ##      
@@ -65,8 +65,8 @@ NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 ##      
 ##    ::
 
-setup-undercloud-passwords
-source tripleo-undercloud-passwords
+setup-undercloud-passwords -f $TRIPLEO_ROOT/tripleo-undercloud-passwords
+source $TRIPLEO_ROOT/tripleo-undercloud-passwords
 
 ## #. Pull out needed variables from the test environment definition.
 ##    ::

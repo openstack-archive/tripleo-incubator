@@ -31,11 +31,11 @@ function show_options () {
     echo
     echo "Options:"
     echo "    -f, --file        -- Specify path for tripleorc file."
-    echo "                         Defaults to tripleorc in the current directory."
     echo "    -o, --overwrite   -- Overwrite file if it already exists."
     exit $1
 }
 
+FILE=""
 TEMP=`getopt -o hof: -l help,overwrite,file: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
@@ -52,7 +52,11 @@ while true ; do
     esac
 done
 
-FILE=${FILE:-"tripleorc"}
+if [-z "$FILE" ]; then
+  echo "ERROR: Must provide a filename"
+  exit 1
+fi
+
 OVERWRITE=${OVERWRITE:-""}
 
 # Don't overwrite $FILE if it already exists and the overwrite option
