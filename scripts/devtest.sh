@@ -20,6 +20,9 @@ function show_options () {
     echo "    --existing-environment -- use an existing test environment. The JSON file"
     echo "                              for it may be overridden via the TE_DATAFILE"
     echo "                              environment variable."
+    echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
+    echo "                              The schema for nodes can be found in the devtest_setup"
+    echo "                              documentation."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
     echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
@@ -30,12 +33,13 @@ function show_options () {
     exit $1
 }
 
+NODES_ARG=
 CONTINUE=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=`getopt -o h,c -l existing-environment,trash-my-machine -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o h,c -l existing-environment,trash-my-machine,--nodes: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -45,6 +49,7 @@ while true ; do
     case "$1" in
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
+	--nodes) NODES_ARG="--nodes $1"; shift 2;;
         -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
@@ -151,7 +156,7 @@ devtest_setup.sh $CONTINUE
 
 if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
 #XXX: When updating, also update the header in devtest_testenv.sh #nodocs
-devtest_testenv.sh $TE_DATAFILE
+devtest_testenv.sh $TE_DATAFILE $NODES_ARG
 fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
