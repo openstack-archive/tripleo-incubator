@@ -1,31 +1,37 @@
 #!/bin/bash
 set -eu
 
-CPU=$1
-MEM=$2
-DISK=$3
-MACS="$4"
-SERVICE_HOST="$5"
-# Power management settings are optional and only used for real bare metal.
-PM_IPS=( $6 )
-PM_USERS=( $7 )
-PM_PASSWORDS=( $8 )
+SERVICE_HOST=${1:-""}
+if [ -z "$SERVICE_HOST" ]; then
+    echo "Ironic not supported, please specify service host as the first argument."
+    exit 1
+fi
+if [ -z "$2" ]; then
+    echo "A JSON file of node listing is required."
+    exit 1
+fi
+NODES=$(jq . "$2")
 
 # Ensure nova's baremetal service has fully initialised before proceeding with real nodes
 wait_for 60 10 nova baremetal-node-create devtest_canary 1 1 1 11:22:33:44:55:66
 nova baremetal-node-delete $(nova baremetal-node-list | awk '/devtest_canary/ {print $2}')
 
-count=0
-for MAC in $MACS; do
-
-    if [ -n "${PM_IPS:-}" -a -n "${PM_USERS:-}" -a -n "${PM_PASSWORDS:-}" ]; then
-        nova baremetal-node-create --pm_address=${PM_IPS[$count]} --pm_user=${PM_USERS[$count]} --pm_password=${PM_PASSWORDS[$count]} $SERVICE_HOST $CPU $MEM $DISK $MAC
-    else
-        nova baremetal-node-create $SERVICE_HOST $CPU $MEM $DISK $MAC
-    fi
-
-    count=$((count + 1))
-
+node_count=$(($(jq length <<< $NODES) - 1))
+for pos in $(seq 0 $node_count); do
+    NODE_JSON=$(jq ".[$pos]" <<< $NODES)
+    for var in pm_addr pm_user pm_password cpu memory disk ; do
+        eval "$var='$(jq -r .$var <<< $NODE_JSON)'"
+    done
+    id=$(nova baremetal-node-create --pm_address="$pm_addr" \
+        --pm_user="$pm_user" --pm_password="$pm_password" $SERVICE_HOST \
+        $cpu $memory $disk $(jq -r ".mac[0]" <<< $NODE_JSON) | \
+        awk '$2=="id" {print $4}')
+    MACS=$(jq ".mac - [.mac[0]]" <<< $NODE_JSON)
+    mac_count=$(($(jq "length" <<< $MACS) - 1))
+    for pos in $(seq 0 $mac_count); do
+        nova baremetal-interface-add $id $(jq -r ".[$pos]" <<< $MACS)
+    done
 done
+
 date
 echo "Nodes will be available in 60 seconds from now."
