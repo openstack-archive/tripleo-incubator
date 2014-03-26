@@ -88,6 +88,18 @@ fi
 ## This document is extracted from devtest.sh, our automated bring-up story for
 ## CI/experimentation.
 
+## Permissions
+## -----------
+
+## These scripts are designed to be run under your normal user account. The
+## scripts make use of sudo when elevated privileges are needed. You will
+## either need to run this attended, entering your password when sudo needs
+## it, or enable passwordless sudo for your user. Another option is to extend
+## the timeout of sudo sessions to long enough that sudo will be allowed
+## long enough on the controlling terminal to complete the devtest run. If
+## there are any circumstances where running as a normal user, and not root,
+## fails, this is considered a critical bug.
+
 ## Stability Warning
 ## -----------------
 
