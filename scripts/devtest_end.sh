@@ -10,7 +10,7 @@ set -o pipefail
 ## #. Save your devtest environment.
 ##    ::
 
-write-tripleorc --overwrite
+write-tripleorc --overwrite -f $TRIPLEO_ROOT/tripleorc
 
 ## #. If you need to recover the environment, you can source tripleorc.
 ##    ::
@@ -19,7 +19,7 @@ write-tripleorc --overwrite
 ## 
 
 echo "devtest.sh completed." #nodocs
-echo source tripleorc to restore all values #nodocs
+echo source $TRIPLEO_ROOT/tripleorc to restore all values #nodocs
 echo "" #nodocs
 
 ## The End!
