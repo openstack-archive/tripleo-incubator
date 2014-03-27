@@ -14,6 +14,9 @@ function show_options () {
     echo "Test the core TripleO story."
     echo
     echo "Options:"
+    echo "    --baremetal-nodes-cfg  -- specify we are targeting real hardware."
+    echo "                              Note: you must export the hardware config"
+    echo "                                    PRE_CONFIGURED_JSON."
     echo "    --trash-my-machine     -- make nontrivial destructive changes to the machine."
     echo "                              For details read the source."
     echo "    -c                     -- re-use existing source/images if they exist."
@@ -33,9 +36,10 @@ function show_options () {
 CONTINUE=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
+export BAREMETAL_NODES=0
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=`getopt -o h,c -l existing-environment,trash-my-machine -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o h,c -l baremetal-nodes-cfg,existing-environment,trash-my-machine -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -45,6 +49,7 @@ while true ; do
     case "$1" in
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
+        --baremetal-nodes-cfg) BAREMETAL_NODES=1; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;

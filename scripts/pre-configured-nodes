@@ -1,0 +1,12 @@
+#!/bin/bash
+set -eu
+
+PRE_CONFIURED_JSON=$1
+TE_DATAFILE=$2
+
+# Create empty json file if it doesn't exist
+[ -s $TE_DATAFILE ] || echo "{}" > $TE_DATAFILE
+
+JSON=$(jq .nodes=$(jq . $PRE_CONFIURED_JSON -c) $TE_DATAFILE)
+
+jq . <<< $JSON > $TE_DATAFILE

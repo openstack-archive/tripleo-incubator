@@ -55,32 +55,43 @@ source tripleo-undercloud-passwords
 ##    ::
 
 POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
-POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
-POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
-POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
+OVERCLOUD_VARIABLES="-P "AdminToken=${UNDERCLOUD_ADMIN_TOKEN}" \
+                     -P "AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
+                     -P "GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD}" \
+                     -P "HeatPassword=${UNDERCLOUD_HEAT_PASSWORD}" \
+                     -P "NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD}" \
+                     -P "NovaPassword=${UNDERCLOUD_NOVA_PASSWORD}" \
+                     -P "BaremetalArch=${NODE_ARCH}" \
+                     -P "PowerManager=${POWER_MANAGER}" \
+                     -P "undercloudImage=${UNDERCLOUD_ID}" \
+                     -P "NeutronPublicInterface=${NeutronPublicInterface}""
 
-## #. Wait for the BM cloud to register BM nodes with the scheduler.
+OVERCLOUD_PROFILE=undercloud-bm.yaml
 
-wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
+## #. Deploy an undercloud on a VM.
+##    ::
+
+if [ "$BAREMETAL_NODES" = "0" ]; then
+  OVERCLOUD_PROFILE=undercloud-vm.yaml
+
+  POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
+  POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
+  POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
+
+  ## #. Wait for the BM cloud to register BM nodes with the scheduler.
+  wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
+
+  OVERCLOUD_VARIABLES+="-P "PowerUserName=${POWER_USER}" \
+                        -P "PowerSSHPrivateKey=${POWER_KEY}" \
+                        -P "PowerSSHHost=${POWER_HOST}""
+fi
 
 ## #. Deploy an undercloud.
 ##    ::
 
-make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
-heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=${POWER_USER}" \
-    -P "AdminToken=${UNDERCLOUD_ADMIN_TOKEN}" \
-    -P "AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
-    -P "GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD}" \
-    -P "HeatPassword=${UNDERCLOUD_HEAT_PASSWORD}" \
-    -P "NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD}" \
-    -P "NovaPassword=${UNDERCLOUD_NOVA_PASSWORD}" \
-    -P "BaremetalArch=${NODE_ARCH}" \
-    -P "PowerManager=${POWER_MANAGER}" \
-    -P "undercloudImage=${UNDERCLOUD_ID}" \
-    -P "PowerSSHPrivateKey=${POWER_KEY}" \
-    -P "PowerSSHHost=${POWER_HOST}" \
-    -P "NeutronPublicInterface=${NeutronPublicInterface}" \
+make -C $TRIPLEO_ROOT/tripleo-heat-templates $OVERCLOUD_PROFILE
+heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$OVERCLOUD_PROFILE \
+    $OVERCLOUD_VARIABLES \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE

@@ -161,7 +161,32 @@ EOF
 ##    you can run clean-env and then recreate with more nodes.
 ##    ::
 
-NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
-create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
+if [ "$BAREMETAL_NODES" = 0 ]; then
+  NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+  create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
+else
+
+  ## #. For a minimum set-up the RE_CONFIGURED_JSON requires 3 nodes to be
+  ##    specified the uncdercloud, non-compute and compute nodes.
+  ##
+  ##    Example json file:
+  ##    [{"cpu":"1",
+  ##      "disk":"20",
+  ##      "memory":"2048",
+  ##      "pm_user":"exds",
+  ##      "arch":"amd64",
+  ##      "pm_password":<PASSAWORD>,
+  ##      "pm_addr":<IP>,
+  ##      "mac":[<MAC>],
+  ##      "virt_type":"baremetal"
+  ##     },
+  ##     {....},
+  ##     ....
+  ##     ....
+  ##     {....}]
+
+  [ -z "$PRE_CONFIGURED_JSON" ] && echo "Please set PRE_CONFIGURED_JSON for real hardware confiuration."
+  pre-configured-nodes $PRE_CONFIGURED_JSON $JSONFILE
+fi
 
 ### --end
