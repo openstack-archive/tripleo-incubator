@@ -182,7 +182,7 @@ fi
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
-expected_nodes=$((1+$OVERCLOUD_COMPUTESCALE))
+expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE ))
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" -ge $expected_nodes ]
 
 ## #. Deploy an overcloud::
@@ -197,7 +197,9 @@ else
   source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 fi #nodocs
 
-make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCLOUD_COMPUTESCALE
+make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
+    COMPUTESCALE=$OVERCLOUD_COMPUTESCALE \
+    CONTROLSCALE=$OVERCLOUD_CONTROLSCALE
 ##         heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
 ##             -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
