@@ -139,6 +139,9 @@ fi
 ## the stable branch of tripleo-incubator you want, and then build the
 ## instructions yourself via::
 
+##      export TRIPLEO_ROOT=~/.cache/tripleo
+##      mkdir -p $TRIPLEO_ROOT
+##      cd $TRIPLEO_ROOT
 ##      git clone https://git.openstack.org/openstack/tripleo-incubator
 ##      cd tripleo-incubator
 ##      git checkout <stable-branch>
