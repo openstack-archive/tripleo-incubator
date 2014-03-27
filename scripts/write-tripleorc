@@ -57,8 +57,7 @@ OVERWRITE=${OVERWRITE:-""}
 
 # Don't overwrite $FILE if it already exists and the overwrite option
 # wasn't provided.
-if [ -f $FILE -a -z "$OVERWRITE" ]
-then
+if [ -f $FILE -a -z "$OVERWRITE" ]; then
     echo $FILE exists, not overwriting.
     echo Either delete the file first, or specify -o
     exit 1
@@ -76,17 +75,14 @@ OVERCLOUD_LIBVIRT_TYPE
 POWER_MANAGER
 DIB_COMMON_ELEMENTS"
 
-for env_var in $ENV_VARS
-do
-    if [ ! -z "${!env_var}" ]
-    then
+for env_var in $ENV_VARS; do
+    if [ ! -z "${!env_var}" ]; then
         echo export $env_var=\"${!env_var}\" >> $FILE
     fi
 done
 
 # Also write out updated $PATH and $ELEMENTS_PATH
-if [ -n "$TRIPLEO_ROOT" ]
-then
+if [ -n "$TRIPLEO_ROOT" ]; then
 
     # Add a newline for some clarity in the tripleorc file.
     echo >> $FILE
@@ -96,14 +92,12 @@ then
     # keep making them longer each time tripleorc is sourced.
     cat >> $FILE <<EOF
 SCRIPTS_PATH=\$TRIPLEO_ROOT/tripleo-incubator/scripts
-if [[ ! "\$PATH" =~ (^|:)"\$SCRIPTS_PATH"(:|$) ]]
-then
+if [[ ! "\$PATH" =~ (^|:)"\$SCRIPTS_PATH"(:|$) ]]; then
     export PATH=\$TRIPLEO_ROOT/tripleo-incubator/scripts:\$PATH
 fi
 
 TIE_PATH=\$TRIPLEO_ROOT/tripleo-image-elements/elements
-if [[ ! "\$ELEMENTS_PATH" =~ (^|:)"\$TIE_PATH"(:|$) ]]
-then
+if [[ ! "\$ELEMENTS_PATH" =~ (^|:)"\$TIE_PATH"(:|$) ]]; then
     export ELEMENTS_PATH=\$TIE_PATH\${ELEMENTS_PATH:+":\$ELEMENTS_PATH"}
 fi
 
