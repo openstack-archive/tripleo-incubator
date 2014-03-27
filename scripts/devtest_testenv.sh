@@ -109,9 +109,11 @@ setup-network $NUM
 ##    to bootstrap a full dynamically configured baremetal cloud.
 ##    ::
 
+BRIDGE=
 SEED_ARGS="-a $NODE_ARCH"
 if [ -n "$NUM" -a -n "$OVSBRIDGE" ]; then
-    SEED_ARGS="$SEED_ARGS -o seed_${NUM} -b brbm${NUM} -p $OVSBRIDGE"
+    BRIDGE="brbm${NUM}"
+    SEED_ARGS="$SEED_ARGS -o seed_${NUM} -b $BRIDGE -p $OVSBRIDGE"
 fi
 setup-seed-vm $SEED_ARGS
 
@@ -186,6 +188,6 @@ else #nodocs
 ##    ::
 
 NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
-create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
+create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
 fi
