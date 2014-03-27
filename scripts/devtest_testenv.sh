@@ -201,12 +201,25 @@ if [ -n "$NODES_PATH" ]; then #nodocs
   JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
   echo "${JSON}" > $JSONFILE
 else #nodocs
+
 ## #. Create baremetal nodes for the test cluster. If the required number of
 ##    VMs changes in future, you can run cleanup-env and then recreate with
 ##    more nodes.
 ##    ::
 
-NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+# Node definitions are cheap but redeploying testenv's is not
+# By the end of our HA story we should have a NODE_CNT < 10. Allow users to
+# specify NODE_CNT which takes precedence, otherwise our calculated NODE_CNT
+# has a minimum of 10.
+if [ -z "${NODE_CNT:-}" ]; then #nodocs
+    NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE + 2 ))
+### --end
+    if [ $NODE_CNT -le 10 ]; then
+        NODE_CNT=10
+    fi
+fi
+
+### --include
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
 fi
