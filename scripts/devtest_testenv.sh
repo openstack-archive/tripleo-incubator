@@ -161,7 +161,7 @@ EOF
 ##    you can run clean-env and then recreate with more nodes.
 ##    ::
 
-NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_NOTCOMPUTESCALE + 1 ))
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
 
 ### --end
