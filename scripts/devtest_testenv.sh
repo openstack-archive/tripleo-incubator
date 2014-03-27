@@ -198,7 +198,8 @@ else #nodocs
 ##    more nodes.
 ##    ::
 
-NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+# Node definitions are cheap but redeploying testenv's is not
+NODE_CNT=${NODE_CNT:-10}
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
 fi
