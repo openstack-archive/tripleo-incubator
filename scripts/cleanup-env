@@ -17,6 +17,8 @@
 
 SCRIPT_NAME=$(basename $0)
 
+LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
+
 function show_options() {
     echo "Usage: $SCRIPT_NAME"
     echo
@@ -31,6 +33,6 @@ for NAME in $(sudo virsh list --name --all | grep "^\(seed\(.*\|\)\|baremetal\(\
   sudo virsh undefine --managed-save --remove-all-storage $NAME
 done
 
-for NAME in $(sudo virsh vol-list default 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\(seed\(.*\|\)|baremetal\(\|brbm.*\)-\)" ); do
-  sudo virsh vol-delete --pool default $NAME
+for NAME in $(sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\(seed\(.*\|\)|baremetal\(\|brbm.*\)-\)" ); do
+  sudo virsh vol-delete --pool $LIBVIRT_VOL_POOL $NAME
 done
