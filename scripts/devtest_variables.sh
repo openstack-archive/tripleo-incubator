@@ -119,6 +119,7 @@ fi
 ##    ::
 
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
+export OVERCLOUD_NOTCOMPUTESCALE=${OVERCLOUD_NOTCOMPUTESCALE:-1} # nodocs
 
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
