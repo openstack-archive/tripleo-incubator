@@ -17,7 +17,7 @@
 
 export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 
-## #. The vm's created by devtest will use e1000 network device emulation by
+## #. The vms created by devtest will use e1000 network device emulation by
 ##    default.  This can be overriden to use a different network driver for
 ##    interfaces instead, such as virtio.  virtio provides faster network
 ##    performance than e1000, but may prove to be less stable.
@@ -26,28 +26,24 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 
 ## #. Choose a base location to put all of the source code.
-##    ::
-## 
-##         # exports are ephemeral - new shell sessions, or reboots, and you need
-##         # to redo them, or use $TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc
-##         # and then source the generated tripleorc file.
-##         export TRIPLEO_ROOT=~/tripleo
-export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo} #nodocs
-
-## 
-## #. Nova tools will get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts
-##    - you need to add that to the PATH.
+##   
+##    .. note::
+##     
+##      exports are ephemeral - they will not survive across new shell sessions  
+##      or reboots. You will need to to redo them, or use
+##      ``$TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc`` and then
+##      source the generated tripleorc file.
+##     
 ##    ::
 
-### --end
-# If devtest_setup.sh has never been run in this environment,
-# $TRIPLEO_ROOT/tripleo-incubator/scripts probably won't exist, so we can't
-# rely on being able to run devtest_setup.sh from there
+export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo}
 
-if [ ! -e $TRIPLEO_ROOT ]; then
-  export PATH=$(readlink -e $(dirname ${BASH_SOURCE[0]})):$PATH
-fi
-### --include
+## #. The TripleO tools will get (or have already been, if you followed the
+##    suggestions in :doc:`devtest`) installed in
+##    $TRIPLEO_ROOT/tripleo-incubator/scripts - you need to add that to the
+##    $PATH.
+##    ::
+
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
 ## #. Set the default bare metal power manager. By default devtest uses
