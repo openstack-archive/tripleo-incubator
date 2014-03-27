@@ -31,8 +31,7 @@ export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"e1000"}
 ##         # exports are ephemeral - new shell sessions, or reboots, and you need
 ##         # to redo them, or use $TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc
 ##         # and then source the generated tripleorc file.
-##         export TRIPLEO_ROOT=~/tripleo
-export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo} #nodocs
+export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo}
 
 ## 
 ## #. Nova tools will get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts
