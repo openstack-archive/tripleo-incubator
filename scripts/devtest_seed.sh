@@ -153,7 +153,7 @@ setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
 ##    suggestions for what they should look like.
 ## 
 ##    * each VM should have 1 NIC
-##    * eth0 (or em1) should be on brbm
+##    * eth0 should be on brbm
 ##    * record the MAC addresses for the NIC of each VM.
 ##    * give each VM no less than 2GB of disk, and ideally give them
 ##      more than NODE_DISK, which defaults to 20GB

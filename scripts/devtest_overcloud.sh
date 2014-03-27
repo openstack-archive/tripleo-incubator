@@ -9,12 +9,7 @@ OS_PASSWORD=${OS_PASSWORD:?"OS_PASSWORD is not set. Undercloud credentials are r
 # NOTE(rpodolyaka): retain backwards compatibility by accepting both positional
 #                   arguments and environment variables. Positional arguments
 #                   take precedence over environment variables
-source $(dirname ${BASH_SOURCE[0]})/set-os-type #nodocs
-if [ $TRIPLEO_OS_DISTRO == 'fedora' ]; then
-    NeutronPublicInterface=${1:-${NeutronPublicInterface:-'em1'}}
-else
-    NeutronPublicInterface=${1:-${NeutronPublicInterface:-'eth0'}}
-fi
+NeutronPublicInterface=${1:-${NeutronPublicInterface:-'eth0'}}
 NeutronPublicInterfaceIP=${2:-${NeutronPublicInterfaceIP:-''}}
 NeutronPublicInterfaceRawDevice=${3:-${NeutronPublicInterfaceRawDevice:-''}}
 NeutronPublicInterfaceDefaultRoute=${4:-${NeutronPublicInterfaceDefaultRoute:-''}}
