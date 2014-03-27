@@ -8,7 +8,7 @@
 
 ## #. The devtest scripts require access to the libvirt system URI.
 ##    If running against a different libvirt URI you may encounter errors.
-##    Export LIBVIRT_DEFAULT_URI to prevent devtest using qemu:///system
+##    Export ``LIBVIRT_DEFAULT_URI`` to prevent devtest using qemu:///system
 ##    Check that the default libvirt connection for your user is qemu:///system.
 ##    If it is not, set an environment variable to configure the connection.
 ##    This configuration is necessary for consistency, as later steps assume
@@ -17,9 +17,9 @@
 
 export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 
-## #. The vm's created by devtest will use a virtio network device by
+## #. The vms created by devtest will use a virtio network device by
 ##    default. This can be overridden to use a different network driver for
-##    interfaces instead, such as e1000 if required.
+##    interfaces instead, such as ``e1000`` if required.
 ##    ::
 
 export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
@@ -35,35 +35,33 @@ export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 
 export LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
-## #. Choose a base location to put all of the source code.
+## #. Set ``TRIPLEO_ROOT``, if it wasn't already set. See note in :doc:`devtest`
+##    for discussion on suggested values for ``TRIPLEO_ROOT``
+
 ##    ::
 
-##         # exports are ephemeral - they will be lost between new shell
-##         # sessions or reboots, and you will need to redo them. You can use
-##         # $TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc to write
-##         # them to a file ($TRIPLEO_ROOT/tripleorc by default) to be sourced
-##         # later.
-##         export TRIPLEO_ROOT=~/tripleo
-export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo} #nodocs
+export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo}
 
 
-## #. Nova tools will get installed in $TRIPLEO_ROOT/tripleo-incubator/scripts
-##    - you need to add that to the PATH.
+## #. The TripleO tools will get (or have already been, if you followed the
+##    suggestions in :doc:`devtest`) installed in
+##    ``$TRIPLEO_ROOT/tripleo-incubator/scripts`` - you need to add that to the
+##    ``$PATH``.
+
 ##    ::
 
 ### --end
-# If devtest_setup.sh has never been run in this environment,
-# $TRIPLEO_ROOT/tripleo-incubator/scripts probably won't exist, so we can't
-# rely on being able to run devtest_setup.sh from there
-
-if [ ! -e $TRIPLEO_ROOT ]; then
-  export PATH=$(readlink -e $(dirname ${BASH_SOURCE[0]})):$PATH
+if [ ! -d "$TRIPLEO_ROOT/tripleo-incubator/scripts" ]; then
+  echo ERROR: Cannot find "$TRIPLEO_ROOT/tripleo-incubator/scripts".
+  echo "      Please set TRIPLEO_ROOT to point to the directory which"
+  echo "      contains your tripleo-incubator checkout."
+  exit 1
 fi
 ### --include
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
 ## #. We now support Ironic as the baremetal deployment layer. To use it just
-##    set USE_IRONIC=1. The default is still Nova Baremetal until we've had some
+##    set ``USE_IRONIC=1``. The default is still Nova Baremetal until we've had some
 ##    time to identify any kinks in the process.
 ##    ::
 
