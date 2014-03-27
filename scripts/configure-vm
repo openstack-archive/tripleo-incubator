@@ -30,7 +30,7 @@ def main():
         help='Create a seed vm with two interfaces.')
     parser.add_argument('--ovsbridge', default="",
         help='Place the seed public interface on this ovs bridge.')
-    parser.add_argument('--libvirt-nic-driver', default='e1000',
+    parser.add_argument('--libvirt-nic-driver', default='virtio',
         help='The libvirt network driver to use')
     args = parser.parse_args()
     with file(templatedir + '/vm.xml', 'rb') as f:
