@@ -203,13 +203,15 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##    boot/deploy process.  After the deploy is complete, the machines will reboot
 ##    and be available.
 
-## #. While we wait for the stack to come up, build an end user disk image and
-##    register it with glance.::
+## #. While we wait for the stack to come up, download an end user disk image.
+##    We use the cirros image as it is very small and convenient for testing.
+##    ::
 
-if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
-fi #nodocs
+VERSION=$($TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
+    http://download.cirros-cloud.net/version/released >(cat) 1>&2)
+$TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
+    http://download.cirros-cloud.net/${VERSION}/cirros-${VERSION}-${NODE_ARCH/amd64/x86_64}-disk.img \
+    $TRIPLEO_ROOT/user.qcow2
 
 ## #. Get the overcloud IP from 'nova list'
 ##    ::
