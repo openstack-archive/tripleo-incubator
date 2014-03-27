@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+1: Dan Prince <dprince@redhat.com>
+Code-Review+2: lifeless <robertc@robertcollins.net>
+Approved+1: Jiri Stransky <jistr@redhat.com>
+Code-Review+2: Jiri Stransky <jistr@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 27 Mar 2014 12:24:28 +0000
+Reviewed-on: https://review.openstack.org/83249
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
