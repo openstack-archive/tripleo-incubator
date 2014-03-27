@@ -115,10 +115,12 @@ if [ -z "${NODE_DIST:-}" ]; then
 fi
 ### --include
 
-## #. Set number of compute nodes for the overcloud
+## #. Set number of compute and control nodes for the overcloud
+##
 ##    ::
 
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
+export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
 
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
