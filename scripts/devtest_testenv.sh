@@ -15,7 +15,8 @@ function show_options () {
     echo
     echo "Options:"
     echo "-n : Test environment number to add the seed to."
-    echo "-b : Name of an already existing OVS bridge to use for the public "
+    echo "-b : Name of the baremetal bridge to use."
+    echo "-p : Name of an already existing OVS bridge to use for the public "
     echo "     interface of the seed."
     echo "-h : This help."
     echo
@@ -28,9 +29,10 @@ function show_options () {
 }
 
 NUM=
+BRIDGE=
 OVSBRIDGE=
 
-TEMP=$(getopt -o h,n:,b: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b:,p: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -40,7 +42,8 @@ while true ; do
     case "$1" in
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
-        -b) OVSBRIDGE="$2" ; shift 2 ;;
+        -b) BRIDGE="$2" ; shift 2;
+        -p) OVSBRIDGE="$2" ; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -162,6 +165,6 @@ EOF
 ##    ::
 
 NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
-create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
+create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 
 ### --end
