@@ -203,12 +203,21 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##    boot/deploy process.  After the deploy is complete, the machines will reboot
 ##    and be available.
 
-## #. While we wait for the stack to come up, build an end user disk image and
-##    register it with glance.::
+## #. While we wait for the stack to come up, download an end user disk image.
+##    We use the cirros image as it is very small and convenient for testing.
+##    ::
 
 if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
+    CIRROS_JSON=$($TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
+        http://download.cirros-cloud.net/streams/v1/net.cirros-cloud:released:download.json  >(cat) 1>&2)
+    LATEST=$(jq -r --arg arch "net.cirros-cloud:standard:0.3:"${NODE_ARCH/amd64/x86_64} '.["products"][$arch]["versions"] | keys | sort | max' <<< $CIRROS_JSON )
+    SHA256=$(jq -r --arg arch "net.cirros-cloud:standard:0.3:"${NODE_ARCH/amd64/x86_64} --arg latest $LATEST '.["products"][$arch]["versions"][$latest]["items"]["disk.img"]["sha256"]' <<< $CIRROS_JSON)
+    CIRROS_PATH=$(jq -r --arg arch "net.cirros-cloud:standard:0.3:"${NODE_ARCH/amd64/x86_64} --arg latest ${LATEST} '.["products"][$arch]["versions"][$latest]["items"]["disk.img"]["path"]' <<< $CIRROS_JSON)
+    $TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
+        http://download.cirros-cloud.net/${CIRROS_PATH} $TRIPLEO_ROOT/user.qcow2}
+    pushd $TRIPLEO_ROOT
+        echo "$SHA256 user.qcow2" | sha256sum --check -
+    popd
 fi #nodocs
 
 ## #. Get the overcloud IP from 'nova list'
