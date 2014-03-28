@@ -72,9 +72,15 @@ source tripleo-undercloud-passwords
 ##    ::
 
 POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
-POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
-POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
-POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
+
+## #.  If we using 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager
+##     as the POWER_MANAGER we need the POWER_KEY for undercloud-vm and
+##     undercloud-vm-ironic.
+##     ::
+
+if [ "$POWER_MANAGER" = 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ]; then
+   POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
+fi
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
@@ -86,12 +92,24 @@ wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" 
 ##    ::
 
 if [ "$USE_IRONIC" -eq 0 ] ; then
-    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
-    HEAT_UNDERCLOUD_EXTRA_OPTS="-P PowerSSHHost=${POWER_HOST} -P PowerManager=${POWER_MANAGER} -P PowerUserName=${POWER_USER}"
+
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-bm.yaml"
+    HEAT_UNDERCLOUD_EXTRA_OPTS="-P PowerManager=${POWER_MANAGER}"
+
+    if [ "$POWER_MANAGER" = 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ] ; then
+      POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
+      POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
+      HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
+      HEAT_UNDERCLOUD_EXTRA_OPTS="-P PowerSSHHost=${POWER_HOST} \
+                                  -P PowerManager=${POWER_MANAGER} \
+                                  -P PowerUserName=${POWER_USER} \
+                                  -P PowerSSHPrivateKey=${POWER_KEY}"
+    fi
     REGISTER_SERVICE_OPTS=""
 else
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
-    HEAT_UNDERCLOUD_EXTRA_OPTS="-P IronicPassword=${UNDERCLOUD_IRONIC_PASSWORD}"
+    HEAT_UNDERCLOUD_EXTRA_OPTS="-P IronicPassword=${UNDERCLOUD_IRONIC_PASSWORD} \
+                                -P PowerSSHPrivateKey=${POWER_KEY}"
     REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
 fi
 
@@ -108,7 +126,6 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPL
     -P "NovaPassword=${UNDERCLOUD_NOVA_PASSWORD}" \
     -P "BaremetalArch=${NODE_ARCH}" \
     -P "undercloudImage=${UNDERCLOUD_ID}" \
-    -P "PowerSSHPrivateKey=${POWER_KEY}" \
     -P "NeutronPublicInterface=${NeutronPublicInterface}" \
     ${HEAT_UNDERCLOUD_EXTRA_OPTS} \
     undercloud
