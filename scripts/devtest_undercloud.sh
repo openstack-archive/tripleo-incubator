@@ -10,6 +10,16 @@ UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 ## devtest_undercloud
 ## ==================
 
+## #. Specify whether to use the nova-baremetal or nova-ironic drivers
+##    for provisioning within the undercloud.
+##    ::
+
+if [ "$USE_IRONIC" -eq 0 ] ; then
+    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-baremetal"
+else
+    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-ironic"
+fi
+
 
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
@@ -20,7 +30,7 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-        baremetal boot-stack nova-baremetal os-collect-config dhcp-all-interfaces \
+        baremetal boot-stack os-collect-config dhcp-all-interfaces \
         neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-undercloud.log
 fi #nodocs
@@ -63,12 +73,26 @@ POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
 
+
+## #. Nova-baremetal and Ironic require different Heat templates
+##    and different options.
+##    ::
+
+if [ "$USE_IRONIC" -eq 0 ] ; then
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
+    HEAT_UNDERCLOUD_EXTRA_OPTS="-P PowerSSHHost=${POWER_HOST} -P PowerManager=${POWER_MANAGER} -P PowerUserName=${POWER_USER}"
+    REGISTER_SERVICE_OPTS=""
+else
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
+    HEAT_UNDERCLOUD_EXTRA_OPTS="-P IronicPassword=${UNDERCLOUD_IRONIC_PASSWORD}"
+    REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
+fi
+
 ## #. Deploy an undercloud.
 ##    ::
 
-make -C $TRIPLEO_ROOT/tripleo-heat-templates undercloud-vm.yaml
-heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
-    -P "PowerUserName=${POWER_USER}" \
+make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
+heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
     -P "AdminToken=${UNDERCLOUD_ADMIN_TOKEN}" \
     -P "AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
     -P "GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD}" \
@@ -76,11 +100,10 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud-vm.yaml \
     -P "NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD}" \
     -P "NovaPassword=${UNDERCLOUD_NOVA_PASSWORD}" \
     -P "BaremetalArch=${NODE_ARCH}" \
-    -P "PowerManager=${POWER_MANAGER}" \
     -P "undercloudImage=${UNDERCLOUD_ID}" \
     -P "PowerSSHPrivateKey=${POWER_KEY}" \
-    -P "PowerSSHHost=${POWER_HOST}" \
     -P "NeutronPublicInterface=${NeutronPublicInterface}" \
+    ${HEAT_UNDERCLOUD_EXTRA_OPTS} \
     undercloud
 
 ##    You can watch the console via virsh/virt-manager to observe the PXE
@@ -126,7 +149,8 @@ init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
 setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --heat-password $UNDERCLOUD_HEAT_PASSWORD \
     --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
-    --nova-password $UNDERCLOUD_NOVA_PASSWORD
+    --nova-password $UNDERCLOUD_NOVA_PASSWORD \
+    $REGISTER_SERVICE_OPTS
 keystone role-create --name heat_stack_user
 # Creating these roles to be used by tenants using swift
 keystone role-create --name=swiftoperator
