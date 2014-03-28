@@ -329,7 +329,7 @@ FLOATINGIP=$(neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}"
 ##    ::
 
 neutron security-group-rule-create default --protocol icmp \
-    --direction ingress --port-range-min 8 --port-range-max 8
+    --direction ingress --port-range-min 8
 neutron security-group-rule-create default --protocol tcp \
     --direction ingress --port-range-min 22 --port-range-max 22
 
