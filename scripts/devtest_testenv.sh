@@ -133,24 +133,7 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 
 SEEDIP=${SEEDIP:-''}
 
-## #. Ensure we can ssh into the host machine to turn VMs on and off.
-##    The private key we create will be embedded in the seed VM, and delivered
-##    dynamically by heat to the undercloud VM.
-##    ::
-
-# generate ssh authentication keys if they don't exist
-if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
-    ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
-fi
-
-# make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
-# that is copied into images via ``local-config``
-if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
-    cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
-    chmod 0600 ~/.ssh/authorized_keys
-fi
-
-## #. Wrap this all up into JSON.
+## #. Set-up default json values.
 ##    ::
 
 jq "." <<EOF > $JSONFILE
@@ -159,10 +142,33 @@ jq "." <<EOF > $JSONFILE
     "host-ip":"$HOSTIP",
     "power_manager":"$POWER_MANAGER",
     "seed-ip":"$SEEDIP",
-    "ssh-key":"$(cat ~/.ssh/id_rsa_virt_power)",
     "ssh-user":"$SSH_USER"
 }
 EOF
+
+## #. Ensure we can ssh into the host machine to turn VMs on and off.
+##    The private key we create will be embedded in the seed VM, and delivered
+##    dynamically by heat to the undercloud VM.
+##    ::
+
+if [ "$POWER_MANAGER" = 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ]; then #nodocs
+
+  # generate ssh authentication keys if they don't exist
+  if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
+      ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
+  fi
+
+  # make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
+  # that is copied into images via ``local-config``
+  if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
+      cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
+      chmod 0600 ~/.ssh/authorized_keys
+  fi
+
+  # Add key to the JSON file.
+  JSON=$(jq ".+{\"ssh-key\":\"$(cat ~/.ssh/id_rsa_virt_power)\"}" $JSONFILE)
+  echo "${JSON}" > $JSONFILE
+fi
 
 ## #. If you have an existing set of nodes to use, use them.
 ##    ::
