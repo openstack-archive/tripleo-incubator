@@ -23,6 +23,8 @@ function show_options () {
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
+    echo "    --sys-target [option]  -- the target deplayment type 'virtual' for virsh install"
+    echo "                              (the default) or 'baremetal' for real hardware types."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
     echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
@@ -36,10 +38,12 @@ function show_options () {
 NODES_ARG=
 CONTINUE=
 USE_CACHE=0
+# Ensure we default to virtual.
+export SYS_TARGET='virtual'
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=`getopt -o h,c -l existing-environment,trash-my-machine,--nodes: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o h,c -l existing-environment,trash-my-machine,--nodes:,sys-target: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -49,6 +53,7 @@ while true ; do
     case "$1" in
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
+        --sys-target) SYS_TARGET="$1"; shift 2;;
         --nodes) NODES_ARG="--nodes $1"; shift 2;;
         -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;

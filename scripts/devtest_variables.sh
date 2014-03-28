@@ -49,6 +49,12 @@ fi
 ### --include
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
+## #. Set the default the system target type 'virtual' for virsh install (the
+##    default) or 'baremetal' for real hardware types.
+##    ::
+
+export SYS_TARGET=${SYS_TARGET:-'virtual'}
+
 ## #. Set the default bare metal power manager. By default devtest uses
 ##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
 ##    support a fully virtualized TripleO test environment. You may
@@ -56,6 +62,10 @@ export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 ##    hardware with the devtest scripts. This setting controls the
 ##    power manager used in both the seed VM and undercloud for Nova Baremetal.
 ##    ::
+
+if [ "$SYS_TARGET" = 'baremetal' ]; then
+    export POWER_MANAGER='nova.virt.baremetal.ipmi.IPMI'
+fi
 
 export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
 
