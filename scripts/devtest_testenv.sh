@@ -142,24 +142,7 @@ SEEDIP=${SEEDIP:-''}
 
 POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
 
-## #. Ensure we can ssh into the host machine to turn VMs on and off.
-##    The private key we create will be embedded in the seed VM, and delivered
-##    dynamically by heat to the undercloud VM.
-##    ::
-
-# generate ssh authentication keys if they don't exist
-if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
-    ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
-fi
-
-# make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
-# that is copied into images via ``local-config``
-if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
-    cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
-    chmod 0600 ~/.ssh/authorized_keys
-fi
-
-## #. Wrap this all up into JSON.
+## #. Set-up default json values.
 ##    ::
 
 jq "." <<EOF > $JSONFILE
@@ -168,7 +151,6 @@ jq "." <<EOF > $JSONFILE
     "host-ip":"$HOSTIP",
     "power_manager":"$POWER_MANAGER",
     "seed-ip":"$SEEDIP",
-    "ssh-key":"$(cat ~/.ssh/id_rsa_virt_power)",
     "ssh-user":"$SSH_USER"
 }
 EOF
@@ -177,15 +159,37 @@ EOF
 ##    ::
 
 if [ -n "$NODES_PATH" ]; then #nodocs
-JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
-echo "${JSON}" > $JSONFILE
+    JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
+    echo "${JSON}" > $JSONFILE
 else #nodocs
-## #. Create baremetal nodes for the test cluster. The final parameter to
-##    create-nodes is the number of VMs to create. To change this in future
-##    you can run clean-env and then recreate with more nodes.
-##    ::
 
-NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
-create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
+    ## #. Ensure we can ssh into the host machine to turn VMs on and off.
+    ##    The private key we create will be embedded in the seed VM, and delivered
+    ##    dynamically by heat to the undercloud VM.
+    ##    ::
+
+    # generate ssh authentication keys if they don't exist
+    if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
+        ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
+    fi
+
+    # make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
+    # that is copied into images via ``local-config``
+    if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
+        cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
+        chmod 0600 ~/.ssh/authorized_keys
+    fi
+
+    # Add key to the JSON file.
+    JSON=$(jq ".+{\"ssh-key\":\"$(cat ~/.ssh/id_rsa_virt_power)\"}" $JSONFILE)
+    echo "${JSON}" > $JSONFILE
+
+    ## #. Create baremetal nodes for the test cluster. The final parameter to
+    ##    create-nodes is the number of VMs to create. To change this in future
+    ##    you can run clean-env and then recreate with more nodes.
+    ##    ::
+
+    NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+    create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
 ### --end
 fi
