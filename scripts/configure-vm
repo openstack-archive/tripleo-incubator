@@ -2,10 +2,29 @@
 
 import argparse
 import os.path
+import random
 
 import libvirt
 
 templatedir = os.path.dirname(os.path.dirname(__file__)) + '/templates'
+
+def generate_bm_mac_address():
+    """Generate an Ethernet MAC address suitable for baremetal testing."""
+    # NOTE(dprince): We generate our own bare metal MAC address here
+    # instead of relying on libvirt so that we can ensure the
+    # locally administered bit is set low. (The libvirt default is
+    # to set the 2nd MSB high.) This effectively allows our
+    # fake baremetal VMs to more accurately behave like real hardware
+    # and fixes issues with bridge/DHCP configurations which rely
+    # on the fact that bridges assume the MAC address of the lowest
+    # attached NIC.
+    mac = [0x00,
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff)]
+    return ':'.join(map(lambda x: "%02x" % x, mac))
 
 def main():
     parser = argparse.ArgumentParser(
@@ -61,6 +80,7 @@ def main():
     nicparams = {
         'nicdriver': args.libvirt_nic_driver,
         'bminterface': args.baremetal_interface,
+        'bmmacaddress': generate_bm_mac_address(),
         'ovsbridge': args.ovsbridge,
         }
     if args.seed:
@@ -84,6 +104,7 @@ def main():
     params['bm_network'] = """
       <!-- bridged 'bare metal' network -->
       <interface type='network'>
+        <mac address='%(bmmacaddress)s'/>
         <source network='%(bminterface)s'/>
         <model type='%(nicdriver)s'/>
         <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
