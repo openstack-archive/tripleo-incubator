@@ -42,7 +42,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        --nodes) NODES_PATH="$2"; shift 2;;
+        --nodes) NODES_PATH="$1"; shift 2;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -133,7 +133,24 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 
 SEEDIP=${SEEDIP:-''}
 
-## #. Set-up default json values.
+## #. Ensure we can ssh into the host machine to turn VMs on and off.
+##    The private key we create will be embedded in the seed VM, and delivered
+##    dynamically by heat to the undercloud VM.
+##    ::
+
+# generate ssh authentication keys if they don't exist
+if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
+    ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
+fi
+
+# make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
+# that is copied into images via ``local-config``
+if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
+    cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
+    chmod 0600 ~/.ssh/authorized_keys
+fi
+
+## #. Wrap this all up into JSON.
 ##    ::
 
 jq "." <<EOF > $JSONFILE
@@ -142,40 +159,16 @@ jq "." <<EOF > $JSONFILE
     "host-ip":"$HOSTIP",
     "power_manager":"$POWER_MANAGER",
     "seed-ip":"$SEEDIP",
+    "ssh-key":"$(cat ~/.ssh/id_rsa_virt_power)",
     "ssh-user":"$SSH_USER"
 }
 EOF
-
-## #. Ensure we can ssh into the host machine to turn VMs on and off.
-##    The private key we create will be embedded in the seed VM, and delivered
-##    dynamically by heat to the undercloud VM.
-##    ::
-
-if [ "$POWER_MANAGER" = 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ]; then #nodocs
-
-  # generate ssh authentication keys if they don't exist
-  if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
-      ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
-  fi
-
-  # make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
-  # that is copied into images via ``local-config``
-  if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
-      cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
-      chmod 0600 ~/.ssh/authorized_keys
-  fi
-
-  # Add key to the JSON file.
-  JSON=$(jq ".+{\"ssh-key\":\"$(cat ~/.ssh/id_rsa_virt_power)\"}" $JSONFILE)
-  echo "${JSON}" > $JSONFILE
-fi
 
 ## #. If you have an existing set of nodes to use, use them.
 ##    ::
 
 if [ -n "$NODES_PATH" ]; then #nodocs
-JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
-echo "${JSON}" > $JSONFILE
+jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH
 else #nodocs
 ## #. Create baremetal nodes for the test cluster. The final parameter to
 ##    create-nodes is the number of VMs to create. To change this in future

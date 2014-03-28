@@ -42,7 +42,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        --nodes) NODES_PATH="$2"; shift 2;;
+        --nodes) NODES_PATH="$1"; shift 2;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -174,8 +174,7 @@ fi
 ##    ::
 
 if [ -n "$NODES_PATH" ]; then #nodocs
-JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
-echo "${JSON}" > $JSONFILE
+jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH
 else #nodocs
 ## #. Create baremetal nodes for the test cluster. The final parameter to
 ##    create-nodes is the number of VMs to create. To change this in future

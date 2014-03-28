@@ -57,11 +57,8 @@ done
 
 #XXX: When updating, sync with the call in devtest.sh #nodocs
 
-## .. note::
-##   
-##   This script is usually called from ``devtest.sh`` as
-##   ``devtest_testenv.sh $TE_DATAFILE``
-##   
+## This script is usually called from devtest.sh as
+## devtest_testenv.sh $TE_DATAFILE
 ## ::
 
 JSONFILE=${1:-''}
@@ -118,7 +115,6 @@ setup-seed-vm $SEED_ARGS
 
 ## #. What user will be used to ssh to run virt commands to control our
 ##    emulated baremetal machines.
-##    ::
 
 SSH_USER=$(whoami)
 
@@ -133,7 +129,28 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 
 SEEDIP=${SEEDIP:-''}
 
+<<<<<<< HEAD
+## #. Ensure we can ssh into the host machine to turn VMs on and off.
+##    The private key we create will be embedded in the seed VM, and delivered
+##    dynamically by heat to the undercloud VM.
+##    ::
+
+# generate ssh authentication keys if they don't exist
+if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
+    ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
+fi
+
+# make the local id_rsa_virt_power.pub be in .ssh/authorized_keys before
+# that is copied into images via local-config
+if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
+    cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
+    chmod 0600 ~/.ssh/authorized_keys
+fi
+
+## #. Wrap this all up into JSON.
+=======
 ## #. Set-up default json values.
+>>>>>>> c849b42... SSH key and virtual_power_driver not used on H/W
 ##    ::
 
 jq "." <<EOF > $JSONFILE
