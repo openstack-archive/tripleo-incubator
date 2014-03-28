@@ -338,10 +338,12 @@ nova start demo
 fi
 ### --include
 
-## #. After which, you should be able to ping it
+## #. After which, you should be able to ssh to it
 ##    ::
 
-wait_for 30 10 ping -c 1 $FLOATINGIP
+wait_for 90 10 ssh -o ConnectTimeout=60 -o StrictHostKeyChecking=no -o PasswordAuthentication=no $TRIPLEO_OS_DISTRO@$FLOATINGIP hostname
+# TODO : Make ping test a hard fail, currently reporting only
+ping -c 3 $FLOATINGIP || true
 
 ### --end
 
