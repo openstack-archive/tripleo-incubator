@@ -338,10 +338,11 @@ nova start demo
 fi
 ### --include
 
-## #. After which, you should be able to ping it
+## #. After which, you should be able to ssh to it
 ##    ::
 
-wait_for 30 10 ping -c 1 $FLOATINGIP
+# TODO : We should test both ping and ssh
+wait_for 30 10 ssh -o ConnectTimeout=60 -o StrictHostKeyChecking=no -o PasswordAuthentication=no ubuntu@$FLOATINGIP hostname
 
 ### --end
 
