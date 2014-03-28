@@ -32,7 +32,7 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
-# This will stop being a parameter once rebuild --preserve-ephemeral is fully
+# This will stop being a parameter once rebuild ``--preserve-ephemeral`` is fully
 # merged. For now, it requires manual effort to use, so it should be opt-in.
 # Since it's not an end-user thing yet either, we don't document it in the
 # example prose below either.
@@ -45,12 +45,16 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 ## devtest_overcloud
 ## =================
 
-## #. Create your overcloud control plane image. This is the image the undercloud
+## #. Create your overcloud control plane image.
+##    
+##    This is the image the undercloud
 ##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
-##    $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS and $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS are
+##    
+##    ``$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS`` and ``$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS`` are
 ##    meant to be used to pass additional build-time specific arguments to
-##    disk-image-create.
-##    SSL_ELEMENT is used when building a cloud with SSL endpoints - it should be
+##    ``disk-image-create``.
+##    
+##    ``$SSL_ELEMENT`` is used when building a cloud with SSL endpoints - it should be
 ##    set to openstack-ssl in that situation.
 ##    ::
 
@@ -107,9 +111,9 @@ OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-''}
 OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-''}
 
 ## #. If you are using SSL, your compute nodes will need static mappings to your
-##    endpoint in /etc/hosts (because we don't do dynamic undercloud DNS yet).
+##    endpoint in ``/etc/hosts`` (because we don't do dynamic undercloud DNS yet).
 ##    set this to the DNS name you're using for your SSL certificate - the heat
-##    template looks up the controller address within the cloud.
+##    template looks up the controller address within the cloud::
 
 OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
 
@@ -131,7 +135,7 @@ fi
 
 ### --include
 
-## #. Wait for the BM cloud to register BM nodes with the scheduler.
+## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
 expected_nodes=$((1+$OVERCLOUD_COMPUTESCALE))
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" -ge $expected_nodes ]
@@ -194,7 +198,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 
 ### --include
 
-##    You can watch the console via virsh/virt-manager to observe the PXE
+##    You can watch the console via ``virsh``/``virt-manager`` to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, the machines will reboot
 ##    and be available.
 
@@ -243,7 +247,7 @@ set +u #nodocs
 export no_proxy=$no_proxy,$OVERCLOUD_IP
 set -u #nodocs
 
-## #. If we updated the cloud we don't need to do admin setup again - skip down to 'Wait for nova-compute'.
+## #. If we updated the cloud we don't need to do admin setup again - skip down to `Wait for Nova Compute`_.
 
 if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
 
@@ -287,7 +291,7 @@ glance image-create --name user --public --disk-format qcow2 \
 
 fi #nodocs
 
-## #. Wait for Nova Compute
+## #. _`Wait for Nova Compute`
 ##    ::
 
 wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'enabled.*\ up\ '
