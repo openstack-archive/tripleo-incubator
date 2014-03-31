@@ -23,7 +23,12 @@ function show_options () {
     echo "    --bm-networks NETFILE  -- You are supplying your own network layout."
     echo "                              The schema for baremetal-network can be found in"
     echo "                              the devtest_setup documentation."
-    echo
+    echo "    --bridge-seed-to-interface [interface]"
+    echo "                           -- When running with physical undercloud and overcloud"
+    echo "                              hosts, the seed needs to be able to communicate with"
+    echo "                              the physical network of the host somehow, and this"
+    echo "                              option is intended to provide for defining the host"
+    echo "                              interface with which to do that."
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
@@ -41,12 +46,13 @@ function show_options () {
 BUILD_ONLY=
 NODES_ARG=
 NETS_ARG=
+BRIDGE_INTERFACE=
 CONTINUE=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes:,bm-networks: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes:,bm-networks:,bridge-seed-to-interface: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -57,6 +63,7 @@ while true ; do
         --build-only) BUILD_ONLY=--build-only; shift 1;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
+        --bridge-seed-to-interface) BRIDGE_INTERFACE="--bridge-seed-to-interface $2"; shift 2;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
         --bm-networks) NETS_ARG="--bm-networks $2"; shift 2;;
         -c) USE_CACHE=1; shift 1;;
@@ -228,7 +235,7 @@ devtest_setup.sh $CONTINUE
 
 if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
 #XXX: When updating, also update the header in devtest_testenv.sh #nodocs
-devtest_testenv.sh $TE_DATAFILE $NODES_ARG $NETS_ARG
+devtest_testenv.sh $TE_DATAFILE $NODES_ARG $NETS_ARG $BRIDGE_INTERFACE
 fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
