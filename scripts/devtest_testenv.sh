@@ -109,7 +109,7 @@ SEED_ARGS="-a $NODE_ARCH"
 if [ -n "$NUM" -a -n "$OVSBRIDGE" ]; then
     SEED_ARGS="$SEED_ARGS -o seed_${NUM} -b brbm${NUM} -p $OVSBRIDGE"
 fi
-setup-seed-vm $SEED_ARGS
+setup-seed-vm $SEED_ARGS -c ${SEED_CPU:-1} -m $((1024 * ${SEED_MEM:-2048}))
 
 ## #. What user will be used to ssh to run virt commands to control our
 ##    emulated baremetal machines.
