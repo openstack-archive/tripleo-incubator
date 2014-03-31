@@ -1,12 +1,39 @@
 #!/bin/bash
-set -eu
+set -eu -x
 
 BASE=$(dirname $0)/../
 BRIDGE_SUFFIX=${1:-''}
+BRIDGE_INTERFACE=${2:-''}
 BRIDGE_NAME=brbm$BRIDGE_SUFFIX
 
+echo $BRIDGE_NAME
+
 # Only add bridge if missing
-(sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) || sudo ovs-vsctl add-br ${BRIDGE_NAME}
+if [[ -z $(sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) ]]; then
+  sudo ovs-vsctl add-br ${BRIDGE_NAME}
+fi
+
+# Only add the interface to the bridge if missing.
+if [[ -n ${BRIDGE_INTERFACE} -a -z $(sudo ovs-vsctl list-ports ${BRIDGE_NAME} | grep ${BRIDGE_INTERFACE}) ]]; then
+  sudo ovs-vsctl add-port ${BRIDGE_NAME} ${BRIDGE_INTERFACE}
+
+  # Original routes
+  ROUTES=$(ip route list | grep  ${BRIDGE_INTERFACE})
+  CFG=$(ip addr show ${BRIDGE_INTERFACE} | awk '/inet / {$1="";$(NF)=""; print $0}')
+  sudo ip addr del dev ${BRIDGE_INTERFACE} ${CFG}
+  sudo ip addr add dev ${BRIDGE_NAME} ${CFG}
+
+  # Ensure we only set up the missing routes on the bridge
+  ROUTES=${ROUTES//${BRIDGE_INTERFACE}/${BRIDGE_NAME}}
+  ROUTES_NEW=$( (echo "${ROUTES}"; ip route list | grep  ${BRIDGE_NAME} ) | sort | uniq -u)
+
+  SAVEIFS=$IFS;
+  IFS=$(echo -en "\n\b");
+  for LINE in ${ROUTES_NEW}; do
+    eval sudo ip route add $LINE
+  done
+  IFS=$SAVEIFS
+fi
 
 # remove bridge before replacing it.
 (virsh net-list --persistent | grep "${BRIDGE_NAME} ") && virsh net-destroy ${BRIDGE_NAME}
