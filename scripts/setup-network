@@ -1,12 +1,82 @@
-#!/bin/bash
-set -eu
+#!/bin/bash -eu
 
 BASE=$(dirname $0)/../
-BRIDGE_SUFFIX=${1:-''}
-BRIDGE_NAME=brbm$BRIDGE_SUFFIX
+SCRIPT_NAME=$(basename $0)
 
-# Only add bridge if missing
-(sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) || sudo ovs-vsctl add-br ${BRIDGE_NAME}
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] "
+    echo
+    echo "Setup a networking for the devtest environment."
+    echo
+    echo "Options:"
+    echo "    --bridge-suffix [number]"
+    echo "                           -- Supply an environment number here if hosting multiple"
+    echo "                              virtual devtest environments on the same machine."
+    echo "    --bridge-seed-to-interface [interface]"
+    echo "                           -- When running with physical undercloud and overcloud"
+    echo "                              hosts, the seed needs to be able to communicate with"
+    echo "                              the physical network of the host somehow, and this"
+    echo "                              option is intended to provide for defining the host"
+    echo "                              interface with which to do that."
+    echo
+    exit $1
+}
+
+BRIDGE_INTERFACE=
+BRIDGE_SUFFIX=
+
+TEMP=$(getopt -o h -l bridge-suffix:,bridge-seed-to-interface: -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        --bridge-seed-to-interface) BRIDGE_INTERFACE="$2"; shift 2;;
+        --bridge-suffix) BRIDGE_SUFFIX="$2"; shift 2;;
+        -h) show_options 0;;
+        --) shift; break;;
+        *) echo "Error: unsupported option $1."; exit 1;;
+    esac
+done
+
+BRIDGE_NAME="brbm${BRIDGE_SUFFIX}"
+
+# Add the bridge
+sudo ovs-vsctl -- --may-exist add-br "${BRIDGE_NAME}"
+
+# Only add the interface to the bridge if missing.
+if [ -n "${BRIDGE_INTERFACE}" ] ; then
+
+   if [[ ! $(sudo ovs-vsctl port-to-br "${BRIDGE_INTERFACE}" 2>/dev/null)  &&
+         "${BRIDGE_NAME}" != "${BRIDGE_INTERFACE}" ]] ; then
+
+     # Obtain current routes for the interface.
+     ROUTES=$(ip route list | grep ${BRIDGE_INTERFACE})
+     CFG=$(ip addr show ${BRIDGE_INTERFACE} | awk '/inet / {$1="";$(NF)=""; print $0}')
+
+     sudo ovs-vsctl add-port ${BRIDGE_NAME} ${BRIDGE_INTERFACE}
+
+     # Remap the current addresses to the bridge.
+     if [[ -n "${CFG}" ]]; then
+       sudo ip addr del dev ${BRIDGE_INTERFACE} ${CFG}
+       sudo ip addr add dev ${BRIDGE_NAME} ${CFG}
+     fi
+
+     # Ensure we only set up the missing routes on the bridge.
+     ROUTES=${ROUTES//${BRIDGE_INTERFACE}/${BRIDGE_NAME}}
+     ROUTES_NEW=$( ( echo "${ROUTES}"; ip route list |
+                     awk -v dev="${BRIDGE_NAME}" '$0 ~ dev {print $0}' ) | sort | uniq -u )
+
+     SAVEIFS=$IFS;
+     IFS=$(echo -en "\n\b");
+     for LINE in ${ROUTES_NEW}; do
+       eval sudo ip route add $LINE
+     done
+     IFS=$SAVEIFS
+   fi
+fi
 
 # remove bridge before replacing it.
 (virsh net-list --persistent | grep "${BRIDGE_NAME} ") && virsh net-destroy ${BRIDGE_NAME}
@@ -28,4 +98,3 @@ fi
 if [ "$autostart" != "yes" ]; then
   virsh net-autostart default
 fi
-
