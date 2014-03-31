@@ -61,6 +61,7 @@ done
 
 ##   This script is usually called from ``devtest.sh`` as
 ##   ``devtest_testenv.sh $TE_DATAFILE``
+
 ## ::
 
 JSONFILE=${1:-''}
@@ -115,7 +116,7 @@ if [ -n "$NUM" -a -n "$OVSBRIDGE" ]; then
     BRIDGE="brbm${NUM}"
     SEED_ARGS="$SEED_ARGS -o seed_${NUM} -b $BRIDGE -p $OVSBRIDGE"
 fi
-setup-seed-vm $SEED_ARGS
+setup-seed-vm $SEED_ARGS -c ${SEED_CPU:-1} -m $((1024 * ${SEED_MEM:-2048}))
 
 ## #. What user will be used to ssh to run virt commands to control our
 ##    emulated baremetal machines.
