@@ -112,7 +112,9 @@ setup-network $NUM
 
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
-##    to bootstrap a full dynamically configured baremetal cloud.
+##    to bootstrap a full dynamically configured baremetal cloud. The seed VM
+##    specs can be configured with the environment variables SEED_CPU and
+##    SEED_MEM (MB)
 ##    ::
 
 BRIDGE=
@@ -121,7 +123,7 @@ if [ -n "$NUM" -a -n "$OVSBRIDGE" ]; then
     BRIDGE="brbm${NUM}"
     SEED_ARGS="$SEED_ARGS -o seed_${NUM} -b $BRIDGE -p $OVSBRIDGE"
 fi
-setup-seed-vm $SEED_ARGS
+setup-seed-vm $SEED_ARGS -c ${SEED_CPU:-1} -m $((1024 * ${SEED_MEM:-2048}))
 
 ## #. What user will be used to ssh to run virt commands to control our
 ##    emulated baremetal machines.
