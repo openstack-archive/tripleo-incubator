@@ -126,6 +126,10 @@ fi
 ##    perform remote operations when starting VMs and copying disk images.
 ##    A non-empty string means true, the default is '', which means false.
 
+## #. remote-host: If the test environment is on a remote host, this may be
+##    set to the host name of the remote host. It is intended to help
+##    provide valuable debug information about where devtest is hosted.
+
 ## #. env-num: An opaque key used by the test environment hosts for identifying
 ##    which environment seed images are being copied into.
 
