@@ -2,11 +2,47 @@
 set -eu
 
 BASE=$(dirname $0)/../
-BRIDGE_SUFFIX=${1:-''}
+SCRIPT_NAME=$(basename $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] "
+    echo
+    echo "Setup a networking for the devtest environment."
+    echo
+    echo "Options:"
+    echo "    --bridge-suffix [number]"
+    echo "                           -- Supply an environment number here if hosting multiple"
+    echo "                              virtual devtest environments on the same machine."
+    echo "    --bridge-seed-to-interface [interface]"
+    echo "                           -- When running with physical undercloud and overcloud"
+    echo "                              hosts, the seed needs to be able to communicate with"
+    echo "                              the physical network of the host somehow, and this"
+    echo "                              option is intended to provide for defining the host"
+    echo "                              interface with which to do that."
+    echo
+    exit $1
+}
+
+TEMP=$(getopt ,-l bridge-suffix:,bridge-seed-to-interface: -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        --bridge-seed-to-interface) BRIDGE_INTERFACE="$2"; shift 2;;
+        --bridge-suffix) BRIDGE_SUFFIX="$2"; shift 2;;
+        -h) show_options 0;; 
+        --) shift; break;;
+        *) echo "Error: unsupported option $1."; exit 1;;
+    esac
+done
+
 BRIDGE_NAME=brbm$BRIDGE_SUFFIX
 
-# Only add bridge if missing
-(sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) || sudo ovs-vsctl add-br ${BRIDGE_NAME}
+# Call tripleo-image-elements to set-up bridge.
+$TRIPLEO_ROOT/ensure-bridge ${BRIDGE_NAME} ${BRIDGE_INTERFACE}
 
 # remove bridge before replacing it.
 (virsh net-list --persistent | grep "${BRIDGE_NAME} ") && virsh net-destroy ${BRIDGE_NAME}
