@@ -34,3 +34,13 @@ done
 for NAME in $(sudo virsh vol-list default 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\(seed\(.*\|\)|baremetal\(\|brbm.*\)-\)" ); do
   sudo virsh vol-delete --pool default $NAME
 done
+
+if [[ -e testenv.json &&
+      "$(jq .power_manager testenv.json)" = "\"nova.virt.baremetal.ipmi.IPMI\"" ]]; then
+
+  BARMATAL_NODES=($(jq '.nodes[] | .pm_addr,.pm_user,.pm_password' testenv.json ))
+    
+  for ((c=0; c<$((${#BARMATAL_NODES[@]})); c+=3)); do
+     echo "eval ipmitool -I lanplus -H ${BARMATAL_NODES[c]} -U ${BARMATAL_NODES[$((c+1))]} -P ${BARMATAL_NODES[$((c+2))]} power off";
+  done
+fi
