@@ -169,6 +169,12 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCL
 
 ### --end
 
+# This param name will soon change from 'notCompute' --> 'controller'
+CONTROLLER_IMAGE_PARAM=notcomputeImage
+if [ -e $TRIPLEO_ROOT/tripleo-heat-templates/controller.yaml ] ; then
+    CONTROLLER_IMAGE_PARAM=controllerImage
+fi
+
 heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
     -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
@@ -190,7 +196,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}" \
     -P "NovaComputeLibvirtType=${OVERCLOUD_LIBVIRT_TYPE}" \
     -P "ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY}" \
-    -P "notcomputeImage=${OVERCLOUD_CONTROL_ID}" \
+    -P "$CONTROLLER_IMAGE_PARAM=${OVERCLOUD_CONTROL_ID}" \
     -P "NovaImage=${OVERCLOUD_COMPUTE_ID}" \
     -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
     -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
@@ -215,7 +221,7 @@ fi #nodocs
 
 echo "Waiting for the overcloud stack to be ready" #nodocs
 wait_for_stack_ready 300 10 $STACKNAME
-OVERCLOUD_IP=$(nova list | grep notCompute0.*ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+OVERCLOUD_IP=$(nova list | grep "notCompute0.*ctlplane\|controller.*ctlplane" | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
 # the public endpoint for APIs.
