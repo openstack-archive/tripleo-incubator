@@ -18,6 +18,9 @@ function show_options () {
     echo "                              the public interface of the seed."
     echo "    -h                     -- This help."
     echo "    -n                     -- Test environment number to add the seed to."
+    echo "    --bridge-to-interface [interface]"
+    echo "                           -- Add a baremetal interface to the libvirt network for"
+    echo "                              the seed."
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
@@ -34,7 +37,7 @@ NODES_PATH=
 NUM=
 OVSBRIDGE=
 
-TEMP=$(getopt -o h,n:,b: -l nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b: -l bridge-to-interface:,nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -42,6 +45,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --bridge-to-interface) BRIDGE_INTERFACE="$2"; shift 2;;
         --nodes) NODES_PATH="$1"; shift 2;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
@@ -100,7 +104,7 @@ NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-30} NO
 ##    This configures an openvswitch bridge and teaches libvirt about it.
 ##    ::
 
-setup-network $NUM
+setup-network "$NUM" "$BRIDGE_INTERFACE"
 
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
