@@ -40,7 +40,8 @@ TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this scri
 # nova: I6bf01e52589c5894eb043f2b57e915d52e81ebc3
 # python-novaclient: Ib1511653904d4f95ab03fb471669175127004582
 OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
-
+# If set, overrides default token provider for Keystone in overcloud.
+OVERCLOUD_KEYSTONE_TOKEN_PROVIDER=${OVERCLOUD_KEYSTONE_TOKEN_PROVIDER:-''}
 ### --include
 ## devtest_overcloud
 ## =================
@@ -184,6 +185,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
     -P "HypervisorNeutronPhysicalBridge=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}" \
     -P "HypervisorNeutronPublicInterface=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}" \
+    -P "KeystoneTokenProvider=${OVERCLOUD_KEYSTONE_TOKEN_PROVIDER}" \
     -P "NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD}" \
     -P "NovaPassword=${OVERCLOUD_NOVA_PASSWORD}" \
     -P "NeutronFlatNetworks=${OVERCLOUD_FLAT_NETWORKS}" \
