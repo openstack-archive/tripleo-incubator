@@ -18,6 +18,12 @@ function show_options () {
     echo "                              the public interface of the seed."
     echo "    -h                     -- This help."
     echo "    -n                     -- Test environment number to add the seed to."
+    echo "    --bridge-seed-to-interface [interface]"
+    echo "                           -- When running with physical undercloud and overcloud"
+    echo "                              hosts, the seed needs to be able to communicate with"
+    echo "                              the physical network of the host somehow, and this"
+    echo "                              option is intended to provide for defining the host"
+    echo "                              interface with which to do that."
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
@@ -33,8 +39,9 @@ function show_options () {
 NODES_PATH=
 NUM=
 OVSBRIDGE=
+BRIDGE_INTERFACE=
 
-TEMP=$(getopt -o h,n:,b: -l nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b: -l bridge-seed-to-interface:,nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -42,6 +49,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --bridge-seed-to-interface) BRIDGE_INTERFACE="--bridge-seed-to-interface $2"; shift 2;;
         --nodes) NODES_PATH="$2"; shift 2;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
@@ -100,9 +108,15 @@ NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-30} NO
 
 ## #. Configure a network for your test environment.
 ##    This configures an openvswitch bridge and teaches libvirt about it.
+##
+##    setup-network --bridge-suffix "$NUM"
+##
+##    If you are driving physical machines, use --bridge-to-interface ethX
+##    where ethX is an otherwise unused interface plugged into the same LAN as
+##    your physical machines
 ##    ::
 
-setup-network $NUM
+setup-network --bridge-suffix "$NUM" $BRIDGE_INTERFACE #nodoc
 
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
