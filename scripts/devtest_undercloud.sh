@@ -6,6 +6,9 @@ set -o pipefail
 USE_CACHE=${USE_CACHE:-0}
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+# If set, overrides default token provider for Keystone in undercloud.
+UNDERCLOUD_KEYSTONE_TOKEN_PROVIDER=${UNDERCLOUD_KEYSTONE_TOKEN_PROVIDER:-''}
+
 ### --include
 ## devtest_undercloud
 ## ==================
@@ -104,6 +107,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPL
     -P "AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
     -P "GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD}" \
     -P "HeatPassword=${UNDERCLOUD_HEAT_PASSWORD}" \
+    -P "KeystoneTokenProvider=${UNDERCLOUD_KEYSTONE_TOKEN_PROVIDER}" \
     -P "NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD}" \
     -P "NovaPassword=${UNDERCLOUD_NOVA_PASSWORD}" \
     -P "BaremetalArch=${NODE_ARCH}" \
