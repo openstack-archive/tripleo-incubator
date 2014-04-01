@@ -1,0 +1,20 @@
+{
+    "images": [
+        {
+            "image_name": "overcloud-control",
+            "elements": "hosts baremetal boot-stack cinder-api cinder-volume os-collect-config horizon neutron-network-node dhcp-all-interfaces swift-proxy swift-storage rabbitmq-server"
+        },
+        {
+            "image_name": "overcloud-compute",
+            "elements": "hosts baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config dhcp-all-interfaces"
+        }
+    ],
+    "heat_templates": [
+        {
+            "name": "overcloud.yaml"
+        },
+        {
+            "name": "swift.yaml"
+        }
+    ]
+}

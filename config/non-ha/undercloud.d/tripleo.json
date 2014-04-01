@@ -1,0 +1,13 @@
+{
+    "images": [
+        {
+            "image_name": "undercloud",
+            "elements": "baremetal boot-stack os-collect-config dhcp-all-interfaces neutron-dhcp-agent rabbitmq-server nova-baremetal"
+        }
+    ],
+    "heat_templates": [
+        {
+            "name": "undercloud.yaml"
+        }
+    ]
+}
