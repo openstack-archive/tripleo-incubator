@@ -128,6 +128,16 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 
 SEEDIP=${SEEDIP:-''}
 
+## #. Set the default bare metal power manager. By default devtest uses
+##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
+##    support a fully virtualized TripleO test environment. You may
+##    optionally customize this setting if you are using real baremetal
+##    hardware with the devtest scripts. This setting controls the
+##    power manager used in both the seed VM and undercloud for Nova Baremetal.
+##    ::
+
+POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
+
 ## #. Ensure we can ssh into the host machine to turn VMs on and off.
 ##    The private key we create will be embedded in the seed VM, and delivered
 ##    dynamically by heat to the undercloud VM.

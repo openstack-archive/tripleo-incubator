@@ -49,16 +49,6 @@ fi
 ### --include
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
-## #. Set the default bare metal power manager. By default devtest uses
-##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
-##    support a fully virtualized TripleO test environment. You may
-##    optionally customize this setting if you are using real baremetal
-##    hardware with the devtest scripts. This setting controls the
-##    power manager used in both the seed VM and undercloud for Nova Baremetal.
-##    ::
-
-export POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
-
 ## #. We now support Ironic as the baremetal deployment layer. To use it just
 ##    set USE_IRONIC=1. The default is still Nova Baremetal until we've had some
 ##    time to identify any kinks in the process.
