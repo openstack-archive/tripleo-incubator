@@ -1,0 +1,9 @@
+{
+    "images": [
+        {
+            "image_name": "seed",
+            "elements": "vm cloud-init-nocloud local-config boot-stack seed-stack-config remove-serial-console rabbitmq-server nova-baremetal",
+            "arch": "i686"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "images": [
+        {
+            "image_name": "common",
+            "elements": "stackuser pypi use-ephemeral",
+            "arch": "amd64"
+        },
+        {
+            "image_name": "ubuntu-common",
+            "elements": "ubuntu apt-conf apt-sources"
+        },
+        {
+            "image_name": "fedora-common",
+            "elements": "fedora selinux-permissive"
+        },
+        {
+            "image_name": "ironic-common",
+            "elements": "nova-ironic"
+        },
+        {
+            "image_name": "baremetal-common",
+            "elements": "nova-baremetal"
+        }
+    ]
+}
