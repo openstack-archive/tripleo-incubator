@@ -38,7 +38,7 @@ fi #nodocs
 ## #. Load the undercloud image into Glance:
 ##    ::
 
-UNDERCLOUD_ID=$(load-image $TRIPLEO_ROOT/undercloud.qcow2)
+UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 
 
 ## #. Set the public interface of the undercloud network node:
