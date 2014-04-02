@@ -201,10 +201,9 @@ DEVTEST_RD_END=$(date +%s) #nodocs
 DEVTEST_SD_START=$(date +%s) #nodocs
 devtest_seed.sh
 DEVTEST_SD_END=$(date +%s) #nodocs
-
 ## #. See :doc:`devtest_undercloud` for documentation::
 
-export no_proxy=${no_proxy:-},192.0.2.1
+export no_proxy=${no_proxy:-},${SEED_VM_IP}
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 DEVTEST_UC_START=$(date +%s) #nodocs
 devtest_undercloud.sh $TE_DATAFILE

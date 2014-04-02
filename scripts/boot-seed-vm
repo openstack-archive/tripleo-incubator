@@ -216,8 +216,8 @@ until ssh $SSH_ARGS root@$VM_IP uptime 2>&1 > /dev/null; do
 done
 echo
 
-# Remove the 192.0.2.1 hostkey, new instance == new key.
-ssh-keygen -R 192.0.2.1 || true
+# Remove the ${SEED_VM_IP} hostkey, new instance == new key.
+ssh-keygen -R ${SEED_VM_IP} || true
 
 echo "element(s): $ALWAYS_ELEMENTS $DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS booted and ready."
 echo "SEED_IP=$VM_IP"

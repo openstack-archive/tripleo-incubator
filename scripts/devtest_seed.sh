@@ -29,15 +29,31 @@ if [ $USE_IRONIC -eq 0 ]; then
 # - ssh power user
 # - sets the ironic key to "" to disable configuration looking for Ironic
 #   settings.
-    jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))|.[0].ironic=""| .[0]' config.json $TE_DATAFILE > local.json
+    local_json=$(jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))|.[0].ironic=""| .[0]' config.json $TE_DATAFILE)
 else
 # Sets:
 # - ironic.virtual_power_ssh_key(needed until https://review.openstack.org/#/c/80376 lands).
 # - nova.compute_driver to ironic.nova.virt.ironic.driver.IronicDriver
 # - sets the nova.baremetal key to "" to disable configuration looking for baremetal configuration.
 # - sets the nova.compute_manager to avoid race conditions on ironic startup.
-    jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal=""| .[0]' config.json $TE_DATAFILE > local.json
+    local_json=$(jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal=""| .[0]' config.json $TE_DATAFILE)
 fi
+
+# nodocs
+local_json=$(jq -s "
+.[0].heat |= (
+       .metadata_server_url=\"http://${SEED_VM_IP}:8000\" |
+       .waitcondition_server_url=\"http://${SEED_VM_IP}:8000/v1/waitcondition\" |
+       .watch_server_url=\"http://${SEED_VM_IP}:8003\") |
+.[0].bootstack |= (
+       .public_interface_ip=\"${SEED_VM_IP_CIDR}\" |
+       .masquerade_networks=[ \"${CTLPLANE_CIDR}\" ]) |
+.[0].neutron.ovs.dnsmasq_range=[ \"${UNDERCLOUD_OVS_IP}\", \"${UNDERCLOUD_OVS_IP}\" ] |
+.[0] |= (.[\"local-ipv4\"]=\"${SEED_VM_IP}\") | 
+.[0] " <<< $local_json)
+
+echo "$local_json" > local.json
+
 ### --end
 # If running in a CI environment then the user and ip address should be read
 # from the json describing the environment
@@ -61,7 +77,7 @@ else #nodocs
 fi #nodocs
 
 ##    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
-##    you can log into it with 'ssh stack@192.0.2.1'.
+##    you can log into it with 'ssh stack@${SEED_VM_IP}'.
 ## 
 ##    The IP address of the VM is printed out at the end of boot-seed-vm, or
 ##    you can query the testenv json which is updated by boot-seed-vm::
@@ -74,13 +90,13 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 
 # These are not persistent, if you reboot, re-run them.
 ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
-sudo ip route replace 192.0.2.0/24 dev $ROUTE_DEV via $SEED_IP
+#sudo ip route replace ${CTLPLANE_CIDR} dev $ROUTE_DEV via $SEED_IP
 
 ## #. Mask the seed API endpoint out of your proxy settings
 ##    ::
 
 set +u #nodocs
-export no_proxy=$no_proxy,192.0.2.1
+export no_proxy=$no_proxy,${SEED_VM_IP}
 set -u #nodocs
 
 ## #. If you downloaded a pre-built seed image you will need to log into it
@@ -110,10 +126,10 @@ fi
 ##    ::
 
 echo "Waiting for seed node to configure br-ctlplane..." #nodocs
-wait_for 30 10 ping -c 1 192.0.2.1
-ssh-keyscan -t rsa 192.0.2.1 >>~/.ssh/known_hosts
-init-keystone -p unset unset 192.0.2.1 admin@example.com root@192.0.2.1
-setup-endpoints 192.0.2.1 --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
+wait_for 30 10 ping -c 1 ${SEED_VM_IP} 
+ssh-keyscan -t rsa ${SEED_VM_IP} >>~/.ssh/known_hosts
+init-keystone -p unset unset ${SEED_VM_IP} admin@example.com root@${SEED_VM_IP}
+setup-endpoints ${SEED_VM_IP} --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
 keystone role-create --name heat_stack_user
 # Creating these roles to be used by tenants using swift
 keystone role-create --name=swiftoperator
@@ -128,7 +144,7 @@ wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'ena
 echo "Waiting for neutron API and L2 agent to be available"
 wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*\"" #nodocs
 
-setup-neutron 192.0.2.2 192.0.2.20 192.0.2.0/24 192.0.2.1 192.0.2.1 ctlplane
+setup-neutron ${UNDERCLOUD_FLOAT_START} ${UNDERCLOUD_FLOAT_END} ${CTLPLANE_CIDR} ${UNDERCLOUD_FLOAT_GATEWAY} ${SEED_VM_IP} ctlplane
 
 ## #. Register "bare metal" nodes with nova and setup Nova baremetal flavors.
 ##    When using VMs Nova will PXE boot them as though they use physical
@@ -152,7 +168,7 @@ setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
 ## 
 ##         # Run within the image!
 ##         echo << EOF >> ~/.profile
-##         export no_proxy=192.0.2.1
+##         export no_proxy=${SEED_VM_IP}
 ##         export http_proxy=http://192.168.2.1:8080/
 ##         EOF
 ## 
