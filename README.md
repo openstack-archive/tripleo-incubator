@@ -305,6 +305,22 @@ Caveats
 
 It is important to consider some unresolved issues in this plan.
 
+Supported platforms
+-------------------
+
+At this moment, there is not a matrix of supported distributions and releases
+for devtest.
+
+The code tries to identify the OS you use and tries to match it against 
+all major distributions (Debian, Ubuntu, Fedora,
+CentOS, RedHat, SUSE, OpenSUSE).
+If you use any other distribution not listed above the script will identify
+your machine as unsupported.
+ 
+Therefore, we encourage users to use any of the distributions listed above in 
+their pertinent latest release.
+
+
 Security
 --------
 
