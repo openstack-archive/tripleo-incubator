@@ -305,6 +305,14 @@ Caveats
 
 It is important to consider some unresolved issues in this plan.
 
+Supported platforms
+-------------------
+
+devtest is not known to work in Ubuntu 12.04.
+
+While the code tries its best to work with Ubuntu 12.04, we encourage users
+to use the latest Ubuntu release available.
+
 Security
 --------
 
