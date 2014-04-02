@@ -170,9 +170,9 @@ jq "." <<EOF > $JSONFILE
 EOF
 
 
-## #. Create baremetal nodes for the test cluster. The final parameter to
+## #. Create baremetal nodes for the test cluster. The fifth parameter to
 ##    create-nodes is the number of VMs to create. To change this in future
-##    you can run clean-env and then recreate with more nodes.
+##    you can run cleanup-env and then recreate with more nodes.
 ##    ::
 
 NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
