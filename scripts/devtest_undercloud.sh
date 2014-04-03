@@ -59,13 +59,25 @@ fi
 ##    ::
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
-if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+### --end
+if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then
+    (
+        # Read environment variables intended for just the undercloud that are to affect
+        # the DIB elements, which are not namespaced.  This will allow different
+        # options to be set for different images whilst still using devtest.sh
+        # As this is in a subshell, once the image is built and we exit the subshell,
+        # the environment changes performed here will be undone.
+        for variable in ${!UNDERCLOUD_DIB_VAR_*} ; do
+            export ${variable##UNDERCLOUD_DIB_VAR_}=${!variable}
+        done
+### --include
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
     baremetal boot-stack os-collect-config dhcp-all-interfaces \
     neutron-dhcp-agent horizon $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
     tee $TRIPLEO_ROOT/dib-undercloud.log
 ### --end
+    )
 fi
 if [ -n "$BUILD_ONLY" ]; then
   exit 0
