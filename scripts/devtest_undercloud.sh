@@ -3,6 +3,7 @@
 set -eux
 set -o pipefail
 
+
 USE_CACHE=${USE_CACHE:-0}
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}

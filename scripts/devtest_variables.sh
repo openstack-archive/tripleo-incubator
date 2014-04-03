@@ -56,6 +56,14 @@ export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
 export USE_IRONIC=${USE_IRONIC:-0}
 
+### --end
+
+## #. If you want to skip the undercloud and deploy the overcloud using
+##    seed, use SKIP_UNDERCLOUD=1
+
+export SKIP_UNDERCLOUD=${SKIP_UNDERCLOUD:-0}
+
+### --include
 ## #. Set a list of image elements that should be included in all image builds.
 ##    Note that stackuser is only for debugging support - it is not suitable for
 ##    a production network. This is also the place to include elements such as

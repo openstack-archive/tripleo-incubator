@@ -185,7 +185,11 @@ else #nodocs
 ##    you can run clean-env and then recreate with more nodes.
 ##    ::
 
-NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+if [ "$SKIP_UNDERCLOUD" -eq 0 ] ; then #nodocs
+    NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+else #nodocs
+    NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 1 )) #nodocs
+fi #nodocs
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE
 ### --end
 fi
