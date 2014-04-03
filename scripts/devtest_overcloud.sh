@@ -58,19 +58,23 @@ FLOATING_CIDR=${7:-${FLOATING_CIDR:-'192.0.2.0/24'}}
 ADMIN_USERS=${8:-${ADMIN_USERS:-''}}
 USERS=${9:-${USERS:-''}}
 STACKNAME=${10:-overcloud}
-# If set, the base name for a .crt and .key file for SSL. This will trigger
-# inclusion of openstack-ssl in the build and pass the contents of the files to heat.
-# Note that PUBLIC_API_URL ($12) must also be set for SSL to actually be used.
+# If set, the base name for a .crt, .key and optionally -ca.crt files for SSL.
 SSLBASE=${11:-''}
-OVERCLOUD_SSL_CERT=${SSLBASE:+$(<$SSLBASE.crt)}
-OVERCLOUD_SSL_KEY=${SSLBASE:+$(<$SSLBASE.key)}
-PUBLIC_API_URL=${12:-''}
-SSL_ELEMENT=${SSLBASE:+openstack-ssl}
+OVERCLOUD_VIP=${OVERCLOUD_VIP:-'192.0.2.254'}
+PUBLIC_API_URL=${12:-$OVERCLOUD_VIP}
+CONTROL_FIXED_IPS='[{"ip_address" : "'"$OVERCLOUD_VIP"'"}]'
+# Whether to enable SSL (https) in the overcloud.
+# Set blank ('OVERCLOUD_SSL=') to disable SSL.
+OVERCLOUD_SSL=${OVERCLOUD_SSL-'True'}
+SSL_ELEMENT=${OVERCLOUD_SSL:+'openstack-ssl'}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
+OVERCLOUD_SSL_CERT=
+OVERCLOUD_SSL_KEY=
+OVERCLOUD_SSL_CACERT=
 
 # A client-side timeout in minutes for creating or updating the overcloud
 # Heat stack.
@@ -250,6 +254,30 @@ else
     ENV_JSON='{"parameters":{}}'
 fi
 
+## #. If using SSL read in certs
+##    ::
+
+if [ -n "${OVERCLOUD_SSL}" ]; then
+    if [ -z "${SSLBASE}" ]; then
+        # create test certs if required
+        TMP_CERT_DIR=${TRIPLEO_ROOT}/generated-test-certs
+        COMMON_NAME=$OVERCLOUD_VIP CERT_DIR=$TMP_CERT_DIR create-test-certs
+        export OS_CACERT=$TMP_CERT_DIR/os-ca.crt
+        SSLBASE=$TMP_CERT_DIR/os
+    fi
+    # read in certs
+    OVERCLOUD_SSL_CERT=$(<$SSLBASE.crt)
+    OVERCLOUD_SSL_KEY=$(<$SSLBASE.key)
+    if [ -f $SSLBASE-ca.crt ]; then
+      OVERCLOUD_SSL_CACERT=$(<$SSLBASE-ca.crt)
+      export OS_CACERT=$SSLBASE-ca.crt
+    else
+      # Use self signed cert for CA
+      OVERCLOUD_SSL_CACERT=$(<$SSLBASE.crt)
+      export OS_CACERT=$SSLBASE.crt
+    fi
+fi
+
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq '.parameters = {
@@ -277,7 +305,8 @@ ENV_JSON=$(jq '.parameters = {
     "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
-    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
+    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
+    "SSLCACertificate": "'"${OVERCLOUD_SSL_CACERT}"'"
   }' <<< $ENV_JSON)
 
 ### --end
@@ -319,6 +348,7 @@ heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
     -t 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
+    -P "ControlFixedIPs=${CONTROL_FIXED_IPS}" \
     $STACKNAME
 
 ### --include
@@ -363,7 +393,7 @@ fi
 
 echo "Waiting for the overcloud stack to be ready" #nodocs
 wait_for_stack_ready $(($OVERCLOUD_STACK_TIMEOUT * 60 / 10)) 10 $STACKNAME
-OVERCLOUD_IP=$(nova list | grep "notCompute0.*ctlplane\|controller.*ctlplane" | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+OVERCLOUD_IP=${OVERCLOUD_VIP}
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
 # the public endpoint for APIs.
@@ -381,8 +411,13 @@ ssh-keygen -R $OVERCLOUD_IP
 ## #. Export the overcloud endpoint and credentials to your test environment.
 ##    ::
 
-OVERCLOUD_ENDPOINT="http://$OVERCLOUD_IP:5000/v2.0"
-NEW_JSON=$(jq '.overcloud.password="'${OVERCLOUD_ADMIN_PASSWORD}'" | .overcloud.endpoint="'${OVERCLOUD_ENDPOINT}'" | .overcloud.endpointhost="'${OVERCLOUD_IP}'"' $TE_DATAFILE)
+if [ -n "${OVERCLOUD_SSL}" ]; then
+    OVERCLOUD_ENDPOINT="https://$OVERCLOUD_VIP:13000/v2.0"
+else
+    OVERCLOUD_ENDPOINT="http://$OVERCLOUD_VIP:5000/v2.0"
+fi
+
+NEW_JSON=$(jq '.overcloud.password="'${OVERCLOUD_ADMIN_PASSWORD}'" | .overcloud.endpoint="'${OVERCLOUD_ENDPOINT}'" | .overcloud.endpointhost="'${OVERCLOUD_VIP}'"' $TE_DATAFILE)
 echo $NEW_JSON > $TE_DATAFILE
 
 ## #. Source the overcloud configuration::

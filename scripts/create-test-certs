@@ -1,0 +1,78 @@
+#!/bin/bash
+# Copyright 2014 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+set -eux
+set -o pipefail
+
+function cleanup() {
+    rm -f ca.cnf cert.cnf ca.key os.csr
+}
+
+trap cleanup EXIT
+
+mkdir -p $CERT_DIR
+cd $CERT_DIR
+
+openssl genrsa -out ca.key 1024
+
+cat << EOF > ca.cnf
+[ req ]
+distinguished_name = ca
+
+[ ca ]
+0.organizationName = Openstack Fake CA
+organizationalUnitName = Openstack CA Unit
+emailAddress = openstack@example.com
+localityName = Cloud
+stateOrProvinceName = State
+countryName = US
+commonName = openstack0.example.com
+countryName_default = AU
+stateOrProvinceName_default = AZ
+localityName_default = State AZ
+0.organizationName_default = Openstack Fake CA Org
+organizationalUnitName_default = Openstack Fake CA
+commonName_default = Openstack Fake Certificate Authority
+emailAddress_default = admin@openstack.example.com
+EOF
+
+cat << EOF > cert.cnf
+[ req ]
+distinguished_name = cert
+
+[ cert ]
+0.organizationName = TripleO Fake Org
+organizationalUnitName = TripleO Fake Unit
+emailAddress = tripleo@example.com
+localityName = Cloud
+stateOrProvinceName = State
+countryName = US
+commonName = openstack.example.com
+countryName_default = US
+stateOrProvinceName_default = AZ
+localityName_default = State1
+0.organizationName_default = TripleO Fake Org
+organizationalUnitName_default = TripleO Fake Unit
+commonName_default = $COMMON_NAME
+emailAddress_default = admin@tripleo.example.com
+EOF
+
+openssl req -new -x509 -days 1000 -key ca.key -out os-ca.crt \
+            -batch -config ca.cnf
+openssl genrsa -out os.key 1024
+openssl req -new -key os.key -out os.csr -batch -config cert.cnf
+openssl x509 -req -days 1000 -in os.csr -extfile cert.cnf -CA os-ca.crt \
+             -CAkey ca.key -set_serial 01 -out os.crt
