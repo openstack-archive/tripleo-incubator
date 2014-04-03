@@ -11,17 +11,19 @@ function show_options () {
     echo "Deploys a baremetal cloud via virsh."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --all-nodes    -- use all the nodes in the testenv rather than"
-    echo "                        just the first one."
+    echo "      -h                    -- this help"
+    echo "      --build-only          -- build the needed images but don't deploy them."
+    echo "      --all-nodes           -- use all the nodes in the testenv rather than"
+    echo "                               just the first one."
+    echo "      --download-images URL -- attempt to download images from this URL."
     echo
     exit $1
 }
 
 BUILD_ONLY=
+DOWNLOAD_OPT=
 
-TEMP=$(getopt -o h -l all-nodes,build-only,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l all-nodes,build-only,download-images:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -31,6 +33,7 @@ while true ; do
     case "$1" in
         --all-nodes) ALL_NODES="true"; shift 1;;
         --build-only) BUILD_ONLY="--build-only"; shift 1;;
+        --download-images) DOWNLOAD_OPT="--download $2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -110,12 +113,16 @@ if [ -n "$REMOTE_OPERATIONS" ] ; then
 fi
 ### --include
 
+## #. We use the architecture defined in the test environment to build the seed vm.::
+
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
-## #. If you are only building disk images, then actually running up the VMs is
-##    not interesting - pass ``--build-only`` to tell boot-seed-vm not to boot the
-##    vm it builds. If you want to use a previously built image rather than building
-##    a new one, pass ``-c`` for that.
+## #. Build and boot a seed VM with the local.json file. If you are only
+##    building disk images, then actually running up the VMs is not interesting
+##    - pass ``--build-only`` to tell boot-seed-vm not to boot the vm it
+##    builds. If you want to use a previously built image rather than building a
+##    new one, pass ``-c`` for that.  If you want to try to download a prebuilt
+##    VM pass --download BASE_URL to boot-seed-vm.::
 
 cd $TRIPLEO_ROOT
 ##    boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent
@@ -125,8 +132,8 @@ if [ "$USE_CACHE" == "0" ] ; then
 else
     CACHE_OPT="-c"
 fi
-boot-seed-vm $CACHE_OPT $BUILD_ONLY -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-seed.log
+boot-seed-vm $CACHE_OPT $BUILD_ONLY $DOWNLOAD_OPT -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
+    tee $TRIPLEO_ROOT/dib-seed.log
 
 if [ -n "${BUILD_ONLY}" ]; then
     exit 0
