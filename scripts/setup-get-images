@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+RETRIVE_IMAGES_URL=${RETRIEVE_IMAGES_URL:-''}
+
+if [ -n "$RETRIEVE_IMAGES_URL" ]; then
+
+    IMAGE_LIST='seed.qcow2 user.qcow2 overcloud-compute.initrd overcloud-compute.qcow2 overcloud-compute.vmlinuz overcloud-control.initrd overcloud-control.qcow2 overcloud-control.vmlinuz deploy-ramdisk.initramfs deploy-ramdisk.kernel'
+    if [ "$SKIP_UNDERCLOUD" -eq 0 ]; then
+	IMAGE_LIST="$IMAGE_LIST undercloud.initrd undercloud.qcow2 undercloud.vmlinuz"
+    fi
+    for IMAGE in $IMAGE_LIST
+    do
+	if [ ! -e $TRIPLEO_ROOT/$IMAGE -o "$USE_CACHE" == "0" ] ; then
+            $TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url $BASE_URL/$IMAGE $TRIPLEO_ROOT/$IMAGE
+	fi
+    done
+fi
