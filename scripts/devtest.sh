@@ -36,6 +36,7 @@ function show_options () {
 NODES_ARG=
 CONTINUE=
 USE_CACHE=0
+export SKIP_OVERCLOUD=${SKIP_OVERCLOUD:-''}
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
@@ -207,10 +208,14 @@ DEVTEST_SD_END=$(date +%s) #nodocs
 export no_proxy=${no_proxy:-},192.0.2.1
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 DEVTEST_UC_START=$(date +%s) #nodocs
-devtest_undercloud.sh $TE_DATAFILE
+if [ "$SKIP_UNDERCLOUD" -eq 0 ] ; then #nodocs
+  devtest_undercloud.sh $TE_DATAFILE
+fi #nodocs
 DEVTEST_UC_END=$(date +%s) #nodocs
-export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
-source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
+if [ "$SKIP_UNDERCLOUD" -eq 0 ] ; then #nodocs
+  export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
+  source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
+fi #nodocs
 
 ## #. See :doc:`devtest_overcloud` for documentation::
 
