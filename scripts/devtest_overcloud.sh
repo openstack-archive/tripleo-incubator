@@ -9,6 +9,7 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 DEBUG_LOGGING=
 HEAT_ENV=
+DOWNLOAD_OPT=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -20,13 +21,14 @@ function show_options () {
     echo "      -c             -- re-use existing source/images if they exist."
     echo "      --build-only   -- build the needed images but don't deploy them."
     echo "      --debug-logging -- Turn on debug logging in the built overcloud."
+    echo "      --download-images URL -- attempt to download images from this URL."
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,debug-logging,heat-env:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l build-only,debug-logging,download-images:,heat-env:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -37,6 +39,7 @@ while true ; do
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="1"; shift 1;;
         --debug-logging) DEBUG_LOGGING="1"; shift 1;;
+        --download-images) DOWNLOAD_OPT="--download $2"; shift 2;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
@@ -72,6 +75,11 @@ OVERCLOUD_SSL_KEY=${SSLBASE:+$(<$SSLBASE.key)}
 PUBLIC_API_URL=${12:-''}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
 USE_CACHE=${USE_CACHE:-0}
+if [ "$USE_CACHE" = "1" ]; then
+    CACHE_OPT=-c
+else
+    CACHE_OPT=
+fi
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
 OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
@@ -106,6 +114,9 @@ OVERCLOUD_FIXED_RANGE_CIDR=${OVERCLOUD_FIXED_RANGE_CIDR:-"10.0.0.0/8"}
 
 ##    ``$SSL_ELEMENT`` is used when building a cloud with SSL endpoints - it should be
 ##    set to openstack-ssl in that situation.
+
+##    If you wish to use a locally cached previously built image pass -c to
+##    acquire-image. To download images pass --download BASE_URL.
 ##    ::
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
@@ -119,16 +130,25 @@ if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS snmpd"
 fi
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
-        baremetal boot-stack cinder-api ceilometer-collector \
-        ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
-        os-collect-config horizon neutron-network-node dhcp-all-interfaces \
-        swift-proxy swift-storage keepalived haproxy \
-        $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-control.log
-fi #nodocs
+##         acquire-image $TRIPLEO_ROOT/overcloud-control \
+##             $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -- $NODE_DIST \
+##             -a $NODE_ARCH ntp hosts \
+##             baremetal boot-stack cinder-api ceilometer-collector \
+##             ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
+##             os-collect-config horizon neutron-network-node dhcp-all-interfaces \
+##             swift-proxy swift-storage keepalived haproxy \
+##             $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-}
+### --end
+
+acquire-image $CACHE_OPT $DOWNLOAD_OPT $TRIPLEO_ROOT/overcloud-control \
+    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -- $NODE_DIST \
+    -a $NODE_ARCH  ntp hosts \
+    baremetal boot-stack cinder-api ceilometer-collector \
+    ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
+    os-collect-config horizon neutron-network-node dhcp-all-interfaces \
+    swift-proxy swift-storage keepalived haproxy \
+    $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
+    tee $TRIPLEO_ROOT/dib-overcloud-control.log
 
 ## #. Unless you are just building the images, load the image into Glance.
 
@@ -143,14 +163,21 @@ fi #nodocs
 ##    ::
 
 if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
-    if [ ! -e $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume ntp hosts \
-            baremetal os-collect-config \
-            dhcp-all-interfaces $DIB_COMMON_ELEMENTS \
-            $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
-            tee $TRIPLEO_ROOT/dib-overcloud-cinder-volume.log
-    fi #nodocs
+##    acquire-image $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2 \
+##        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -- $NODE_DIST \
+##        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume ntp hosts \
+##        baremetal cinder-volume os-collect-config \
+##        dhcp-all-interfaces $DIB_COMMON_ELEMENTS \
+##        $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS
+### --end
+
+    acquire-image $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2 \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -- $NODE_DIST \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume ntp hosts \
+        baremetal os-collect-config \
+        dhcp-all-interfaces $DIB_COMMON_ELEMENTS \
+        $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
+        tee $TRIPLEO_ROOT/dib-overcloud-cinder-volume.log
 
 ## #. And again load the image into Glance, unless you are just building the images.
 
@@ -165,24 +192,27 @@ fi
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute ntp hosts \
-        baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-        dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-compute.log
-fi #nodocs
-
-## #. Load the image into Glance. If you are just building the images you are done.
-##    ::
+##         acquire-image $TRIPLEO_ROOT/overcloud-compute \
+##             $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -- $NODE_DIST \
+##             -a $NODE_ARCH ntp hosts \
+##             baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
+##             dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS
 
 ### --end
-
+acquire-image $CACHE_OPT $DOWNLOAD_OPT $TRIPLEO_ROOT/overcloud-compute \
+    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -- \
+    $NODE_DIST -a $NODE_ARCH  ntp hosts \
+    baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
+    dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
+    tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 if [ -n "$BUILD_ONLY" ]; then
   exit 0
 fi
 
 ### --include
+## #. Load the image into Glance. If you are just building the images you are done.
+##    ::
+
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
 
 ## #. For running an overcloud in VM's. For Physical machines, set to kvm:
@@ -403,9 +433,13 @@ TEST_IMAGE_DIB_EXTRA_ARGS=${TEST_IMAGE_DIB_EXTRA_ARGS:-''}
 if [ ! -e $TRIPLEO_ROOT/$USER_IMG_NAME -o "$USE_CACHE" == "0" ] ; then
     if [ "$USE_CIRROS" == "0" ] ; then
 ### --include
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm $TEST_IMAGE_DIB_EXTRA_ARGS \
-            -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
+##         acquire-image $TRIPLEO_ROOT/user \
+##             $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -- $NODE_DIST vm \
+##             $TEST_IMAGE_DIB_EXTRA_ARGS -a $NODE_ARCH 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
 ### --end
+      acquire-image $CACHE_OPT $DOWNLOAD_OPT $TRIPLEO_ROOT/user \
+          $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -- $NODE_DIST vm \
+          $TEST_IMAGE_DIB_EXTRA_ARGS -a $NODE_ARCH
     else
         VERSION=$($TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
             http://download.cirros-cloud.net/version/released >(cat) 1>&2)
