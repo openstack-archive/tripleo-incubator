@@ -1,0 +1,12 @@
+Verified+2: Jenkins
+Code-Review+1: Jon-Paul Sullivan <jonpaul.sullivan@hp.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Approved+1: lifeless <robertc@robertcollins.net>
+Code-Review+1: jan grant <jan.grant@hp.com>
+Code-Review+2: Ladislav Smola <lsmola@redhat.com>
+Code-Review+1: Nicholas Randon <nicholas.randon@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 03 Apr 2014 02:29:12 +0000
+Reviewed-on: https://review.openstack.org/83188
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
