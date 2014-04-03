@@ -23,6 +23,27 @@ function show_options () {
     exit $1
 }
 
+function read_certs () {
+    OVERCLOUD_SSL_CERT=$(<$SSLBASE.crt)
+    OVERCLOUD_SSL_KEY=$(<$SSLBASE.key)
+    if [ -f $SSLBASE-ca.crt ]; then
+      OVERCLOUD_SSL_CACERT=$(<$SSLBASE-ca.crt)
+      export OS_CACERT=$SSLBASE-ca.crt
+    else
+      # Use self signed cert for CA
+      OVERCLOUD_SSL_CACERT=$(<$SSLBASE.crt)
+      export OS_CACERT=$SSLBASE.crt
+    fi
+}
+
+function generate_test_certs () {
+    export TMP_CERT_DIR=${TRIPLEO_ROOT}/generated-test-certs
+    mkdir -p $TMP_CERT_DIR
+    COMMON_NAME=$1 CERT_DIR=$TMP_CERT_DIR create-test-certs
+    export OS_CACERT=$TMP_CERT_DIR/os-ca.crt
+    SSLBASE=$TMP_CERT_DIR/os
+}
+
 TEMP=$(getopt -o h -l build-only,heat-env:help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
@@ -64,7 +85,8 @@ STACKNAME=${10:-overcloud}
 SSLBASE=${11:-''}
 OVERCLOUD_SSL_CERT=${SSLBASE:+$(<$SSLBASE.crt)}
 OVERCLOUD_SSL_KEY=${SSLBASE:+$(<$SSLBASE.key)}
-PUBLIC_API_URL=${12:-''}
+OVERCLOUD_VIP=${OVERCLOUD_VIP:-'192.0.2.254'}
+PUBLIC_API_URL=${12:-$OVERCLOUD_VIP}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
@@ -239,6 +261,15 @@ else
     ENV_JSON='{"parameters":{}}'
 fi
 
+## #. If using SSL read in certs
+##    ::
+if [ -n "${SSL_ELEMENT}" ]; then
+    if [ -z "${SSLBASE}" ]; then
+        generate_test_certs $OVERCLOUD_VIP
+    fi
+    read_certs
+fi
+
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq '.parameters += {
@@ -261,7 +292,8 @@ ENV_JSON=$(jq '.parameters += {
     "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
-    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
+    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
+    "SSLCACertificate": "'"${OVERCLOUD_SSL_CACERT}"'"
   }' <<< $ENV_JSON)
 # Preserve user supplied buffer size in the environment, defaulting to 100 for VM usage.
 ENV_JSON=$(jq '.parameters.MysqlInnodbBufferPoolSize=(.parameters.MysqlInnodbBufferPoolSize | 100)' <<< $ENV_JSON)
@@ -300,10 +332,13 @@ if [ -e $TRIPLEO_ROOT/tripleo-heat-templates/controller.yaml ] ; then
     CONTROLLER_IMAGE_PARAM=controllerImage
 fi
 
+CONTROL_FIXED_IPS='[{"ip_address" : "'"$OVERCLOUD_VIP"'"}]'
+
 heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
     -P "$CONTROLLER_IMAGE_PARAM=${OVERCLOUD_CONTROL_ID}" \
+    -P "ControlFixedIPs=${CONTROL_FIXED_IPS}" \
     $STACKNAME
 
 ### --include
@@ -342,7 +377,7 @@ fi
 echo "Waiting for the overcloud stack to be ready" #nodocs
 # Make time out 60 mins as like the Heat stack-create default timeout.
 wait_for_stack_ready 360 10 $STACKNAME
-OVERCLOUD_IP=$(nova list | grep "notCompute0.*ctlplane\|controller.*ctlplane" | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+OVERCLOUD_IP=${OVERCLOUD_VIP}
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
 # the public endpoint for APIs.
