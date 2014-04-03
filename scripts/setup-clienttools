@@ -18,6 +18,8 @@ pip install -U 'pbr>=0.5.21,<1.0'
 
 pip install -U python-cinderclient python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient python-ironicclient os-apply-config
 
+pip install -U $TRIPLEO_ROOT/os-cloud-config
+
 for tool in os-apply-config cinder nova glance heat keystone neutron swift ironic; do
   ln -sf $BASE/openstack-tools/bin/$tool $BASE/scripts/$tool ;
 done
