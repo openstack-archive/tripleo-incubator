@@ -7,6 +7,7 @@ SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
 BUILD_ONLY=
+DOWNLOAD_OPT=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -14,13 +15,14 @@ function show_options () {
     echo "Deploys a baremetal cloud via heat."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      --build-only   -- build the needed images but don't deploy them."
+    echo "      -h                    -- this help"
+    echo "      --build-only          -- build the needed images but don't deploy them."
+    echo "      --download-images URL -- attempt to download images from this URL."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,download-images:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -29,6 +31,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
+        --download-images) DOWNLOAD_OPT="--download $2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -37,6 +40,11 @@ done
 
 set -x
 USE_CACHE=${USE_CACHE:-0}
+if [ "$USE_CACHE" = "1" ]; then
+    CACHE_OPT=-c
+else
+    CACHE_OPT=
+fi
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 ### --include
@@ -56,17 +64,25 @@ fi
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
 ##    meant to be used to pass additional arguments to disk-image-create.
+##    If you wish to use a locally cached previously built image pass -c to
+##    acquire-image. To download images pass --download BASE_URL.
 ##    ::
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
-if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-    -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
+
+##    acquire-image $TRIPLEO_ROOT/undercloud \
+##        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create \
+##        $NODE_DIST -a $NODE_ARCH  \
+##        baremetal boot-stack os-collect-config dhcp-all-interfaces \
+##        neutron-dhcp-agent horizon $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS
+
+### --end
+acquire-image $CACHE_OPT $DOWNLOAD_OPT $TRIPLEO_ROOT/undercloud \
+    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create -- \
+    $NODE_DIST -a $NODE_ARCH  \
     baremetal boot-stack os-collect-config dhcp-all-interfaces \
     neutron-dhcp-agent horizon $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
     tee $TRIPLEO_ROOT/dib-undercloud.log
-### --end
-fi
 if [ -n "$BUILD_ONLY" ]; then
   exit 0
 fi
