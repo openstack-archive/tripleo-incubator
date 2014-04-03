@@ -13,11 +13,13 @@ function show_options () {
     echo "Options:"
     echo "      -h             -- this help"
     echo "      --build-only   -- build the needed images but don't deploy them."
+    echo "      --all-nodes    -- use all the nodes in the testenv rather than"
+    echo "                        just the first one."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l all-nodes,build-only,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -25,6 +27,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --all-nodes) ALL_NODES="true"; shift 1;;
         --build-only) BUILD_ONLY="--build-only"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
@@ -185,9 +188,17 @@ setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWOR
 ##    If you want to create the VM yourself see footnote [#f2]_ for details
 ##    on its requirements.
 ##    If you want to use real baremetal see footnote [#f3]_ for details.
+##    If you are building an undercloud, register only the first node.
 ##    ::
 
-setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
+if [ -z "${ALL_NODES:-}" ]; then #nodocs
+  setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
+else #nodocs
+
+## #. Otherwise, if you are skipping the undercloud, you should register all
+##    the nodes.::
+  setup-baremetal --service-host seed --nodes <(jq '.nodes' $TE_DATAFILE)
+fi #nodocs
 
 ##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
 
