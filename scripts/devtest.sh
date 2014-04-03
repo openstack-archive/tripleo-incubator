@@ -23,6 +23,7 @@ function show_options () {
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
+    echo "    --no-undercloud        -- Do not run devtest_undercloud.sh."
     echo "    --build-only           -- Builds images but doesn't attempt to run them."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
@@ -41,7 +42,7 @@ USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes:,no-undercloud -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -53,6 +54,7 @@ while true ; do
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
+        --no-undercloud) NO_UNDERCLOUD="true"; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
@@ -199,27 +201,45 @@ DEVTEST_RD_START=$(date +%s) #nodocs
 devtest_ramdisk.sh
 DEVTEST_RD_END=$(date +%s) #nodocs
 
-## #. See :doc:`devtest_seed` for documentation::
+## #. See :doc:`devtest_seed` for documentation. If you are not deploying an
+##    undercloud, (see below) then you will want to set NO_UNDERCLOUD to "true"
+##    and register all your nodes directly with the seed cloud.::
+
+NO_UNDERCLOUD=${NO_UNDERCLOUD:-''}
 
 DEVTEST_SD_START=$(date +%s) #nodocs
-devtest_seed.sh $BUILD_ONLY
+if [ -z "NO_UNDERCLOUD" ]; then
+  ALLNODES=""
+else
+  ALLNODES="--all-nodes"
+fi
+devtest_seed.sh $BUILD_ONLY $ALLNODES
+export no_proxy=${no_proxy:-},192.0.2.1
+source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 DEVTEST_SD_END=$(date +%s) #nodocs
 
-## #. See :doc:`devtest_undercloud` for documentation.
+## #. See :doc:`devtest_undercloud` for documentation. The undercloud doesn't
+##    have to be built - the seed is entirely capable of deploying any
+##    baremetal workload - but a production deployment would quite probably
+##    want to have a heat deployed (and thus reconfigurable) deployment
+##    infrastructure layer).
 ##    If you are only building images you won't be able
 ##    to update your no_proxy line or source the undercloudrc file.::
 
-export no_proxy=${no_proxy:-},192.0.2.1
-source $TRIPLEO_ROOT/tripleo-incubator/seedrc
-DEVTEST_UC_START=$(date +%s) #nodocs
+### --end
+DEVTEST_UC_START=$(date +%s)
+if [ -z "$NO_UNDERCLOUD" ]; then
+### --include
 devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY
 ### --end
-DEVTEST_UC_END=$(date +%s)
-if [ -z "$BUILD_ONLY" ]; then
+  if [ -z "$BUILD_ONLY" ]; then
 ### --include
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
 source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
-fi #nodocs
+### --end
+  fi
+fi
+DEVTEST_UC_END=$(date +%s)
 
 ## #. See :doc:`devtest_overcloud` for documentation. If you are only building
 ##    images you won't be able to update your no_proxy variable or import the
