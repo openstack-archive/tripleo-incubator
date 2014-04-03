@@ -23,6 +23,27 @@ function show_options () {
     exit $1
 }
 
+function read_certs () {
+    OVERCLOUD_SSL_CERT=$(<$SSLBASE.crt)
+    OVERCLOUD_SSL_KEY=$(<$SSLBASE.key)
+    if [ -f $SSLBASE-ca.crt ]; then
+      OVERCLOUD_SSL_CACERT=$(<$SSLBASE-ca.crt)
+      export OS_CACERT=$SSLBASE-ca.crt
+    else
+      # Use self signed cert for CA
+      OVERCLOUD_SSL_CACERT=$(<$SSLBASE.crt)
+      export OS_CACERT=$SSLBASE.crt
+    fi
+}
+
+function generate_test_certs () {
+    export TMP_CERT_DIR=${TRIPLEO_ROOT}/generated-test-certs
+    mkdir -p $TMP_CERT_DIR
+    COMMON_NAME=$1 CERT_DIR=$TMP_CERT_DIR create-test-certs
+    export OS_CACERT=$TMP_CERT_DIR/os-ca.crt
+    SSLBASE=$TMP_CERT_DIR/os
+}
+
 TEMP=$(getopt -o h -l build-only,heat-env:help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
@@ -48,9 +69,9 @@ fi
 # NOTE(rpodolyaka): retain backwards compatibility by accepting both positional
 #                   arguments and environment variables. Positional arguments
 #                   take precedence over environment variables
-NeutronPublicInterface=${1:-${NeutronPublicInterface:-'eth0'}}
-NeutronPublicInterfaceIP=${2:-${NeutronPublicInterfaceIP:-''}}
-NeutronPublicInterfaceRawDevice=${3:-${NeutronPublicInterfaceRawDevice:-''}}
+NeutronPublicInterface=${1:-${NeutronPublicInterface:-'vlan0'}}
+NeutronPublicInterfaceIP=${2:-${NeutronPublicInterfaceIP:-'192.0.2.254'}}
+NeutronPublicInterfaceRawDevice=${3:-${NeutronPublicInterfaceRawDevice:-'eth0'}}
 NeutronPublicInterfaceDefaultRoute=${4:-${NeutronPublicInterfaceDefaultRoute:-''}}
 FLOATING_START=${5:-${FLOATING_START:-'192.0.2.45'}}
 FLOATING_END=${6:-${FLOATING_END:-'192.0.2.64'}}
@@ -58,14 +79,19 @@ FLOATING_CIDR=${7:-${FLOATING_CIDR:-'192.0.2.0/24'}}
 ADMIN_USERS=${8:-${ADMIN_USERS:-''}}
 USERS=${9:-${USERS:-''}}
 STACKNAME=${10:-overcloud}
-# If set, the base name for a .crt and .key file for SSL. This will trigger
-# inclusion of openstack-ssl in the build and pass the contents of the files to heat.
-# Note that PUBLIC_API_URL ($12) must also be set for SSL to actually be used.
-SSLBASE=${11:-''}
-OVERCLOUD_SSL_CERT=${SSLBASE:+$(<$SSLBASE.crt)}
-OVERCLOUD_SSL_KEY=${SSLBASE:+$(<$SSLBASE.key)}
-PUBLIC_API_URL=${12:-''}
-SSL_ELEMENT=${SSLBASE:+openstack-ssl}
+# If set, the base name for a .crt and .key file for SSL.
+# The contents of the files will be passed to heat.
+# Note that SSL_ELEMENT must also be set for SSL to actually be used.
+# If not set, and SSL is enabled via SSL_ELEMENT, then test
+# (non-production quality) certs will be auto-generated.
+SSLBASE=${11:-${SSLBASE:-''}}
+PUBLIC_API_URL=${12:-${NeutronPublicInterfaceIP}}
+# Specify no SSL element ('SSL_ELEMENT=') to disable SSL in the overcloud.
+# Note: lack of ':' is intentional
+SSL_ELEMENT=${SSL_ELEMENT-'openstack-ssl'}
+OVERCLOUD_SSL_CERT=
+OVERCLOUD_SSL_KEY=
+OVERCLOUD_SSL_CACERT=
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
@@ -235,6 +261,15 @@ else
     ENV_JSON='{"parameters":{}}'
 fi
 
+## #. If using SSL read in certs
+##    ::
+if [ -n "${SSL_ELEMENT}" ]; then
+    if [ -z "${SSLBASE}" ]; then
+        generate_test_certs $PUBLIC_API_URL
+    fi
+    read_certs
+fi
+
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq .parameters.AdminPassword=\"${OVERCLOUD_ADMIN_PASSWORD}\" <<< $ENV_JSON)
@@ -256,6 +291,7 @@ ENV_JSON=$(jq .parameters.SwiftPassword=\"${OVERCLOUD_SWIFT_PASSWORD}\" <<< $ENV
 ENV_JSON=$(jq .parameters.NovaImage=\"${OVERCLOUD_COMPUTE_ID}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.SSLCertificate=\""${OVERCLOUD_SSL_CERT}"\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.SSLKey=\""${OVERCLOUD_SSL_KEY}"\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.SSLCACertificate=\""${OVERCLOUD_SSL_CACERT}"\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NtpServer=\"${OVERCLOUD_NTP_SERVER}\" <<< $ENV_JSON)
 
 ### --end
