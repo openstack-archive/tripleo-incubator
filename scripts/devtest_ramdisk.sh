@@ -65,8 +65,9 @@ if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
      ! -e $TRIPLEO_ROOT/deploy-ramdisk.initramfs -o \
      "$USE_CACHE" == "0" ] ; then
 ### --include
-    $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-        $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk \
+    acquire-image $TRIPLEO_ROOT/deploy-ramdisk \
+        $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create \
+	-a $NODE_ARCH $NODE_DIST $DEPLOY_IMAGE_ELEMENT \
         $DIB_COMMON_ELEMENTS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-deploy.log
 ### --end
