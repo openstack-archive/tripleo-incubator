@@ -114,7 +114,10 @@ NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-40} NO
 ##    This configures an openvswitch bridge and teaches libvirt about it.
 ##    ::
 
-setup-network $NUM
+NeutronPublicInterfaceVlan=${NeutronPublicInterfaceVlan:-'vlan101'}
+OVERCLOUD_GATEWAY=${OVERCLOUD_GATEWAY:-'198.51.100.1/24'}
+
+setup-network $NUM $NeutronPublicInterfaceVlan $OVERCLOUD_GATEWAY
 
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
