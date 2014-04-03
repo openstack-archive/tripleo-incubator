@@ -28,11 +28,22 @@ fi
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-        baremetal boot-stack os-collect-config dhcp-all-interfaces \
-        neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-undercloud.log
+    (
+        # Read environment variables intended for just the undercloud that are to affect
+        # the DIB elements (which aren't namespaced) - this will allow different
+        # options to be set for different images whilst still using devtest.sh
+        # As this is in a subshell, once the image is built and we exit the subshell,
+        # the environment changes performed here will be undone.
+        for variable in ${!UNDERCLOUD_DIB_VAR_*} ; do #nodocs
+            export ${variable##UNDERCLOUD_DIB_VAR_}=${!variable} #nodocs
+        done  #nodocs
+
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
+            baremetal boot-stack os-collect-config dhcp-all-interfaces \
+            neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
+            tee $TRIPLEO_ROOT/dib-undercloud.log
+    )
 fi #nodocs
 
 ## #. Load the undercloud image into Glance:

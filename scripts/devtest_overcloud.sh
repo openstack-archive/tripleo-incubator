@@ -61,12 +61,23 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \
-        baremetal boot-stack cinder-api cinder-volume os-collect-config horizon \
-        neutron-network-node dhcp-all-interfaces swift-proxy swift-storage \
-        $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-control.log
+    (
+        # Read environment variables intended for just the overcloud-control that are
+        # to affect the DIB elements (which aren't namespaced) - this will allow different
+        # options to be set for different images whilst still using devtest.sh
+        # As this is in a subshell, once the image is built and we exit the subshell,
+        # the environment changes performed here will be undone.
+        for variable in ${!OVERCLOUD_CONTROL_DIB_VAR_*} ; do #nodocs
+            export ${variable##OVERCLOUD_CONTROL_DIB_VAR_}=${!variable} #nodocs
+        done #nodocs
+
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \
+            baremetal boot-stack cinder-api cinder-volume os-collect-config horizon \
+            neutron-network-node dhcp-all-interfaces swift-proxy swift-storage \
+            $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
+            tee $TRIPLEO_ROOT/dib-overcloud-control.log
+    )
 fi #nodocs
 
 ## #. Load the image into Glance:
@@ -79,11 +90,22 @@ OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 ##    ::
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+    (
+        # Read environment variables intended for just the overcloud-compute that are
+        # to affect the DIB elements (which aren't namespaced) - this will allow different
+        # options to be set for different images whilst still using devtest.sh
+        # As this is in a subshell, once the image is built and we exit the subshell,
+        # the environment changes performed here will be undone.
+        for variable in ${!OVERCLOUD_COMPUTE_DIB_VAR_*} ; do #nodocs
+            export ${variable##OVERCLOUD_COMPUTE_DIB_VAR_}=${!variable} #nodocs
+        done #nodocs
+
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute hosts \
         baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
         dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
+    )
 fi #nodocs
 
 ## #. Load the image into Glance:
