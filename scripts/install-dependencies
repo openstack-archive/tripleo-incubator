@@ -96,7 +96,10 @@ if [ "$os" = "suse" ]; then
   sudo service openvswitch-switch restart
 fi
 
-setup-clienttools
+INSTALL_CLIENTTOOLS=${INSTALL_CLIENTTOOLS:-true}
+if [ "$INSTALL_CLIENTTOOLS" == true ]; then
+  setup-clienttools
+fi
 
 # libvirtd group
 case "$os" in
