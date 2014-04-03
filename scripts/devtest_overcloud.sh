@@ -20,6 +20,27 @@ function show_options () {
     exit $1
 }
 
+function read_certs () {
+    OVERCLOUD_SSL_CERT=$(<$SSLBASE.crt)
+    OVERCLOUD_SSL_KEY=$(<$SSLBASE.key)
+    if [ -f $SSLBASE-ca.crt ]; then
+      OVERCLOUD_SSL_CACERT=$(<$SSLBASE-ca.crt)
+      export OS_CACERT=$SSLBASE-ca.crt
+    else
+      # Use self signed cert for CA
+      OVERCLOUD_SSL_CACERT=$(<$SSLBASE.crt)
+      export OS_CACERT=$SSLBASE.crt
+    fi
+}
+
+function generate_certs () {
+    export TMP_CERT_DIR=${TRIPLEO_ROOT}/generated-certs
+    mkdir -p $TMP_CERT_DIR
+    COMMON_NAME=$1 CERT_DIR=$TMP_CERT_DIR create-certs
+    export OS_CACERT=$TMP_CERT_DIR/os-ca.crt
+    SSLBASE=$TMP_CERT_DIR/os
+}
+
 TEMP=$(getopt -o h -l build-only,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
@@ -57,11 +78,10 @@ STACKNAME=${10:-overcloud}
 # If set, the base name for a .crt and .key file for SSL. This will trigger
 # inclusion of openstack-ssl in the build and pass the contents of the files to heat.
 # Note that PUBLIC_API_URL ($12) must also be set for SSL to actually be used.
-SSLBASE=${11:-''}
-OVERCLOUD_SSL_CERT=${SSLBASE:+$(<$SSLBASE.crt)}
-OVERCLOUD_SSL_KEY=${SSLBASE:+$(<$SSLBASE.key)}
-PUBLIC_API_URL=${12:-''}
+SSLBASE=${11:-${SSLBASE:-'NULL'}}
+PUBLIC_API_URL=${12:-${PUBLIC_API_URL:-'192.0.2.254'}}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
+KEEPALIVED_ELEMENT=${SSLBASE:+keepalived}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
@@ -101,7 +121,8 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         baremetal boot-stack cinder-api cinder-volume cinder-tgt \
         os-collect-config horizon neutron-network-node dhcp-all-interfaces \
         swift-proxy swift-storage \
-        $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
+        $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS \
+        ${KEEPALIVED_ELEMENT:-} ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
 
@@ -197,6 +218,15 @@ else
   source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 fi #nodocs
 
+## #. If no user certs were provided generate some automatically
+##    ::
+if [ $SSLBASE == 'NULL' ];
+then
+    generate_certs $PUBLIC_API_URL
+fi
+
+read_certs
+
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCLOUD_COMPUTESCALE
 ##         heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
@@ -217,6 +247,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCL
 ##             -P "NovaComputeLibvirtType=${OVERCLOUD_LIBVIRT_TYPE}" \
 ##             -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
 ##             -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
+##             -P "SSLCACertificate=${OVERCLOUD_SSL_CACERT}" \
 ##             overcloud
 
 ### --end
@@ -252,6 +283,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "NovaImage=${OVERCLOUD_COMPUTE_ID}" \
     -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
     -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
+    -P "SSLCACertificate=${OVERCLOUD_SSL_CACERT}" \
     $STACKNAME
 
 ### --include
@@ -291,8 +323,8 @@ ssh-keygen -R $OVERCLOUD_IP
 ## #. Export the overcloud endpoint and credentials to your test environment.
 ##    ::
 
-OVERCLOUD_ENDPOINT="http://$OVERCLOUD_IP:5000/v2.0"
-NEW_JSON=$(jq '.overcloud.password="'${OVERCLOUD_ADMIN_PASSWORD}'" | .overcloud.endpoint="'${OVERCLOUD_ENDPOINT}'" | .overcloud.endpointhost="'${OVERCLOUD_IP}'"' $TE_DATAFILE)
+OVERCLOUD_ENDPOINT="https://$PUBLIC_API_URL:13000/v2.0"
+NEW_JSON=$(jq '.overcloud.password="'${OVERCLOUD_ADMIN_PASSWORD}'" | .overcloud.endpoint="'${OVERCLOUD_ENDPOINT}'" | .overcloud.endpointhost="'${PUBLIC_API_URL}'"' $TE_DATAFILE)
 echo $NEW_JSON > $TE_DATAFILE
 
 ## #. Source the overcloud configuration::
@@ -302,7 +334,7 @@ source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
 ## #. Exclude the overcloud from proxies::
 
 set +u #nodocs
-export no_proxy=$no_proxy,$OVERCLOUD_IP
+export no_proxy=$no_proxy,$PUBLIC_API_URL,$OVERCLOUD_IP
 set -u #nodocs
 
 ## #. If we updated the cloud we don't need to do admin setup again - skip down to `Wait for Nova Compute`_.
