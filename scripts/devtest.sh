@@ -25,6 +25,7 @@ function show_options () {
     echo "                              documentation."
     echo "    --no-undercloud        -- Do not run devtest_undercloud.sh."
     echo "    --build-only           -- Builds images but doesn't attempt to run them."
+    echo "    --download-images URL  -- Attempt to download images from a given URL."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
     echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
@@ -36,13 +37,14 @@ function show_options () {
 }
 
 BUILD_ONLY=
+DOWNLOAD_OPT=
 NODES_ARG=
 CONTINUE=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes:,no-undercloud -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,download-images:,existing-environment,trash-my-machine,nodes:,no-undercloud -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -51,6 +53,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY=--build-only; shift 1;;
+        --download-images) DOWNLOAD_OPT="--download-images $2"; shift 2;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
@@ -198,7 +201,7 @@ fi #nodocs
 ## #. See :doc:`devtest_ramdisk` for documentation::
 
 DEVTEST_RD_START=$(date +%s) #nodocs
-devtest_ramdisk.sh
+devtest_ramdisk.sh $DOWNLOAD_OPT
 DEVTEST_RD_END=$(date +%s) #nodocs
 
 ## #. See :doc:`devtest_seed` for documentation. If you are not deploying an
@@ -213,7 +216,7 @@ if [ -z "${NO_UNDERCLOUD}" ]; then
 else
   ALLNODES="--all-nodes"
 fi
-devtest_seed.sh $BUILD_ONLY $ALLNODES
+devtest_seed.sh $BUILD_ONLY $ALLNODES $DOWNLOAD_OPT
 export no_proxy=${no_proxy:-},192.0.2.1
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 DEVTEST_SD_END=$(date +%s) #nodocs
@@ -230,7 +233,7 @@ DEVTEST_SD_END=$(date +%s) #nodocs
 DEVTEST_UC_START=$(date +%s)
 if [ -z "$NO_UNDERCLOUD" ]; then
 ### --include
-devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY
+devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY $DOWNLOAD_OPT
 ### --end
   if [ -z "$BUILD_ONLY" ]; then
 ### --include
@@ -246,7 +249,7 @@ DEVTEST_UC_END=$(date +%s)
 ##    overcloudrc.::
 
 DEVTEST_OC_START=$(date +%s) #nodocs
-devtest_overcloud.sh $BUILD_ONLY
+devtest_overcloud.sh $BUILD_ONLY $DOWNLOAD_OPT
 ### --end
 DEVTEST_OC_END=$(date +%s)
 if [ -z "$BUILD_ONLY" ]; then
