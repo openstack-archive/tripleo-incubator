@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+(sudo ovs-vsctl list-ports brbm | grep -q 'ext-gw') || sudo ovs-vsctl add-port brbm ext-gw tag=101 -- set interface ext-gw type=internal
+(ip addr show ext-gw > /dev/null) || sudo ip addr add ${OVERCLOUD_GATEWAY} dev ext-gw
