@@ -39,6 +39,7 @@ function show_options () {
     echo "    --neutron-password      -- Specify a password for neutron."
     echo "    --nova-password         -- Specify a password for nova."
     echo "    --swift-password        -- Specify a password for swift"
+    echo "    --tuskar-password       -- Specify a password for tuskar"
     echo "    --enable-horizon        -- Enable horizon"
     echo "    --debug                 -- Debug the API calls made."
     echo "    --ssl                   -- Use SSL public endpoints. Takes the hostname to"
@@ -58,6 +59,7 @@ IRONIC_PASSWORD=""
 NEUTRON_PASSWORD=""
 NOVA_PASSWORD=""
 SWIFT_PASSWORD=""
+TUSKAR_PASSWORD=""
 ENABLE_HORIZON=""
 SSL=""
 REGION="regionOne" #NB: This is the keystone default.
@@ -80,6 +82,7 @@ while true ; do
         --neutron-password) export NEUTRON_PASSWORD=$2; shift 2 ;;
         --nova-password) export NOVA_PASSWORD=$2; shift 2 ;;
         --swift-password) export SWIFT_PASSWORD=$2; shift 2 ;;
+        --tuskar-password) export TUSKAR_PASSWORD=$2; shift 2 ;;
         --enable-horizon) export ENABLE_HORIZON=--enable-horizon; shift 1;;
 	--ssl) export SSL=$2; shift 2 ;;
         -h) show_options 0;;
@@ -152,4 +155,9 @@ fi
 if [ -n "$IRONIC_PASSWORD" ]; then
   # XXX: SSL not wired up yet.
   PASSWORD=$IRONIC_PASSWORD register-endpoint $DEBUG -r $REGION -d "Ironic Service" ironic baremetal http://$HOST:6385
+fi
+
+if [ -n "$TUSKAR_PASSWORD" ]; then
+  # XXX: SSL not wired up yet.
+  PASSWORD=$TUSKAR_PASSWORD register-endpoint $DEBUG -r $REGION -d "Tuskar Service" tuskar management http://$HOST:8585
 fi
