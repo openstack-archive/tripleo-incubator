@@ -11,12 +11,15 @@ function show_options () {
     echo "Build a baremetal deployment ramdisk."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
+    echo "      -h                    -- this help"
+    echo "      --download-images URL -- attempt to download images from this URL."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
+DOWNLOAD_OPT=
+
+TEMP=$(getopt -o h -l download-images:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -24,6 +27,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --download-images) DOWNLOAD_OPT="--download $2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -64,8 +68,9 @@ if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
      ! -e $TRIPLEO_ROOT/deploy-ramdisk.initramfs -o \
      "$USE_CACHE" == "0" ] ; then
 ### --include
-    $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-        $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk \
+    acquire-image $DOWNLOAD_OPT $TRIPLEO_ROOT/deploy-ramdisk \
+        $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -- \
+	-a $NODE_ARCH $NODE_DIST $DEPLOY_IMAGE_ELEMENT \
         $DIB_COMMON_ELEMENTS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-deploy.log
 ### --end
