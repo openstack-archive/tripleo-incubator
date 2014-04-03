@@ -1,0 +1,100 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] IMAGE_NAME IMAGE-CREATE-EXECUTABLE -- DISKIMAGEBUILDER-COMMAND-LINE"
+    echo
+    echo "Acquire an image from cache/download/building it."
+    echo
+    echo "With no options and no download root set, images will be built. If a download"
+    echo "root is supplied then an image will be downloaded only if the local copy is"
+    echo "different. With -c, locally built images are not refreshed - while we can do"
+    echo "cache invalidation for downloaded images, we don't have cache invalidation"
+    echo "logic yet for building images - -c allows direct control."
+    echo
+    echo "What constitutes an image is determined by the images key of the"
+    echo "\$IMAGE_NAME.meta metadata file."
+    echo
+    echo "Options:"
+    echo "    -c                     -- re-use existing images rather than rebuilding."
+    echo "    --download BASE_URL    -- download images from BASE_URL/\$imagename."
+    echo "    -h, --help             -- this text."
+    echo
+    exit $1
+}
+
+DOWNLOAD_BASE=
+USE_CACHE=
+
+TEMP=$(getopt -o ch -l download:,help -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        --download) DOWNLOAD_BASE=$2; shift 2;;
+        -c) USE_CACHE=1; shift 1;;
+        -h | --help) show_options 0;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+IMAGE_NAME=${1:-''}
+shift
+BUILD_COMMAND=${1:-''}
+shift
+
+if [ -z "$IMAGE_NAME" -o -z "${BUILD_COMMAND}" ]; then
+    show_options 1
+fi
+
+IMAGE_BASENAME=$(basename "${IMAGE_NAME}")
+IMAGE_DIRNAME=$(dirname "${IMAGE_NAME}")
+URL_BASENAME=$DOWNLOAD_BASE/$IMAGE_BASENAME
+METADATA_PATH=$URL_BASENAME.meta
+CACHE_URL="$TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url"
+
+if [ -n "$DOWNLOAD_BASE" ]; then
+    set +e
+    "${CACHE_URL}" ${URL_BASENAME}.meta ${IMAGE_NAME}.meta
+    RES=$?
+    set -e
+    if [ 0 -ne "$RES" -a 44 -ne "$RES" ]; then
+        exit $RES
+    elif [ 44 -ne "$RES" ]; then
+        IMG_LIST=$(jq '.images' ${IMAGE_NAME}.meta)
+        for pos in $(seq 0 $(($(jq length <<< $IMG_LIST) -1))); do
+            COMPONENT_NAME=$(jq -r ".[$pos]" <<< $IMG_LIST)
+            "${CACHE_URL}" ${DOWNLOAD_BASE}/${COMPONENT_NAME} "${IMAGE_DIRNAME}"/${COMPONENT_NAME}
+        done
+        exit 0
+    fi
+fi
+
+function image_exists() {
+    if [ ! -e "${IMAGE_NAME}.meta" ]; then
+        return 1
+    fi
+    IMG_LIST=$(jq '.images' ${IMAGE_NAME}.meta)
+    for pos in $(seq 0 $(($(jq length <<< $IMG_LIST) -1))); do
+        COMPONENT_NAME=$(jq -r ".[$pos]" <<< $IMG_LIST)
+        if [ ! -e "${IMAGE_DIRNAME}"/${COMPONENT_NAME} ]; then
+            return 1
+        fi
+    done
+    return 0
+}
+
+if [ image_exists -a -n "$USE_CACHE" ]; then
+    exit 0
+fi
+
+"$BUILD_COMMAND" -o "${IMAGE_NAME}" $@
