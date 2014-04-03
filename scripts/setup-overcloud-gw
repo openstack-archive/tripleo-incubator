@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+NeutronPublicInterfaceVlan=$1
+OVERCLOUD_GATEWAY=$2
+
+TAG=$(sed -e 's/vlan//g' < <(echo $NeutronPublicInterfaceVlan))
+
+(sudo ovs-vsctl list-ports brbm | grep -q 'ext-gw') || sudo ovs-vsctl add-port brbm ext-gw tag=$TAG -- set interface ext-gw type=internal
+(ip addr show ext-gw | grep -q $OVERCLOUD_GATEWAY) || sudo ip addr add $OVERCLOUD_GATEWAY dev ext-gw
