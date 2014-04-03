@@ -130,6 +130,20 @@ if [ -z "${NODE_DIST:-}" ]; then
 fi
 ### --include
 
+## #. DIB elements often take arguments in the form of environment variables.
+##    To specify DIB variables on a per-image basis you would prefix those
+##    variables according to the image they are intended for as follows:
+##        * ``SEED_DIB_VAR_``
+##        * ``UNDERCLOUD_DIB_VAR_``
+##        * ``OVERCLOUD_CONTROL_DIB_VAR_``
+##        * ``OVERCLOUD_COMPUTE_DIB_VAR_``
+##        * ``USER_DIB_VAR_``
+
+##    So to pass ``DIB_NO_PYPI_PIP=1`` to only the undercloud for example,
+##    prior to running devtest.sh you would::
+##
+##        export UNDERCLOUD_DIB_VAR_DIB_NO_PYPI_PIP=1
+
 ## #. Set size of root partition on our disk (GB). The remaining disk space
 ##    will be used for the persistent ephemeral disk to store node state.
 ##    ::

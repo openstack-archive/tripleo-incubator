@@ -104,10 +104,20 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
 if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS snmpd"
-    OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
 fi
+### --end
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then
+    (
+        # Read environment variables intended for just the overcloud-control that are
+        # to affect the DIB elements, which are not namespaced.  This will allow different
+        # options to be set for different images whilst still using devtest.sh
+        # As this is in a subshell, once the image is built and we exit the subshell,
+        # the environment changes performed here will be undone.
+        for variable in ${!OVERCLOUD_CONTROL_DIB_VAR_*} ; do
+            export ${variable##OVERCLOUD_CONTROL_DIB_VAR_}=${!variable}
+        done
+### --include
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
         baremetal boot-stack cinder-api cinder-volume cinder-tgt \
@@ -115,8 +125,10 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         swift-proxy swift-storage \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
-fi #nodocs
-
+### --end
+    )
+fi
+### --include
 ## #. Unless you are just building the images, load the image into Glance.
 
 ##    ::
@@ -130,11 +142,22 @@ fi #nodocs
 ##    ::
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+    (
+        # Read environment variables intended for just the overcloud-compute that are
+        # to affect the DIB elements, which are not namespaced.  This will allow different
+        # options to be set for different images whilst still using devtest.sh
+        # As this is in a subshell, once the image is built and we exit the subshell,
+        # the environment changes performed here will be undone.
+        for variable in ${!OVERCLOUD_COMPUTE_DIB_VAR_*} ; do #nodocs
+            export ${variable##OVERCLOUD_COMPUTE_DIB_VAR_}=${!variable} #nodocs
+        done #nodocs
+
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute ntp hosts \
         baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
         dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
+    )
 fi #nodocs
 
 ## #. Load the image into Glance. If you are just building the images you are done.
@@ -301,6 +324,7 @@ heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
 ##    register it with glance.::
 
 if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+<<<<<<< HEAD
     USE_CIRROS=${USE_CIRROS:-0} #nodocs
     if [ "$USE_CIRROS" == "0" ] ; then #nodocs
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
@@ -320,6 +344,23 @@ if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     fi
 fi
 ### --include
+=======
+    (
+        # Read environment variables intended for just the overcloud-compute that are
+        # to affect the DIB elements, which are not namespaced.  This will allow different
+        # options to be set for different images whilst still using devtest.sh
+        # As this is in a subshell, once the image is built and we exit the subshell,
+        # the environment changes performed here will be undone.
+        for variable in ${!USER_DIB_VAR_*} ; do #nodocs
+            export ${variable##USER_DIB_VAR_}=${!variable} #nodocs
+        done #nodocs
+
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
+    )
+fi #nodocs
+
+>>>>>>> 64866ad... Enable selective dib configuration per image
 ## #. Get the overcloud IP from 'nova list'
 ##    ::
 
