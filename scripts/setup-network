@@ -3,6 +3,9 @@ set -eu
 
 BASE=$(dirname $0)/../
 BRIDGE_SUFFIX=${1:-''}
+NeutronPublicInterfaceVlan=${2:-''}
+OVERCLOUD_GATEWAY=${3:-''}
+
 BRIDGE_NAME=brbm$BRIDGE_SUFFIX
 
 # Only add bridge if missing
@@ -29,3 +32,6 @@ if [ "$autostart" != "yes" ]; then
   virsh net-autostart default
 fi
 
+if [ -n "${NeutronPublicInterfaceVlan}" ] && [ -n "${OVERCLOUD_GATEWAY}" ]; then
+    setup-overcloud-gw $NeutronPublicInterfaceVlan $OVERCLOUD_GATEWAY
+fi
