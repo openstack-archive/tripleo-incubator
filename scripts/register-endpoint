@@ -115,6 +115,9 @@ elif [ "metering" = "$TYPE" ]; then
 elif [ "dashboard" = "$TYPE" ]; then
     SUFFIX="/"
     ADMIN_SUFFIX="/admin"
+elif [ "management" = "$TYPE" ]; then
+    SUFFIX="/"
+    ADMIN_SUFFIX="$SUFFIX"
 else
     echo "Unknown service type" >&2
     exit 1
