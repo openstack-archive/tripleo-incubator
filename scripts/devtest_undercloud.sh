@@ -110,6 +110,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPL
     -P "undercloudImage=${UNDERCLOUD_ID}" \
     -P "PowerSSHPrivateKey=${POWER_KEY}" \
     -P "NeutronPublicInterface=${NeutronPublicInterface}" \
+    -P "HeatStackDomainAdminPassword=${UNDERCLOUD_HEAT_STACK_DOMAIN_ADMIN_PASSWORD}" \
     ${HEAT_UNDERCLOUD_EXTRA_OPTS} \
     undercloud
 
@@ -151,8 +152,10 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 ## #. Perform setup of your undercloud.
 ##    ::
 
-init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
+init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD \
+    $UNDERCLOUD_ADMIN_TOKEN \
     $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
+init-heat-domain -p $UNDERCLOUD_HEAT_STACK_DOMAIN_ADMIN_PASSWORD 
 setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --heat-password $UNDERCLOUD_HEAT_PASSWORD \
     --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
