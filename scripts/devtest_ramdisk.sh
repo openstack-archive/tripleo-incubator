@@ -2,6 +2,33 @@
 
 set -eux
 set -o pipefail
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options]"
+    echo
+    echo "Build a baremetal deployment ramdisk."
+    echo
+    echo "Options:"
+    echo "      -h             -- this help"
+    echo
+    exit $1
+}
+
+TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -h | --help) show_options 0;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
 
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
