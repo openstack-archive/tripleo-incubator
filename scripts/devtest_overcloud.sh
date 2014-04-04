@@ -225,6 +225,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCL
 ##             -P "NovaComputeLibvirtType=${OVERCLOUD_LIBVIRT_TYPE}" \
 ##             -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
 ##             -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
+##             -P "HeatStackDomainAdminPassword=${OVERCLOUD_HEAT_STACK_DOMAIN_ADMIN_PASSWORD}" \
 ##             overcloud
 
 ### --end
@@ -261,6 +262,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "NovaImage=${OVERCLOUD_COMPUTE_ID}" \
     -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
     -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
+    -P "HeatStackDomainAdminPassword=${OVERCLOUD_HEAT_STACK_DOMAIN_ADMIN_PASSWORD}" \
     $STACKNAME
 
 ### --include
@@ -324,6 +326,8 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
     init-keystone -p $OVERCLOUD_ADMIN_PASSWORD $OVERCLOUD_ADMIN_TOKEN \
         $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP \
         ${SSLBASE:+--ssl $PUBLIC_API_URL}
+    heat-keystone-setup-domain \
+        --stack-domain-admin-password $OVERCLOUD_HEAT_STACK_DOMAIN_ADMIN_PASSWORD
     setup-endpoints $OVERCLOUD_IP \
         --cinder-password $OVERCLOUD_CINDER_PASSWORD \
         --glance-password $OVERCLOUD_GLANCE_PASSWORD \

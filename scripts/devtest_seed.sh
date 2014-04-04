@@ -202,6 +202,7 @@ echo "Waiting for seed node to configure br-ctlplane..." #nodocs
 wait_for 30 10 ping -c 1 $BM_NETWORK_SEED_IP
 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP >>~/.ssh/known_hosts
 init-keystone -p unset unset $BM_NETWORK_SEED_IP admin@example.com root@$BM_NETWORK_SEED_IP
+heat-keystone-setup-domain --stack-domain-admi-password unset
 setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
 keystone role-create --name heat_stack_user
 # Creating these roles to be used by tenants using swift
