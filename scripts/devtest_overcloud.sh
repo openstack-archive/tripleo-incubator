@@ -72,14 +72,6 @@ OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-s
 OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
 NeutronControlPlaneID=$(neutron net-show ctlplane | grep ' id ' | awk '{print $4}')
-# This will stop being a parameter once rebuild ``--preserve-ephemeral`` is fully
-# merged. For now, it requires manual effort to use, so it should be opt-in.
-# Since it's not an end-user thing yet either, we don't document it in the
-# example prose below either.
-# The patch sets needed are:
-# nova: I6bf01e52589c5894eb043f2b57e915d52e81ebc3
-# python-novaclient: Ib1511653904d4f95ab03fb471669175127004582
-OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 
 # A client-side timeout in minutes for creating or updating the overcloud
 # Heat stack.
@@ -277,7 +269,6 @@ ENV_JSON=$(jq '.parameters = {
 ENV_JSON=$(jq '.parameters = {
     "ControlVirtualInterface": "'${OVERCLOUD_VIRTUAL_INTERFACE}'"
   } + .parameters + {
-    "ImageUpdatePolicy": "'${OVERCLOUD_IMAGE_UPDATE_POLICY}'",
     "NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
     "NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
     "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
