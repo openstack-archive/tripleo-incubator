@@ -23,6 +23,7 @@ function show_options () {
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
+    echo "    --build-only           -- Builds images but doesn't attempt to run them."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
     echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
@@ -33,13 +34,14 @@ function show_options () {
     exit $1
 }
 
+BUILD_ONLY=
 NODES_ARG=
 CONTINUE=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l existing-environment,trash-my-machine,nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -47,6 +49,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --build-only) BUILD_ONLY=--build-only; shift 1;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
@@ -198,27 +201,51 @@ DEVTEST_RD_END=$(date +%s) #nodocs
 
 ## #. See :doc:`devtest_seed` for documentation::
 
-DEVTEST_SD_START=$(date +%s) #nodocs
-devtest_seed.sh
-DEVTEST_SD_END=$(date +%s) #nodocs
+##         devtest_seed.sh
 
-## #. See :doc:`devtest_undercloud` for documentation::
+### --end
+DEVTEST_SD_START=$(date +%s)
+devtest_seed.sh $BUILD_ONLY
+DEVTEST_SD_END=$(date +%s)
+### --include
+
+## #. See :doc:`devtest_undercloud` for documentation.
+##    If you are only building images you won't be able
+##    to update your no_proxy line or source the undercloudrc file.
+
+##    ::
 
 export no_proxy=${no_proxy:-},192.0.2.1
-source $TRIPLEO_ROOT/tripleo-incubator/seedrc
-DEVTEST_UC_START=$(date +%s) #nodocs
-devtest_undercloud.sh $TE_DATAFILE
-DEVTEST_UC_END=$(date +%s) #nodocs
+##         devtest_undercloud.sh $TE_DATAFILE
+### --end
+if [ -z "$BUILD_ONLY" ]; then
+    source $TRIPLEO_ROOT/tripleo-incubator/seedrc
+fi
+DEVTEST_UC_START=$(date +%s)
+devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY
+DEVTEST_UC_END=$(date +%s)
+if [ -z "$BUILD_ONLY" ]; then
+### --include
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
 source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
+fi #nodocs
 
-## #. See :doc:`devtest_overcloud` for documentation::
+## #. See :doc:`devtest_overcloud` for documentation. If you are only building
+##    images you won't be able to update your no_proxy variable or import the
+##    overcloudrc.
 
-DEVTEST_OC_START=$(date +%s) #nodocs
-devtest_overcloud.sh
-DEVTEST_OC_END=$(date +%s) #nodocs
+##    ::
+
+##         devtest_overcloud.sh
+### --end
+DEVTEST_OC_START=$(date +%s)
+devtest_overcloud.sh $BUILD_ONLY
+DEVTEST_OC_END=$(date +%s)
+if [ -z "$BUILD_ONLY" ]; then
+### --include
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key overcloud.endpointhost)
 source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
+fi #nodocs
 
 ## #. See :doc:`devtest_end` for documentation::
 

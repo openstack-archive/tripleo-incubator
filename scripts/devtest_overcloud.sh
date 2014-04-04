@@ -6,6 +6,8 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
+BUILD_ONLY=
+
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
@@ -13,11 +15,12 @@ function show_options () {
     echo
     echo "Options:"
     echo "      -h             -- this help"
+    echo "      --build-only   -- build the needed images but don't deploy them."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -25,6 +28,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --build-only) BUILD_ONLY="1"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -32,7 +36,9 @@ while true ; do
 done
 
 set -x
-OS_PASSWORD=${OS_PASSWORD:?"OS_PASSWORD is not set. Undercloud credentials are required"}
+if [ -z "$BUILD_ONLY" ]; then
+    OS_PASSWORD=${OS_PASSWORD:?"OS_PASSWORD is not set. Undercloud credentials are required"}
+fi
 
 # Parameters for tripleo-cd - see the tripleo-cd element.
 # NOTE(rpodolyaka): retain backwards compatibility by accepting both positional
@@ -75,14 +81,14 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 ## =================
 
 ## #. Create your overcloud control plane image.
-##    
+
 ##    This is the image the undercloud
 ##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
-##    
+
 ##    ``$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS`` and ``$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS`` are
 ##    meant to be used to pass additional build-time specific arguments to
 ##    ``disk-image-create``.
-##    
+
 ##    ``$SSL_ELEMENT`` is used when building a cloud with SSL endpoints - it should be
 ##    set to openstack-ssl in that situation.
 ##    ::
@@ -98,10 +104,14 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
 
-## #. Load the image into Glance:
+## #. Load the image into Glance. If you are just building the images skip this
+##    step.
+
 ##    ::
 
+if [ -z "$BUILD_ONLY" ]; then #nodocs
 OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
+fi #nodocs
 
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
@@ -115,9 +125,15 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
-## #. Load the image into Glance:
+## #. Load the image into Glance. If you are just building the images you are done.
 ##    ::
+### --end
 
+if [ -n "$BUILD_ONLY" ]; then
+  exit 0
+fi
+
+### --include
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
 
 ## #. For running an overcloud in VM's. For Physical machines, set to kvm:
