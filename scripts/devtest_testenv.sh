@@ -22,6 +22,10 @@ function show_options () {
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
     echo
+    echo "    --bm-networks NETFILE  -- You are supplying your own network layout."
+    echo "                              The schema for baremetal-network can be found in"
+    echo "                              the devtest_setup documentation."
+    echo
     echo "JSON-filename -- the path to write the environment description to."
     echo
     echo "Note: This adds a unique key to your authorised_keys file to permit "
@@ -31,10 +35,11 @@ function show_options () {
 }
 
 NODES_PATH=
+NETS_PATH=
 NUM=
 OVSBRIDGE=
 
-TEMP=$(getopt -o h,n:,b: -l nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b: -l nodes:,bm-networks: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -43,6 +48,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --nodes) NODES_PATH="$2"; shift 2;;
+        --bm-networks) NETS_PATH="$2"; shift 2;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -174,6 +180,14 @@ jq "." <<EOF > $JSONFILE
     "ssh-user":"$SSH_USER"
 }
 EOF
+
+if [ -n "$NETS_PATH" ]; then #nodocs
+    #JSON=$(jq -s '.[0].["baremetal-network"]=.[1] | .[0]' $JSONFILE $NETS_PATH)
+    JSON=$(jq -s '.[0]["baremetal-network"]=.[1] | .[0]' $JSONFILE $NETS_PATH)
+    echo "${JSON}" > $JSONFILE
+fi
+
+exit 13123
 
 ## #. If you have an existing set of nodes to use, use them.
 ##    ::
