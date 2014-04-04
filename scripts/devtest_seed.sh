@@ -94,13 +94,17 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 ##    ::
 
 # These are not persistent, if you reboot, re-run them.
-ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
-sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
+
+BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
+BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
+if [ $BM_NETWORK_GATEWAY == $BM_NETWORK_SEED_IP ]; then
+    ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
+    sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
+fi
 
 ## #. Mask the seed API endpoint out of your proxy settings
 ##    ::
 
-BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
 set +u #nodocs
 export no_proxy=$no_proxy,$BM_NETWORK_SEED_IP
 set -u #nodocs
@@ -131,7 +135,6 @@ fi
 ## #. Perform setup of your seed cloud.
 ##    ::
 
-BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
 echo "Waiting for seed node to configure br-ctlplane..." #nodocs
 wait_for 30 10 ping -c 1 $BM_NETWORK_SEED_IP
 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP >>~/.ssh/known_hosts
