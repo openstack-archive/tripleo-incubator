@@ -38,6 +38,23 @@ else
 # - sets the nova.compute_manager to avoid race conditions on ironic startup.
     jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal=""| .[0]' config.json $TE_DATAFILE > local.json
 fi
+
+# nodocs
+local_json=$(jq -s '
+.[1] as $config |(
+    .[0].heat |= (
+        .metadata_server_url= "http://" + $config["baremetal-network"].seed.ip + ":8000" |
+        .waitcondition_server_url= "http://" + $config["baremetal-network"].seed.ip + ":8000/v1/waitcondition" |
+        .watch_server_url= "http://" + $config["baremetal-network"].seed.ip + ":8003") |
+    .[0].bootstack |= (
+        .public_interface_ip=$config["baremetal-network"].seed.ip |
+        .masquerade_networks=[ $config["baremetal-network"].cidr ]) |
+    .[0].neutron.ovs.dnsmasq_range=[ $config["baremetal-network"].seed["range-start"], $config["baremetal-network"].seed["range-start"] ] |
+    .[0] |= (.["local-ipv4"]=$config["baremetal-network"].seed.ip)) | 
+.[0] ' local.json $TE_DATAFILE)
+
+echo "$local_json" > local.json
+
 ### --end
 # If running in a CI environment then the user and ip address should be read
 # from the json describing the environment
