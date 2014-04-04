@@ -304,8 +304,10 @@ keystone role-create --name heat_stack_user
 keystone role-create --name=swiftoperator
 keystone role-create --name=ResellerAdmin
 user-config
+
 ##         setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
-setup-neutron "" "" 10.0.0.0/8 "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
+INCLOUD_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key incloud-cidr --type raw --key-default '10.0.0.0/8')
+setup-neutron "" "" $INCLOUD_CIDR "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
 
 ## #. If you want a demo user in your overcloud (probably a good idea).
 ##    ::
