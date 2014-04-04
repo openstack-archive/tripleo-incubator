@@ -3,6 +3,34 @@
 set -eux
 set -o pipefail
 
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options]"
+    echo
+    echo "Deploys a baremetal cloud via heat."
+    echo
+    echo "Options:"
+    echo "      -h             -- this help"
+    echo
+    exit $1
+}
+
+TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -h | --help) show_options 0;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
 USE_CACHE=${USE_CACHE:-0}
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
