@@ -6,3 +6,4 @@ export OS_TENANT_NAME=admin
 export COMPUTE_API_VERSION=1.1
 export OS_NO_CACHE=True
 export OS_CLOUDNAME=overcloud
+export OS_IDENTITY_API_VERSION=2.0
