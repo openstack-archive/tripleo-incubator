@@ -28,6 +28,10 @@ if [ -n "$ZUUL_REF" ]; then
     exit 0
 fi
 
+# Create a manifest of tools that are in use
+GIT_MANIFEST=$TRIPLEO_ROOT/dib-manifest-git-pull_tools
+rm -f $GIT_MANIFEST
+
 for TOOL in $TOOLS; do
     TOOL_BASE=$(basename $TOOL)
     echo pulling/updating $TOOL_BASE
@@ -56,8 +60,13 @@ for TOOL in $TOOLS; do
             echo "* $TOOL_BASE is not on branch $REF; skipping pull *"
             echo "***************************************"
         fi
+        # For the manifest, LOCATION is now what we have checked out
+        LOCATION=$(git config remote.origin.url)
     fi
     echo -n $TRIPLEO_ROOT/$TOOL_BASE:
     cd $TRIPLEO_ROOT/$TOOL_BASE
     git --no-pager log -1 --pretty=oneline
+
+    # Write the manifest entry
+    echo "$TOOL_BASE git $TRIPLEO_ROOT/$TOOL_BASE $LOCATION $(git rev-parse HEAD)" >> $GIT_MANIFEST
 done
