@@ -16,9 +16,19 @@ pip install -U 'setuptools>=1.0'
 # fragile.
 pip install -U 'pbr>=0.5.21,<1.0'
 
-pip install -U python-cinderclient python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient python-ironicclient python-openstackclient os-apply-config
+pip install -U python-cinderclient python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient python-ironicclient python-openstackclient os-apply-config heat
 
-for tool in os-apply-config cinder nova glance heat keystone neutron swift ironic openstack; do
+for tool in os-apply-config \
+    cinder \
+    nova \
+    glance \
+    heat \
+    heat-keystone-setup-domain \
+    keystone \
+    neutron \
+    swift \
+    ironic \
+    openstack; do
   ln -sf $BASE/openstack-tools/bin/$tool $BASE/scripts/$tool ;
 done
 echo "Installed openstack client tool symlinks in $BASE/scripts"
