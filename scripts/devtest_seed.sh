@@ -12,11 +12,14 @@ function show_options () {
     echo
     echo "Options:"
     echo "      -h             -- this help"
+    echo "      --build-only   -- build the needed images but don't deploy them."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
+BUILD_ONLY=
+
+TEMP=$(getopt -o h -l build-only,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -24,6 +27,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --build-only) BUILD_ONLY="--build-only"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -105,17 +109,38 @@ fi
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
-cd $TRIPLEO_ROOT
-if [ "$USE_CACHE" == "0" ] ; then #nodocs
-    boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-seed.log
-else #nodocs
-    boot-seed-vm -c -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | tee $TRIPLEO_ROOT/dib-seed.log #nodocs
-fi #nodocs
+## #. If you are only building disk images, there is no reason to boot the
+##    seed VM. Instead, pass ``--build-only`` to tell boot-seed-vm not to boot
+##    the vm it builds.
 
-##    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
-##    you can log into it with 'ssh stack@192.0.2.1'.
-## 
+##    If you want to use a previously built image rather than building a new
+##    one, passing ``-c`` will boot the existing image rather than creating
+##    a new one.
+
+##    ::
+
+cd $TRIPLEO_ROOT
+##         boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent
+### --end
+if [ "$USE_CACHE" == "0" ] ; then
+    CACHE_OPT=
+else
+    CACHE_OPT="-c"
+fi
+boot-seed-vm $CACHE_OPT $BUILD_ONLY -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
+        tee $TRIPLEO_ROOT/dib-seed.log
+
+if [ -n "${BUILD_ONLY}" ]; then
+    exit 0
+fi
+### --include
+
+## #. If you're just building images, you're done with this script. Move on
+##    to :doc:`devtest_undercloud`
+
+##    ``boot-seed-vm`` will start a VM and copy your SSH pub key into the VM so that
+##    you can log into it with ``ssh stack@192.0.2.1``.
+
 ##    The IP address of the VM is printed out at the end of boot-seed-vm, or
 ##    you can query the testenv json which is updated by boot-seed-vm::
 
@@ -197,7 +222,7 @@ setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWOR
 
 setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
 
-##    If you need to collect the MAC address separately, see scripts/get-vm-mac.
+##    If you need to collect the MAC address separately, see ``scripts/get-vm-mac`.
 
 ## .. rubric:: Footnotes
 ## 
