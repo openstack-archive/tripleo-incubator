@@ -6,6 +6,8 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
+BUILD_ONLY=
+
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
@@ -13,6 +15,7 @@ function show_options () {
     echo
     echo "Options:"
     echo "      -h             -- this help"
+    echo "      --build-only   -- build the needed images but don't deploy them."
     echo
     exit $1
 }
@@ -25,6 +28,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --build-only) BUILD_ONLY="true"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -48,7 +52,6 @@ else
     UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-ironic"
 fi
 
-
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
 ##    meant to be used to pass additional arguments to disk-image-create.
@@ -61,7 +64,15 @@ if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
         baremetal boot-stack os-collect-config dhcp-all-interfaces \
         neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-undercloud.log
-fi #nodocs
+### --end
+fi
+if [ -n "$BUILD_ONLY" ]; then
+  exit 0
+fi
+### --include
+
+## #. If you wanted to build the image and run it elsewhere, you can stop at
+##    this point and head onto the overcloud image building.
 
 ## #. Load the undercloud image into Glance:
 ##    ::

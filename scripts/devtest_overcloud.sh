@@ -6,6 +6,8 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
+BUILD_ONLY=
+
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
@@ -13,6 +15,7 @@ function show_options () {
     echo
     echo "Options:"
     echo "      -h             -- this help"
+    echo "      --build-only   -- build the needed images but don't deploy them."
     echo
     exit $1
 }
@@ -25,6 +28,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --build-only) BUILD_ONLY="true"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -97,10 +101,12 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
 
-## #. Load the image into Glance:
+## #. Load the image into Glance. If you are just building the images skip this
+##    step.
 ##    ::
-
+if [ -z "$BUILD_ONLY" ]; then #nodocs
 OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
+fi #nodocs
 
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
@@ -114,9 +120,14 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
-## #. Load the image into Glance:
+## #. Load the image into Glance. If you are just building the images you are done.
 ##    ::
-
+### --end
+fi
+if [ -n "$BUILD_ONLY" ]; then
+  exit 0
+fi
+### --include
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
 
 ## #. For running an overcloud in VM's. For Physical machines, set to kvm:

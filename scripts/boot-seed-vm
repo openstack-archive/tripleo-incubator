@@ -61,6 +61,7 @@ function show_options () {
     echo
     echo "Options:"
     echo "      -a i386|amd64     -- set the architecture of the VM (i386)"
+    echo "      --build-only      -- build the needed images but don't deploy them."
     echo "      -o name           -- set the name of the VM and image file"
     echo "                           (seed) - must match that from setup-seed-vm"
     echo "      -s size           -- set the image size (30 GB)"
@@ -71,7 +72,7 @@ function show_options () {
     exit $1
 }
 
-TEMP=$(getopt -o hcia:o:s: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o hcia:o:s: -l build-only -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -80,6 +81,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         -a) export ARCH=$2; shift 2 ;;
+        --build-only) BUILD_ONLY="true"; shift 1;;
         -o) export IMAGE_NAME=$2; shift 2 ;;
         -s) export DIB_IMAGE_SIZE=$2; shift 2 ;;
         -h) show_options 0;;
@@ -135,22 +137,24 @@ fi
 
 # Shutdown any running VM - writing to the image file of a running VM is a
 # great way to get a corrupt image file.
-if [ -n "$REMOTE_OPERATIONS" ]; then
-    ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
-    # nova-baremetal doesn't kill these, they need to be destroyed to avoid conflicting with new CI runs,
-    # this can be removed when we're exclusively using ironic.
-    if [ "${USE_IRONIC:-0}" = "0" ] ; then
-        for NUM in $(seq 0 3) ; do
-            ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy baremetalbrbm${ENV_NUM}_${NUM} || true
-        done
-    fi
-else
-    virsh destroy $IMAGE_NAME || true
-    if [ "${USE_IRONIC:-0}" = "0" ] ; then
-        for NUM in $(seq 0 3) ; do
-            virsh destroy baremetal_${NUM} || true
-        done
-    fi
+if [ -z "$BUILD_ONLY" ]; then
+  if [ -n "$REMOTE_OPERATIONS" ]; then
+      ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
+      # nova-baremetal doesn't kill these, they need to be destroyed to avoid conflicting with new CI runs,
+      # this can be removed when we're exclusively using ironic.
+      if [ "${USE_IRONIC:-0}" = "0" ] ; then
+	  for NUM in $(seq 0 3) ; do
+	      ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy baremetalbrbm${ENV_NUM}_${NUM} || true
+	  done
+      fi
+  else
+      virsh destroy $IMAGE_NAME || true
+      if [ "${USE_IRONIC:-0}" = "0" ] ; then
+	  for NUM in $(seq 0 3) ; do
+	      virsh destroy baremetal_${NUM} || true
+	  done
+      fi
+  fi
 fi
 
 if [ $CREATE_IMAGE  ]; then
@@ -162,6 +166,9 @@ if [ $CREATE_IMAGE  ]; then
         $DIB -x -u -a $ARCH $ALWAYS_ELEMENTS $DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS -o $IMAGE_CACHE_FILE 2>&1 | tee $IMAGE_CACHE_FILE.log
     else
         echo "Using cached seed image : $IMAGE_CACHE_FILE.qcow2"
+    fi
+    if [ -n "$BUILD_ONLY" ]; then
+      exit 0
     fi
 
     if [ -n "$REMOTE_OPERATIONS" ]; then

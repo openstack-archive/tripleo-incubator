@@ -23,6 +23,7 @@ function show_options () {
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
+    echo "    --build-only           -- Builds images but doesn't attempt to run them."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
     echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
@@ -33,13 +34,14 @@ function show_options () {
     exit $1
 }
 
+BUILD_ONLY=
 NODES_ARG=
 CONTINUE=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l existing-environment,trash-my-machine,nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -47,6 +49,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --build-only) BUILD_ONLY=--build-only; shift 1;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
@@ -187,7 +190,7 @@ devtest_setup.sh $CONTINUE
 
 if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
 #XXX: When updating, also update the header in devtest_testenv.sh #nodocs
-devtest_testenv.sh $TE_DATAFILE $NODES_ARG
+devtest_testenv.sh $TE_DATAFILE $NODES_ARG $BUILD_ONLY
 fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
@@ -199,7 +202,7 @@ DEVTEST_RD_END=$(date +%s) #nodocs
 ## #. See :doc:`devtest_seed` for documentation::
 
 DEVTEST_SD_START=$(date +%s) #nodocs
-devtest_seed.sh
+devtest_seed.sh $BUILD_ONLY
 DEVTEST_SD_END=$(date +%s) #nodocs
 
 ## #. See :doc:`devtest_undercloud` for documentation::
@@ -207,7 +210,7 @@ DEVTEST_SD_END=$(date +%s) #nodocs
 export no_proxy=${no_proxy:-},192.0.2.1
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 DEVTEST_UC_START=$(date +%s) #nodocs
-devtest_undercloud.sh $TE_DATAFILE
+devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY
 DEVTEST_UC_END=$(date +%s) #nodocs
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
 source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
@@ -215,7 +218,7 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 ## #. See :doc:`devtest_overcloud` for documentation::
 
 DEVTEST_OC_START=$(date +%s) #nodocs
-devtest_overcloud.sh
+devtest_overcloud.sh $BUILD_ONLY
 DEVTEST_OC_END=$(date +%s) #nodocs
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key overcloud.endpointhost)
 source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
