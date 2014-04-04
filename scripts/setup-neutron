@@ -50,7 +50,7 @@ else
     # Overclouds
     NET_NAME="default-net"
     NET_EXTRA="--shared"
-    SUBNET_EXTRA=""
+    SUBNET_EXTRA="--dns-nameservers list=true 8.8.8.8"
 fi
 
 NET_ID=$(neutron net-create $NET_NAME $NET_EXTRA | grep ' id ' | awk '{print $4}')
