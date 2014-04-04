@@ -278,6 +278,7 @@ user-config
 ##         setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
 setup-neutron "" "" 10.0.0.0/8 "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
 
+
 ## #. If you want a demo user in your overcloud (probably a good idea).
 ##    ::
 
@@ -365,3 +366,10 @@ if [ -n "$USERS" ] ; then
     source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
     assert-users "$USERS"
 fi
+
+# Setup tripleo-bm-test network.
+if 
+NODEPOOL=$(keystone tenant-list | awk '$4=="openstack-nodepool" {print $2}')
+NETID=$(neutron net-create tripleo-bm-test --tenant-id $NODEPOOL --provider:network_type flat --provider:physical_network tripleo-bm-test | awk '$2=="id" { print $4}')
+neutron subnet-create --ip_version 4 --tenant-id $NODEPOOL --allocation-pool start=192.168.1.1,end=192.168.1.254 --no-gateway $NETID 192.168.1.0/24
+nova flavor-create --is-public true h1.large auto $((2*8192)) 20 1
