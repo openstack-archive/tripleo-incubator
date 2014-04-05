@@ -206,10 +206,10 @@ We start with an [image builder]
 (https://git.openstack.org/cgit/openstack/diskimage-builder/), and rules for that to
 [build OpenStack images] (https://git.openstack.org/cgit/openstack/tripleo-image-elements/).
 We then use [Heat] (https://git.openstack.org/cgit/openstack/heat) to orchestrate deployment
-of those images onto bare metal using the [Nova baremetal driver]
-(https://wiki.openstack.org/wiki/Baremetal).
+of those images onto bare metal. Currently, heat drives the [Nova baremetal driver]
+(https://wiki.openstack.org/wiki/Baremetal), although Ironic will replace Nova baremetal.
 
-Eventually we will have the Heat instance we use to deploy both the undercloud
+Eventually, we will have the Heat instance we use to deploy both the undercloud
 and overcloud hosted in the undercloud. That depends on a full-HA setup so that
 we can upgrade itself using rolling deploys... and we haven't implemented the
 full HA setup yet. Today, we deploy the undercloud from a Heat instance hosted
