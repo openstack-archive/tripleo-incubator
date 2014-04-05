@@ -70,14 +70,14 @@ Current status
 TripleO is a work in progress : we're building up the facilities needed to
 deliver the full story incrementally. Proof of concept implementations exist
 for all the discrete components - sufficient to prove the design, though
-(perhaps) not what will be used in production. In particular we don't have
+(perhaps) not what will be used in production. In particular, we don't have
 a full HA story in place, which leads to requiring a long lived seed facility
 rather than a fully self-sustaining infrastructure.  We track bugs affecting
 TripleO itself at https://bugs.launchpad.net/tripleo/.
 
 ### Diskimage-builder
 
-The lowest layer in the dependency stack, diskimage-builder can be used to
+The lowest layer in the dependency stack, diskimage-builder, can be used to
 customise generic disk images for use with Nova bare metal. It can also be
 used to provide build-time specialisation for disk images. Diskimage-builder
 is quite mature and can be downloaded from
@@ -333,7 +333,7 @@ Getting started
 ---------------
 
 See the TripleO userguide for basic setup instructions - as a developer you
-need to be setup as a user too.
+need to be set up as a user too.
 
 Efficient development
 ---------------------
