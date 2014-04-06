@@ -122,10 +122,9 @@ fi
 ## #. If you were just building images, you're finished with this script now -
 ##    move onto the next one.
 
-##    boot-seed-vm will start a VM and copy your SSH pub key into the VM so that
-##    you can log into it with 'ssh stack@192.0.2.1'.
+##    boot-seed-vm will start a VM. you can log into it with 'ssh stack@192.0.2.1'.
 ## 
-##    The IP address of the VM is printed out at the end of boot-seed-vm, or
+##    The IP address of the VM's eth0 is printed out at the end of boot-seed-vm, or
 ##    you can query the testenv json which is updated by boot-seed-vm::
 
 SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type netaddress)
