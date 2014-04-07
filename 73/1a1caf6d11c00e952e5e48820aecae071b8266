@@ -1,0 +1,14 @@
+Verified+2: Jenkins
+Code-Review+1: Jon-Paul Sullivan <jonpaul.sullivan@hp.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Approved+1: lifeless <robertc@robertcollins.net>
+Code-Review+2: Tomas Sedovic <tomas@sedovic.cz>
+Code-Review+2: Clint "SpamapS" Byrum <clint@ubuntu.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Code-Review+1: Steve Kowalik <steven@wedontsleep.org>
+Code-Review+1: Gregory Haynes <greg@greghaynes.net>
+Submitted-by: Jenkins
+Submitted-at: Mon, 07 Apr 2014 20:36:54 +0000
+Reviewed-on: https://review.openstack.org/83659
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
