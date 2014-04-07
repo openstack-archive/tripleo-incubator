@@ -57,15 +57,36 @@ if [ $USE_IRONIC -eq 0 ]; then
 # - ssh power user
 # - sets the ironic key to "" to disable configuration looking for Ironic
 #   settings.
-    jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))|.[0].ironic=""| .[0]' config.json $TE_DATAFILE > local.json
+    jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))|.[0].ironic=""| .[0]' config.json $TE_DATAFILE > tmp_local.json
 else
 # Sets:
 # - ironic.virtual_power_ssh_key(needed until https://review.openstack.org/#/c/80376 lands).
 # - nova.compute_driver to ironic.nova.virt.ironic.driver.IronicDriver
 # - sets the nova.baremetal key to "" to disable configuration looking for baremetal configuration.
 # - sets the nova.compute_manager to avoid race conditions on ironic startup.
-    jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal=""| .[0]' config.json $TE_DATAFILE > local.json
+    jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal=""| .[0]' config.json $TE_DATAFILE > tmp_local.json
 fi
+
+# Apply custom BM network settings to the seeds local.json config
+BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
+# FIXME: Once we support jq 1.3 we can use --arg here instead of writing
+# cidr.json as the 3rd input file
+echo "{ \"cidr\": \"${BM_NETWORK_CIDR##*/}\" }" > cidr.json
+jq -s '
+.[1] as $config |
+.[2] as $cidr_config |
+($config["baremetal-network"].seed.ip // "192.0.2.1") as $bm_seed_ip |
+(.[0].heat |= (
+    .watch_server_url="http://" + $bm_seed_ip + ":8003"|
+    .waitcondition_server_url="http://" + $bm_seed_ip + ":8000/v1/waitcondition"|
+    .metadata_server_url="http://" + $bm_seed_ip + ":8000"))|
+(.[0]["local-ipv4"] = $bm_seed_ip)|
+(.[0].bootstack.public_interface_ip = $bm_seed_ip + "/" + $cidr_config.cidr)|
+(.[0].bootstack.masquerade_networks = ($config["baremetal-network"].cidr // "192.0.2.0/24"))|
+ .[0]' tmp_local.json $TE_DATAFILE cidr.json > local.json
+rm cidr.json
+
+
 ### --end
 # If running in a CI environment then the user and ip address should be read
 # from the json describing the environment
@@ -101,7 +122,6 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 ##    ::
 
 # These are not persistent, if you reboot, re-run them.
-BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
 ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
 sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
 
