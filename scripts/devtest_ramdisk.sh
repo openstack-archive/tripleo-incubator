@@ -49,7 +49,7 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 
 if [ $USE_IRONIC -eq 0 ]; then
     # nova baremetal
-    DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy}
+    DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-baremetal}
 else
     # Ironic
     DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-ironic}
@@ -66,7 +66,7 @@ if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
      "$USE_CACHE" == "0" ] ; then
 ### --include
     $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-        $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk \
+        $NODE_DIST ramdisk $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk \
         $DIB_COMMON_ELEMENTS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-deploy.log
 ### --end
