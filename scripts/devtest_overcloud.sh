@@ -91,9 +91,7 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \
-        baremetal boot-stack cinder-api cinder-volume os-collect-config horizon \
-        neutron-network-node dhcp-all-interfaces swift-proxy swift-storage \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control overcloud-control \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
@@ -109,9 +107,8 @@ OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute hosts \
-        baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-        dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute overcloud-compute \
+        $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
