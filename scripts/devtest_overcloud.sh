@@ -289,40 +289,41 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
 ## #. Perform admin setup of your overcloud.
 ##    ::
 
-init-keystone -p $OVERCLOUD_ADMIN_PASSWORD $OVERCLOUD_ADMIN_TOKEN \
-    $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP \
-    ${SSLBASE:+--ssl $PUBLIC_API_URL}
-setup-endpoints $OVERCLOUD_IP --cinder-password $OVERCLOUD_CINDER_PASSWORD \
-    --glance-password $OVERCLOUD_GLANCE_PASSWORD \
-    --heat-password $OVERCLOUD_HEAT_PASSWORD \
-    --neutron-password $OVERCLOUD_NEUTRON_PASSWORD \
-    --nova-password $OVERCLOUD_NOVA_PASSWORD \
-    --swift-password $OVERCLOUD_SWIFT_PASSWORD \
-    ${SSLBASE:+--ssl $PUBLIC_API_URL}
-keystone role-create --name heat_stack_user
-# Creating these roles to be used by tenants using swift
-keystone role-create --name=swiftoperator
-keystone role-create --name=ResellerAdmin
-user-config
-##         setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
-setup-neutron "" "" 10.0.0.0/8 "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
+    init-keystone -p $OVERCLOUD_ADMIN_PASSWORD $OVERCLOUD_ADMIN_TOKEN \
+        $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP \
+        ${SSLBASE:+--ssl $PUBLIC_API_URL}
+    setup-endpoints $OVERCLOUD_IP \
+        --cinder-password $OVERCLOUD_CINDER_PASSWORD \
+        --glance-password $OVERCLOUD_GLANCE_PASSWORD \
+        --heat-password $OVERCLOUD_HEAT_PASSWORD \
+        --neutron-password $OVERCLOUD_NEUTRON_PASSWORD \
+        --nova-password $OVERCLOUD_NOVA_PASSWORD \
+        --swift-password $OVERCLOUD_SWIFT_PASSWORD \
+        ${SSLBASE:+--ssl $PUBLIC_API_URL}
+    keystone role-create --name heat_stack_user
+    # Creating these roles to be used by tenants using swift
+    keystone role-create --name=swiftoperator
+    keystone role-create --name=ResellerAdmin
+    user-config
+##             setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
+    setup-neutron "" "" 10.0.0.0/8 "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
 
 ## #. If you want a demo user in your overcloud (probably a good idea).
 ##    ::
 
-os-adduser -p $OVERCLOUD_DEMO_PASSWORD demo demo@example.com
+    os-adduser -p $OVERCLOUD_DEMO_PASSWORD demo demo@example.com
 
 ## #. Workaround https://bugs.launchpad.net/diskimage-builder/+bug/1211165.
 ##    ::
 
-nova flavor-delete m1.tiny
-nova flavor-create m1.tiny 1 512 2 1
+    nova flavor-delete m1.tiny
+    nova flavor-create m1.tiny 1 512 2 1
 
 ## #. Register the end user image with glance.
 ##    ::
 
-glance image-create --name user --public --disk-format qcow2 \
-    --container-format bare --file $TRIPLEO_ROOT/user.qcow2
+    glance image-create --name user --public --disk-format qcow2 \
+        --container-format bare --file $TRIPLEO_ROOT/user.qcow2
 
 fi #nodocs
 
@@ -346,34 +347,37 @@ source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc-user
 ##    ::
 
 if [ "stack-create" = "$HEAT_OP" ] ; then #nodocs
-user-config
+    user-config
 
 ## #. So that you can deploy a VM.
 ##    ::
 
-nova boot --key-name default --flavor m1.tiny --image user demo
+    nova boot --key-name default --flavor m1.tiny --image user demo
 
 ## #. Add an external IP for it.
 ##    ::
 
-wait_for 10 5 neutron port-list -f csv -c id --quote none \| grep id
-PORT=$(neutron port-list -f csv -c id --quote none | tail -n1)
-FLOATINGIP=$(neutron floatingip-create ext-net --port-id "${PORT//[[:space:]]/}" | awk '$2=="floating_ip_address" {print $4}')
+    wait_for 10 5 neutron port-list -f csv -c id --quote none \| grep id
+    PORT=$(neutron port-list -f csv -c id --quote none | tail -n1)
+    FLOATINGIP=$(neutron floatingip-create ext-net \
+        --port-id "${PORT//[[:space:]]/}" \
+        | awk '$2=="floating_ip_address" {print $4}')
 
 ## #. And allow network access to it.
 ##    ::
 
-neutron security-group-rule-create default --protocol icmp \
-    --direction ingress --port-range-min 8
-neutron security-group-rule-create default --protocol tcp \
-    --direction ingress --port-range-min 22 --port-range-max 22
+    neutron security-group-rule-create default --protocol icmp \
+        --direction ingress --port-range-min 8
+    neutron security-group-rule-create default --protocol tcp \
+        --direction ingress --port-range-min 22 --port-range-max 22
 
 ### --end
 else
-FLOATINGIP=$(neutron floatingip-list --quote=none -f csv -c floating_ip_address | tail -n 1)
-nova stop demo
-sleep 5
-nova start demo
+    FLOATINGIP=$(neutron floatingip-list \
+        --quote=none -f csv -c floating_ip_address | tail -n 1)
+    nova stop demo
+    sleep 5
+    nova start demo
 fi
 ### --include
 
