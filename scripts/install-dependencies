@@ -129,6 +129,7 @@ if [ "$os" = "redhat" ]; then
     fi
 fi
 
+TE_DATAFILE=${TE_DATAFILE:-}
 REMOTE_OPERATIONS=${REMOTE_OPERATIONS:-0}
 if [ "$REMOTE_OPERATIONS" != 1 -a -n "$TE_DATAFILE" -a -e "$TE_DATAFILE" ]; then
   REMOTE_OPERATIONS=$(jq '.["remote-operations"]' $TE_DATAFILE)
