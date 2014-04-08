@@ -125,7 +125,7 @@ export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
 
-export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
+export ELEMENTS_PATH=${ELEMENTS_PATH:-"$TRIPLEO_ROOT/tripleo-image-elements/elements"}
 
 ## #. Set the datafile to use to describe the 'hardware' in the devtest
 ##    environment. If this file already exists, you should skip running
