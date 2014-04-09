@@ -48,6 +48,10 @@ USE_CACHE=${USE_CACHE:-0}
 ##    ::
 
 cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
+
+## #. Ironic and Nova-Baremetal require different metadata to operate.
+##    ::
+
 if [ $USE_IRONIC -eq 0 ]; then
 # Sets:
 # - bm node arch
