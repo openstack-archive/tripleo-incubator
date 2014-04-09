@@ -21,7 +21,7 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 
 if [ $USE_IRONIC -eq 0 ]; then
     # nova baremetal
-    DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy}
+    DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-baremetal}
     DEPLOY_NAME=deploy-ramdisk
 else
     # Ironic
