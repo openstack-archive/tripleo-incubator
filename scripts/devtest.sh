@@ -14,6 +14,9 @@ function show_options () {
     echo "Test the core TripleO story."
     echo
     echo "Options:"
+    echo "    --baremetal-network [config]"
+    echo "                           -- makes the flat network ranges used to bootstrap"
+    echo "                              the seed and undercloud fully configurable"
     echo "    --trash-my-machine     -- make nontrivial destructive changes to the machine."
     echo "                              For details read the source."
     echo "    -c                     -- re-use existing source/images if they exist."
@@ -34,12 +37,13 @@ function show_options () {
 }
 
 NODES_ARG=
+BAREMETAL_NETWORK=
 CONTINUE=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l existing-environment,trash-my-machine,nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l baremetal-network:,existing-environment,trash-my-machine,nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -47,6 +51,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --baremetal-network) BAREMETAL_NETWORK="--baremetal-network $2"; shift 2;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
@@ -187,7 +192,7 @@ devtest_setup.sh $CONTINUE
 
 if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
 #XXX: When updating, also update the header in devtest_testenv.sh #nodocs
-devtest_testenv.sh $TE_DATAFILE $NODES_ARG
+devtest_testenv.sh $TE_DATAFILE $NODES_ARG $BAREMETAL_NETWORK
 fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
@@ -204,7 +209,7 @@ DEVTEST_SD_END=$(date +%s) #nodocs
 
 ## #. See :doc:`devtest_undercloud` for documentation::
 
-export no_proxy=${no_proxy:-},192.0.2.1
+export no_proxy=${no_proxy:-},$(os-apply-config --type raw -m $TE_DATAFILE --key baremetal-network.gateway-ip --key-default '192.0.2.1')
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 DEVTEST_UC_START=$(date +%s) #nodocs
 devtest_undercloud.sh $TE_DATAFILE
