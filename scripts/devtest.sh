@@ -253,7 +253,7 @@ DEVTEST_SD_END=$(date +%s)
 
 ##    ::
 
-export no_proxy=${no_proxy:-},192.0.2.1
+export no_proxy=${no_proxy:-},$(os-apply-config --type netaddress -m $TE_DATAFILE --key baremetal-network.gateway-ip --key-default '192.0.2.1')
 ##         devtest_undercloud.sh $TE_DATAFILE
 ##         source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 ### --end
