@@ -138,7 +138,12 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 ##    looked up in the ARP table by the seed MAC address during seed deployment.
 ##    ::
 
-SEEDIP=${SEEDIP:-''}
+if [ -n "$NETS_PATH" ]; then
+  SEEDIP=$(jq '.["baremetal-network"]["seed"]["ip"]' -r $NETS_PATH)
+else
+  SEEDIP=${SEEDIP:-''}
+fi
+
 
 ## #. Set the default bare metal power manager. By default devtest uses
 ##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
