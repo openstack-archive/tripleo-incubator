@@ -18,6 +18,9 @@ function show_options () {
     echo "                              the public interface of the seed."
     echo "    -h                     -- This help."
     echo "    -n                     -- Test environment number to add the seed to."
+    echo "    --baremetal-network [config]"
+    echo "                           -- makes the flat network ranges used to bootstrap"
+    echo "                              the seed and undercloud fully configurable"
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
@@ -32,9 +35,10 @@ function show_options () {
 
 NODES_PATH=
 NUM=
+BAREMETAL_NETWORK=
 OVSBRIDGE=
 
-TEMP=$(getopt -o h,n:,b: -l nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b: -l baremetal-network:,nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -42,6 +46,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
+        --baremetal-network) BAREMETAL_NETWORK="$2"; shift 2;;
         --nodes) NODES_PATH="$2"; shift 2;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
@@ -132,7 +137,12 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 ##    looked up in the ARP table by the seed MAC address during seed deployment.
 ##    ::
 
-SEEDIP=${SEEDIP:-''}
+if [ -n "$BAREMETAL_NETWORK" ]; then
+  SEEDIP=$(jq '.["baremetal-network"]["seed"]["ip"]' -r $BAREMETAL_NETWORK)
+else
+  SEEDIP=${SEEDIP:-''}
+fi
+
 
 ## #. Set the default bare metal power manager. By default devtest uses
 ##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
@@ -174,6 +184,11 @@ jq "." <<EOF > $JSONFILE
     "ssh-user":"$SSH_USER"
 }
 EOF
+
+if [ -n "$BAREMETAL_NETWORK" ]; then #nodocs
+   JSON=$(jq -s '.[0]["baremetal-network"]=.[1]["baremetal-network"] | .[0]' $JSONFILE $BAREMETAL_NETWORK)
+   echo "${JSON}" > $JSONFILE
+fi
 
 ## #. If you have an existing set of nodes to use, use them.
 ##    ::

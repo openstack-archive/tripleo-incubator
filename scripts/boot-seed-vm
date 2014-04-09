@@ -217,7 +217,7 @@ done
 echo
 
 # Remove the 192.0.2.1 hostkey, new instance == new key.
-ssh-keygen -R 192.0.2.1 || true
+ssh-keygen -R $(os-apply-config -m $TE_DATAFILE --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1') || true
 
 echo "element(s): $ALWAYS_ELEMENTS $DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS booted and ready."
 echo "SEED_IP=$VM_IP"
