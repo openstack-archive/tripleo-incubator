@@ -95,6 +95,11 @@ UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 
 NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
+## #. Set the timeout for PXE deployment of overcloud nodes:
+##    ::
+
+PxeDeployTimeout=${PxeDeployTimeout:-'2400'}
+
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
 ##    that you need to source into your shell environment.
@@ -146,14 +151,16 @@ if [[ "$USE_IRONIC" -eq 0 &&
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
     HEAT_UNDERCLOUD_EXTRA_OPTS="-P \"PowerManager=${POWER_MANAGER}\" \
                                 -P \"PowerSSHHost=${POWER_HOST}\" \
-                                -P \"PowerUserName=${POWER_USER}\""
+                                -P \"PowerUserName=${POWER_USER}\" \
+                                -P \"PxeDeployTimeout=${PxeDeployTimeout}\""
 
     REGISTER_SERVICE_OPTS=""
 
 elif [ "$USE_IRONIC" -eq 0 ] ; then #nodocs
 
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-bm.yaml"
-    HEAT_UNDERCLOUD_EXTRA_OPTS="-P \"PowerManager=${POWER_MANAGER}\""
+    HEAT_UNDERCLOUD_EXTRA_OPTS="-P \"PowerManager=${POWER_MANAGER}\" \
+                                -P \"PxeDeployTimeout=${PxeDeployTimeout}\""
 
     REGISTER_SERVICE_OPTS=""
 
