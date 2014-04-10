@@ -109,10 +109,12 @@ fi
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
-## #. If you are only building disk images, then actually running up the VMs is
-##    not interesting - pass ``--build-only`` to tell boot-seed-vm not to boot the
-##    vm it builds. If you want to use a previously built image rather than building
-##    a new one, pass ``-c`` for that.
+## #. If you are only building disk images, then then there is no reason to boot a
+##    seed VM - pass ``--build-only`` to tell boot-seed-vm not to boot the
+##    vm it builds.
+
+##    Use the ``-c`` option to boot-seed-vm to use a previously built
+##    image to boot the seed VM instead of building one.
 
 ##    ::
 
@@ -132,9 +134,7 @@ if [ -n "${BUILD_ONLY}" ]; then
 fi
 ### --include
 
-## #. It is possible to build images without deploying them - and deploy them later.
-##    If you want to do this, move onto the next script at this point - you're
-##    finished with this one now.
+## #. If you are only building images, move onto the next script at this point.
 
 ##    ``boot-seed-vm`` will start a VM and copy your SSH pub key into the VM so that
 ##    you can log into it with ``ssh stack@192.0.2.1``.
