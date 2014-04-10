@@ -193,6 +193,7 @@ setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --heat-password $UNDERCLOUD_HEAT_PASSWORD \
     --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
     --nova-password $UNDERCLOUD_NOVA_PASSWORD \
+    --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
     $REGISTER_SERVICE_OPTS
 keystone role-create --name heat_stack_user
 # Creating these roles to be used by tenants using swift
