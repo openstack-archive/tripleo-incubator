@@ -210,12 +210,13 @@ DEVTEST_SD_END=$(date +%s)
 ### --include
 
 ## #. See :doc:`devtest_undercloud` for documentation.
-##    If you are only building images you won't be able
-##    to update your no_proxy line or source the undercloudrc file.
+##    If you are only building images it is unnecessary to update
+##    your no_proxy setting or to source the undercloudrc file
 
 ##    ::
 
 export no_proxy=${no_proxy:-},192.0.2.1
+##         source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 ##         devtest_undercloud.sh $TE_DATAFILE
 ### --end
 if [ -z "$BUILD_ONLY" ]; then
@@ -231,8 +232,8 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 fi #nodocs
 
 ## #. See :doc:`devtest_overcloud` for documentation. If you are only building
-##    images you won't be able to update your no_proxy variable or import the
-##    overcloudrc.
+##    images it is unnecessary to update your no_proxy setting or to source
+##    the undercloudrc file
 
 ##    ::
 
