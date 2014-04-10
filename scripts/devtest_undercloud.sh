@@ -75,6 +75,11 @@ UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 
 NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
+## #. Set the timeout for PXE deployment of overcloud nodes:
+##    ::
+
+PxeDeployTimeout=${PxeDeployTimeout:-'9000'}
+
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    (tripleo-undercloud-passwords by default) that you need to source into
 ##    your shell environment.
@@ -111,21 +116,27 @@ wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" 
 ##    and different options.
 ##    ::
 
-if [ "$USE_IRONIC" -eq 0 ] ; then
+REGISTER_SERVICE_OPTS=
 
-    # Default to bm with nova-barmental untill we check the POWER_MANAGER.
-    HEAT_UNDERCLOUD_TEMPLATE="undercloud-bm.yaml"
-    HEAT_UNDERCLOUD_EXTRA_OPTS="-P \"PowerManager=${POWER_MANAGER}\""
-
-    REGISTER_SERVICE_OPTS=""
-else
+if [ "$USE_IRONIC" -ne 0 ] ; then
 
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
     HEAT_UNDERCLOUD_EXTRA_OPTS="-P \"IronicPassword=${UNDERCLOUD_IRONIC_PASSWORD}\""
 
     REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
-fi
 
+else
+
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
+    HEAT_UNDERCLOUD_EXTRA_OPTS="-P \"PowerManager=${POWER_MANAGER}\""
+
+    if [ "$POWER_MANAGER" != 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ] ; then
+
+        HEAT_UNDERCLOUD_TEMPLATE="undercloud-bm.yaml"
+        HEAT_UNDERCLOUD_EXTRA_OPTS="${HEAT_UNDERCLOUD_EXTRA_OPTS} \
+                                     -P \"PxeDeployTimeout=${PxeDeployTimeout}\""
+    fi
+fi
 
 ## #.  If we using 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager
 ##     as the POWER_MANAGER we need the POWER_KEY for undercloud-vm and
@@ -138,17 +149,17 @@ if [ "$POWER_MANAGER" = 'nova.virt.baremetal.virtual_power_driver.VirtualPowerMa
    HEAT_UNDERCLOUD_EXTRA_OPTS="${HEAT_UNDERCLOUD_EXTRA_OPTS} \
                                -P \"PowerSSHPrivateKey=${POWER_KEY}\""
 
-   # Using a vm and nova-barmental
+   # Using a vm and nova-barmental setup
    if [ "$USE_IRONIC" -eq 0 ] ; then
       POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
       POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
-      HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
       HEAT_UNDERCLOUD_EXTRA_OPTS="${HEAT_UNDERCLOUD_EXTRA_OPTS} \
                                   -P \"PowerSSHHost=${POWER_HOST}\" \
                                   -P \"PowerUserName=${POWER_USER}\""
    fi
 fi
+
 
 
 ## #. Deploy an undercloud.
