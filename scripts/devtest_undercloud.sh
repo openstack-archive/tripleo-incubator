@@ -53,6 +53,14 @@ else
     UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-ironic"
 fi
 
+## #. Add extra elements for Undercloud UI
+##    ::
+
+if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
+    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS ceilometer-collector \
+        ceilometer-api ceilometer-agent-central ceilometer-agent-notification"
+fi
+
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
 ##    meant to be used to pass additional arguments to disk-image-create.
@@ -149,6 +157,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
     -P "AdminToken=${UNDERCLOUD_ADMIN_TOKEN}" \
     -P "AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
+    -P "CeilometerPassword=${UNDERCLOUD_CEILOMETER_PASSWORD}" \
     -P "GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD}" \
     -P "HeatPassword=${UNDERCLOUD_HEAT_PASSWORD}" \
     -P "NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD}" \
@@ -201,7 +210,8 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
     $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
-setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD \
+    --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --heat-password $UNDERCLOUD_HEAT_PASSWORD \
     --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
     --nova-password $UNDERCLOUD_NOVA_PASSWORD \
