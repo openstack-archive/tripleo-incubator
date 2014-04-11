@@ -49,7 +49,6 @@ else
     UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-ironic"
 fi
 
-
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
 ##    meant to be used to pass additional arguments to disk-image-create.
@@ -60,6 +59,7 @@ if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
         baremetal boot-stack os-collect-config dhcp-all-interfaces \
+        ceilometer-collector ceilometer-api ceilometer-agent-central ceilometer \
         neutron-dhcp-agent horizon $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-undercloud.log
 fi #nodocs
@@ -78,20 +78,20 @@ NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
 ##    that you need to source into your shell environment.
-##    
+##
 ##    .. note::
-##      
+##
 ##      You can also make or change these later and
 ##      update the heat stack definition to inject them - as long as you also
 ##      update the keystone recorded password.
-##      
+##
 ##    .. note::
-##      
+##
 ##      There will be a window between updating keystone and
 ##      instances where they will disagree and service will be down. Instead
 ##      consider adding a new service account and changing everything across
 ##      to it, then deleting the old account after the cluster is updated.
-##      
+##
 ##    ::
 
 ### --end
@@ -138,6 +138,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
 heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
     -P "AdminToken=${UNDERCLOUD_ADMIN_TOKEN}" \
     -P "AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
+    -P "CeilometerPassword=${UNDERCLOUD_CEILOMETER_PASSWORD}" \
     -P "GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD}" \
     -P "HeatPassword=${UNDERCLOUD_HEAT_PASSWORD}" \
     -P "NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD}" \
@@ -152,7 +153,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPL
 ##    You can watch the console via ``virsh``/``virt-manager`` to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, it will reboot into the
 ##    image.
-## 
+##
 ## #. Get the undercloud IP from ``nova list``
 ##    ::
 
@@ -189,7 +190,8 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
     $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
-setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD \
+    --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --heat-password $UNDERCLOUD_HEAT_PASSWORD \
     --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
     --nova-password $UNDERCLOUD_NOVA_PASSWORD \
