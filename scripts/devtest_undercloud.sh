@@ -157,7 +157,8 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPL
 ##    ::
 
 echo "Waiting for the undercloud stack to be ready" #nodocs
-wait_for_stack_ready 220 10 undercloud
+# Make time out 60 mins as like the Heat stack-create default timeout.
+wait_for_stack_ready 240 15 undercloud
 UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
 ## #. We don't (yet) preserve ssh keys on rebuilds.
