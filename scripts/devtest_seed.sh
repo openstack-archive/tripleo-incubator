@@ -221,6 +221,13 @@ BM_NETWORK_SEED_RANGE_START=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key
 BM_NETWORK_SEED_RANGE_END=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.range-end --type raw --key-default '192.0.2.20')
 setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $BM_NETWORK_SEED_IP ctlplane
 
+## #. Nova quota runs up with the defaults quota so overide the default to
+##    allow umlimted cores, instances and ram.
+##    ::
+
+nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin | awk '$2=="id" {print $4}')
+
+
 ## #. Register "bare metal" nodes with nova and setup Nova baremetal flavors.
 ##    When using VMs Nova will PXE boot them as though they use physical
 ##    hardware.
