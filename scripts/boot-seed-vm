@@ -25,6 +25,7 @@ PATH=$PATH:/usr/sbin:/sbin
 
 # Some defaults
 ARCH=i386
+BOOTTIMEOUT=120
 export IMAGE_NAME=seed
 export DIB_IMAGE_SIZE=30
 CREATE_IMAGE=yes
@@ -67,11 +68,12 @@ function show_options () {
     echo "      -c                -- use a image cache for seed image"
     echo "      -i                -- image file was built elsewhere, don't"
     echo "                           create"
+    echo "      -t 120            -- set the time out value for boot checks in seconds"
     echo
     exit $1
 }
 
-TEMP=$(getopt -o hcia:o:s: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o hcia:o:s:t: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -85,6 +87,7 @@ while true ; do
         -h) show_options 0;;
         -c) export IMAGE_CACHE_USE=1; shift ;;
         -i) export CREATE_IMAGE=; shift ;;
+        -t) BOOTTIMEOUT=$2; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -200,7 +203,14 @@ poll_vm
 
 echo
 echo "Booted. Found IP: $VM_IP. Waiting for ssh service to start."
+STARTTIME=$(date +"%s")
 until echo '' | nc $VM_IP 22; do
+    CURRENTTIME=$(date +"%s")
+    TIMEDIFF=$(($CURRENTTIME - $STARTTIME))
+    if [ "$TIMEDIFF" -ge "$BOOTTIMEOUT" ]; then
+        echo "Boot timeout reached. Exiting."
+        exit 1
+    fi
     echo -n '.'
     sleep 1
 done
@@ -210,7 +220,14 @@ echo
 # take a few seconds.
 echo "Waiting for SSH hostkey."
 SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+STARTTIME=$(date +"%s")
 until ssh $SSH_ARGS root@$VM_IP uptime 2>&1 > /dev/null; do
+    CURRENTTIME=$(date +"%s")
+    TIMEDIFF=$(($CURRENTTIME - $STARTTIME))
+    if [ "$TIMEDIFF" -ge "$BOOTTIMEOUT" ]; then
+        echo "Boot timeout reached. Exiting."
+        exit 1
+    fi
     echo -n '.'
     sleep 1
 done
