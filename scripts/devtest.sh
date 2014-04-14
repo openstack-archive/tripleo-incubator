@@ -247,7 +247,8 @@ DEVTEST_RD_END=$(date +%s) #nodocs
 ##    with the seed cloud.::
 
 ##         devtest_seed.sh
-##         export no_proxy=${no_proxy:-},192.0.2.1
+##         export no_proxy=${no_proxy:-},$(os-apply-config --type netaddress -m \
+##             $TE_DATAFILE --key baremetal-network.seed.ip --key-default '192.0.2.1')
 ##         source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 
 ### --end
@@ -259,7 +260,8 @@ else
 fi
 devtest_seed.sh $BUILD_ONLY $ALLNODES
 DEVTEST_SD_END=$(date +%s)
-export no_proxy=${no_proxy:-},192.0.2.1
+export no_proxy=${no_proxy:-},$(os-apply-config --type netaddress -m $TE_DATAFILE \
+                                --key baremetal-network.seed.ip --key-default '192.0.2.1')
 if [ -z "$BUILD_ONLY" ]; then
     source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 fi

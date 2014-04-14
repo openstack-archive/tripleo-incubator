@@ -109,6 +109,7 @@ if [ -z "$TE_DATAFILE" ]; then
 fi
 
 HOST_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key host-ip --type netaddress --key-default '')
+BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type netaddress --key-default '192.0.2.1')
 REMOTE_OPERATIONS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key remote-operations --type raw --key-default '')
 if [ -n "$HOST_IP" ]; then
   SSH_USER=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default '')
@@ -224,8 +225,8 @@ until ssh $SSH_ARGS root@$VM_IP uptime 2>&1 > /dev/null; do
 done
 echo
 
-# Remove the 192.0.2.1 hostkey, new instance == new key.
-ssh-keygen -R 192.0.2.1 || true
+# Remove the baremetal seed ip hostkey, new instance == new key.
+ssh-keygen -R $BM_NETWORK_SEED_IP || true
 
 echo "element(s): $ALWAYS_ELEMENTS $DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS booted and ready."
 echo "SEED_IP=$VM_IP"
