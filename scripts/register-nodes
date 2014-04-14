@@ -49,7 +49,7 @@ for pos in $(seq 0 $node_count); do
             exit 1
         fi
         # Common properties.
-        ironic node-update $NODE_ID add $(jq -r '"properties/cpus=" + .cpu + " properties/memory_mb=" + .memory + " properties/local_gb=" + .disk + " properties/cpu_arch=" + .arch' <<< $NODE_JSON)
+        ironic node-update $NODE_ID add $(jq -r '"properties/cpus=" + (.cpu|tostring) + " properties/memory_mb=" + (.memory|tostring) + " properties/local_gb=" + (.disk|tostring) + " properties/cpu_arch=" + .arch' <<< $NODE_JSON)
 
         MAC_COUNT=$(($(jq ".mac | length" <<< $NODE_JSON) - 1))
         for pos in $(seq 0 $MAC_COUNT); do
