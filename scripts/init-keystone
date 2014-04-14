@@ -98,6 +98,7 @@ MEMBER_ROLE_ID=$(keystone role-create --name=Member | awk '$2=="id" {print $4}')
 
 # Users
 ADMIN_USER_ID=$(keystone user-create --name=admin \
+    --tenant-id="$ADMIN_TENANT_ID" \
     --pass="$PASSWORD" \
     --email="$ADMIN_EMAIL" | awk '$2=="id" {print $4}')
 
