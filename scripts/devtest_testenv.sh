@@ -190,12 +190,12 @@ fi
 ##    ::
 
 if [ -n "$NODES_PATH" ]; then #nodocs
-JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
-echo "${JSON}" > $JSONFILE
+  JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
+  echo "${JSON}" > $JSONFILE
 else #nodocs
-## #. Create baremetal nodes for the test cluster. The final parameter to
-##    create-nodes is the number of VMs to create. To change this in future
-##    you can run clean-env and then recreate with more nodes.
+## #. Create baremetal nodes for the test cluster. If the required number of
+##    VMs changes in future, you can run cleanup-env and then recreate with
+##    more nodes.
 ##    ::
 
 NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
