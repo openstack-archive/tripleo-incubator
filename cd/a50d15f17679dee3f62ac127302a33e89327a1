@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Approved+1: Dan Prince <dprince@redhat.com>
+Code-Review+2: Dan Prince <dprince@redhat.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+1: Michael Kerrin <michael.kerrin@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 16 Apr 2014 15:42:34 +0000
+Reviewed-on: https://review.openstack.org/85222
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
