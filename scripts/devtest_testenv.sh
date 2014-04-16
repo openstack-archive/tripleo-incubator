@@ -66,12 +66,15 @@ done
 ## .. note::
 
 ##   This script is usually called from ``devtest.sh`` as
-##   ``devtest_testenv.sh $TE_DATAFILE``
+##   ``devtest_testenv.sh $TE_DATAFILE`` so we should declare
+##   a JSONFILE variable (which equals to the first positional
+##   argument) explicitly.
 ## ::
 
-JSONFILE=${1:-''}
+##      JSONFILE=${JSONFILE:-$TE_DATAFILE}
 
 ### --end
+JSONFILE=${1:-''}
 EXTRA_ARGS=${2:-''}
 
 if [ -z "$JSONFILE" -o -n "$EXTRA_ARGS" ]; then
@@ -192,18 +195,23 @@ jq "." <<EOF > $JSONFILE
 }
 EOF
 
-if [ -n "$NETS_PATH" ]; then #nodocs
-    JSON=$(jq -s '.[0]["baremetal-network"]=.[1] | .[0]' $JSONFILE $NETS_PATH)
-    echo "${JSON}" > $JSONFILE
+## #. If you have an existing bare metal cloud network to use, use it. See
+##    `baremetal-network` section in :ref:`devtest-environment-configuration`
+##    for more details
+##    ::
+
+if [ -n "$NETS_PATH" ]; then
+  JSON=$(jq -s '.[0]["baremetal-network"]=.[1] | .[0]' $JSONFILE $NETS_PATH)
+  echo "${JSON}" > $JSONFILE
 fi
 
 ## #. If you have an existing set of nodes to use, use them.
 ##    ::
 
-if [ -n "$NODES_PATH" ]; then #nodocs
+if [ -n "$NODES_PATH" ]; then
   JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
   echo "${JSON}" > $JSONFILE
-else #nodocs
+else
 
 ## #. Create baremetal nodes for the test cluster. If the required number of
 ##    VMs changes in future, you can run cleanup-env and then recreate with
