@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Approved+1: Chris Jones <cmsj@tenshu.net>
+Code-Review+2: Chris Jones <cmsj@tenshu.net>
+Code-Review+2: Ladislav Smola <lsmola@redhat.com>
+Code-Review+1: James Polley <jp@jamezpolley.com>
+Code-Review+1: Nicholas Randon <nicholas.randon@hp.com>
+Code-Review+1: john Brooker <john.edw.brooker@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 16 Apr 2014 21:25:22 +0000
+Reviewed-on: https://review.openstack.org/85355
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
