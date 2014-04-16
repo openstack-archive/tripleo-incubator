@@ -161,6 +161,13 @@ OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-'
 
 OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
 
+## #. TripleO explicitly models key settings for OpenStack, as well as settings
+##    that require cluster awareness to configure. To configure arbitrary
+##    additional settings, provide a JSON string with them in the structure
+##    required by the template ExtraConfig parameter.
+
+OVERCLOUD_EXTRA_CONFIG=${OVERCLOUD_EXTRA_CONFIG:-''}
+
 ## #. Choose whether to deploy or update. Use stack-update to update::
 
 ##         HEAT_OP=stack-create
@@ -202,6 +209,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCL
 ##             -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
 ##             -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
 ##             -P "CloudName=${OVERCLOUD_NAME}" \
+##             -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
 ##             -P "GlancePassword=${OVERCLOUD_GLANCE_PASSWORD}" \
 ##             -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
 ##             -P "HypervisorNeutronPhysicalBridge=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}" \
@@ -231,6 +239,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
     -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
     -P "CloudName=${OVERCLOUD_NAME}" \
+    -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
     -P "GlancePassword=${OVERCLOUD_GLANCE_PASSWORD}" \
     -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
     -P "HypervisorNeutronPhysicalBridge=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}" \
