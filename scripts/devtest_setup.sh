@@ -252,7 +252,9 @@ fi
 ## #. Clone/update the other needed tools which are not available as packages.
 ##    The DIB_REPOLOCATION_* and DIB_REPOREF_* environment variables will be used,
 ##    if set, to select the diskimage_builder, tripleo_image_elements and
-##    tripleo_heat_templates to check out.
+##    tripleo_heat_templates to check out.  Setting TRIPLEO_ADDITIONAL_PULL_TOOLS
+##    to full git URLs will also allow you to add extra repositories to be cloned
+##    or updated by the pull-tools script.
 ##    ::
 
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
