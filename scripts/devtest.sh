@@ -133,8 +133,41 @@ fi
 ##     username    ALL = NOPASSWD: ALL
 ## 
 
-## Stability Warning
-## -----------------
+## Initial Checkout
+## ----------------
+
+## #. Choose a base location to put all of the source code.
+
+##    .. note::
+
+##      exports are ephemeral - they will not survive across new shell sessions
+##      or reboots. If you put these export commands in ``~/.devtestrc``, you
+##      can simply ``source ~/.devtestrc`` to reload them. Alternatively, you
+##      can ``$TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc`` and then
+##      source the generated tripleorc file.
+
+##    ::
+
+##      export TRIPLEO_ROOT=~/tripleo
+
+##    .. note::
+
+##      By default, devtest.sh uses ``~/.cache/tripleo`` for ``$TRIPLEO_ROOT``.
+##      Unless you're planning to do a one-shot run of ``devtest.sh`` and never
+##      look at the code installed or the artifacts generated, you should
+##      set this value to something more convenient to you.
+
+## #. Create the directory and check out the code
+
+##    ::
+
+##      mkdir -p $TRIPLEO_ROOT
+##      cd $TRIPLEO_ROOT
+##      git clone https://git.openstack.org/openstack/tripleo-incubator
+##      cd tripleo-incubator
+
+## Optional: stable branch
+## -----------------------
 
 ## Note that every effort is made to keep the published set of these instructions
 ## updated for use with only the master branches of the TripleO projects. There is
@@ -146,11 +179,10 @@ fi
 
 ## If you wish to use the stable branches, you should instead checkout and clone
 ## the stable branch of tripleo-incubator you want, and then build the
-## instructions yourself via::
+## instructions yourself. For instance, to create a local branch named
+## ``icehouse`` based on the upstream branch ``stable/icehouse``::
 
-##      git clone https://git.openstack.org/openstack/tripleo-incubator
-##      cd tripleo-incubator
-##      git checkout <stable-branch>
+##      git checkout -b icehouse origin/stable/icehouse
 ##      tox -evenv python setup.py build_sphinx
 ##      # View doc/build/html/devtest.html in your browser and proceed from there
 
