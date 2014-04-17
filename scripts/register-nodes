@@ -65,6 +65,8 @@ for pos in $(seq 0 $node_count); do
             ironic node-update $NODE_ID add $(jq -r '"driver_info/ssh_address=" + .pm_addr + " driver_info/ssh_username=" + .pm_user + " driver_info/ssh_key_filename=/mnt/state/var/lib/ironic/virtual-power-key driver_info/ssh_virt_type=virsh"' <<< $NODE_JSON) ;;
         *) echo "Unknown power type $PM_TYPE" ; exit 1 ;;
         esac
+        # validate the node so we sync the power state
+        ironic node-validate $NODE_ID
     fi
 done
 
