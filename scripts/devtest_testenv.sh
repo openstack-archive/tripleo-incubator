@@ -89,19 +89,22 @@ fi
 ##    impairs performance. Of the four minimum VMs for TripleO simulation, two
 ##    are nova baremetal nodes (seed and undercloud) and these need to be 2G or
 ##    larger. The hypervisor host in the overcloud also needs to be a decent size
-##    or it cannot host more than one VM.
+##    or it cannot host more than one VM. The NODE_DISK is set to support
+##    building 5 overcloud nodes when not using Ironic. If you are building a
+##    larger overcloud than this without using Ironic you may need to increase
+##    NODE_DISK.
 
 ##    32bit VMs
 ##    ::
 
-##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=30 NODE_ARCH=i386
+##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=40 NODE_ARCH=i386
 
-NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-30} NODE_ARCH=${NODE_ARCH:-i386} #nodocs
+NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386} #nodocs
 
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint::
 
-##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=30 NODE_ARCH=amd64
+##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=40 NODE_ARCH=amd64
 
 
 ## #. Configure a network for your test environment.
