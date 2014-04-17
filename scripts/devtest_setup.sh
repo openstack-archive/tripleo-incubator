@@ -233,6 +233,7 @@ fi
 
 if [ "$USE_CACHE" == "0" ] ; then #nodocs
     install-dependencies
+    setup-clienttools
 fi #nodocs
 
 ## #. (Optional) Run cleanup-env to delete VM's and storage pools from previous
