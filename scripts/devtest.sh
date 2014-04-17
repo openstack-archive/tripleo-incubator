@@ -137,12 +137,11 @@ fi
 
 ## If you wish to use the stable branches, you should instead checkout and clone
 ## the stable branch of tripleo-incubator you want, and then build the
-## instructions yourself via::
+## instructions yourself. For instance, to create a local branch named
+## ``foo`` based on the upstream branch ``stable/foo``::
 
-##      git clone https://git.openstack.org/openstack/tripleo-incubator
-##      cd tripleo-incubator
-##      git checkout <stable-branch>
-##      tox -evenv python setup.py build_sphinx
+##      git checkout -b foo origin/stable/foo
+##      tox -edocs
 ##      # View doc/build/html/devtest.html in your browser and proceed from there
 
 ## Next Steps:
