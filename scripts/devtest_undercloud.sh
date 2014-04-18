@@ -62,7 +62,7 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-    baremetal boot-stack os-collect-config dhcp-all-interfaces \
+    ntp baremetal boot-stack os-collect-config dhcp-all-interfaces \
     neutron-dhcp-agent horizon $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
     tee $TRIPLEO_ROOT/dib-undercloud.log
 ### --end
