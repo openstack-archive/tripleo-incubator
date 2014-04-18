@@ -71,7 +71,7 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-    baremetal boot-stack os-collect-config dhcp-all-interfaces \
+    ntp baremetal boot-stack os-collect-config dhcp-all-interfaces \
     neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
     tee $TRIPLEO_ROOT/dib-undercloud.log
 ### --end
@@ -94,6 +94,11 @@ UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 ##    ::
 
 NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
+
+## #. Set the NTP server for the undercloud::
+##    ::
+
+UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
@@ -167,6 +172,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPL
     -P "undercloudImage=${UNDERCLOUD_ID}" \
     -P "PowerSSHPrivateKey=${POWER_KEY}" \
     -P "NeutronPublicInterface=${NeutronPublicInterface}" \
+    -P "NtpServer=${UNDERCLOUD_NTP_SERVER}" \
     ${HEAT_UNDERCLOUD_EXTRA_OPTS} \
     undercloud
 
