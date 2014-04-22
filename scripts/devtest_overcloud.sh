@@ -110,9 +110,10 @@ fi
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \
-        baremetal boot-stack cinder-api cinder-volume cinder-tgt \
-        os-collect-config horizon neutron-network-node dhcp-all-interfaces \
-        swift-proxy swift-storage \
+        baremetal boot-stack cinder-api cinder-volume cinder-tgt ceilometer-collector\
+        ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
+        ceilometer-agent-compute os-collect-config horizon neutron-network-node \
+        dhcp-all-interfaces swift-proxy swift-storage \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
