@@ -83,7 +83,7 @@ USE_REMOTE=${USE_REMOTE:-0}
 REMOTE=${REMOTE:-""}
 USE_MANIFEST=${USE_MANIFEST:-0}
 
-if [[ "$((USE_LOCAL + USE_REMOTE + USE_MANIFEST))" != "1" ]]; then
+if [ "$((USE_LOCAL + USE_REMOTE + USE_MANIFEST))" != "1" ]; then
     echo "Choose to either clone the local path (-l)" >&2
     echo "OR" >&2
     echo "to use the remote (-r <remote>) defined in the local repo to lookup the repo URL" >&2
@@ -111,15 +111,13 @@ use_manifest() {
 
 get_location() {
     local remote_name=${1:-""}
-    if [[ -n "${remote_name}" ]] ; then
+    if [ -n "$remote_name" ]; then
         git config --get remote.${remote_name}.url
-    elif [[ "${USE_LOCAL}" == "1" ]]; then
+    elif [ "${USE_LOCAL}" = "1" ]; then
         # Find the .git directory
         local dir="$(pwd)"
-        while [[ "${dir}" != "/" ]]
-        do
-            if [[ -d "${dir}/.git" ]]
-            then
+        while [ "${dir}" != "/" ]; do
+            if [ -d "${dir}/.git" ]; then
                 echo ${dir}
                 break
             fi
@@ -144,9 +142,8 @@ get_name() {
 
 use_repos() {
     declare -A a
-    for dir in "${REPOS[@]}"
-    do
-        if [[ ! -d ${dir} ]] ; then
+    for dir in "${REPOS[@]}"; do
+        if [ ! -d ${dir} ]; then
             echo "Not a directory: ${dir}" >&2
             exit 1
         fi
@@ -162,7 +159,7 @@ use_repos() {
 }
 
 
-if [[ "${USE_MANIFEST}" == "1" ]] ; then
+if [ "${USE_MANIFEST}" = "1" ]; then
     use_manifest
 else
     if (( $# <= 0 )); then echo "Local repository location is required" >&2; show_options 1 >&2; fi

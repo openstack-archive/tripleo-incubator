@@ -125,7 +125,7 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 cd $TRIPLEO_ROOT
 ##         boot-seed-vm -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent
 ### --end
-if [ "$USE_CACHE" == "0" ] ; then
+if [ "$USE_CACHE" = "0" ] ; then
     CACHE_OPT=
 else
     CACHE_OPT="-c"
@@ -160,7 +160,7 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 
 BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
 BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
-if [ $BM_NETWORK_GATEWAY == $BM_NETWORK_SEED_IP ]; then
+if [ $BM_NETWORK_GATEWAY = $BM_NETWORK_SEED_IP ]; then
     ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
     sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
 fi

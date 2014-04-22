@@ -60,14 +60,14 @@ while [ $i -lt $LOOPS ]; do
     i=$((i + 1))
     STATUS=0
     OUTPUT=$(eval $COMMAND 2>&1) || STATUS=$?
-    if [[ -n "$SUCCESSFUL_MATCH_OUTPUT" ]] \
-        && [[ $OUTPUT =~ $SUCCESSFUL_MATCH_OUTPUT ]]; then
+    if [ -n "$SUCCESSFUL_MATCH_OUTPUT" ] \
+        && [ $OUTPUT =~ $SUCCESSFUL_MATCH_OUTPUT ]; then
         exit 0
-    elif [[ -n "$FAIL_MATCH_OUTPUT" ]] \
-        && [[ $OUTPUT =~ $FAIL_MATCH_OUTPUT ]]; then
+    elif [ -n "$FAIL_MATCH_OUTPUT" ] \
+        && [ $OUTPUT =~ $FAIL_MATCH_OUTPUT ]; then
         echo "Command output matched '$FAIL_MATCH_OUTPUT'. Exiting..."
         exit 1
-    elif [[ -z "$SUCCESSFUL_MATCH_OUTPUT" ]] && [[ $STATUS -eq 0 ]]; then
+    elif [ -z "$SUCCESSFUL_MATCH_OUTPUT" ] && [ $STATUS -eq 0 ]; then
         # The command successfully completed and we aren't testing against
         # it's output so we have finished waiting.
         exit 0
