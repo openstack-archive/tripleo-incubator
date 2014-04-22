@@ -154,6 +154,15 @@ OVERCLOUD_FLAT_NETWORKS=${OVERCLOUD_FLAT_NETWORKS:-''}
 OVERCLOUD_BRIDGE_MAPPINGS=${OVERCLOUD_BRIDGE_MAPPINGS:-''}
 OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-''}
 OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-''}
+OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
+OVERCLOUD_VIRTUAL_IP=${OVERCLOUD_VIRTUAL_IP:-'192.0.2.22'}
+OVERCLOUD_VIRTUAL_CIDR=${OVERCLOUD_VIRTUAL_CIDR:-'24'}
+
+# NOTE (dshulyak) overcloud ip should be allocated from baremetal network range
+# to ensure that ip wont be used,which is named ctlplane right now
+neutron port-create ctlplane --name VIRTUAL_IP \
+        --fixed-ip ip_address=${OVERCLOUD_VIRTUAL_IP}
+
 
 ## #. If you are using SSL, your compute nodes will need static mappings to your
 ##    endpoint in ``/etc/hosts`` (because we don't do dynamic undercloud DNS yet).
@@ -252,6 +261,8 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "NovaImage=${OVERCLOUD_COMPUTE_ID}" \
     -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
     -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
+    -P "VirtualIp=${OVERCLOUD_VIRTUAL_IP}/${OVERCLOUD_VIRTUAL_CIDR}" \
+    -P "VirtualInterface=${OVERCLOUD_VIRTUAL_INTERFACE}" \
     $STACKNAME
 
 ### --include
