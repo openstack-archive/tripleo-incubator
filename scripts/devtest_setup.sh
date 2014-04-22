@@ -207,7 +207,7 @@ cd $TRIPLEO_ROOT
 ##    ::
 
 ### --end
-if [ "$USE_CACHE" == "0" ] ; then
+if [ "$USE_CACHE" = "0" ] ; then
   if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then
 ### --include
     git clone ${DIB_REPOLOCATION_tripleo_incubator:-"https://git.openstack.org/openstack/tripleo-incubator"} tripleo-incubator
@@ -221,7 +221,7 @@ if [ "$USE_CACHE" == "0" ] ; then
   fi
 fi
 
-if [ "$NODE_DIST" == 'unsupported' ]; then
+if [ "$NODE_DIST" = 'unsupported' ]; then
     echo 'Unsupported OS distro.'
     exit 1
 fi
@@ -231,7 +231,7 @@ fi
 ##    performed:
 ##    ::
 
-if [ "$USE_CACHE" == "0" ] ; then #nodocs
+if [ "$USE_CACHE" = "0" ] ; then #nodocs
     install-dependencies
     setup-clienttools
 fi #nodocs
@@ -255,7 +255,7 @@ fi
 ##    tripleo_heat_templates to check out.
 ##    ::
 
-if [ "$USE_CACHE" == "0" ] ; then #nodocs
+if [ "$USE_CACHE" = "0" ] ; then #nodocs
     pull-tools
 fi #nodocs
 

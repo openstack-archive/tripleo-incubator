@@ -63,7 +63,7 @@ fi
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch)
 if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
      ! -e $TRIPLEO_ROOT/deploy-ramdisk.initramfs -o \
-     "$USE_CACHE" == "0" ] ; then
+     "$USE_CACHE" = "0" ] ; then
 ### --include
     $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
         $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk \

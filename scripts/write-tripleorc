@@ -98,12 +98,12 @@ if [ -n "$TRIPLEO_ROOT" ]; then
     # keep making them longer each time tripleorc is sourced.
     cat >> $FILE <<EOF
 SCRIPTS_PATH=\$TRIPLEO_ROOT/tripleo-incubator/scripts
-if [[ ! "\$PATH" =~ (^|:)"\$SCRIPTS_PATH"(:|$) ]]; then
+if [ ! "\$PATH" =~ (^|:)"\$SCRIPTS_PATH"(:|$) ]; then
     export PATH=\$TRIPLEO_ROOT/tripleo-incubator/scripts:\$PATH
 fi
 
 TIE_PATH=\$TRIPLEO_ROOT/tripleo-image-elements/elements
-if [[ ! "\$ELEMENTS_PATH" =~ (^|:)"\$TIE_PATH"(:|$) ]]; then
+if [ ! "\$ELEMENTS_PATH" =~ (^|:)"\$TIE_PATH"(:|$) ]; then
     export ELEMENTS_PATH=\$TIE_PATH\${ELEMENTS_PATH:+":\$ELEMENTS_PATH"}
 fi
 
