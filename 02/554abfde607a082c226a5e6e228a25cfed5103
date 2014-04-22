@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+1: Coleman Corrigan <coleman.corrigan@hp.com>
+Code-Review+1: Chris Jones <cmsj@tenshu.net>
+Approved+1: Imre Farkas <ifarkas@redhat.com>
+Code-Review+2: Imre Farkas <ifarkas@redhat.com>
+Code-Review+2: Jiri Stransky <jistr@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 22 Apr 2014 12:04:24 +0000
+Reviewed-on: https://review.openstack.org/86589
+Project: openstack/tripleo-incubator
+Branch: refs/heads/stable/icehouse
