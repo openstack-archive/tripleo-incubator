@@ -145,4 +145,8 @@ export ELEMENTS_PATH=${ELEMENTS_PATH:-"$TRIPLEO_ROOT/tripleo-image-elements/elem
 
 export TE_DATAFILE=${TE_DATAFILE:-"$TRIPLEO_ROOT/testenv.json"}
 
+## #. Specify whether run keystone via apache. To use it just set ``OVERCLOUD_KEYSTONE_APACHE=1``
+##    ::
+OVERCLOUD_KEYSTONE_APACHE=${OVERCLOUD_KEYSTONE_APACHE:-0}
+
 ### --end
