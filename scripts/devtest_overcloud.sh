@@ -113,7 +113,7 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \
         baremetal boot-stack cinder-api cinder-volume cinder-tgt \
         os-collect-config horizon neutron-network-node dhcp-all-interfaces \
-        swift-proxy swift-storage \
+        swift-proxy swift-storage keepalived \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
@@ -167,6 +167,7 @@ OVERCLOUD_FLAT_NETWORKS=${OVERCLOUD_FLAT_NETWORKS:-''}
 OVERCLOUD_BRIDGE_MAPPINGS=${OVERCLOUD_BRIDGE_MAPPINGS:-''}
 OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-''}
 OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-''}
+OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
 
 ## #. If you are using SSL, your compute nodes will need static mappings to your
 ##    endpoint in ``/etc/hosts`` (because we don't do dynamic undercloud DNS yet).
@@ -259,6 +260,7 @@ ENV_JSON=$(jq .parameters.NeutronPublicInterfaceDefaultRoute=\"${NeutronPublicIn
 ENV_JSON=$(jq .parameters.NeutronPublicInterfaceIP=\"${NeutronPublicInterfaceIP}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NeutronPublicInterfaceRawDevice=\"${NeutronPublicInterfaceRawDevice}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NeutronControlPlaneID=\"${NeutronControlPlaneID}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.ControlVirtualInterface=\"${OVERCLOUD_VIRTUAL_INTERFACE}\" <<< $ENV_JSON)
 ### --include
 
 ## #. Save the finished environment file.::
