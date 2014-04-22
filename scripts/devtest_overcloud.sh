@@ -154,6 +154,7 @@ OVERCLOUD_FLAT_NETWORKS=${OVERCLOUD_FLAT_NETWORKS:-''}
 OVERCLOUD_BRIDGE_MAPPINGS=${OVERCLOUD_BRIDGE_MAPPINGS:-''}
 OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-''}
 OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-''}
+OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
 
 ## #. If you are using SSL, your compute nodes will need static mappings to your
 ##    endpoint in ``/etc/hosts`` (because we don't do dynamic undercloud DNS yet).
@@ -252,6 +253,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "NovaImage=${OVERCLOUD_COMPUTE_ID}" \
     -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
     -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
+    -P "CtlVirtualInterface=${OVERCLOUD_VIRTUAL_INTERFACE}" \
     $STACKNAME
 
 ### --include
