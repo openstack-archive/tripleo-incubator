@@ -46,10 +46,16 @@ for TOOL in $TOOLS; do
         cd $TRIPLEO_ROOT/$TOOL_BASE
         if echo "/$(git symbolic-ref -q HEAD)" | grep -q "/${REF}\$" ; then
             if ! git pull --ff-only ; then
-                    echo "***************************************************"
-                    echo "* Perhaps you want to 'git rebase origin/$REF'? *"
-                    echo "***************************************************"
-                    exit 1
+              if [ $USE_CACHE == 0 ]; then
+                echo "***************************************************"
+                echo "* Perhaps you want to 'git rebase origin/$REF'? *"
+                echo "***************************************************"
+                exit 1
+              else
+                echo "***************************************************"
+                echo "* Could not update $PWD; skipping *"
+                echo "***************************************************"
+              fi
             fi
         else
             echo "***************************************"
