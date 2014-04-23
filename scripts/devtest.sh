@@ -156,10 +156,10 @@ fi
 
 ##    .. note::
 
-##      By default, devtest.sh uses ``~/.cache/tripleo`` for ``$TRIPLEO_ROOT``.
-##      Unless you're planning to do a one-shot run of ``devtest.sh`` and never
-##      look at the code installed or the artifacts generated, you should
-##      set this value to something more convenient to you.
+##      By default, devtest.sh uses the parent of the current checout for
+##      ``$TRIPLEO_ROOT``.  If required you could change this to something more
+##      conventient for you.  You will need to have tripleo-incubator checked out
+##      wherever $TRIPLEO_ROOT points to.
 
 ## #. Create the directory and check out the code
 

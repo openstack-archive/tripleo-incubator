@@ -40,8 +40,7 @@ export LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
 ##    ::
 
-export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo}
-
+export TRIPLEO_ROOT=${TRIPLEO_ROOT:-$(cd $(dirname $0)/../.. && pwd)}
 
 ## #. The TripleO tools will get (or have already been, if you followed the
 ##    suggestions in :doc:`devtest`) installed in
