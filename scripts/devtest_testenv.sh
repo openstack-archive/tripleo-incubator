@@ -192,19 +192,44 @@ if [ -n "$NETS_PATH" ]; then #nodocs
     echo "${JSON}" > $JSONFILE
 fi
 
+## #. Ensure we can ssh into the host machine to turn VMs on and off if we are
+##    using the the ``nova.virt.baremetal.virtual_power_driver.VirtualPowerManager``
+##    The private key we create will be embedded in the seed VM, and delivered
+##    dynamically by heat to the undercloud VM.
+##    ::
+
+if [ "$POWER_MANAGER" == 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ]; then #nodocs
+
+    # generate ssh authentication keys if they don't exist
+    if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
+        ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
+    fi
+
+    # make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
+    # that is copied into images via ``local-config``
+    if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
+        cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
+        chmod 0600 ~/.ssh/authorized_keys
+    fi
+
+    # Add key to the JSON file.
+    JSON=$(jq ".+{\"ssh-key\":\"$(cat ~/.ssh/id_rsa_virt_power)\"}" $JSONFILE)
+    echo "${JSON}" > $JSONFILE
+fi
+
 ## #. If you have an existing set of nodes to use, use them.
 ##    ::
 
 if [ -n "$NODES_PATH" ]; then #nodocs
-  JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
-  echo "${JSON}" > $JSONFILE
+    JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
+    echo "${JSON}" > $JSONFILE
 else #nodocs
-## #. Create baremetal nodes for the test cluster. If the required number of
-##    VMs changes in future, you can run cleanup-env and then recreate with
-##    more nodes.
-##    ::
+    ## #. Create baremetal nodes for the test cluster. If the required number of
+    ##    VMs changes in future, you can run cleanup-env and then recreate with
+    ##    more nodes.
+    ##    ::
 
-NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
-create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
+    NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+    create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
 fi
