@@ -187,7 +187,7 @@ jq "." <<EOF > $JSONFILE
 }
 EOF
 
-if [ -n "$NETS_PATH" ]; then #nodocs
+if [ -n "$NETS_PATH" ]; then
     JSON=$(jq -s '.[0]["baremetal-network"]=.[1] | .[0]' $JSONFILE $NETS_PATH)
     echo "${JSON}" > $JSONFILE
 fi
