@@ -45,20 +45,20 @@ export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo}
 
 ## #. The TripleO tools will get (or have already been, if you followed the
 ##    suggestions in :doc:`devtest`) installed in
-##    ``$TRIPLEO_ROOT/tripleo-incubator/scripts`` - you need to add that to the
+##    ``$TRIPLEO_INCUBATOR/scripts`` - you need to add that to the
 ##    ``$PATH``.
 
 ##    ::
 
 ### --end
-if [ ! -d "$TRIPLEO_ROOT/tripleo-incubator/scripts" ]; then
-  echo ERROR: Cannot find "$TRIPLEO_ROOT/tripleo-incubator/scripts".
+if [ ! -d "$TRIPLEO_INCUBATOR/scripts" ]; then
+  echo ERROR: Cannot find "$TRIPLEO_INCUBATOR/scripts".
   echo "      Please set TRIPLEO_ROOT to point to the directory which"
   echo "      contains your tripleo-incubator checkout."
   exit 1
 fi
 ### --include
-export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
+export PATH=$TRIPLEO_INCUBATOR/scripts:$PATH
 
 ## #. We now support Ironic as the baremetal deployment layer. To use it just
 ##    set ``USE_IRONIC=1``. The default is still Nova Baremetal until we've had some
@@ -136,7 +136,7 @@ export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
 
-export ELEMENTS_PATH=${ELEMENTS_PATH:-"$TRIPLEO_ROOT/tripleo-image-elements/elements"}
+export ELEMENTS_PATH=${ELEMENTS_PATH:-"$TRIPLEO_IMAGE_ELEMENTS/elements"}
 
 ## #. Set the datafile to use to describe the 'hardware' in the devtest
 ##    environment. If this file already exists, you should skip running

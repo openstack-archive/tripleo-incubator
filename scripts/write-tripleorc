@@ -97,12 +97,12 @@ if [ -n "$TRIPLEO_ROOT" ]; then
     # $ELEMENTS_PATH if they haven't already been updated.  Otherwise, we will
     # keep making them longer each time tripleorc is sourced.
     cat >> $FILE <<EOF
-SCRIPTS_PATH=\$TRIPLEO_ROOT/tripleo-incubator/scripts
+SCRIPTS_PATH=\$TRIPLEO_INCUBATOR/scripts
 if [[ ! "\$PATH" =~ (^|:)"\$SCRIPTS_PATH"(:|$) ]]; then
-    export PATH=\$TRIPLEO_ROOT/tripleo-incubator/scripts:\$PATH
+    export PATH=\$TRIPLEO_INCUBATOR/scripts:\$PATH
 fi
 
-TIE_PATH=\$TRIPLEO_ROOT/tripleo-image-elements/elements
+TIE_PATH=\$TRIPLEO_IMAGE_ELEMENTS/elements
 if [[ ! "\$ELEMENTS_PATH" =~ (^|:)"\$TIE_PATH"(:|$) ]]; then
     export ELEMENTS_PATH=\$TIE_PATH\${ELEMENTS_PATH:+":\$ELEMENTS_PATH"}
 fi

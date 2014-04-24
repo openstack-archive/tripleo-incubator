@@ -54,7 +54,7 @@ USE_CACHE=${USE_CACHE:-0}
 ##    a known-solid config.
 ##    ::
 
-cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
+cd $TRIPLEO_IMAGE_ELEMENTS/elements/seed-stack-config
 
 ## #. Ironic and Nova-Baremetal require different metadata to operate.
 ##    ::
@@ -179,12 +179,12 @@ set -u #nodocs
 ##    (Do this once).
 ##    ::
 ## 
-##      source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
+##      source $TRIPLEO_INCUBATOR/cloudprompt
 
 ## #. Source the client configuration for the seed cloud.
 ##    ::
 
-source $TRIPLEO_ROOT/tripleo-incubator/seedrc
+source $TRIPLEO_INCUBATOR/seedrc
 
 ## #. If Ironic is in use, we need to setup a user for it.
 ##    ::

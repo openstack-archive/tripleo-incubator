@@ -147,7 +147,7 @@ fi
 ##      exports are ephemeral - they will not survive across new shell sessions
 ##      or reboots. If you put these export commands in ``~/.devtestrc``, you
 ##      can simply ``source ~/.devtestrc`` to reload them. Alternatively, you
-##      can ``$TRIPLEO_ROOT/tripleo-incubator/scripts/write-tripleorc`` and then
+##      can ``$TRIPLEO_INCUBATOR/scripts/write-tripleorc`` and then
 ##      source the generated tripleorc file.
 
 ##    ::
@@ -248,7 +248,7 @@ DEVTEST_RD_END=$(date +%s) #nodocs
 
 ##         devtest_seed.sh
 ##         export no_proxy=${no_proxy:-},192.0.2.1
-##         source $TRIPLEO_ROOT/tripleo-incubator/seedrc
+##         source $TRIPLEO_INCUBATOR/seedrc
 
 ### --end
 DEVTEST_SD_START=$(date +%s)
@@ -261,7 +261,7 @@ devtest_seed.sh $BUILD_ONLY $ALLNODES
 DEVTEST_SD_END=$(date +%s)
 export no_proxy=${no_proxy:-},$(os-apply-config --type netaddress -m $TE_DATAFILE --key baremetal-network.gateway-ip --key-default '192.0.2.1')
 if [ -z "$BUILD_ONLY" ]; then
-    source $TRIPLEO_ROOT/tripleo-incubator/seedrc
+    source $TRIPLEO_INCUBATOR/seedrc
 fi
 ### --include
 
@@ -276,14 +276,14 @@ fi
 ##    ::
 ##         devtest_undercloud.sh $TE_DATAFILE
 ##         export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
-##         source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
+##         source $TRIPLEO_INCUBATOR/undercloudrc
 ### --end
 DEVTEST_UC_START=$(date +%s)
 if [ -z "$NO_UNDERCLOUD" ]; then
     devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY
     if [ -z "$BUILD_ONLY" ]; then
         export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
-        source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
+        source $TRIPLEO_INCUBATOR/undercloudrc
     fi
 fi
 DEVTEST_UC_END=$(date +%s)
@@ -303,7 +303,7 @@ DEVTEST_OC_END=$(date +%s)
 if [ -z "$BUILD_ONLY" ]; then
 ### --include
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key overcloud.endpointhost)
-source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
+source $TRIPLEO_INCUBATOR/overcloudrc
 fi #nodocs
 
 ## #. See :doc:`devtest_end` for documentation::

@@ -208,7 +208,7 @@ cd $TRIPLEO_ROOT
 
 ### --end
 if [ "$USE_CACHE" == "0" ] ; then
-  if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then
+  if [ ! -d $TRIPLEO_INCUBATOR ]; then
 ### --include
     git clone ${DIB_REPOLOCATION_tripleo_incubator:-"https://git.openstack.org/openstack/tripleo-incubator"} tripleo-incubator
     pushd tripleo-incubator
@@ -217,7 +217,7 @@ if [ "$USE_CACHE" == "0" ] ; then
 ### --end
 
   elif [ -z "${ZUUL_REF:-''}" ]; then
-    cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
+    cd $TRIPLEO_INCUBATOR ; git pull
   fi
 fi
 

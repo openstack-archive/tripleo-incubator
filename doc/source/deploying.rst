@@ -443,7 +443,7 @@ Follow the 'devtest' guide but edit the seed config.json to:
 
 - Create your deployment ramdisk with baremetal in mind::
 
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST -a \
+    $DISKIMAGE_BUILDER/bin/disk-image-create $NODE_DIST -a \
     $NODE_ARCH -o $TRIPLEO_ROOT/undercloud  boot-stack nova-baremetal \
     os-collect-config stackuser $DHCP_DRIVER -p linux-image-generic mellanox \
     serial-console --offline

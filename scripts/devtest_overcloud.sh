@@ -96,7 +96,7 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+    $DISKIMAGE_BUILDER/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \
         baremetal boot-stack cinder-api cinder-volume cinder-tgt \
         os-collect-config horizon neutron-network-node dhcp-all-interfaces \
@@ -118,7 +118,7 @@ fi #nodocs
 ##    ::
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+    $DISKIMAGE_BUILDER/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute hosts \
         baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
         dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
@@ -197,8 +197,8 @@ else
   source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 fi #nodocs
 
-make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCLOUD_COMPUTESCALE
-##         heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
+make -C $TRIPLEO_HEAT_TEMPLATES overcloud.yaml COMPUTESCALE=$OVERCLOUD_COMPUTESCALE
+##         heat $HEAT_OP -f $TRIPLEO_HEAT_TEMPLATES/overcloud.yaml \
 ##             -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
 ##             -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
 ##             -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
@@ -223,11 +223,11 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCL
 
 # This param name will soon change from 'notCompute' --> 'controller'
 CONTROLLER_IMAGE_PARAM=notcomputeImage
-if [ -e $TRIPLEO_ROOT/tripleo-heat-templates/controller.yaml ] ; then
+if [ -e $TRIPLEO_HEAT_TEMPLATES/controller.yaml ] ; then
     CONTROLLER_IMAGE_PARAM=controllerImage
 fi
 
-heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
+heat $HEAT_OP -f $TRIPLEO_HEAT_TEMPLATES/overcloud.yaml \
     -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
     -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
     -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
@@ -264,7 +264,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##    register it with glance.::
 
 if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
+    $DISKIMAGE_BUILDER/bin/disk-image-create $NODE_DIST vm \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
 fi #nodocs
 
@@ -297,7 +297,7 @@ echo $NEW_JSON > $TE_DATAFILE
 
 ## #. Source the overcloud configuration::
 
-source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
+source $TRIPLEO_INCUBATOR/overcloudrc
 
 ## #. Exclude the overcloud from proxies::
 
@@ -364,7 +364,7 @@ wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep 
 ## #. Log in as a user.
 ##    ::
 
-source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc-user
+source $TRIPLEO_INCUBATOR/overcloudrc-user
 
 ## #. If you just created the cloud you need to add your keypair to your user.
 ##    ::
@@ -412,12 +412,12 @@ wait_for 30 10 ping -c 1 $FLOATINGIP
 ### --end
 
 if [ -n "$ADMIN_USERS" ]; then
-    source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
+    source $TRIPLEO_INCUBATOR/overcloudrc
     assert-admin-users "$ADMIN_USERS"
     assert-users "$ADMIN_USERS"
 fi
 
 if [ -n "$USERS" ] ; then
-    source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
+    source $TRIPLEO_INCUBATOR/overcloudrc
     assert-users "$USERS"
 fi

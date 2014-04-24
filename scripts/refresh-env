@@ -18,12 +18,23 @@
 __tripleo_refresh_env() {
     export TRIPLEO_ROOT=$1
 
-    export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
+    for PROJNAME in tripleo-incubator tripleo-image-elements diskimage-builder \
+            tripleo-heat-templates ; do
+        UPPER_PROJNAME=$(echo $PROJNAME | tr a-z A-Z)
+        UPPER_PROJNAME=${UPPER_PROJNAME//[-.]/_}
+        if [ -d $TRIPLEO_ROOT/openstack/$PROJNAME ] ; then
+            eval $UPPER_PROJNAME=$TRIPLEO_ROOT/openstack/$PROJNAME
+        else
+            eval $UPPER_PROJNAME=$TRIPLEO_ROOT/PROJNAME
+        fi
+    done
+
+    export PATH=$TRIPLEO_INCUBATOR/scripts:$PATH
     source $(dirname $BASH_SOURCE)/set-os-type
     export NODE_DIST=${NODE_DIST:-"$TRIPLEO_OS_DISTRO"}
     pull-tools
     setup-clienttools
-    export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
+    export ELEMENTS_PATH=$TRIPLEO_IMAGE_ELEMENTS/elements
 
     echo "Make sure to source your stackrc file"
 }
