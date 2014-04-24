@@ -25,8 +25,10 @@ LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
 # define the default storage pool if its not there yet
-(virsh pool-list --all --persistent | grep -q $LIBVIRT_VOL_POOL) || (
- virsh pool-define-as --name $LIBVIRT_VOL_POOL dir --target /var/lib/libvirt/images; virsh pool-autostart $LIBVIRT_VOL_POOL; virsh pool-start $LIBVIRT_VOL_POOL) >&2
+(sudo virsh pool-list --all --persistent | grep -q $LIBVIRT_VOL_POOL) || (
+    sudo virsh pool-define-as --name $LIBVIRT_VOL_POOL dir --target /var/lib/libvirt/images
+    sudo virsh pool-autostart $LIBVIRT_VOL_POOL
+    sudo virsh pool-start $LIBVIRT_VOL_POOL) >&2
 
 PREALLOC=
 if [ -f /etc/debian_version ]; then
@@ -39,9 +41,9 @@ JSON=$(jq .nodes=[] $TE_DATAFILE)
 
 for idx in $(seq 0 $TOTAL) ; do
   vm_name="baremetal${BRIDGE}_$idx"
-  (virsh list --all | grep -q $vm_name) && continue
-  virsh vol-create-as $LIBVIRT_VOL_POOL $vm_name.qcow2 ${NODE_DISK}G --format qcow2 $PREALLOC >&2
-  volume_path=$(virsh vol-path --pool $LIBVIRT_VOL_POOL $vm_name.qcow2)
+  (sudo virsh list --all | grep -q $vm_name) && continue
+  sudo virsh vol-create-as $LIBVIRT_VOL_POOL $vm_name.qcow2 ${NODE_DISK}G --format qcow2 $PREALLOC >&2
+  volume_path=$(sudo virsh vol-path --pool $LIBVIRT_VOL_POOL $vm_name.qcow2)
   # Pre-touch the VM to set +C, as it can only be set on empty files.
   sudo touch "$volume_path"
   sudo chattr +C "$volume_path" || true
@@ -49,7 +51,13 @@ for idx in $(seq 0 $TOTAL) ; do
   if [ -n "$BRIDGE" ]; then
     BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE"
   fi
-  configure-vm --bootdev network --name $vm_name --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
+  sudo "$(dirname $0)/configure-vm" --bootdev network \
+      --name $vm_name \
+      --image "$volume_path" \
+      --arch $ARCH \
+      --cpus $CPU \
+      --memory $MEM \
+      --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
   mac=$(get-vm-mac $vm_name)
   JSON=$(jq ".nodes=(.nodes + [{mac:[\"$mac\"], cpu:\"$CPU\", memory:\"$2\", disk:\"$DISK\", arch:\"$4\", pm_user:\"$SSH_USER\", pm_addr:\"$HOSTIP\", pm_password:.[\"ssh-key\"], pm_type:\"pxe_ssh\"}])" <<< $JSON)
 

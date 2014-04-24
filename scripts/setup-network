@@ -1,20 +1,22 @@
 #!/bin/bash
-set -eu
+set -eux
 
 BASE=$(dirname $0)/../
 BRIDGE_SUFFIX=${1:-''}
+NETS_PATH=${2:-''}
 BRIDGE_NAME=brbm$BRIDGE_SUFFIX
 
 # Only add bridge if missing
 (sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) || sudo ovs-vsctl add-br ${BRIDGE_NAME}
 
 # remove bridge before replacing it.
-(virsh net-list --persistent | grep "${BRIDGE_NAME} ") && virsh net-destroy ${BRIDGE_NAME}
-(virsh net-list --inactive --persistent | grep "${BRIDGE_NAME} ") && virsh net-undefine ${BRIDGE_NAME}
+(sudo virsh net-list --persistent | grep "${BRIDGE_NAME} ") && sudo virsh net-destroy ${BRIDGE_NAME}
+(sudo virsh net-list --inactive --persistent | grep "${BRIDGE_NAME} ") && sudo virsh net-undefine ${BRIDGE_NAME}
 
-virsh net-define <(sed s/brbm/$BRIDGE_NAME/ $BASE/templates/brbm.xml)
-virsh net-autostart ${BRIDGE_NAME}
-virsh net-start ${BRIDGE_NAME}
+sed s/brbm/$BRIDGE_NAME/ $BASE/templates/brbm.xml >/tmp/brbm.xml
+sudo virsh net-define /tmp/brbm.xml
+sudo virsh net-autostart ${BRIDGE_NAME}
+sudo virsh net-start ${BRIDGE_NAME}
 
 # start default if needed and configure it to autostart
 default_net=$(sudo virsh net-list --all --persistent | grep default | awk 'BEGIN{OFS=":";} {print $2,$3}')
@@ -22,10 +24,9 @@ state=${default_net%%:*}
 autostart=${default_net##*:}
 
 if [ "$state" != "active" ]; then
-  virsh net-start default
+  sudo virsh net-start default
 fi
 
 if [ "$autostart" != "yes" ]; then
-  virsh net-autostart default
+  sudo virsh net-autostart default
 fi
-

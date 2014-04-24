@@ -51,14 +51,16 @@ export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo}
 ##    ::
 
 ### --end
-if [ ! -d "$TRIPLEO_ROOT/tripleo-incubator/scripts" ]; then
-  echo ERROR: Cannot find "$TRIPLEO_ROOT/tripleo-incubator/scripts".
+if [[ ! -d $TRIPLEO_ROOT/tripleo-incubator/scripts ]]; then
+  echo "ERROR: Cannot find '$TRIPLEO_ROOT/tripleo-incubator/scripts'".
   echo "      Please set TRIPLEO_ROOT to point to the directory which"
   echo "      contains your tripleo-incubator checkout."
   exit 1
 fi
 ### --include
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
+export PIP_DOWNLOAD_CACHE="${PIP_DOWNLOAD_CACHE:-/tmp/pip-cache}"
+mkdir -p "$PIP_DOWNLOAD_CACHE"
 
 ## #. It's posible to deploy the Undercloud without a UI and its dependent elements.
 ##    The dependent image elements in Undercloud are Horizon, Tuskar-UI (not included
@@ -120,9 +122,9 @@ export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rab
 ##         export NODE_DIST="ubuntu"
 
 ### --end
-source $(dirname ${BASH_SOURCE[0]:-$0})/set-os-type
-if [ -z "${NODE_DIST:-}" ]; then
-    if [ "$TRIPLEO_OS_DISTRO" = "fedora" ]; then
+. $(dirname ${BASH_SOURCE[0]:-$0})/set-os-type
+if [[ ! ${NODE_DIST:-} ]]; then
+    if [[ $TRIPLEO_OS_DISTRO = fedora ]]; then
         export NODE_DIST="fedora selinux-permissive"
     else
         export NODE_DIST=$TRIPLEO_OS_DISTRO

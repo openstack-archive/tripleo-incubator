@@ -3,7 +3,7 @@
 # Test environment creation for devtest.
 # This creates the bridge and VM's
 
-set -eu
+set -eux
 set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
@@ -108,7 +108,7 @@ NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-30} NO
 ##    This configures an openvswitch bridge and teaches libvirt about it.
 ##    ::
 
-setup-network $NUM
+setup-network $NUM $NETS_PATH
 
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
@@ -129,7 +129,7 @@ setup-seed-vm $SEED_ARGS -c ${SEED_CPU:-1} -m $((1024 * ${SEED_MEM:-2048}))
 ##    emulated baremetal machines.
 ##    ::
 
-SSH_USER=$(whoami)
+SSH_USER=root
 
 ## #. What IP address to ssh to for virsh operations.
 ##    ::
@@ -164,16 +164,7 @@ POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.Virtual
 ##    ::
 
 # generate ssh authentication keys if they don't exist
-if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
-    ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
-fi
-
-# make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
-# that is copied into images via ``local-config``
-if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
-    cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
-    chmod 0600 ~/.ssh/authorized_keys
-fi
+sudo -E "$SCRIPT_HOME/mangle-root-power-keys"
 
 ## #. Wrap this all up into JSON.
 ##    ::
@@ -184,7 +175,7 @@ jq "." <<EOF > $JSONFILE
     "host-ip":"$HOSTIP",
     "power_manager":"$POWER_MANAGER",
     "seed-ip":"$SEEDIP",
-    "ssh-key":"$(cat ~/.ssh/id_rsa_virt_power)",
+    "ssh-key":"$(sudo cat /root/.ssh/id_rsa_virt_power)",
     "ssh-user":"$SSH_USER"
 }
 EOF

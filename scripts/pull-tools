@@ -15,49 +15,79 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-set -eu
+set -eux
 
 # This is a cheap mr/cm-alike. Perhaps we should use mr/cm.
 
-TOOLS="https://git.openstack.org/openstack/diskimage-builder https://git.openstack.org/openstack/tripleo-image-elements https://git.openstack.org/openstack/tripleo-heat-templates https://git.openstack.org/openstack/tripleo-incubator https://git.openstack.org/openstack-infra/tripleo-ci https://git.openstack.org/openstack/os-cloud-config"
+TOOLS=(https://git.openstack.org/openstack/diskimage-builder
+    https://git.openstack.org/openstack/tripleo-image-elements
+    https://git.openstack.org/openstack/tripleo-heat-templates
+    https://git.openstack.org/openstack/tripleo-incubator
+    https://git.openstack.org/openstack-infra/tripleo-ci
+    https://git.openstack.org/openstack/os-cloud-config)
 
 ZUUL_REF=${ZUUL_REF:-''}
 
-if [ -n "$ZUUL_REF" ]; then
+if [[ $ZUUL_REF ]]; then
     echo "SKIPPING pull-tools as ZUUL_REF is present."
     exit 0
 fi
 
-for TOOL in $TOOLS; do
-    TOOL_BASE=$(basename $TOOL)
-    echo pulling/updating $TOOL_BASE
-    LOCATION_OVERRIDE=DIB_REPOLOCATION_${TOOL_BASE//[^A-Za-z0-9]/_}
-    LOCATION=${!LOCATION_OVERRIDE:-$TOOL}
+STATDIR=$(mktemp -d /tmp/tripleo-pull-XXXXXX)
+
+puller() (
+    TOOL_BASE=$(basename "$TOOL")
+    exec >>"$STATDIR/$TOOL_BASE.status"
+    exec 2>>"$STATDIR/$TOOL_BASE.status"
+    echo pulling/updating "$TOOL_BASE"
+    LOCATION_OVERRIDE="DIB_REPOLOCATION_${TOOL_BASE//[^A-Za-z0-9]/_}"
+    LOCATION="${!LOCATION_OVERRIDE:-$TOOL}"
     REF=master
-    REF_OVERRIDE=DIB_REPOREF_${TOOL_BASE//[^A-Za-z0-9]/_}
-    REF=${!REF_OVERRIDE:-$REF}
-    if [ ! -d $TRIPLEO_ROOT/$TOOL_BASE ] ; then
-        cd $TRIPLEO_ROOT
-        git clone $LOCATION
-        pushd $TOOL_BASE
-        git checkout $REF  # for a branch or SHA1
-        popd
+    REF_OVERRIDE="DIB_REPOREF_${TOOL_BASE//[^A-Za-z0-9]/_}"
+    REF="${!REF_OVERRIDE:-$REF}"
+    if [[ ! -d $TRIPLEO_ROOT/$TOOL_BASE ]] ; then
+        (   cd "$TRIPLEO_ROOT"
+            git clone "$LOCATION"
+            cd "$TOOL_BASE"
+            git checkout "$REF"  # for a branch or SHA1
+        )
     else
-        cd $TRIPLEO_ROOT/$TOOL_BASE
-        if echo "/$(git symbolic-ref -q HEAD)" | grep -q "/${REF}\$" ; then
-            if ! git pull --ff-only ; then
+        (   cd "$TRIPLEO_ROOT/$TOOL_BASE"
+            if [[ $(git symbolic-ref -q HEAD) = refs/*/$REF ]] ; then
+                if ! git pull --ff-only ; then
                     echo "***************************************************"
                     echo "* Perhaps you want to 'git rebase origin/$REF'? *"
                     echo "***************************************************"
                     exit 1
+                fi
+            else
+                echo "***************************************"
+                echo "* $TOOL_BASE is not on branch $REF; skipping pull *"
+                echo "***************************************"
             fi
-        else
-            echo "***************************************"
-            echo "* $TOOL_BASE is not on branch $REF; skipping pull *"
-            echo "***************************************"
-        fi
+        )
     fi
-    echo -n $TRIPLEO_ROOT/$TOOL_BASE:
-    cd $TRIPLEO_ROOT/$TOOL_BASE
+    printf '%s: ' "$TRIPLEO_ROOT/$TOOL_BASE"
+    cd "$TRIPLEO_ROOT/$TOOL_BASE"
     git --no-pager log -1 --pretty=oneline
+    touch "$STATDIR/$TOOL_BASE.pulled"
+)
+
+echo "Pulling ${TOOLS[*]##*/} in parallel"
+
+for TOOL in "${TOOLS[@]}"; do
+    puller &
 done
+
+wait
+
+OK=true
+for TOOL in "${TOOLS[@]}"; do
+    TOOL_BASE=$(basename "$TOOL")
+    cat "$STATDIR/$TOOL_BASE.status"
+    [[ -f $STATDIR/$TOOL_BASE.pulled ]] || OK=false
+done
+
+rm -rf "$STATDIR"
+
+[[ $OK = true ]]

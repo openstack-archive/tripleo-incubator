@@ -2,23 +2,130 @@
 set -eu
 
 ## This script should die: https://bugs.launchpad.net/tripleo/+bug/1195046.
+os=unsupported
+if [[ -f /etc/redhat-release ]]; then
+  os=redhat
+fi
+
+if [[ -f /etc/debian_version ]]; then
+  os=debian
+fi
+
+if [[ -f /etc/SuSE-release ]]; then
+  os=suse
+  # Need these in path for sudo service & usermod to work
+  PATH=/sbin:/usr/sbin:$PATH
+fi
+LIBVIRTD_GROUP='libvirtd'
+
+sudo() {
+    if [[ $UID = 0 ]]; then
+        "$@"
+    else
+        command sudo "$@"
+    fi
+}
+
+case $os in
+    debian)
+        LIBVIRTD_GROUP='libvirt'
+        export DEBIAN_FRONTEND=noninteractive
+        if grep -Eqs 'Ubuntu 12.04' /etc/lsb-release; then
+            # adding Ubuntu Cloud Archive Repository only if not present:
+            # bug https://bugs.launchpad.net/tripleo/+bug/1212237
+            # Ubuntu 12.04 has a too-old libvirt-bin but a newer one is present in the Ubuntu cloud archive.
+            sudo apt-get install --yes ubuntu-cloud-keyring
+            grep -Eqs "precise-updates/grizzly" /etc/apt/sources.list.d/cloud-archive.list || \
+                echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main' | \
+                sudo tee -a /etc/apt/sources.list.d/cloud-archive.list
+            #adding precise-backports universe repository for jq package
+            sudo add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports universe"
+        fi
+        # packages
+        sudo apt-get update
+        sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils \
+            qemu-system qemu-kvm git python-pip python-dev gcc python-virtualenv \
+            libssl-dev curl python-yaml parted lsb-release openvswitch-switch \
+            libxml2-dev libxslt1-dev jq openssh-server libffi-dev kpartx
+        sudo service libvirt-bin restart;;
+    redhat)
+        # For RHEL/CentOS, python-pip is in EPEL
+        if grep -Eqs '(Red Hat Enterprise Linux Server|CentOS) release 6|' /etc/redhat-release; then
+            if [[ ! -f /etc/yum.repos.d/epel.repo ]]; then
+                # This will need to be updated as the EPEL release changes.
+                sudo yum -y localinstall \
+                    http://mirrors.servercentral.net/fedora/epel/6/i386/epel-release-6-8.noarch.rpm || {
+                    echo Cannot automatically install the EPEL repository.
+                    echo See http://fedoraproject.org/wiki/EPEL for manual installation instructions.
+                    exit 1
+                }
+            fi
+        fi
+        sudo yum install -y python-lxml libvirt libvirt-python libvirt qemu-img \
+            git python-pip openssl-devel python-devel gcc audit python-virtualenv \
+            python-yaml bridge-utils net-tools redhat-lsb-core libxslt-devel jq \
+            openssh-server libffi-devel which kpartx python-argparse openvswitch
+        sudo service libvirtd restart
+        sudo service openvswitch restart
+        sudo chkconfig openvswitch on
+        ;;
+    suse)
+        LIBVIRTD_GROUP='libvirt'
+        # TODO: this is a bit fragile, and assumes openSUSE, not SLES
+        suse_version=$(awk '/VERSION/ { print $3 }' /etc/SuSE-release)
+        if [[ ! -f /etc/zypp/repos.d/Cloud_OpenStack_Master.repo ]]; then
+            # Add Cloud:OpenStack:Master (Project that follows master branch with daily updates)
+            sudo zypper -n ar -f http://download.opensuse.org/repositories/Cloud:/OpenStack:/Master/openSUSE_$suse_version/Cloud:OpenStack:Master.repo
+            sudo zypper -n --gpg-auto-import-keys ref
+        fi
+        sudo zypper --non-interactive install --no-recommends openvswitch-switch\
+            python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
+            python-devel gcc audit python-virtualenv python-PyYAML net-tools arping2 \
+            lsb-release libxslt-devel jq libffi48-devel libyaml-devel curl make
+        sudo service libvirtd restart
+        sudo service openvswitch-switch restart
+        ;;
+    unsupported|*)
+        echo This script has not been tested outside of Fedora, RHEL, and Ubuntu variants.
+        echo Aborting.
+        exit 1;;
+esac
+
+getent group $LIBVIRTD_GROUP || sudo groupadd $LIBVIRTD_GROUP
+
+case $os in
+    suse)
+        # kvm_intel/amd is autoloaded on SUSE, but without
+        # proper permissions. the kvm package will install an udev rule,
+        # so lets activate that one:
+        if [ "$(sudo readlink -f /proc/1/root)" = "/" ]; then
+            sudo /sbin/udevadm control --reload-rules  || :
+            sudo /sbin/udevadm trigger || :
+        fi;;
+    redhat)
+        libvirtd_file=/etc/libvirt/libvirtd.conf
+        if ! sudo grep -q "^unix_sock_group" $libvirtd_file; then
+            sudo sed -i "s/^#unix_sock_group.*/unix_sock_group = \"$LIBVIRTD_GROUP\"/g" $libvirtd_file
+            sudo sed -i 's/^#auth_unix_rw.*/auth_unix_rw = "none"/g' $libvirtd_file
+            sudo sed -i 's/^#unix_sock_rw_perms.*/unix_sock_rw_perms = "0770"/g' $libvirtd_file
+            sudo service libvirtd restart
+        fi;;
+esac
+
+sudo pip install py2-ipaddress
 
 # generate ssh key directory if it doesn't exist
-if [ ! -d ~/.ssh ]; then
-    install --mode 700 -d ~/.ssh
-fi
+[[ -d ~/.ssh ]] || install --mode 700 -d ~/.ssh
 
 # generate ssh authentication keys if they don't exist
-if [ ! -f ~/.ssh/id_rsa ]; then
-    ssh-keygen -t rsa -N ""  -f ~/.ssh/id_rsa
-fi
+[[ -f ~/.ssh/id_rsa ]] || ssh-keygen -t rsa -N ""  -f ~/.ssh/id_rsa
 
 # Ensure the local id_rsa.pub is in .ssh/authorized_keys before that is copied
 # into images via local-config. We are opening up ssh access to the host with
 # a key that the user might not want, we should find another way to place the
 # key onto the image. See https://bugs.launchpad.net/tripleo/+bug/1280052 for
 # more details.
-if ! grep "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys >/dev/null; then
+if ! fgrep -q "$(cat ~/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys; then
     echo "Adding public key to ~/.ssh/authorized_keys"
     cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 fi
@@ -26,115 +133,30 @@ fi
 # Make sure permissions are correct for ssh authorized_keys file.
 chmod 0600 ~/.ssh/authorized_keys
 
-# packages
-os=unsupported
-if [ -f /etc/redhat-release ]; then
-  if $(grep -Eqs 'Red Hat Enterprise Linux Server release 6|CentOS release 6' /etc/redhat-release); then
-    if [ -f /etc/yum.repos.d/epel.repo ]; then
-      echo EPEL repository is required to install python-pip for RHEL/CentOS.
-      echo See http://fedoraproject.org/wiki/EPEL
-       exit 1
-    fi
-  fi
-  os=redhat
-fi
-
-if [ -f /etc/debian_version ]; then
-  os=debian
-fi
-
-if [ -f /etc/SuSE-release ]; then
-  os=suse
-  # Need these in path for sudo service & usermod to work
-  PATH=/sbin:/usr/sbin:$PATH
-fi
-
-if [ "$os" = "unsupported" ]; then
-  echo This script has not been tested outside of Fedora, RHEL, and Ubuntu variants.
-  echo Aborting.
-fi
-
-if [ "$os" = "debian" ]; then
-  if $(grep -Eqs 'Ubuntu 12.04' /etc/lsb-release); then
-    #adding Ubuntu Cloud Archive Repository only if not present : bug https://bugs.launchpad.net/tripleo/+bug/1212237
-    #Ubuntu 12.04 has a too-old libvirt-bin but a newer one is present in the Ubuntu cloud archive.
-    DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes ubuntu-cloud-keyring
-    (grep -Eqs "precise-updates/grizzly" /etc/apt/sources.list.d/cloud-archive.list) || echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
-' | sudo tee -a /etc/apt/sources.list.d/cloud-archive.list
-    #adding precise-backports universe repository for jq package
-    sudo add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports universe"
-  fi
-  # packages
-  sudo apt-get update
-  DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc python-virtualenv openvswitch-switch libssl-dev curl python-yaml parted lsb-release libxml2-dev libxslt1-dev jq openssh-server libffi-dev kpartx
-
-  sudo service libvirt-bin restart
-fi
-
-if [ "$os" = "redhat" ]; then
-  # For RHEL/CentOS, python-pip is in EPEL
-  sudo yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv openvswitch python-yaml net-tools redhat-lsb-core libxslt-devel jq openssh-server libffi-devel which
-
-  sudo service libvirtd restart
-  sudo service openvswitch restart
-  sudo chkconfig openvswitch on
-fi
-
-if [ "$os" = "suse" ]; then
-  # TODO: this is a bit fragile, and assumes openSUSE, not SLES
-  suse_version=$(awk '/VERSION/ { print $3 }' /etc/SuSE-release)
-  if [ ! -f /etc/zypp/repos.d/Cloud_OpenStack_Master.repo ]; then
-      # Add Cloud:OpenStack:Master (Project that follows master branch with daily updates)
-      sudo zypper -n ar -f http://download.opensuse.org/repositories/Cloud:/OpenStack:/Master/openSUSE_$suse_version/Cloud:OpenStack:Master.repo
-      sudo zypper -n --gpg-auto-import-keys ref
-  fi
-  sudo zypper --non-interactive install \
-    python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
-    python-devel gcc audit python-virtualenv openvswitch-switch python-PyYAML net-tools \
-    lsb-release libxslt-devel jq
-  sudo service libvirtd restart
-  sudo service openvswitch-switch restart
-fi
-
-# libvirtd group
-case "$os" in
-    'Debian' | 'suse')
-        LIBVIRTD_GROUP='libvirt'
-        ;;
-    *)
-        LIBVIRTD_GROUP='libvirtd'
-        ;;
-esac
-getent group $LIBVIRTD_GROUP || sudo groupadd $LIBVIRTD_GROUP
-
-if [ "$os" = "suse" ]; then
-    # kvm_intel/amd is autoloaded on SUSE, but without
-    # proper permissions. the kvm package will install an udev rule,
-    # so lets activate that one:
-    if [ "$(sudo readlink -f /proc/1/root)" = "/" ]; then
-        sudo /sbin/udevadm control --reload-rules  || :
-        sudo /sbin/udevadm trigger || :
-    fi
-fi
-
-if [ "$os" = "redhat" ]; then
-    libvirtd_file=/etc/libvirt/libvirtd.conf
-    if ! sudo grep -q "^unix_sock_group" $libvirtd_file; then
-        sudo sed -i "s/^#unix_sock_group.*/unix_sock_group = \"$LIBVIRTD_GROUP\"/g" $libvirtd_file
-        sudo sed -i 's/^#auth_unix_rw.*/auth_unix_rw = "none"/g' $libvirtd_file
-        sudo sed -i 's/^#unix_sock_rw_perms.*/unix_sock_rw_perms = "0770"/g' $libvirtd_file
-        sudo service libvirtd restart
-    fi
-fi
-
 REMOTE_OPERATIONS=${REMOTE_OPERATIONS:-0}
-if [ "$REMOTE_OPERATIONS" != 1 -a -n "$TE_DATAFILE" -a -e "$TE_DATAFILE" ]; then
+if [[ $REMOTE_OPERATIONS != 1 && $TE_DATAFILE && -e $TE_DATAFILE ]]; then
   REMOTE_OPERATIONS=$(jq '.["remote-operations"]' $TE_DATAFILE)
   REMOTE_OPERATIONS=${REMOTE_OPERATIONS//\"}
 fi
 
-if [ $REMOTE_OPERATIONS != 1 ]; then
-  if ! id | grep -qw $LIBVIRTD_GROUP; then
+if [[ $REMOTE_OPERATIONS != 1 ]]; then
+  if [[ -f /.dockerenv ]]; then
+      [[ -c /dev/kvm ]] || sudo mknod -m 666 /dev/kvm c 10 232
+      [[ -c /dev/net/tun ]] || {
+          sudo mkdir -p /dev/net
+          sudo mknod -m 666 /dev/net/tun c 10 200
+      }
+      for ((d=0;d<=7;d++)); do 
+          [[ -b /dev/loop$d ]] || sudo mknod /dev/loop$d b 7 $d
+          sudo chmod 666 /dev/loop$d
+      done
+      [[ -c /dev/loop-control ]] || sudo mknod -m 666 /dev/loop-control c 10 237
+      [[ -c /dev/mapper/control ]] || {
+          sudo mkdir -p /dev/mapper/
+          sudo mknod -m 666 /dev/mapper/control c 10 236
+      }
+      sudo chmod 666 /var/run/libvirt/libvirt-sock
+  elif ! id | grep -qw $LIBVIRTD_GROUP; then
      echo "adding $USER to group $LIBVIRTD_GROUP"
      sudo usermod -a -G $LIBVIRTD_GROUP $USER
 

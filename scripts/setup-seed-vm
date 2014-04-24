@@ -108,7 +108,7 @@ EXTRAOPTS=
 if [ -n "$OVSBRIDGE" ] ; then
     EXTRAOPTS="--ovsbridge $OVSBRIDGE"
 fi
-configure-vm $EXTRAOPTS \
+sudo "$SCRIPT_HOME/configure-vm" $EXTRAOPTS \
        --name $IMAGE_NAME \
        --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
        --baremetal-interface $BRIDGE \

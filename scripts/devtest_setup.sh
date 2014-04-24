@@ -8,7 +8,12 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
-function show_options () {
+die() {
+    printf "%s\n" "$@"
+    exit 1
+}
+
+show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
     echo "Setup the TripleO devtest environment."
@@ -21,11 +26,11 @@ function show_options () {
     exit $1
 }
 
-CONTINUE=0
+CONTINUE=''
 USE_CACHE=${USE_CACHE:-0}
 
-TEMP=`getopt -o h,c -l trash-my-machine -n $SCRIPT_NAME -- "$@"`
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+TEMP=$(getopt -o h,c -l trash-my-machine -n $SCRIPT_NAME -- "$@") || \
+    die "Terminating..." >&2
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -36,14 +41,12 @@ while true ; do
         -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
-        *) echo "Error: unsupported option $1." ; exit 1 ;;
+        *) die "Error: unsupported option $1.";;
     esac
 done
 
-if [ "0" = "$CONTINUE" ]; then
-    echo "Not running - this script is destructive and requires --trash-my-machine to run." >&2
-    exit 1
-fi
+[[ $CONTINUE ]] || \
+    die "Not running - this script is destructive and requires --trash-my-machine to run." >&2
 
 ### --include
 ## devtest_setup
@@ -198,8 +201,8 @@ fi
 ##    use is your own, but you can also setup a dedicated user if you choose.
 ##    ::
 
-mkdir -p $TRIPLEO_ROOT
-cd $TRIPLEO_ROOT
+mkdir -p "$TRIPLEO_ROOT"
+cd "$TRIPLEO_ROOT"
 
 ## #. git clone this repository to your local machine.
 ##    The DIB_REPOLOCATION_tripleo_incubator and DIB_REPOREF_tripleo_incubator
@@ -207,30 +210,24 @@ cd $TRIPLEO_ROOT
 ##    ::
 
 ### --end
-if [ "$USE_CACHE" == "0" ] ; then
-  if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then
+if [[ $USE_CACHE = 0 ]] && which git &>/dev/null; then
+  if [[ ! -d $TRIPLEO_ROOT/tripleo-incubator ]]; then
 ### --include
-    git clone ${DIB_REPOLOCATION_tripleo_incubator:-"https://git.openstack.org/openstack/tripleo-incubator"} tripleo-incubator
-    pushd tripleo-incubator
-    git checkout ${DIB_REPOREF_tripleo_incubator:-master}
-    popd
+    git clone "${DIB_REPOLOCATION_tripleo_incubator:-https://git.openstack.org/openstack/tripleo-incubator}" tripleo-incubator
+    (cd tripleo-incubator; git checkout "${DIB_REPOREF_tripleo_incubator:-master}")
 ### --end
-
-  elif [ -z "${ZUUL_REF:-''}" ]; then
-    cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
+  elif [[ ! ${ZUUL_REF:-''} ]]; then
+    (cd "$TRIPLEO_ROOT/tripleo-incubator"; git pull)
   fi
 fi
 
-if [ "$NODE_DIST" == 'unsupported' ]; then
-    echo 'Unsupported OS distro.'
-    exit 1
-fi
+[[ $NODE_DIST != unsupported ]] || die 'Unsupported OS distro.'
 ### --include
 
 ## #. Install required system packages
 ##    ::
 
-if [ "$USE_CACHE" = "0" ] ; then #nodocs
+if [[ $USE_CACHE = 0 ]] ; then #nodocs
     install-dependencies
 fi #nodocs
 
@@ -240,25 +237,26 @@ fi #nodocs
 ##    tripleo_heat_templates to check out.
 ##    ::
 
-if [ "$USE_CACHE" = "0" ] ; then #nodocs
+if [[ $USE_CACHE = 0 ]] ; then #nodocs
     pull-tools
 fi #nodocs
+
 
 ## #. Install client tools
 ##    ::
 
-if [ "$USE_CACHE" = "0" ] ; then #nodocs
+if [[ $USE_CACHE = 0 ]] ; then #nodocs
     setup-clienttools
 fi #nodocs
 
 ## #. (Optional) Run cleanup-env to delete VM's and storage pools from previous
 ##    devtest runs. Use this if you are creating a new test environment.
 ##    ::
-## 
+##
 ##         cleanup-env
 
 ### --end
-if [ "${TRIPLEO_CLEANUP:-0}" = "1"  ]; then
+if [[ ${TRIPLEO_CLEANUP:-0} = 1  ]]; then
     echo "Cleaning up vm's/storage from previous devtest runs"
     cleanup-env
 fi
@@ -267,15 +265,15 @@ fi
 
 ## .. rubric:: Footnotes
 ## .. [#f3] Setting Up Squid Proxy
-## 
+##
 ##    * Install squid proxy
 ##      ::
-## 
+##
 ##          apt-get install squid
-## 
+##
 ##    * Set `/etc/squid3/squid.conf` to the following
 ##      ::
-## 
+##
 ##          acl localhost src 127.0.0.1/32 ::1
 ##          acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
 ##          acl localnet src 10.0.0.0/8 # RFC1918 possible internal network
@@ -310,16 +308,16 @@ fi
 ##          refresh_pattern (Release|Packages(.gz)*)$      0       20%     2880
 ##          refresh_pattern .       0   20% 4320
 ##          refresh_all_ims on
-## 
+##
 ##    * Restart squid
 ##      ::
-## 
+##
 ##          sudo service squid3 restart
-## 
+##
 ##    * Set http_proxy environment variable
 ##      ::
-## 
+##
 ##          http_proxy=http://your_ip_or_localhost:3128/
-## 
-## 
+##
+##
 ### --end

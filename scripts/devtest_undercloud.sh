@@ -120,14 +120,9 @@ UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 ##    ::
 
 ### --end
-if [ -e tripleo-undercloud-passwords ]; then
-  echo "Re-using existing passwords in $PWD/tripleo-undercloud-passwords"
-  source tripleo-undercloud-passwords
-else
-### --include
-  setup-undercloud-passwords $TRIPLEO_ROOT/tripleo-undercloud-passwords
-  source $TRIPLEO_ROOT/tripleo-undercloud-passwords
-fi #nodocs
+[[ -e $TRIPLEO_ROOT/tripleo-undercloud-passwords ]] || \
+    setup-undercloud-passwords "$TRIPLEO_ROOT/tripleo-undercloud-passwords"
+. "$TRIPLEO_ROOT/tripleo-undercloud-passwords"
 
 ## #. Pull out needed variables from the test environment definition.
 ##    ::

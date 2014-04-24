@@ -3,6 +3,7 @@
 # Demo script for Tripleo - the dev/test story.
 # This can be run for CI purposes, by passing --trash-my-machine to it.
 # Without that parameter, the script is a no-op.
+export PS4='${BASH_SOURCE}@${LINENO}: '
 set -eu
 set -o pipefail
 SCRIPT_NAME=$(basename $0)

@@ -158,10 +158,12 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 ##    ::
 
 # These are not persistent, if you reboot, re-run them.
+# Routes will not be created this way if you are running in Docker,
+# under the presumption that you are testing using local VMs
 
 BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
 BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
-if [ $BM_NETWORK_GATEWAY == $BM_NETWORK_SEED_IP ]; then
+if [[ $BM_NETWORK_GATEWAY = $BM_NETWORK_SEED_IP ]]; then
     ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
     sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
 fi
@@ -200,7 +202,7 @@ fi
 ##    ::
 
 echo "Waiting for seed node to configure br-ctlplane..." #nodocs
-wait_for 30 10 ping -c 1 $BM_NETWORK_SEED_IP
+wait_for 30 10 sudo ping -c 1 $BM_NETWORK_SEED_IP
 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP >>~/.ssh/known_hosts
 init-keystone -p unset unset $BM_NETWORK_SEED_IP admin@example.com root@$BM_NETWORK_SEED_IP
 setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
