@@ -262,40 +262,45 @@ echo $NEW_JSON > $TE_DATAFILE
 
 source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
+## #. If we updated the cloud we don't need to do admin setup again - skip down to `end`_.
+
+if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
+
 ## #. Perform setup of your undercloud.
 ##    ::
 
-init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
-    $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
-setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD \
-    --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
-    --heat-password $UNDERCLOUD_HEAT_PASSWORD \
-    --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
-    --nova-password $UNDERCLOUD_NOVA_PASSWORD \
-    --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
-    $REGISTER_SERVICE_OPTS
-keystone role-create --name heat_stack_user
-# Creating these roles to be used by tenants using swift
-keystone role-create --name=swiftoperator
-keystone role-create --name=ResellerAdmin
+    init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
+        $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
+    setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD \
+        --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+        --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+        --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
+        --nova-password $UNDERCLOUD_NOVA_PASSWORD \
+        --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
+        $REGISTER_SERVICE_OPTS
+    keystone role-create --name heat_stack_user
+    # Creating these roles to be used by tenants using swift
+    keystone role-create --name=swiftoperator
+    keystone role-create --name=ResellerAdmin
 
-user-config
+    user-config
 
-BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
-BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
-BM_NETWORK_UNDERCLOUD_RANGE_START=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-start --type raw --key-default '192.0.2.21')
-BM_NETWORK_UNDERCLOUD_RANGE_END=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-end --type raw --key-default '192.0.2.40')
-setup-neutron $BM_NETWORK_UNDERCLOUD_RANGE_START $BM_NETWORK_UNDERCLOUD_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $UNDERCLOUD_IP ctlplane
+    BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
+    BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
+    BM_NETWORK_UNDERCLOUD_RANGE_START=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-start --type raw --key-default '192.0.2.21')
+    BM_NETWORK_UNDERCLOUD_RANGE_END=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-end --type raw --key-default '192.0.2.40')
+    setup-neutron $BM_NETWORK_UNDERCLOUD_RANGE_START $BM_NETWORK_UNDERCLOUD_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $UNDERCLOUD_IP ctlplane
 
 ## #. Nova quota runs up with the defaults quota so overide the default to
 ##    allow unlimited cores, instances and ram.
 ##    ::
 
-nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin | awk '$2=="id" {print $4}')
+    nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin | awk '$2=="id" {print $4}')
 
 ## #. Register two baremetal nodes with your undercloud.
 ##    ::
 
-setup-baremetal --service-host undercloud --nodes <(jq '.nodes - [.nodes[0]]' $TE_DATAFILE)
+    setup-baremetal --service-host undercloud --nodes <(jq '.nodes - [.nodes[0]]' $TE_DATAFILE)
 
+fi
 ### --end
