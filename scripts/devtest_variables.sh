@@ -28,7 +28,7 @@ export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 ##    'default'. This variable can be to used to specify a custome volume
 ##    pool. This is useful in scenarios where the default volume pool cannot
 ##    accommodate the storage requirements of the nodes.
-##
+
 ##    Note that this variable only changes the volume pool for the nodes.
 ##    Seed image will still end up in /var/lib/libvirt/images.
 ##    ::
