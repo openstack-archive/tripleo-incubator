@@ -289,7 +289,8 @@ fi #nodocs
 ##    ::
 
 echo "Waiting for the overcloud stack to be ready" #nodocs
-wait_for_stack_ready 300 10 $STACKNAME
+# Make time out 60 mins as like the Heat stack-create default timeout.
+wait_for_stack_ready 360 10 $STACKNAME
 OVERCLOUD_IP=$(nova list | grep "notCompute0.*ctlplane\|controller.*ctlplane" | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
