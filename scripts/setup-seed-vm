@@ -113,7 +113,7 @@ if [[ $DIB_COMMON_ELEMENTS == *enable-serial-console* ]]; then
     EXTRAOPTS="${EXTRAOPTS} --enable-serial-console"
 fi
 
-configure-vm $EXTRAOPTS \
+"$SCRIPT_HOME/configure-vm" $EXTRAOPTS \
        --name $IMAGE_NAME \
        --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
        --baremetal-interface $BRIDGE \

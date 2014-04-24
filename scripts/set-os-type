@@ -1,37 +1,34 @@
 #!/bin/bash
 
-TRIPLEO_OS_FAMILY='unsupported' # Generic OS Family: debian, redhat, suse
-TRIPLEO_OS_DISTRO='unsupported' # Specific distro: centos, fedora, redhat, suse, ubuntu
-
-if [ -f /etc/redhat-release ]; then
-  TRIPLEO_OS_FAMILY='redhat'
-  if $(grep -Eqs 'Red Hat Enterprise Linux' /etc/redhat-release); then
-    TRIPLEO_OS_DISTRO='rhel'
-  fi
-  if $(grep -Eqs 'CentOS' /etc/redhat-release); then
-    TRIPLEO_OS_DISTRO='centos'
-  fi
-  if $(grep -Eqs 'Fedora' /etc/redhat-release); then
-    TRIPLEO_OS_DISTRO='fedora'
-  fi
-fi
-
-if [ -f /etc/debian_version ]; then
-  TRIPLEO_OS_FAMILY='debian'
-  if $(grep -Eqs 'Ubuntu' /etc/lsb-release); then
-    TRIPLEO_OS_DISTRO='ubuntu'
-  fi
-  if $(grep -Eqs 'Debian' /etc/os-release); then
-    TRIPLEO_OS_DISTRO='debian'
-  fi
-fi
-
-if [ -f /etc/os-release ]; then
-    if $(egrep -qx "ID=opensuse" /etc/os-release); then
-        TRIPLEO_OS_FAMILY='suse'
-        TRIPLEO_OS_DISTRO='opensuse'
+if [[ ! $TRIPLEO_OS_DISTRO ]]; then
+    if [[ -f /etc/redhat-release ]]; then
+        if grep -Eqs 'Red Hat Enterprise Linux' /etc/redhat-release; then
+            TRIPLEO_OS_DISTRO='rhel'
+        elif grep -Eqs 'CentOS' /etc/redhat-release; then
+            TRIPLEO_OS_DISTRO='centos'
+        elif grep -Eqs 'Fedora' /etc/redhat-release; then
+            TRIPLEO_OS_DISTRO='fedora'
+        fi
+    elif [[ -f /etc/debian_version ]]; then
+        if grep -Eqs 'Ubuntu' /etc/lsb-release; then
+            TRIPLEO_OS_DISTRO='ubuntu'
+        elif grep -Eqs 'Debian' /etc/os-release; then
+            TRIPLEO_OS_DISTRO='debian'
+        fi
+    elif [[ -f /etc/os-release ]]; then
+        if egrep -qx "ID=opensuse" /etc/os-release; then
+            TRIPLEO_OS_DISTRO='opensuse'
+        fi
+    else
+        TRIPLEO_OS_DISTRO='unsupported'
     fi
 fi
+case $TRIPLEO_OS_DISTRO in
+    rhel|centos|fedora) TRIPLEO_OS_FAMILY='redhat';;
+    ubuntu|debian) TRIPLEO_OS_FAMILY='debian';;
+    opensuse) TRIPLEO_OS_FAMILY='suse';;
+    *) TRIPLEO_OS_FAMILY='unsupported';;
+esac
 
 export TRIPLEO_OS_FAMILY
 export TRIPLEO_OS_DISTRO
