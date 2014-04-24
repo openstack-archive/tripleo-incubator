@@ -26,7 +26,9 @@ LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
 # define the default storage pool if its not there yet
 (virsh pool-list --all --persistent | grep -q $LIBVIRT_VOL_POOL) || (
- virsh pool-define-as --name $LIBVIRT_VOL_POOL dir --target /var/lib/libvirt/images; virsh pool-autostart $LIBVIRT_VOL_POOL; virsh pool-start $LIBVIRT_VOL_POOL) >&2
+    virsh pool-define-as --name $LIBVIRT_VOL_POOL dir --target /var/lib/libvirt/images
+    virsh pool-autostart $LIBVIRT_VOL_POOL
+    virsh pool-start $LIBVIRT_VOL_POOL) >&2
 
 PREALLOC=
 if [ -f /etc/debian_version ]; then
@@ -54,14 +56,15 @@ for idx in $(seq 0 $TOTAL) ; do
   if [ -n "$BRIDGE" ]; then
     BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE"
   fi
-  configure-vm $EXTRAOPTS \
-         --bootdev network \
-         --name $vm_name \
-         --image "$volume_path" \
-         --arch $ARCH \
-         --cpus $CPU \
-         --memory $MEM \
-         --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
+  "$(dirname $0)/configure-vm" \
+      $EXTRAOPTS \
+      --bootdev network \
+      --name $vm_name \
+      --image "$volume_path" \
+      --arch $ARCH \
+      --cpus $CPU \
+      --memory $MEM \
+      --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
   mac=$(get-vm-mac $vm_name)
   JSON=$(jq ".nodes=(.nodes + [{mac:[\"$mac\"], cpu:\"$CPU\", memory:\"$2\", disk:\"$DISK\", arch:\"$4\", pm_user:\"$SSH_USER\", pm_addr:\"$HOSTIP\", pm_password:.[\"ssh-key\"], pm_type:\"pxe_ssh\"}])" <<< $JSON)
 

@@ -42,6 +42,13 @@ export LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
 export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo}
 
+## #. Set ``TRIPLEO_OS_DISTRO`` to the empty string if it was not already set.
+##    If it is not already set, then it be set to the distro you are running on
+##    by ``$TRIPLEO_ROOT/tripleo-incubator/scripts/set-os-type``.
+
+##    ::
+
+export TRIPLEO_OS_DISTRO=${TRIPLEO_OS_DISTRO:-''}
 
 ## #. The TripleO tools will get (or have already been, if you followed the
 ##    suggestions in :doc:`devtest`) installed in
