@@ -54,6 +54,7 @@ FLOATING_CIDR=${7:-${FLOATING_CIDR:-'192.0.2.0/24'}}
 ADMIN_USERS=${8:-${ADMIN_USERS:-''}}
 USERS=${9:-${USERS:-''}}
 STACKNAME=${10:-overcloud}
+METADATA_SERVER=$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
 # If set, the base name for a .crt and .key file for SSL. This will trigger
 # inclusion of openstack-ssl in the build and pass the contents of the files to heat.
 # Note that PUBLIC_API_URL ($12) must also be set for SSL to actually be used.
@@ -261,6 +262,7 @@ heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "NovaImage=${OVERCLOUD_COMPUTE_ID}" \
     -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
     -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
+    -P "MetadataServer=${METADATA_SERVER}" \
     $STACKNAME
 
 ### --include
