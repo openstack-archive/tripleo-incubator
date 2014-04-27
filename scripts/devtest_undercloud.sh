@@ -89,20 +89,20 @@ NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
 ##    that you need to source into your shell environment.
-##    
+##
 ##    .. note::
-##      
+##
 ##      You can also make or change these later and
 ##      update the heat stack definition to inject them - as long as you also
 ##      update the keystone recorded password.
-##      
+##
 ##    .. note::
-##      
+##
 ##      There will be a window between updating keystone and
 ##      instances where they will disagree and service will be down. Instead
 ##      consider adding a new service account and changing everything across
 ##      to it, then deleting the old account after the cluster is updated.
-##      
+##
 ##    ::
 
 ### --end
@@ -163,7 +163,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPL
 ##    You can watch the console via ``virsh``/``virt-manager`` to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, it will reboot into the
 ##    image.
-## 
+##
 ## #. Get the undercloud IP from ``nova list``
 ##    ::
 
@@ -213,12 +213,6 @@ keystone role-create --name=swiftoperator
 keystone role-create --name=ResellerAdmin
 
 user-config
-
-BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
-BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
-BM_NETWORK_UNDERCLOUD_RANGE_START=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-start --type raw --key-default '192.0.2.21')
-BM_NETWORK_UNDERCLOUD_RANGE_END=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-end --type raw --key-default '192.0.2.40')
-setup-neutron $BM_NETWORK_UNDERCLOUD_RANGE_START $BM_NETWORK_UNDERCLOUD_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $UNDERCLOUD_IP ctlplane
 
 ## #. Register two baremetal nodes with your undercloud.
 ##    ::
