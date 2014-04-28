@@ -147,6 +147,13 @@ if [ "dashboard" != "$TYPE" ]; then
         keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
                                --user-id $SVC_USER \
                                --role-id $ADMIN_ROLE
+        #Add the admin tenant role for ceilometer user to enable polling services
+        if  [ "metering" == "$TYPE" ]; then
+            ADMIN_TENANT=$(keystone $DEBUG tenant-list | awk '/ admin / {print $2}')
+            keystone user-role-add $DEBUG --tenant-id $ADMIN_TENANT \
+                                 --user-id $SVC_USER \
+                                 --role-id $ADMIN_ROLE
+        fi
     fi
 fi
 SERVICE_ID=$(keystone $DEBUG service-create --name=$NAME --type=$TYPE "$DESCRIPTION" | awk '/ id / {print $4}')
