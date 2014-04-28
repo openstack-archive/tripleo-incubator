@@ -95,6 +95,14 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
+## #. Undercloud UI needs SNMPd for monitoring of every Overcloud node
+##    ::
+
+if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
+    OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS snmpd"
+    OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
+fi
+
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \

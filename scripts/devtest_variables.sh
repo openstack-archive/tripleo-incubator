@@ -60,6 +60,14 @@ fi
 ### --include
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
 
+## #. It's posible to deploy the Undercloud without a UI and its dependent elements.
+##    The dependent image elements in Undercloud are Horizon, Tuskar-UI (not included
+##    yet, Tuskar UI element is not finished) and  Ceilometer. In Overcloud it is
+##    SNMPd image element on every node.
+##    ::
+
+export USE_UNDERCLOUD_UI=${USE_UNDERCLOUD_UI:-1}
+
 ## #. We now support Ironic as the baremetal deployment layer. To use it just
 ##    set ``USE_IRONIC=1``. The default is still Nova Baremetal until we've had some
 ##    time to identify any kinks in the process.
