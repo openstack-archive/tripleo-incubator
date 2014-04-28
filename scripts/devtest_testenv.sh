@@ -25,6 +25,8 @@ function show_options () {
     echo "    --bm-networks NETFILE  -- You are supplying your own network layout."
     echo "                              The schema for baremetal-network can be found in"
     echo "                              the devtest_setup documentation."
+    echo "    --power-off-IPMI-nodes -- Power-off all nodes using IPMI power managment befor"
+    echo "                              deployment to the nodes."
     echo
     echo "JSON-filename -- the path to write the environment description to."
     echo
@@ -38,8 +40,9 @@ NODES_PATH=
 NETS_PATH=
 NUM=
 OVSBRIDGE=
+POWER_OFF_NODES=0
 
-TEMP=$(getopt -o h,n:,b: -l nodes:,bm-networks: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b: -l nodes:,bm-networks:,power-off-IPMI-nodes -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -49,6 +52,7 @@ while true ; do
     case "$1" in
         --nodes) NODES_PATH="$2"; shift 2;;
         --bm-networks) NETS_PATH="$2"; shift 2;;
+        --power-off-IPMI-nodes) POWER_OFF_NODES=1; shift 1;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -206,5 +210,11 @@ else #nodocs
 
 NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
+fi
+
+## #. Turn-off any node using IPMI power manager.
+##    ::
+if [ $POWER_OFF_NODES -eq 1 ] ; then  #nodocs
+  cleanup-env --power-off-IPMI-nodes "$JSONFILE"
 ### --end
 fi
