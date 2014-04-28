@@ -240,12 +240,12 @@ fi #nodocs
 ##    devtest runs. Use this if you are creating a new test environment.
 ##    ::
 ## 
-##         cleanup-env
+##         cleanup-env --clean-up-vm
 
 ### --end
 if [ "${TRIPLEO_CLEANUP:-0}" = "1"  ]; then
     echo "Cleaning up vm's/storage from previous devtest runs"
-    cleanup-env
+    cleanup-env --clean-up-vm
 fi
 ### --include
 

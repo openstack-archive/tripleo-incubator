@@ -30,6 +30,8 @@ function show_options () {
     echo "    --no-undercloud        -- Use the seed as the baremetal cloud to deploy the"
     echo "                              overcloud from."
     echo "    --build-only           -- Builds images but doesn't attempt to run them."
+    echo "    --power-off-IPMI-nodes -- Power-off all nodes using IPMI power managment befor"
+    echo "                              deployment to the nodes."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
     echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
@@ -45,11 +47,12 @@ NODES_ARG=
 NO_UNDERCLOUD=
 NETS_ARG=
 CONTINUE=
+POWER_OFF_NODES=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes:,bm-networks:,no-undercloud -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes:,bm-networks:,no-undercloud,power-off-IPMI-nodes -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -63,6 +66,7 @@ while true ; do
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
         --bm-networks) NETS_ARG="--bm-networks $2"; shift 2;;
         --no-undercloud) NO_UNDERCLOUD="true"; shift 1;;
+        --power-off-IPMI-nodes) POWER_OFF_NODES=--power-off-IPMI-nodes; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
@@ -232,7 +236,7 @@ devtest_setup.sh $CONTINUE
 
 if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
 #XXX: When updating, also update the header in devtest_testenv.sh #nodocs
-devtest_testenv.sh $TE_DATAFILE $NODES_ARG $NETS_ARG
+devtest_testenv.sh $TE_DATAFILE $NODES_ARG $NETS_ARG $POWER_OFF_NODES
 fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
