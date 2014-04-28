@@ -224,10 +224,18 @@ source $(dirname $0)/devtest_variables.sh  #nodocs
 
 devtest_setup.sh $CONTINUE
 
-## #. See :doc:`devtest_testenv` for documentation. Note that you can make
-##    your test environment just once and reuse it thereafter.
-##    TE_DATAFILE should specify where you want your test environment JSON
-##    file created. (A default value is set in devtest_variables.sh).
+## #. See :doc:`devtest_testenv` for documentation. This step creates the
+##    seed VM, as well as "baremetal" VMs for the under/overclouds. Details
+##    of the created VMs are written to ``$TE_DATAFILE``.
+
+##    .. warning::
+
+##       You only need to run this step once, the first time you're setting
+##       up your environment. Unless you remove the VMs and need to recreate
+##       them, you should skip this step on subsequent runs. Running this
+##       script with existing VMs will result in information about the existing
+##       nodes being removed from ``$TE_DATAFILE``
+
 ##    ::
 
 if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
