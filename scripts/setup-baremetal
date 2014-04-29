@@ -69,8 +69,14 @@ fi
 NODES=$(cat $JSON_PATH)
 register-nodes $SERVICE_HOST <(echo $NODES)
 
-deploy_kernel=$TRIPLEO_ROOT/deploy-ramdisk.kernel
-deploy_ramdisk=$TRIPLEO_ROOT/deploy-ramdisk.initramfs
+if [ $USE_IRONIC -eq 0 ]; then
+    deploy_base=deploy-ramdisk
+else
+    deploy_base=deploy-ramdisk-ironic
+fi
+
+deploy_kernel=$TRIPLEO_ROOT/$deploy_base.kernel
+deploy_ramdisk=$TRIPLEO_ROOT/$deploy_base.initramfs
 deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --public \
     --disk-format aki < "$deploy_kernel" | awk ' / id / {print $4}')
 deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --public \
