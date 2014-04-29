@@ -50,9 +50,11 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 if [ $USE_IRONIC -eq 0 ]; then
     # nova baremetal
     DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy}
+    DEPLOY_NAME=deploy-ramdisk
 else
     # Ironic
     DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-ironic}
+    DEPLOY_NAME=deploy-ramdisk-ironic
 fi
 
 ## #. Create a deployment ramdisk + kernel. These are used by the seed cloud and
@@ -61,12 +63,12 @@ fi
 
 ### --end
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch)
-if [ ! -e $TRIPLEO_ROOT/deploy-ramdisk.kernel -o \
-     ! -e $TRIPLEO_ROOT/deploy-ramdisk.initramfs -o \
+if [ ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.kernel -o \
+     ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.initramfs -o \
      "$USE_CACHE" == "0" ] ; then
 ### --include
     $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
-        $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/deploy-ramdisk \
+        $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/$DEPLOY_NAME \
         $DIB_COMMON_ELEMENTS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-deploy.log
 ### --end
