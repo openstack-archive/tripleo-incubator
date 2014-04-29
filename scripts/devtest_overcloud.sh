@@ -7,6 +7,7 @@ SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
 BUILD_ONLY=
+HEAT_ENV=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -16,11 +17,13 @@ function show_options () {
     echo "Options:"
     echo "      -h             -- this help"
     echo "      --build-only   -- build the needed images but don't deploy them."
+    echo "      --heat-env     -- path to a JSON heat environment file."
+    echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,heat-env:help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -29,6 +32,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
+        --heat-env) HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -200,7 +204,7 @@ fi
 expected_nodes=$((1+$OVERCLOUD_COMPUTESCALE))
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" -ge $expected_nodes ]
 
-## #. Deploy an overcloud::
+## #. Create unique credentials::
 
 ### --end
 if [ -e tripleo-overcloud-passwords ]; then
@@ -212,27 +216,59 @@ else
   source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 fi #nodocs
 
+## #. We need an environment file to store the parameters we're gonig to give
+##    heat.::
+
+HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/overcloud-env.json"}
+
+## #. Read the heat env in for updating.::
+
+if [ -e "${HEAT_ENV}" ]; then
+    ENV_JSON=$(cat "${HEAT_ENV}")
+else
+    ENV_JSON='{"parameters":{}}'
+fi
+
+## #. Set parameters we need to deploy a KVM cloud.::
+
+ENV_JSON=$(jq .parameters.AdminPassword=\"${OVERCLOUD_ADMIN_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.AdminToken=\"${OVERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.CinderPassword=\"${OVERCLOUD_CINDER_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.CloudName=\"${OVERCLOUD_NAME}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.GlancePassword=\"${OVERCLOUD_GLANCE_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.HeatPassword=\"${OVERCLOUD_HEAT_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.HypervisorNeutronPhysicalBridge=\"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.HypervisorNeutronPublicInterface=\"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronBridgeMappings=\"${OVERCLOUD_BRIDGE_MAPPINGS}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronFlatNetworks=\"${OVERCLOUD_FLAT_NETWORKS}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPassword=\"${OVERCLOUD_NEUTRON_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterface=\"${NeutronPublicInterface}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NovaComputeLibvirtType=\"${OVERCLOUD_LIBVIRT_TYPE}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NovaPassword=\"${OVERCLOUD_NOVA_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.SwiftHashSuffix=\"${OVERCLOUD_SWIFT_HASH}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.SwiftPassword=\"${OVERCLOUD_SWIFT_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NovaImage=\"${OVERCLOUD_COMPUTE_ID}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.SSLCertificate=\"${OVERCLOUD_SSL_CERT}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.SSLKey=\"${OVERCLOUD_SSL_KEY}\" <<< $ENV_JSON)
+
+### --end
+# Options we haven't documented as such
+ENV_JSON=$(jq .parameters.ImageUpdatePolicy=\"${OVERCLOUD_IMAGE_UPDATE_POLICY}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterfaceDefaultRoute=\"${NeutronPublicInterfaceDefaultRoute}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterfaceIP=\"${NeutronPublicInterfaceIP}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterfaceRawDevice=\"${NeutronPublicInterfaceRawDevice}\" <<< $ENV_JSON)
+### --include
+
+## #. Save the finished environment file.::
+
+jq . > "${HEAT_ENV}" <<< $ENV_JSON
+
+## #. Deploy an overcloud::
+
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml COMPUTESCALE=$OVERCLOUD_COMPUTESCALE
-##         heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-##             -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
-##             -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
-##             -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
-##             -P "CloudName=${OVERCLOUD_NAME}" \
+##         heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
+##             -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
-##             -P "GlancePassword=${OVERCLOUD_GLANCE_PASSWORD}" \
-##             -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
-##             -P "HypervisorNeutronPhysicalBridge=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}" \
-##             -P "HypervisorNeutronPublicInterface=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}" \
-##             -P "NeutronFlatNetworks=${OVERCLOUD_FLAT_NETWORKS}" \
-##             -P "NeutronBridgeMappings=${OVERCLOUD_BRIDGE_MAPPINGS}" \
-##             -P "NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD}" \
-##             -P "NovaPassword=${OVERCLOUD_NOVA_PASSWORD}" \
-##             -P "NeutronPublicInterface=${NeutronPublicInterface}" \
-##             -P "SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD}" \
-##             -P "SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}" \
-##             -P "NovaComputeLibvirtType=${OVERCLOUD_LIBVIRT_TYPE}" \
-##             -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
-##             -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
 ##             overcloud
 
 ### --end
@@ -243,32 +279,10 @@ if [ -e $TRIPLEO_ROOT/tripleo-heat-templates/controller.yaml ] ; then
     CONTROLLER_IMAGE_PARAM=controllerImage
 fi
 
-heat $HEAT_OP -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-    -P "AdminToken=${OVERCLOUD_ADMIN_TOKEN}" \
-    -P "AdminPassword=${OVERCLOUD_ADMIN_PASSWORD}" \
-    -P "CinderPassword=${OVERCLOUD_CINDER_PASSWORD}" \
-    -P "CloudName=${OVERCLOUD_NAME}" \
+heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
+    -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
-    -P "GlancePassword=${OVERCLOUD_GLANCE_PASSWORD}" \
-    -P "HeatPassword=${OVERCLOUD_HEAT_PASSWORD}" \
-    -P "HypervisorNeutronPhysicalBridge=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}" \
-    -P "HypervisorNeutronPublicInterface=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}" \
-    -P "NeutronPassword=${OVERCLOUD_NEUTRON_PASSWORD}" \
-    -P "NovaPassword=${OVERCLOUD_NOVA_PASSWORD}" \
-    -P "NeutronFlatNetworks=${OVERCLOUD_FLAT_NETWORKS}" \
-    -P "NeutronBridgeMappings=${OVERCLOUD_BRIDGE_MAPPINGS}" \
-    -P "NeutronPublicInterface=${NeutronPublicInterface}" \
-    -P "NeutronPublicInterfaceIP=${NeutronPublicInterfaceIP}" \
-    -P "NeutronPublicInterfaceRawDevice=${NeutronPublicInterfaceRawDevice}" \
-    -P "NeutronPublicInterfaceDefaultRoute=${NeutronPublicInterfaceDefaultRoute}" \
-    -P "SwiftPassword=${OVERCLOUD_SWIFT_PASSWORD}" \
-    -P "SwiftHashSuffix=${OVERCLOUD_SWIFT_HASH}" \
-    -P "NovaComputeLibvirtType=${OVERCLOUD_LIBVIRT_TYPE}" \
-    -P "ImageUpdatePolicy=${OVERCLOUD_IMAGE_UPDATE_POLICY}" \
     -P "$CONTROLLER_IMAGE_PARAM=${OVERCLOUD_CONTROL_ID}" \
-    -P "NovaImage=${OVERCLOUD_COMPUTE_ID}" \
-    -P "SSLCertificate=${OVERCLOUD_SSL_CERT}" \
-    -P "SSLKey=${OVERCLOUD_SSL_KEY}" \
     $STACKNAME
 
 ### --include
