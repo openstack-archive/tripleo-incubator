@@ -90,19 +90,19 @@ fi
 ##    are nova baremetal nodes (seed and undercloud) and these need to be 2G or
 ##    larger. The hypervisor host in the overcloud also needs to be a decent size
 ##    or it cannot host more than one VM.
-##
+
 ##    32bit VMs
 ##    ::
-##
+
 ##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=30 NODE_ARCH=i386
-##
+
 NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-30} NODE_ARCH=${NODE_ARCH:-i386} #nodocs
 
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint::
-##
+
 ##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=30 NODE_ARCH=amd64
-##
+
 
 ## #. Configure a network for your test environment.
 ##    This configures an openvswitch bridge and teaches libvirt about it.
