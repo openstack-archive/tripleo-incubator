@@ -58,6 +58,8 @@ FLOATING_CIDR=${7:-${FLOATING_CIDR:-'192.0.2.0/24'}}
 ADMIN_USERS=${8:-${ADMIN_USERS:-''}}
 USERS=${9:-${USERS:-''}}
 STACKNAME=${10:-overcloud}
+# Undercloud controller endpoint, will be used for serving metadata
+METADATA_SERVER=$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
 # If set, the base name for a .crt and .key file for SSL. This will trigger
 # inclusion of openstack-ssl in the build and pass the contents of the files to heat.
 # Note that PUBLIC_API_URL ($12) must also be set for SSL to actually be used.
@@ -257,6 +259,7 @@ ENV_JSON=$(jq .parameters.ImageUpdatePolicy=\"${OVERCLOUD_IMAGE_UPDATE_POLICY}\"
 ENV_JSON=$(jq .parameters.NeutronPublicInterfaceDefaultRoute=\"${NeutronPublicInterfaceDefaultRoute}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NeutronPublicInterfaceIP=\"${NeutronPublicInterfaceIP}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NeutronPublicInterfaceRawDevice=\"${NeutronPublicInterfaceRawDevice}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.MetadataServer=\"${METADATA_SERVER}\" <<< $ENV_JSON)
 ### --include
 
 ## #. Save the finished environment file.::
