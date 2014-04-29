@@ -3,8 +3,8 @@ set -eu
 set -o pipefail
 
 SERVICE_HOST=${1:-""}
-if [ -z "$SERVICE_HOST" ]; then
-    echo "Ironic not supported, please specify service host as the first argument."
+if [ -z "$SERVICE_HOST" -a "$USE_IRONIC" -eq 0 ]; then
+    echo "Nova Baremetal requires a service host as the first argument."
     exit 1
 fi
 if [ -z "$2" ]; then
