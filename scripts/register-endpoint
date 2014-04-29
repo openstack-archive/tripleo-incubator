@@ -79,48 +79,42 @@ if [ -z "NAME" -o -z "$TYPE" -o -z "$PUBLIC_URL" -o -n "$EXTRA" ]; then
     show_options
 fi
 
-if [ "ec2" = "$TYPE" ]; then
-    SUFFIX="/services/Cloud"
-    ADMIN_SUFFIX="/services/Admin"
-elif [ "image" = "$TYPE" ]; then
-    SUFFIX="/"
+ADMIN_SUFFIX=
+case "$TYPE" in
+    ec2)
+        SUFFIX="/services/Cloud"
+        ADMIN_SUFFIX="/services/Admin"
+        ;;
+    image|baremetal|network|metering|management)
+        SUFFIX="/"
+        ;;
+    orchestration|volume)
+        SUFFIX="/v1/%(tenant_id)s"
+        ;;
+    identity)
+        SUFFIX="/v2.0"
+        ;;
+    compute)
+        SUFFIX="/v2/\$(tenant_id)s"
+        ;;
+    computev3)
+        SUFFIX="/v3"
+        ;;
+    object-store)
+        SUFFIX="/v1/AUTH_%(tenant_id)s"
+        ADMIN_SUFFIX="/v1"
+        ;;
+    dashboard)
+        SUFFIX="/"
+        ADMIN_SUFFIX="/admin"
+        ;;
+    *)
+        echo "Unknown service type" >&2
+        exit 1
+esac
+
+if [ -z "$ADMIN_SUFFIX" ]; then
     ADMIN_SUFFIX="$SUFFIX"
-elif [ "baremetal" = "$TYPE" ]; then
-    SUFFIX="/"
-    ADMIN_SUFFIX="$SUFFIX"
-elif [ "orchestration" = "$TYPE" ]; then
-    SUFFIX="/v1/%(tenant_id)s"
-    ADMIN_SUFFIX="$SUFFIX"
-elif [ "identity" = "$TYPE" ]; then
-    SUFFIX="/v2.0"
-    ADMIN_SUFFIX="$SUFFIX"
-elif [ "network" = "$TYPE" ]; then
-    SUFFIX="/"
-    ADMIN_SUFFIX="$SUFFIX"
-elif [ "compute" = "$TYPE" ]; then
-    SUFFIX="/v2/\$(tenant_id)s"
-    ADMIN_SUFFIX="$SUFFIX"
-elif [ "computev3" = "$TYPE" ]; then
-    SUFFIX="/v3"
-    ADMIN_SUFFIX="$SUFFIX"
-elif [ "volume" = "$TYPE" ]; then
-    SUFFIX="/v1/%(tenant_id)s"
-    ADMIN_SUFFIX="$SUFFIX"
-elif [ "object-store" = "$TYPE" ]; then
-    SUFFIX="/v1/AUTH_%(tenant_id)s"
-    ADMIN_SUFFIX="/v1"
-elif [ "metering" = "$TYPE" ]; then
-    SUFFIX="/"
-    ADMIN_SUFFIX="$SUFFIX"
-elif [ "dashboard" = "$TYPE" ]; then
-    SUFFIX="/"
-    ADMIN_SUFFIX="/admin"
-elif [ "management" = "$TYPE" ]; then
-    SUFFIX="/"
-    ADMIN_SUFFIX="$SUFFIX"
-else
-    echo "Unknown service type" >&2
-    exit 1
 fi
 
 if [ -n "$DESCRIPTION" ]; then
