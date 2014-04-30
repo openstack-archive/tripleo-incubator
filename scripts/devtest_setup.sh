@@ -227,6 +227,16 @@ if [ "$NODE_DIST" == 'unsupported' ]; then
 fi
 ### --include
 
+## #. Clone/update the other needed tools which are not available as packages.
+##    The DIB_REPOLOCATION_* and DIB_REPOREF_* environment variables will be used,
+##    if set, to select the diskimage_builder, tripleo_image_elements and
+##    tripleo_heat_templates to check out.
+##    ::
+
+if [ "$USE_CACHE" == "0" ] ; then #nodocs
+    pull-tools
+fi #nodocs
+
 ## #. Ensure dependencies are installed and required virsh configuration is
 ##    performed:
 ##    ::
@@ -247,19 +257,6 @@ if [ "${TRIPLEO_CLEANUP:-0}" = "1"  ]; then
     echo "Cleaning up vm's/storage from previous devtest runs"
     cleanup-env
 fi
-### --include
-
-## #. Clone/update the other needed tools which are not available as packages.
-##    The DIB_REPOLOCATION_* and DIB_REPOREF_* environment variables will be used,
-##    if set, to select the diskimage_builder, tripleo_image_elements and
-##    tripleo_heat_templates to check out.
-##    ::
-
-if [ "$USE_CACHE" == "0" ] ; then #nodocs
-    pull-tools
-fi #nodocs
-
-### --end
 
 ### --include
 
