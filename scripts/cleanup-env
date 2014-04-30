@@ -23,14 +23,40 @@ function show_options() {
     echo "Usage: $SCRIPT_NAME"
     echo
     echo "Cleanup vm state left behind by previous runs"
+    echo
+    echo "    -n                     -- Test environment number to clean up."
     exit 1
 }
 
-[ $# -gt 0 ] && show_options
+NUM=
+OVSBRIDGE=
 
-for NAME in $(sudo virsh list --name --all | grep "^\(seed\(.*\|\)\|baremetal\(\|brbm.*\)_.*\)$"); do
-  sudo virsh destroy $NAME
-  sudo virsh undefine --managed-save --remove-all-storage $NAME
+TEMP=$(getopt -o h,n:,b: -l nodes:,bm-networks: -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then show_options; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -n) NUM="$2" ; shift 2 ;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; show_options ;;
+    esac
+done
+
+SEED_NAME="seed"
+BRIDGE_NAME=""
+#Seed only uses environment number
+if [ -n $NUM ]; then
+  SEED_NAME="seed_${NUM}"
+  BRIDGE_NAME="brbm${NUM}"
+fi
+
+BAREMETAL_REGEX="baremetal${BRIDGE_NAME}"
+for NAME in $SEED_NAME $(sudo virsh list --name --all | grep "^\($BAREMETAL_REGEX\)$"); do
+  echo sudo virsh destroy $NAME
+  echo sudo virsh undefine --managed-save --remove-all-storage $NAME
 done
 
 for NAME in $(sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\(seed\(.*\|\)|baremetal\(\|brbm.*\)-\)" ); do
