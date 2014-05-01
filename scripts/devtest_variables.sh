@@ -128,4 +128,22 @@ export ELEMENTS_PATH=$TRIPLEO_ROOT/tripleo-image-elements/elements
 
 export TE_DATAFILE=${TE_DATAFILE:-"$TRIPLEO_ROOT/testenv.json"}
 
+## #. Set the environment variables for diskimage-builder so that you're
+##    building from the stable icehouse branches for the OpenStack projects and 
+##    TripleO projects.
+
+export DIB_REPOREF_nova=stable/icehouse
+export DIB_REPOREF_neutron=stable/icehouse
+export DIB_REPOREF_ceilometer=stable/icehouse
+export DIB_REPOREF_keystone=stable/icehouse
+export DIB_REPOREF_ironic=stable/icehouse
+export DIB_REPOREF_tuskar=stable/icehouse
+export DIB_REPOREF_swift=stable/icehouse
+export DIB_REPOREF_horizon=stable/icehouse
+export DIB_REPOREF_cinder=stable/icehouse
+export DIB_REPOREF_heat=stable/icehouse
+export DIB_REPOREF_tripleo_incubator=stable/icehouse
+export DIB_REPOREF_tripleo_image_elements=stable/icehouse
+export DIB_REPOREF_tripleo_heat_templates=stable/icehouse
+
 ### --end
