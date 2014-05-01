@@ -95,6 +95,10 @@ UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 
 NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
+## #. Amount of time a keystone token should remain valid (in seconds)
+##    ::
+KeystoneExpiration=${KeystoneExpiration:-86400}
+
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
 ##    that you need to source into your shell environment.
@@ -166,6 +170,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPL
     -P "BaremetalArch=${NODE_ARCH}" \
     -P "undercloudImage=${UNDERCLOUD_ID}" \
     -P "PowerSSHPrivateKey=${POWER_KEY}" \
+    -P "KeystoneExpiration=${KeystoneExpiration}" \
     -P "NeutronPublicInterface=${NeutronPublicInterface}" \
     ${HEAT_UNDERCLOUD_EXTRA_OPTS} \
     undercloud
