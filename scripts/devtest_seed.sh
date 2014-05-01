@@ -95,6 +95,7 @@ jq -s '
 (.[0].bootstack.public_interface_ip = $bm_seed_ip + "/" + $cidr_config.cidr)|
 (.[0].bootstack.masquerade_networks = ($config["baremetal-network"].cidr // "192.0.2.0/24"))|
  .[0]' tmp_local.json $TE_DATAFILE cidr.json > local.json
+rm tmp_local.json
 rm cidr.json
 
 
