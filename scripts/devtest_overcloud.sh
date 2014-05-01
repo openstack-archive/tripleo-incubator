@@ -295,10 +295,25 @@ heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
 ##    register it with glance.::
 
 if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
-fi #nodocs
-
+    USE_CIRROS=${USE_CIRROS:-0} #nodocs
+    if [ "$USE_CIRROS" == "0" ] ; then #nodocs
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
+### --end
+    else
+        VERSION=$($TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
+            http://download.cirros-cloud.net/version/released >(cat) 1>&2)
+        IMAGE_ID=cirros-${VERSION}-${NODE_ARCH/amd64/x86_64}-disk.img
+        MD5SUM=$($TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
+            http://download.cirros-cloud.net/${VERSION}/MD5SUMS >(cat) 1>&2 | awk '/$IMAGE_ID/ {print $1}')
+        $TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
+            http://download.cirros-cloud.net/${VERSION}/${IMAGE_ID} $TRIPLEO_ROOT/user.qcow2}
+        pushd $TRIPLEO_ROOT
+        echo "$MD5SUM user.qcow2" | md5sum --check -
+        popd
+    fi
+fi
+### --include
 ## #. Get the overcloud IP from 'nova list'
 ##    ::
 
