@@ -104,6 +104,11 @@ NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 
 UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 
+## #. Set the timeout for PXE deployment of overcloud nodes:
+##    ::
+
+PxeDeployTimeout=${PxeDeployTimeout:-'2400'}
+
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
 ##    that you need to source into your shell environment.
@@ -165,6 +170,7 @@ if [ "$USE_IRONIC" -eq 0 ] ; then
 
   REGISTER_SERVICE_OPTS=""
   ENV_JSON=$(jq .parameters.PowerManager=\"${POWER_MANAGER}\" <<< $ENV_JSON)
+  ENV_JSON=$(jq .parameters.PxeDeployTimeout=\"${PxeDeployTimeout}\" <<< $ENV_JSON)
 
   if [ "$POWER_MANAGER" = 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ]; then
 
