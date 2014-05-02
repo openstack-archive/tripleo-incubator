@@ -93,6 +93,12 @@ fi
 
 UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 
+## #. TripleO explicitly models key settings for OpenStack, as well as settings
+##    that require cluster awareness to configure. To configure arbitrary
+##    additional settings, provide a JSON string with them in the structure
+##    required by the template ExtraConfig parameter.
+
+UNDERCLOUD_EXTRA_CONFIG=${UNDERCLOUD_EXTRA_CONFIG:-''}
 
 ## #. Set the public interface of the undercloud network node:
 ##    ::
@@ -182,6 +188,7 @@ ENV_JSON=$(jq .parameters.AdminToken=\"${UNDERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON
 ENV_JSON=$(jq .parameters.CeilometerPassword=\"${UNDERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.GlancePassword=\"${UNDERCLOUD_GLANCE_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.HeatPassword=\"${UNDERCLOUD_HEAT_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.ExtraConfig=\"${UNDERCLOUD_EXTRA_CONFIG}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NovaPassword=\"${UNDERCLOUD_NOVA_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NeutronPassword=\"${UNDERCLOUD_NEUTRON_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NeutronPublicInterface=\"${NeutronPublicInterface}\" <<< $ENV_JSON)
