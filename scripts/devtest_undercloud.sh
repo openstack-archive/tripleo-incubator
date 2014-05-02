@@ -7,6 +7,7 @@ SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
 BUILD_ONLY=
+HEAT_ENV=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -16,11 +17,13 @@ function show_options () {
     echo "Options:"
     echo "      -h             -- this help"
     echo "      --build-only   -- build the needed images but don't deploy them."
+    echo "      --heat-env     -- path to a JSON heat environment file."
+    echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,heat-env:help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -29,6 +32,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
+        --heat-env) HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -156,25 +160,73 @@ else
     REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
 fi
 
+## #. Choose whether to deploy or update. Use stack-update to update::
+
+##         HEAT_OP=stack-create
+
+### --end
+
+if heat stack-show $STACKNAME > /dev/null; then
+    HEAT_OP=stack-update
+    if (heat stack-show $STACKNAME | grep -q FAILED); then
+        echo "Cannot update a failed stack" >&2
+        exit 1
+    fi
+else
+    HEAT_OP=stack-create
+fi
+
+## #. We need an environment file to store the parameters we're gonig to give
+##    heat.::
+
+HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/undercloud-env.json"}
+
+## #. Read the heat env in for updating.::
+
+if [ -e "${HEAT_ENV}" ]; then
+    ENV_JSON=$(cat "${HEAT_ENV}")
+else
+    ENV_JSON='{"parameters":{}}'
+fi
+
+## #. Set parameters we need to deploy a KVM cloud.::
+
+ENV_JSON=$(jq .parameters.AdminPassword=\"${UNDERCLOUD_ADMIN_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.AdminToken=\"${UNDERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.CeilometerPassword=\"${UNDERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.GlancePassword=\"${OVERCLOUD_GLANCE_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.HeatPassword=\"${OVERCLOUD_HEAT_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPassword=\"${OVERCLOUD_NEUTRON_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterface=\"${NeutronPublicInterface}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.BaremetalArch=\"${NODE_ARCH}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.PowerSSHPrivateKey=\"${POWER_KEY}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NtpServer=\"${UNDERCLOUD_NTP_SERVER}\" <<< $ENV_JSON)
+
+### --end
+# Options we haven't documented as such
+ENV_JSON=$(jq .parameters.NeutronPublicInterfaceDefaultRoute=\"${NeutronPublicInterfaceDefaultRoute}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterfaceIP=\"${NeutronPublicInterfaceIP}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterfaceRawDevice=\"${NeutronPublicInterfaceRawDevice}\" <<< $ENV_JSON)
+### --include
+
+## #. Save the finished environment file.::
+
+jq . > "${HEAT_ENV}" <<< $ENV_JSON
+
+
 ## #. Deploy an undercloud.
 ##    ::
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
-heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
-    -P "AdminToken=${UNDERCLOUD_ADMIN_TOKEN}" \
-    -P "AdminPassword=${UNDERCLOUD_ADMIN_PASSWORD}" \
-    -P "CeilometerPassword=${UNDERCLOUD_CEILOMETER_PASSWORD}" \
-    -P "GlancePassword=${UNDERCLOUD_GLANCE_PASSWORD}" \
-    -P "HeatPassword=${UNDERCLOUD_HEAT_PASSWORD}" \
-    -P "NeutronPassword=${UNDERCLOUD_NEUTRON_PASSWORD}" \
-    -P "NovaPassword=${UNDERCLOUD_NOVA_PASSWORD}" \
-    -P "BaremetalArch=${NODE_ARCH}" \
-    -P "undercloudImage=${UNDERCLOUD_ID}" \
-    -P "PowerSSHPrivateKey=${POWER_KEY}" \
-    -P "NeutronPublicInterface=${NeutronPublicInterface}" \
-    -P "NtpServer=${UNDERCLOUD_NTP_SERVER}" \
-    ${HEAT_UNDERCLOUD_EXTRA_OPTS} \
-    undercloud
+##    heat $HEAT_OP -e $TRIPLEO_ROOT/undercloud-env.json \
+##        -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud.yaml \
+##        undercloud
+
+### --end
+
+heat $HEAT_OP -e $TRIPLEO_ROOT/undercloud-env.json \
+    -f $TRIPLEO_ROOT/tripleo-heat-templates/undercloud.yaml \
+    $STACKNAME
 
 ##    You can watch the console via ``virsh``/``virt-manager`` to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, it will reboot into the
