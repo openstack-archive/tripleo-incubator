@@ -93,6 +93,12 @@ fi
 
 UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 
+## #. TripleO explicitly models key settings for OpenStack, as well as settings
+##    that require cluster awareness to configure. To configure arbitrary
+##    additional settings, provide a JSON string with them in the structure
+##    required by the template ExtraConfig parameter.
+
+UNDERCLOUD_EXTRA_CONFIG=${UNDERCLOUD_EXTRA_CONFIG:-''}
 
 ## #. Set the public interface of the undercloud network node:
 ##    ::
@@ -189,6 +195,8 @@ ENV_JSON=$(jq .parameters.undercloudImage=\"${UNDERCLOUD_ID}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.BaremetalArch=\"${NODE_ARCH}\" <<< $ENV_JSON)
 ENV_JSON=$(jq '.parameters.PowerSSHPrivateKey="'"${POWER_KEY}"'"' <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NtpServer=\"${UNDERCLOUD_NTP_SERVER}\" <<< $ENV_JSON)
+ENV_JSON=$(jq '.parameters.ExtraConfig=('"${UNDERCLOUD_EXTRA_CONFIG}"' | tostring)' <<< $ENV_JSON)
+
 # Preserve user supplied buffer size in the environment, defaulting to 100 for VM usage.
 ENV_JSON=$(jq '.parameters.MysqlInnodbBufferPoolSize=(.parameters.MysqlInnodbBufferPoolSize | 100)' <<< $ENV_JSON)
 
