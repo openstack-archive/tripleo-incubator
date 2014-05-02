@@ -109,7 +109,7 @@ fi
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control hosts \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
         baremetal boot-stack cinder-api cinder-volume cinder-tgt \
         os-collect-config horizon neutron-network-node dhcp-all-interfaces \
         swift-proxy swift-storage \
@@ -131,7 +131,7 @@ fi #nodocs
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute hosts \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute ntp hosts \
         baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
         dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
@@ -157,6 +157,11 @@ OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
 ##    ::
 
 NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
+
+## #. Set the NTP server for the overcloud::
+##    ::
+
+OVERCLOUD_NTP_SERVER=${OVERCLOUD_NTP_SERVER:-''}
 
 ## #. If you want to permit VM's access to bare metal networks, you need
 ##    to define flat-networks and bridge mappings in Neutron::
@@ -250,6 +255,7 @@ ENV_JSON=$(jq .parameters.SwiftPassword=\"${OVERCLOUD_SWIFT_PASSWORD}\" <<< $ENV
 ENV_JSON=$(jq .parameters.NovaImage=\"${OVERCLOUD_COMPUTE_ID}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.SSLCertificate=\"${OVERCLOUD_SSL_CERT}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.SSLKey=\"${OVERCLOUD_SSL_KEY}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NtpServer=\"${OVERCLOUD_NTP_SERVER}\" <<< $ENV_JSON)
 
 ### --end
 # Options we haven't documented as such
