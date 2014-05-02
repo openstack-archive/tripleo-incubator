@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: lifeless <robertc@robertcollins.net>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Code-Review+1: Dougal Matthews <dougal@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 02 May 2014 15:35:18 +0000
+Reviewed-on: https://review.openstack.org/91432
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
