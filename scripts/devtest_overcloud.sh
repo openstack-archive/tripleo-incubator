@@ -216,7 +216,7 @@ else
   source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 fi #nodocs
 
-## #. We need an environment file to store the parameters we're gonig to give
+## #. We need an environment file to store the parameters we're going to give
 ##    heat.::
 
 HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/overcloud-env.json"}
