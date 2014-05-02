@@ -18,7 +18,7 @@ function show_options () {
     echo "      -h             -- this help"
     echo "      --build-only   -- build the needed images but don't deploy them."
     echo "      --heat-env     -- path to a JSON heat environment file."
-    echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json.
+    echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
     echo
     exit $1
 }
@@ -132,27 +132,58 @@ fi #nodocs
 ##    ::
 
 POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
-POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
-POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
-POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
 
+## #. We need an environment file to store the parameters we're gonig to give
+##    heat.::
+
+HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/undercloud-env.json"}
 
 ## #. Nova-baremetal and Ironic require different Heat templates
 ##    and different options.
 ##    ::
 
 if [ "$USE_IRONIC" -eq 0 ] ; then
+
+  REGISTER_SERVICE_OPTS=""
+  ENV_JSON=$(jq .parameters.PowerManager=\"${POWER_MANAGER}\" <<< $ENV_JSON)
+
+  if [ "$POWER_MANAGER" = 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ]; then
+
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
-    HEAT_UNDERCLOUD_EXTRA_OPTS="-P PowerSSHHost=${POWER_HOST} -P PowerManager=${POWER_MANAGER} -P PowerUserName=${POWER_USER}"
-    REGISTER_SERVICE_OPTS=""
+
+    POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
+    ENV_JSON=$(jq .parameters.PowerSSHHost=\"${POWER_HOST}\" <<< $ENV_JSON)
+
+    POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
+    ENV_JSON=$(jq .parameters.PowerUserName=\"${POWER_USER}\" <<< $ENV_JSON)
+
+  else
+
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-bm.yaml"
+
+  fi
+
 else
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
-    HEAT_UNDERCLOUD_EXTRA_OPTS="-P IronicPassword=${UNDERCLOUD_IRONIC_PASSWORD}"
+    ENV_JSON=$(jq .parameters.IronicPassword=\"${UNDERCLOUD_IRONIC_PASSWORD}\" <<< $ENV_JSON)
+
     REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
+fi
+
+## #.  If we using 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager
+##     as the POWER_MANAGER we need the POWER_KEY for undercloud-vm and
+##     undercloud-vm-ironic.
+##     ::
+
+if [ "$POWEaR_MANAGER" = 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ] ; then
+
+   POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
+   ENV_JSON=$(jq .parameters.PowerSSHPrivateKey=\"${POWER_KEY}\" <<< $ENV_JSON)
+
 fi
 
 ## #. Choose whether to deploy or update. Use stack-update to update::
@@ -188,13 +219,12 @@ fi
 
 ENV_JSON=$(jq .parameters.AdminPassword=\"${UNDERCLOUD_ADMIN_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.AdminToken=\"${UNDERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.CeilometerPassword=\"${{UNDERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.CeilometerPassword=\"${UNDERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.GlancePassword=\"${OVERCLOUD_GLANCE_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.HeatPassword=\"${OVERCLOUD_HEAT_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NeutronPassword=\"${OVERCLOUD_NEUTRON_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NeutronPublicInterface=\"${NeutronPublicInterface}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.BaremetalArch=\"${NODE_ARCH}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.PowerSSHPrivateKey=\"${POWER_KEY}\" <<< $ENV_JSON)
 
 ### --end
 # Options we haven't documented as such
