@@ -93,6 +93,12 @@ fi
 
 UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 
+## #. TripleO explicitly models key settings for OpenStack, as well as settings
+##    that require cluster awareness to configure. To configure arbitrary
+##    additional settings, provide a JSON string with them in the structure
+##    required by the template ExtraConfig parameter.
+
+UNDERCLOUD_EXTRA_CONFIG=${UNDERCLOUD_EXTRA_CONFIG:-''}
 
 ## #. Set the public interface of the undercloud network node:
 ##    ::
@@ -209,6 +215,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
 
 heat stack-create -e $HEAT_ENV \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
+    -P "ExtraConfig=${UNDERCLOUD_EXTRA_CONFIG}"
     $STACKNAME_UNDERCLOUD
 
 ##    You can watch the console via ``virsh``/``virt-manager`` to observe the PXE
