@@ -18,7 +18,7 @@ function show_options () {
     echo "      -h             -- this help"
     echo "      --build-only   -- build the needed images but don't deploy them."
     echo "      --heat-env     -- path to a JSON heat environment file."
-    echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json.
+    echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
     echo
     exit $1
 }
@@ -93,6 +93,12 @@ fi
 
 UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 
+## #. TripleO explicitly models key settings for OpenStack, as well as settings
+##    that require cluster awareness to configure. To configure arbitrary
+##    additional settings, provide a JSON string with them in the structure
+##    required by the template ExtraConfig parameter.
+
+UNDERCLOUD_EXTRA_CONFIG=${UNDERCLOUD_EXTRA_CONFIG:-''}
 
 ## #. Set the public interface of the undercloud network node:
 ##    ::
@@ -188,7 +194,8 @@ fi
 
 ENV_JSON=$(jq .parameters.AdminPassword=\"${UNDERCLOUD_ADMIN_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.AdminToken=\"${UNDERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.CeilometerPassword=\"${{UNDERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.CeilometerPassword=\"${UNDERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.ExtraConfig=\"${UNDERCLOUD_EXTRA_CONFIG}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.GlancePassword=\"${OVERCLOUD_GLANCE_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.HeatPassword=\"${OVERCLOUD_HEAT_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NeutronPassword=\"${OVERCLOUD_NEUTRON_PASSWORD}\" <<< $ENV_JSON)
