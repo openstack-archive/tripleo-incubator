@@ -139,14 +139,10 @@ fi #nodocs
 ##    ::
 
 POWER_MANAGER=$(os-apply-config -m $TE_DATAFILE --key power_manager --type raw)
-POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
-POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
-POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
-
 
 ## #. We need an environment file to store the parameters we're gonig to give
 ##    heat.::
@@ -166,14 +162,33 @@ fi
 ##    ::
 
 if [ "$USE_IRONIC" -eq 0 ] ; then
+  REGISTER_SERVICE_OPTS=""
+  ENV_JSON=$(jq .parameters.PowerManager=\"${POWER_MANAGER}\" <<< $ENV_JSON)
+
+  if [ "$POWER_MANAGER" = 'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager' ]; then
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
+
+    POWER_HOST=$(os-apply-config -m $TE_DATAFILE --key host-ip --type raw)
+    POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
+    POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
+
     ENV_JSON=$(jq .parameters.PowerSSHHost=\"${POWER_HOST}\" <<< $ENV_JSON)
-    ENV_JSON=$(jq .parameters.PowerManager=\"${POWER_MANAGER}\" <<< $ENV_JSON)
     ENV_JSON=$(jq .parameters.PowerUserName=\"${POWER_USER}\" <<< $ENV_JSON)
-    REGISTER_SERVICE_OPTS=""
+    ENV_JSON=$(jq '.parameters.PowerSSHPrivateKey="'"${POWER_KEY}"'"' <<< $ENV_JSON)
+
+  else
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-bm.yaml"
+
+  fi
+
 else
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
     ENV_JSON=$(jq .parameters.IronicPassword=\"${UNDERCLOUD_IRONIC_PASSWORD}\" <<< $ENV_JSON)
+
+    POWER_KEY=$(os-apply-config -m $TE_DATAFILE --key ssh-key --type raw)
+
+    ENV_JSON=$(jq '.parameters.PowerSSHPrivateKey="'"${POWER_KEY}"'"' <<< $ENV_JSON)
+
     REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
 fi
 
@@ -190,7 +205,6 @@ ENV_JSON=$(jq '.parameters += {
     "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
     "undercloudImage": "'"${UNDERCLOUD_ID}"'",
     "BaremetalArch": "'"${NODE_ARCH}"'",
-    "PowerSSHPrivateKey": "'"${POWER_KEY}"'",
     "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'"
   }
   | {"parameters": {"MysqlInnodbBufferPoolSize": 100}} + .' <<< $ENV_JSON)
