@@ -129,6 +129,11 @@ if [ -n "$OVSBRIDGE" ]; then
     BRIDGE="brbm${NUM}"
     SEED_ARGS="$SEED_ARGS -b $BRIDGE -p $OVSBRIDGE"
 fi
+
+#Clean up any prior environment
+cleanup-env $NUM
+
+#Now start creating the new environment
 setup-seed-vm $SEED_ARGS -c ${SEED_CPU:-1} -m $((1024 * ${SEED_MEM:-2048}))
 
 ## #. What user will be used to ssh to run virt commands to control our
