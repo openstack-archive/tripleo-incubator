@@ -300,10 +300,11 @@ heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
 ## #. While we wait for the stack to come up, build an end user disk image and
 ##    register it with glance.::
 
+TEST_IMAGE_DIB_EXTRA_ARGS=${TEST_IMAGE_DIB_EXTRA_ARGS:-''} #nodocs
 if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     USE_CIRROS=${USE_CIRROS:-0} #nodocs
     if [ "$USE_CIRROS" == "0" ] ; then #nodocs
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm \
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm $TEST_IMAGE_DIB_EXTRA_ARGS \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
 ### --end
     else
