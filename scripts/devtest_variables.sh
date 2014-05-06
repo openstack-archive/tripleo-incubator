@@ -140,6 +140,13 @@ export ROOT_DISK=${ROOT_DISK:-10}
 ##    of 1 for OVERCLOUD_CONTROLSCALE is currently supported.
 ##    ::
 
+export DISK_BUS_TYPE=${DISK_BUS_TYPE:-"sata"}
+
+## #. Set the disk bus type. The default value is 'sata'. But if the VM is going
+##    to be migrated or saved to disk, then 'scsi' would be more appropriate
+##    for libvirt.
+##    ::
+
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
 export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
 

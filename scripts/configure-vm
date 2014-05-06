@@ -33,6 +33,8 @@ def main():
         help='the name to give the machine in libvirt.')
     parser.add_argument('--image',
         help='Use a custom image file (must be qcow2).')
+    parser.add_argument('--diskbus', default='sata',
+        help='Choose an alternate bus type for the disk')
     parser.add_argument('--baremetal-interface', default='brbm',
         help='The interface which bare metal nodes will be connected to.')
     parser.add_argument('--engine', default='kvm',
@@ -74,6 +76,10 @@ def main():
         }
     if args.image is not None:
         params['imagefile'] = args.image
+
+    # Configure the bus type for the target disk device
+    if args.diskbus:
+        params['diskbus'] = args.diskbus
 
     if os.path.exists("/usr/bin/kvm"): # Debian
         params['emulator'] = "/usr/bin/kvm"
