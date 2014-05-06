@@ -6,6 +6,7 @@ MEM=$(( 1024 * $2 ))
 # extra G to allow fuzz for partition table : flavor size and registered size
 # need to be different to actual size.
 DISK=$3
+DISK_BUS_TYPE=${DISK_BUS_TYPE:-"sata"}
 NODE_DISK=$(( $DISK + 1))
 
 
@@ -49,7 +50,7 @@ for idx in $(seq 0 $TOTAL) ; do
   if [ -n "$BRIDGE" ]; then
     BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE"
   fi
-  configure-vm --bootdev network --name $vm_name --image "$volume_path" --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
+  configure-vm --bootdev network --name $vm_name --image "$volume_path" --diskbus $DISK_BUS_TYPE --arch $ARCH --cpus $CPU --memory $MEM --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
   mac=$(get-vm-mac $vm_name)
   JSON=$(jq ".nodes=(.nodes + [{mac:[\"$mac\"], cpu:\"$CPU\", memory:\"$2\", disk:\"$DISK\", arch:\"$4\", pm_user:\"$SSH_USER\", pm_addr:\"$HOSTIP\", pm_password:.[\"ssh-key\"], pm_type:\"pxe_ssh\"}])" <<< $JSON)
 
