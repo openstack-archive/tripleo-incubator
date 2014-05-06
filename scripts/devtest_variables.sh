@@ -139,6 +139,13 @@ export ROOT_DISK=${ROOT_DISK:-10}
 ## #. Set number of compute nodes for the overcloud
 ##    ::
 
+export DISK_BUS_TYPE=${DISK_BUS_TYPE:-"sata"}
+
+## #. Set the disk bus type. The default value is 'sata'. But if the VM is going
+##    to be migrated or saved to disk, then 'scsi' would be more appropriate
+##    for libvirt.
+##    ::
+
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
 
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
