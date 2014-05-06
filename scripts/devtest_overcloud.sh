@@ -240,37 +240,40 @@ fi
 
 ## #. Set parameters we need to deploy a KVM cloud.::
 
-ENV_JSON=$(jq .parameters.AdminPassword=\"${OVERCLOUD_ADMIN_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.AdminToken=\"${OVERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.CinderPassword=\"${OVERCLOUD_CINDER_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.CeilometerPassword=\"${OVERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.CloudName=\"${OVERCLOUD_NAME}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.GlancePassword=\"${OVERCLOUD_GLANCE_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.HeatPassword=\"${OVERCLOUD_HEAT_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.HypervisorNeutronPhysicalBridge=\"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.HypervisorNeutronPublicInterface=\"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronBridgeMappings=\"${OVERCLOUD_BRIDGE_MAPPINGS}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronFlatNetworks=\"${OVERCLOUD_FLAT_NETWORKS}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronPassword=\"${OVERCLOUD_NEUTRON_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronPublicInterface=\"${NeutronPublicInterface}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NovaComputeLibvirtType=\"${OVERCLOUD_LIBVIRT_TYPE}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NovaPassword=\"${OVERCLOUD_NOVA_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.SwiftHashSuffix=\"${OVERCLOUD_SWIFT_HASH}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.SwiftPassword=\"${OVERCLOUD_SWIFT_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NovaImage=\"${OVERCLOUD_COMPUTE_ID}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.SSLCertificate=\"${OVERCLOUD_SSL_CERT}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.SSLKey=\"${OVERCLOUD_SSL_KEY}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NtpServer=\"${OVERCLOUD_NTP_SERVER}\" <<< $ENV_JSON)
+ENV_JSON=$(jq '.parameters += {
+    "AdminPassword": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
+    "AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
+    "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
+    "CloudName": "'"${OVERCLOUD_NAME}"'",
+    "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
+    "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
+    "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
+    "HypervisorNeutronPublicInterface": "'"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}"'",
+    "NeutronBridgeMappings": "'"${OVERCLOUD_BRIDGE_MAPPINGS}"'",
+    "NeutronFlatNetworks": "'"${OVERCLOUD_FLAT_NETWORKS}"'",
+    "NeutronPassword": "'"${OVERCLOUD_NEUTRON_PASSWORD}"'",
+    "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
+    "NovaComputeLibvirtType": "'"${OVERCLOUD_LIBVIRT_TYPE}"'",
+    "NovaPassword": "'"${OVERCLOUD_NOVA_PASSWORD}"'",
+    "NtpServer": "'"${OVERCLOUD_NTP_SERVER}"'",
+    "SwiftHashSuffix": "'"${OVERCLOUD_SWIFT_HASH}"'",
+    "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
+    "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
+    "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
+    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
+  }' <<< $ENV_JSON)
 # Preserve user supplied buffer size in the environment, defaulting to 100 for VM usage.
 ENV_JSON=$(jq '.parameters.MysqlInnodbBufferPoolSize=(.parameters.MysqlInnodbBufferPoolSize | 100)' <<< $ENV_JSON)
 
 ### --end
 # Options we haven't documented as such
-ENV_JSON=$(jq .parameters.ImageUpdatePolicy=\"${OVERCLOUD_IMAGE_UPDATE_POLICY}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronPublicInterfaceDefaultRoute=\"${NeutronPublicInterfaceDefaultRoute}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronPublicInterfaceIP=\"${NeutronPublicInterfaceIP}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronPublicInterfaceRawDevice=\"${NeutronPublicInterfaceRawDevice}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronControlPlaneID=\"${NeutronControlPlaneID}\" <<< $ENV_JSON)
+ENV_JSON=$(jq '.parameters += {
+    "ImageUpdatePolicy": "'${OVERCLOUD_IMAGE_UPDATE_POLICY}'",
+    "NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
+    "NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
+    "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
+    "NeutronControlPlaneID": "'${NeutronControlPlaneID}'"
+  }' <<< $ENV_JSON)
 ### --include
 
 ## #. Save the finished environment file.::
