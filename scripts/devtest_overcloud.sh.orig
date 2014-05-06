@@ -262,13 +262,20 @@ ENV_JSON=$(jq '.parameters += {
 
 ### --end
 # Options we haven't documented as such
+<<<<<<< HEAD
+ENV_JSON=$(jq .parameters.ImageUpdatePolicy=\"${OVERCLOUD_IMAGE_UPDATE_POLICY}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterfaceDefaultRoute=\"${NeutronPublicInterfaceDefaultRoute}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterfaceIP=\"${NeutronPublicInterfaceIP}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronPublicInterfaceRawDevice=\"${NeutronPublicInterfaceRawDevice}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.NeutronControlPlaneID=\"${NeutronControlPlaneID}\" <<< $ENV_JSON)
+=======
 ENV_JSON=$(jq '.parameters += {
     "ImageUpdatePolicy": "'${OVERCLOUD_IMAGE_UPDATE_POLICY}'",
     "NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
     "NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
-    "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
-    "NeutronControlPlaneID": "'${NeutronControlPlaneID}'"
+    "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'"
   }' <<< $ENV_JSON)
+>>>>>>> Clean up heat env file code
 ### --include
 
 ## #. Save the finished environment file.::
