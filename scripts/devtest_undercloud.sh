@@ -177,6 +177,22 @@ else
     REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
 fi
 
+STACKNAME_UNDERCLOUD=${STACKNAME_UNDERCLOUD:-'undercloud'}
+
+## #. Choose whether to deploy or update. Use stack-update to update::
+##    HEAT_OP=stack-create
+##    ::
+
+if heat stack-show $STACKNAME_UNDERCLOUD > /dev/null; then
+    HEAT_OP=stack-update
+    if (heat stack-show $STACKNAME_UNDERCLOUD | grep -q FAILED); then
+        echo "Cannot update a failed stack" >&2
+        exit 1
+    fi  
+else
+    HEAT_OP=stack-create
+fi
+
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq .parameters.AdminPassword=\"${UNDERCLOUD_ADMIN_PASSWORD}\" <<< $ENV_JSON)
@@ -204,7 +220,7 @@ jq . > "${HEAT_ENV}" <<< $ENV_JSON
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
 
-heat stack-create -e $HEAT_ENV \
+heat $HEAT_OP -e $HEAT_ENV \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
     undercloud
 
