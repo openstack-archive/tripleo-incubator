@@ -136,6 +136,13 @@ fi
 
 export ROOT_DISK=${ROOT_DISK:-10}
 
+## #. Set the disk bus type. The default value is 'sata'. But if the VM is going
+##    to be migrated or saved to disk, then 'scsi' would be more appropriate
+##    for libvirt.
+##    ::
+
+export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
+
 ## #. Set number of compute and control nodes for the overcloud. Only a value
 ##    of 1 for OVERCLOUD_CONTROLSCALE is currently supported.
 ##    ::

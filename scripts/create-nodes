@@ -6,6 +6,7 @@ MEM=$(( 1024 * $2 ))
 # extra G to allow fuzz for partition table : flavor size and registered size
 # need to be different to actual size.
 DISK=$3
+LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 NODE_DISK=$(( $DISK + 1))
 
 
@@ -58,6 +59,7 @@ for idx in $(seq 0 $TOTAL) ; do
          --bootdev network \
          --name $vm_name \
          --image "$volume_path" \
+         --diskbus $LIBVIRT_DISK_BUS_TYPE \
          --arch $ARCH \
          --cpus $CPU \
          --memory $MEM \
