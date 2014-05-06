@@ -86,7 +86,7 @@ fi
 if [ "$TENANT" = "admin" ]; then
     ROLE="admin"
 else
-    ROLE="Member"
+    ROLE="_member_"
 fi
 ROLE_ID=$(keystone role-get $ROLE | awk '$2=="id" {print $4}')
 if keystone user-role-list --user-id $USER_ID --tenant-id $TENANT_ID | grep "${ROLE_ID}.*${ROLE}.*${USER_ID}" ; then
