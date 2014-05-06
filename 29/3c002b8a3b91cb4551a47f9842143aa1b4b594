@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+2: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Workflow+1: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Code-Review+2: Imre Farkas <ifarkas@redhat.com>
+Code-Review+1: Dmitry Shulyak <dshulyak@mirantis.com>
+Code-Review+1: Steve Kowalik <steven@wedontsleep.org>
+Submitted-by: Jenkins
+Submitted-at: Tue, 06 May 2014 23:12:01 +0000
+Reviewed-on: https://review.openstack.org/91916
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
