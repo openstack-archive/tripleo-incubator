@@ -55,7 +55,7 @@ if [ ! -d "$TRIPLEO_ROOT/tripleo-incubator/scripts" ]; then
   echo ERROR: Cannot find "$TRIPLEO_ROOT/tripleo-incubator/scripts".
   echo "      Please set TRIPLEO_ROOT to point to the directory which"
   echo "      contains your tripleo-incubator checkout."
-  exit 1
+  return 1
 fi
 ### --include
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$PATH
