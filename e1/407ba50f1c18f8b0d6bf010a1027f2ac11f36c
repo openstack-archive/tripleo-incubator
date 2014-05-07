@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+1: Coleman Corrigan <coleman.corrigan@hp.com>
+Code-Review+2: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Code-Review+1: Michael Kerrin <michael.kerrin@hp.com>
+Code-Review+2: Jiri Stransky <jistr@redhat.com>
+Workflow+1: Jiri Stransky <jistr@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 07 May 2014 13:13:27 +0000
+Reviewed-on: https://review.openstack.org/91787
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
