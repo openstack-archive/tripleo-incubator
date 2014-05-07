@@ -35,22 +35,18 @@ export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 
 export LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
-## #. Set ``TRIPLEO_ROOT``, if it wasn't already set. See note in :doc:`devtest`
-##    for discussion on suggested values for ``TRIPLEO_ROOT``
-
-##    ::
-
-export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo}
-
-
-## #. The TripleO tools will get (or have already been, if you followed the
-##    suggestions in :doc:`devtest`) installed in
+## #. The TripleO tools should have already been, if you followed the
+##    suggestions in :doc:`devtest`, installed in
 ##    ``$TRIPLEO_ROOT/tripleo-incubator/scripts`` - you need to add that to the
 ##    ``$PATH``.
 
 ##    ::
 
 ### --end
+if [ -z "$TRIPLEO_ROOT" ]; then
+  echo "      You must set TRIPLEO_ROOT to use devtest"
+  return 1
+fi
 if [ ! -d "$TRIPLEO_ROOT/tripleo-incubator/scripts" ]; then
   echo ERROR: Cannot find "$TRIPLEO_ROOT/tripleo-incubator/scripts".
   echo "      Please set TRIPLEO_ROOT to point to the directory which"

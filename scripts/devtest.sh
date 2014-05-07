@@ -156,12 +156,11 @@ fi
 
 ##    .. note::
 
-##      By default, devtest.sh uses ``~/.cache/tripleo`` for ``$TRIPLEO_ROOT``.
-##      Unless you're planning to do a one-shot run of ``devtest.sh`` and never
-##      look at the code installed or the artifacts generated, you should
-##      set this value to something more convenient to you.
+##      This will be used by devtest.sh and other scripts to store the
+##      additional tools, images, packages, tarballs and everything else
+##      needed. Make sure it is correctly set and exported before starting.
 
-## #. Create the directory and check out the code
+## #. Create the directory and check out the code within your ``$TRIPLEO_ROOT``
 
 ##    ::
 
