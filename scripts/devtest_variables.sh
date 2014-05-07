@@ -81,7 +81,7 @@ export USE_IRONIC=${USE_IRONIC:-0}
 ##    pip-cache or pypi-openstack if you intend to use them.
 ##    ::
 
-export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser"}
+export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv"}
 
 ## #. If you have a specific Ubuntu mirror you want to use when building
 ##    images.
