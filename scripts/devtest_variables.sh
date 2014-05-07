@@ -35,26 +35,17 @@ export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 
 export LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
-## #. Set ``TRIPLEO_ROOT``, if it wasn't already set. See note in :doc:`devtest`
-##    for discussion on suggested values for ``TRIPLEO_ROOT``
-
-##    ::
-
-export TRIPLEO_ROOT=${TRIPLEO_ROOT:-~/.cache/tripleo}
-
-
-## #. The TripleO tools will get (or have already been, if you followed the
-##    suggestions in :doc:`devtest`) installed in
-##    ``$TRIPLEO_ROOT/tripleo-incubator/scripts`` - you need to add that to the
-##    ``$PATH``.
+## #. The tripleo-incubator tools must be available at
+##    $TRIPLEO_ROOT/tripleo-incubator. See the :doc:`devtest` documentation
+##    which describes how to setup that.
 
 ##    ::
 
 ### --end
-if [ ! -d "$TRIPLEO_ROOT/tripleo-incubator/scripts" ]; then
-  echo ERROR: Cannot find "$TRIPLEO_ROOT/tripleo-incubator/scripts".
-  echo "      Please set TRIPLEO_ROOT to point to the directory which"
-  echo "      contains your tripleo-incubator checkout."
+if [ -z "$TRIPLEO_ROOT" -o ! -d "$TRIPLEO_ROOT/tripleo-incubator/scripts" ]; then
+  echo ERROR: Cannot find '$TRIPLEO_ROOT/tripleo-incubator/scripts'.
+  echo "      To use devtest you must set the TRIPLEO_ROOT variable and have cloned tripleo-incubator within your TRIPLEO_ROOT."
+  echo "      Check http://docs.openstack.org/developer/tripleo-incubator/devtest.html#initial-checkout for instructions."
   return 1
 fi
 ### --include
