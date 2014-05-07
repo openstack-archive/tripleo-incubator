@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+1: Cian O'Driscoll <cian@hp.com>
+Code-Review+2: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Workflow+1: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 07 May 2014 04:03:34 +0000
+Reviewed-on: https://review.openstack.org/85619
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
