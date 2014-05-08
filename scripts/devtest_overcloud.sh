@@ -311,7 +311,7 @@ if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
             http://download.cirros-cloud.net/version/released >(cat) 1>&2)
         IMAGE_ID=cirros-${VERSION}-${NODE_ARCH/amd64/x86_64}-disk.img
         MD5SUM=$($TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
-            http://download.cirros-cloud.net/${VERSION}/MD5SUMS >(cat) 1>&2 | awk '/$IMAGE_ID/ {print $1}')
+            http://download.cirros-cloud.net/${VERSION}/MD5SUMS >(cat) 1>&2 | awk '/'$IMAGE_ID'/ {print $1}')
         $TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
             http://download.cirros-cloud.net/${VERSION}/${IMAGE_ID} $TRIPLEO_ROOT/user.qcow2}
         pushd $TRIPLEO_ROOT
