@@ -401,22 +401,23 @@ Caveats
 
 It is important to consider some unresolved issues in this plan.
 
+.. _tested_platforms:
+
 Tested platforms
 ----------------
 
 At this moment, the distributions that are tested by the CI systems
-are Ubuntu and Fedora.
+are the Ubuntu and Fedora. As of 2014-05-08, we specifically test Ubuntu Saucy
+VMs and Fedora 20vms, each running on both Ubuntu hosts and Fedora 20 hosts.
 
-Therefore, we encourage users to use either Ubuntu or Fedora to have a
-smooth experience.
+Therefore, we encourage users to use these versions of either Ubuntu or Fedora
+to have a smooth experience.
 
-You may be able to run devtest on other distributions though, such as
-CentOS, Debian, openSUSE and RHEL.
-The devtest code tries to identify the OS you use and match it against
-all major distributions (CentOS, Debian, Fedora, openSUSE, RHEL,
-SUSE and Ubuntu).
-If you use any other distribution not listed above, the script will identify
-your machine as unsupported.
+You may be able to run devtest on other distributions, as the devtest code
+tries to identify the OS you use and match it against all major distributions
+(CentOS, Debian, Fedora, openSUSE, RHEL, SUSE and Ubuntu).  If you use any
+other distribution not listed above, the script will identify your machine as
+unsupported.
 
 
 Security

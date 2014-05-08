@@ -106,6 +106,9 @@ fi
 ## This document is extracted from devtest.sh, our automated bring-up story for
 ## CI/experimentation.
 
+## More details about the TripleO project and its goals can be found in the
+## :doc:`README <README>`
+
 ## .. tip::
 
 ##    https://wiki.openstack.org/wiki/TripleO#Notes_for_new_developers contains
@@ -114,8 +117,12 @@ fi
 ##    notes (such as those relating to setting up local mirrors for apt and
 ##    pypi) will probably be helpful for everyone.
 
-## More details about the TripleO project and its goals can be found in the
-## :doc:`README <README>`
+## .. note::
+
+##    See :ref:`tested_platforms` for an overview of which releases of which
+##    distros are tested in our CI system.  We suggest you read that section
+##    before proceeding, to make sure you're running on a platform that we have
+##    extensively tested.
 
 ## Permissions
 ## -----------
@@ -203,7 +210,6 @@ fi
 
 ## Next Steps:
 ## -----------
-
 ## When run as a standalone script, devtest.sh runs the following commands
 ## to configure the devtest environment, bootstrap a seed, deploy under and
 ## overclouds. Many of these commands are also part of our documentation.
