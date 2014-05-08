@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Code-Review+1: tom-howley <tom.howley@hp.com>
+Code-Review+2: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Code-Review+1: Loganathan Parthipan <parthipan@hp.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Workflow+1: James Slagle <jslagle@redhat.com>
+Code-Review+1: Matthew Gilliard <matthew.gilliard@hp.com>
+Code-Review+1: James Polley <jp@jamezpolley.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 08 May 2014 15:32:45 +0000
+Reviewed-on: https://review.openstack.org/87039
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
