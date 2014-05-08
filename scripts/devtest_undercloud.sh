@@ -173,6 +173,7 @@ heat stack-create -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPL
     -P "PowerSSHPrivateKey=${POWER_KEY}" \
     -P "NeutronPublicInterface=${NeutronPublicInterface}" \
     -P "NtpServer=${UNDERCLOUD_NTP_SERVER}" \
+    -P "MysqlInnodbBufferPoolSize=100" \
     ${HEAT_UNDERCLOUD_EXTRA_OPTS} \
     undercloud
 

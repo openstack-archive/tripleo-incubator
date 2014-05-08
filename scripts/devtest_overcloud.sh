@@ -257,6 +257,7 @@ ENV_JSON=$(jq .parameters.NovaImage=\"${OVERCLOUD_COMPUTE_ID}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.SSLCertificate=\"${OVERCLOUD_SSL_CERT}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.SSLKey=\"${OVERCLOUD_SSL_KEY}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NtpServer=\"${OVERCLOUD_NTP_SERVER}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.MysqlInnodbBufferPoolSize=100 <<< $ENV_JSON)
 
 ### --end
 # Options we haven't documented as such
