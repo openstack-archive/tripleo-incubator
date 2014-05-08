@@ -111,7 +111,8 @@ fi
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
-        baremetal boot-stack cinder-api cinder-volume cinder-tgt \
+        baremetal boot-stack cinder-api cinder-volume cinder-tgt ceilometer-collector \
+        ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
         os-collect-config horizon neutron-network-node dhcp-all-interfaces \
         swift-proxy swift-storage \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
@@ -242,6 +243,7 @@ fi
 ENV_JSON=$(jq .parameters.AdminPassword=\"${OVERCLOUD_ADMIN_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.AdminToken=\"${OVERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.CinderPassword=\"${OVERCLOUD_CINDER_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.CeilometerPassword=\"${OVERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.CloudName=\"${OVERCLOUD_NAME}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.GlancePassword=\"${OVERCLOUD_GLANCE_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.HeatPassword=\"${OVERCLOUD_HEAT_PASSWORD}\" <<< $ENV_JSON)
@@ -380,6 +382,7 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
         --neutron-password $OVERCLOUD_NEUTRON_PASSWORD \
         --nova-password $OVERCLOUD_NOVA_PASSWORD \
         --swift-password $OVERCLOUD_SWIFT_PASSWORD \
+        --ceilometer-password $OVERCLOUD_CEILOMETER_PASSWORD \
         ${SSLBASE:+--ssl $PUBLIC_API_URL}
     keystone role-create --name heat_stack_user
     # Creating these roles to be used by tenants using swift
