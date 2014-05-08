@@ -106,6 +106,13 @@ fi
 ## This document is extracted from devtest.sh, our automated bring-up story for
 ## CI/experimentation.
 
+## .. note::
+
+##    README.md contains a "Tested platforms" section with an overview of which
+##    releases of which distros are tested in our CI system. We suggest you
+##    read that section before proceeding, to make sure you're running on a
+##    supported platform.
+
 ## Permissions
 ## -----------
 
