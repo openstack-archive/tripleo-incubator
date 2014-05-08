@@ -25,10 +25,6 @@ function show_options() {
     echo "Cleanup vm state left behind by previous runs"
     echo
     echo "    -n                     -- Test environment number to clean up."
-    echo "    -o seed_name           -- Name of the seed to clean up."
-    echo "                              If not provided, seed_n will be assumed"
-    echo "                              if -n is used; or simply seed if -n is"
-    echo "                              not provided. "
     exit 1
 }
 
@@ -49,11 +45,13 @@ while true ; do
     esac
 done
 
+SEED_NAME=seed
+BRIDGE_NAME=
+
 if [ -n "$NUM" ]; then
-  SEED_NAME="${SEED_NAME:-seed_${NUM}}"
+  SEED_NAME="seed_${NUM}"
   BRIDGE_NAME="brbm${NUM}"
 fi
-SEED_NAME="${SEED_NAME:-seed}"
 
 BAREMETAL_REGEX="baremetal${BRIDGE_NAME}"
 for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
