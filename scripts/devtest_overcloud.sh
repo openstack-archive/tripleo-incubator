@@ -254,8 +254,8 @@ ENV_JSON=$(jq .parameters.NovaPassword=\"${OVERCLOUD_NOVA_PASSWORD}\" <<< $ENV_J
 ENV_JSON=$(jq .parameters.SwiftHashSuffix=\"${OVERCLOUD_SWIFT_HASH}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.SwiftPassword=\"${OVERCLOUD_SWIFT_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NovaImage=\"${OVERCLOUD_COMPUTE_ID}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.SSLCertificate=\"${OVERCLOUD_SSL_CERT}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.SSLKey=\"${OVERCLOUD_SSL_KEY}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.SSLCertificate=\""${OVERCLOUD_SSL_CERT}"\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.SSLKey=\""${OVERCLOUD_SSL_KEY}"\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NtpServer=\"${OVERCLOUD_NTP_SERVER}\" <<< $ENV_JSON)
 
 ### --end
