@@ -122,6 +122,8 @@ UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 ### --end
 if [ -e tripleo-undercloud-passwords ]; then
   echo "Re-using existing passwords in $PWD/tripleo-undercloud-passwords"
+  # Add any new passwords since the file was generated
+  setup-undercloud-passwords tripleo-undercloud-passwords
   source tripleo-undercloud-passwords
 else
 ### --include

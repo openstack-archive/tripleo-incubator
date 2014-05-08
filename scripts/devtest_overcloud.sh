@@ -215,6 +215,8 @@ wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" 
 ### --end
 if [ -e tripleo-overcloud-passwords ]; then
   echo "Re-using existing passwords in $PWD/tripleo-overcloud-passwords"
+  # Add any new passwords since the file was generated
+  setup-overcloud-passwords tripleo-overcloud-passwords
   source tripleo-overcloud-passwords
 else
 ### --include
