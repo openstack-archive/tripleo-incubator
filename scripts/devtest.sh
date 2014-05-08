@@ -114,6 +114,13 @@ fi
 ##    notes (such as those relating to setting up local mirrors for apt and
 ##    pypi) will probably be helpful for everyone.
 
+## .. note::
+
+##    README.md contains a "Tested platforms" section with an overview of which
+##    releases of which distros are tested in our CI system. We suggest you
+##    read that section before proceeding, to make sure you're running on a
+##    supported platform.
+
 ## Permissions
 ## -----------
 
