@@ -322,7 +322,7 @@ if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
         MD5SUM=$($TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
             http://download.cirros-cloud.net/${VERSION}/MD5SUMS >(cat) 1>&2 | awk '/$IMAGE_ID/ {print $1}')
         $TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
-            http://download.cirros-cloud.net/${VERSION}/${IMAGE_ID} $TRIPLEO_ROOT/user.qcow2}
+            http://download.cirros-cloud.net/${VERSION}/${IMAGE_ID} $TRIPLEO_ROOT/user.qcow2
         pushd $TRIPLEO_ROOT
         echo "$MD5SUM user.qcow2" | md5sum --check -
         popd
