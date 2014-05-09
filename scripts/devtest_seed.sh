@@ -75,7 +75,7 @@ else
 # - nova.compute_driver to ironic.nova.virt.ironic.driver.IronicDriver
 # - sets the nova.baremetal key to "" to disable configuration looking for baremetal configuration.
 # - sets the nova.compute_manager to avoid race conditions on ironic startup.
-    jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal=""| .[0]' config.json $TE_DATAFILE > tmp_local.json
+jq -s '.[1] as $config | ($config["baremetal-network"].seed.ip // "192.0.2.1") as $bm_seed_ip |  (.[0].ironic |= (.tftp_server=$bm_seed_ip)) | (.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal=""| .[0]' config.json $TE_DATAFILE > tmp_local.json
 fi
 
 # Apply custom BM network settings to the seeds local.json config
