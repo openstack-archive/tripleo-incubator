@@ -90,11 +90,6 @@ export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv"}
 # export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} apt-sources"
 # export DIB_APT_SOURCES=/path/to/a/sources.list to use.
 
-## #. These elements are required for tripleo in all images we build.
-##    ::
-
-export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
-
 ## #. A messaging backend is required for the seed, undercloud, and overcloud
 ##    control node. It is not required for overcloud computes. The backend is
 ##    set through the ``*EXTRA_ARGS``.
