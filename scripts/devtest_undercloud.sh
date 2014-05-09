@@ -177,18 +177,20 @@ fi
 
 ## #. Set parameters we need to deploy a KVM cloud.::
 
-ENV_JSON=$(jq .parameters.AdminPassword=\"${UNDERCLOUD_ADMIN_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.AdminToken=\"${UNDERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.CeilometerPassword=\"${UNDERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.GlancePassword=\"${UNDERCLOUD_GLANCE_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.HeatPassword=\"${UNDERCLOUD_HEAT_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NovaPassword=\"${UNDERCLOUD_NOVA_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronPassword=\"${UNDERCLOUD_NEUTRON_PASSWORD}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NeutronPublicInterface=\"${NeutronPublicInterface}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.undercloudImage=\"${UNDERCLOUD_ID}\" <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.BaremetalArch=\"${NODE_ARCH}\" <<< $ENV_JSON)
-ENV_JSON=$(jq '.parameters.PowerSSHPrivateKey="'"${POWER_KEY}"'"' <<< $ENV_JSON)
-ENV_JSON=$(jq .parameters.NtpServer=\"${UNDERCLOUD_NTP_SERVER}\" <<< $ENV_JSON)
+ENV_JSON=$(jq '.parameters += {
+    "AdminPassword": "'"${UNDERCLOUD_ADMIN_PASSWORD}"'",
+    "AdminToken": "'"${UNDERCLOUD_ADMIN_TOKEN}"'",
+    "CeilometerPassword": "'"${UNDERCLOUD_CEILOMETER_PASSWORD}"'",
+    "GlancePassword": "'"${UNDERCLOUD_GLANCE_PASSWORD}"'",
+    "HeatPassword": "'"${UNDERCLOUD_HEAT_PASSWORD}"'",
+    "NovaPassword": "'"${UNDERCLOUD_NOVA_PASSWORD}"'",
+    "NeutronPassword": "'"${UNDERCLOUD_NEUTRON_PASSWORD}"'",
+    "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
+    "undercloudImage": "'"${UNDERCLOUD_ID}"'",
+    "BaremetalArch": "'"${NODE_ARCH}"'",
+    "PowerSSHPrivateKey": "'"${POWER_KEY}"'",
+    "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'"
+  }' <<< $ENV_JSON)
 # Preserve user supplied buffer size in the environment, defaulting to 100 for VM usage.
 ENV_JSON=$(jq '.parameters.MysqlInnodbBufferPoolSize=(.parameters.MysqlInnodbBufferPoolSize | 100)' <<< $ENV_JSON)
 
