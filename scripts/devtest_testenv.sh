@@ -204,12 +204,17 @@ if [ -n "$NODES_PATH" ]; then #nodocs
   JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
   echo "${JSON}" > $JSONFILE
 else #nodocs
+
 ## #. Create baremetal nodes for the test cluster. If the required number of
 ##    VMs changes in future, you can run cleanup-env and then recreate with
 ##    more nodes.
 ##    ::
 
-NODE_CNT=$(( $OVERCLOUD_COMPUTESCALE + 2 ))
+# Node definitions are cheap but redeploying testenv's is not.
+# Set NODE_CNT high enough for typical CI and Dev deployments for the
+# forseeable future
+NODE_CNT=${NODE_CNT:-15}
+
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
 fi
