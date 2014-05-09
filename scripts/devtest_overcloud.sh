@@ -262,9 +262,8 @@ ENV_JSON=$(jq '.parameters += {
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
     "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
-  }' <<< $ENV_JSON)
-# Preserve user supplied buffer size in the environment, defaulting to 100 for VM usage.
-ENV_JSON=$(jq '.parameters.MysqlInnodbBufferPoolSize=(.parameters.MysqlInnodbBufferPoolSize | 100)' <<< $ENV_JSON)
+  }
+  | {"parameters": {"MysqlInnodbBufferPoolSize": 100}} + .' <<< $ENV_JSON)
 
 ### --end
 # Options we haven't documented as such
