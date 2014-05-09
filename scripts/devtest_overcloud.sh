@@ -241,7 +241,9 @@ fi
 
 ## #. Set parameters we need to deploy a KVM cloud.::
 
-ENV_JSON=$(jq '.parameters += {
+ENV_JSON=$(jq '.parameters = {
+    "MysqlInnodbBufferPoolSize": 100
+  } + .parameters + {
     "AdminPassword": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
     "AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
     "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
@@ -263,19 +265,18 @@ ENV_JSON=$(jq '.parameters += {
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
     "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
   }' <<< $ENV_JSON)
-# Preserve user supplied buffer size in the environment, defaulting to 100 for VM usage.
-ENV_JSON=$(jq '.parameters.MysqlInnodbBufferPoolSize=(.parameters.MysqlInnodbBufferPoolSize | 100)' <<< $ENV_JSON)
 
 ### --end
 # Options we haven't documented as such
-ENV_JSON=$(jq '.parameters += {
+ENV_JSON=$(jq '.parameters = {
+    "ControlVirtualInterface": "'${OVERCLOUD_VIRTUAL_INTERFACE}'"
+  } + .parameters + {
     "ImageUpdatePolicy": "'${OVERCLOUD_IMAGE_UPDATE_POLICY}'",
     "NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
     "NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
     "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
     "NeutronControlPlaneID": "'${NeutronControlPlaneID}'"
-  }
-  | {"parameters": {"ControlVirtualInterface": "'${OVERCLOUD_VIRTUAL_INTERFACE}'"}} + .' <<< $ENV_JSON)
+  }' <<< $ENV_JSON)
 ### --include
 
 ## #. Save the finished environment file.::
