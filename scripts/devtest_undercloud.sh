@@ -23,7 +23,7 @@ function show_options () {
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,heat-env:help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,heat-env:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
