@@ -156,12 +156,14 @@ fi
 
 ##    .. note::
 
-##      By default, devtest.sh uses ``~/.cache/tripleo`` for ``$TRIPLEO_ROOT``.
-##      Unless you're planning to do a one-shot run of ``devtest.sh`` and never
-##      look at the code installed or the artifacts generated, you should
-##      set this value to something more convenient to you.
+##      This will be used by devtest.sh and other scripts to store the
+##      additional tools, images, packages, tarballs and everything else
+##      needed by the deployment process. The tripleo-incubator tools must
+##      be cloned within your ``$TRIPLEO_ROOT``.
+##      If unset, devtest.sh assumes ``~/.cache/tripleo`` to be your
+##      ``$TRIPLEO_ROOT``.
 
-## #. Create the directory and check out the code
+## #. Create the directory and clone tripleo-incubator within ``$TRIPLEO_ROOT``
 
 ##    ::
 
@@ -215,7 +217,7 @@ fi
 ##    the root of your checkout::
 
 ##        source scripts/devtest_variables.sh
-source $(dirname $0)/devtest_variables.sh  #nodocs
+source $SCRIPT_HOME/devtest_variables.sh  #nodocs
 
 ## #. See :doc:`devtest_setup` for documentation.
 ##    $CONTINUE should be set to '--trash-my-machine' to have it execute
