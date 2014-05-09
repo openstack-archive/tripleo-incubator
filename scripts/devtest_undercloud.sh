@@ -7,7 +7,7 @@ SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
 BUILD_ONLY=
-HEAT_ENV=
+UNDERCLOUD_HEAT_ENV=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -32,7 +32,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
-        --heat-env) HEAT_ENV="$2"; shift 2;;
+        --heat-env) UNDERCLOUD_HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -165,12 +165,12 @@ fi
 ## #. We need an environment file to store the parameters we're gonig to give
 ##    heat.::
 
-HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/undercloud-env.json"}
+UNDERCLOUD_HEAT_ENV=${UNDERCLOUD_HEAT_ENV:-"${TRIPLEO_ROOT}/undercloud-env.json"}
 
 ## #. Read the heat env in for updating.::
 
-if [ -e "${HEAT_ENV}" ]; then
-    ENV_JSON=$(cat "${HEAT_ENV}")
+if [ -e "${UNDERCLOUD_HEAT_ENV}" ]; then
+    ENV_JSON=$(cat "${UNDERCLOUD_HEAT_ENV}")
 else
     ENV_JSON='{"parameters":{}}'
 fi
@@ -194,7 +194,7 @@ ENV_JSON=$(jq '.parameters.MysqlInnodbBufferPoolSize=(.parameters.MysqlInnodbBuf
 
 ## #. Save the finished environment file.::
 
-jq . > "${HEAT_ENV}" <<< $ENV_JSON
+jq . > "${UNDERCLOUD_HEAT_ENV}" <<< $ENV_JSON
 
 
 ## #. Deploy an undercloud.
@@ -202,7 +202,7 @@ jq . > "${HEAT_ENV}" <<< $ENV_JSON
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
 
-heat stack-create -e $HEAT_ENV \
+heat stack-create -e $UNDERCLOUD_HEAT_ENV \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
     undercloud
 
