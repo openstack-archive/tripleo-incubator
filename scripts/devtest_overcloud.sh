@@ -7,7 +7,6 @@ SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
 BUILD_ONLY=
-HEAT_ENV=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -32,7 +31,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
-        --heat-env) HEAT_ENV="$2"; shift 2;;
+        --heat-env) OVERCLOUD_HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -228,12 +227,12 @@ fi #nodocs
 ## #. We need an environment file to store the parameters we're gonig to give
 ##    heat.::
 
-HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/overcloud-env.json"}
+OVERCLOUD_HEAT_ENV=${OVERCLOUD_HEAT_ENV:-"${TRIPLEO_ROOT}/overcloud-env.json"}
 
 ## #. Read the heat env in for updating.::
 
-if [ -e "${HEAT_ENV}" ]; then
-    ENV_JSON=$(cat "${HEAT_ENV}")
+if [ -e "${OVERCLOUD_HEAT_ENV}" ]; then
+    ENV_JSON=$(cat "${OVERCLOUD_HEAT_ENV}")
 else
     ENV_JSON='{"parameters":{}}'
 fi
@@ -275,7 +274,7 @@ ENV_JSON=$(jq .parameters.NeutronControlPlaneID=\"${NeutronControlPlaneID}\" <<<
 
 ## #. Save the finished environment file.::
 
-jq . > "${HEAT_ENV}" <<< $ENV_JSON
+jq . > "${OVERCLOUD_HEAT_ENV}" <<< $ENV_JSON
 
 ## #. Deploy an overcloud::
 
