@@ -106,6 +106,14 @@ fi
 ## This document is extracted from devtest.sh, our automated bring-up story for
 ## CI/experimentation.
 
+## .. tip::
+
+##    https://etherpad.openstack.org/p/tripleo-newdev-notes contains notes on
+##    setting up a development environment. It's primarily aimed at people who
+##    intended to become contributors for tripleo, but many of its notes (such
+##    as those relating to setting up local mirrors for apt and pypi) will
+##    probably be helpful for everyone.
+
 ## Permissions
 ## -----------
 
