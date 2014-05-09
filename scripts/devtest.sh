@@ -30,6 +30,10 @@ function show_options () {
     echo "    --no-undercloud        -- Use the seed as the baremetal cloud to deploy the"
     echo "                              overcloud from."
     echo "    --build-only           -- Builds images but doesn't attempt to run them."
+    echo "    --head-env-undercloud ENVFILE"
+    echo "                           -- heat environment file for the undercloud."
+    echo "    --head-env-overcloud  ENVFILE"
+    echo "                           -- heat environment file for the overcloud."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
     echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
@@ -45,11 +49,13 @@ NODES_ARG=
 NO_UNDERCLOUD=
 NETS_ARG=
 CONTINUE=
+UNDERCLOUD_HEAT_ENV=
+OVERCLOUD_HEAT_ENV=
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes:,bm-networks:,no-undercloud -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes:,bm-networks:,no-undercloud,head-env-overcloud:,head-env-undercloud: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -63,6 +69,8 @@ while true ; do
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
         --bm-networks) NETS_ARG="--bm-networks $2"; shift 2;;
         --no-undercloud) NO_UNDERCLOUD="true"; shift 1;;
+        --head-env-undercloud) UNDERCLOUD_HEAT_ENV="--heat-env $2"; shift 2;;
+        --head-env-overcloud) OVERCLOUD_HEAT_ENV="--heat-env $2"; shift 2;;
         -c) USE_CACHE=1; shift 1;;
         -h) show_options 0;;
         --) shift ; break ;;
@@ -288,7 +296,7 @@ fi
 ### --end
 DEVTEST_UC_START=$(date +%s)
 if [ -z "$NO_UNDERCLOUD" ]; then
-    devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY
+    devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY $UNDERCLOUD_HEAT_ENV
     if [ -z "$BUILD_ONLY" ]; then
         export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
         source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
@@ -306,7 +314,7 @@ DEVTEST_UC_END=$(date +%s)
 ##         devtest_overcloud.sh
 ### --end
 DEVTEST_OC_START=$(date +%s)
-devtest_overcloud.sh $BUILD_ONLY
+devtest_overcloud.sh $BUILD_ONLY $OVERCLOUD_HEAT_ENV
 DEVTEST_OC_END=$(date +%s)
 if [ -z "$BUILD_ONLY" ]; then
 ### --include
