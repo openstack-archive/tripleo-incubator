@@ -204,6 +204,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
 
 heat stack-create -e $HEAT_ENV \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
+    ${HEAT_UNDERCLOUD_EXTRA_OPTS} \
     undercloud
 
 ##    You can watch the console via ``virsh``/``virt-manager`` to observe the PXE
