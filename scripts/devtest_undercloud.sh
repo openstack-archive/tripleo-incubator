@@ -188,6 +188,9 @@ ENV_JSON=$(jq .parameters.NeutronPublicInterface=\"${NeutronPublicInterface}\" <
 ENV_JSON=$(jq .parameters.undercloudImage=\"${UNDERCLOUD_ID}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.BaremetalArch=\"${NODE_ARCH}\" <<< $ENV_JSON)
 ENV_JSON=$(jq '.parameters.PowerSSHPrivateKey="'"${POWER_KEY}"'"' <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.PowerUserName=\"${POWER_USER}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.PowerSSHHost=\"${POWER_HOST}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.PowerManager=\"${POWER_MANAGER}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.NtpServer=\"${UNDERCLOUD_NTP_SERVER}\" <<< $ENV_JSON)
 # Preserve user supplied buffer size in the environment, defaulting to 100 for VM usage.
 ENV_JSON=$(jq '.parameters.MysqlInnodbBufferPoolSize=(.parameters.MysqlInnodbBufferPoolSize | 100)' <<< $ENV_JSON)
