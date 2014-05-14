@@ -1,0 +1,14 @@
+Verified+2: Jenkins
+Code-Review+1: Victor Lowther <victor.lowther@gmail.com>
+Code-Review+1: Jon-Paul Sullivan (jp_at_hp) <jonpaul.sullivan@hp.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: lifeless <robertc@robertcollins.net>
+Workflow+1: lifeless <robertc@robertcollins.net>
+Code-Review+1: Ben Nemec <openstack@nemebean.com>
+Code-Review+1: Richard Su <rwsu@redhat.com>
+Code-Review+1: Dmitry Shulyak <dshulyak@mirantis.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 14 May 2014 16:12:54 +0000
+Reviewed-on: https://review.openstack.org/93042
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
