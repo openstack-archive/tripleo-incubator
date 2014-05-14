@@ -263,10 +263,17 @@ devtest_setup.sh $CONTINUE
 ##       nodes being removed from ``$TE_DATAFILE``
 
 ##    ::
+### --end
 
+# Currently devtest.sh uses a single seed, a single undercloud node, and then
+# variables for the overcloud scale
+#     Seed  + Undercloud + Overcloud Controllers + Overcloud Compute Nodes
+MIN_NODES=$(( 1 + 1 + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_COMPUTESCALE ))
+
+### --include
 if [ "$TRIPLEO_CLEANUP" = "1" ]; then #nodocs
 #XXX: When updating, also update the header in devtest_testenv.sh #nodocs
-devtest_testenv.sh $TE_DATAFILE $NODES_ARG $NETS_ARG
+devtest_testenv.sh $TE_DATAFILE $NODES_ARG $NETS_ARG --required-nodes $MIN_NODES
 fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
