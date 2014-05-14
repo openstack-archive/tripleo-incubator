@@ -27,6 +27,7 @@ function show_options () {
     echo "    --bm-networks NETFILE  -- You are supplying your own network layout."
     echo "                              The schema for baremetal-network can be found in"
     echo "                              the devtest_setup documentation."
+    echo "    --required-nodes NODES -- The minimum number of nodes that are required by the user"
     echo
     echo "JSON-filename -- the path to write the environment description to."
     echo
@@ -37,12 +38,13 @@ function show_options () {
 }
 
 NODES_PATH=
+MIN_NODES=
 NETS_PATH=
 NUM=
 OVSBRIDGE=
 SSH_KEY=~/.ssh/id_rsa_virt_power
 
-TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,required-nodes: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -52,6 +54,7 @@ while true ; do
     case "$1" in
         --nodes) NODES_PATH="$2"; shift 2;;
         --bm-networks) NETS_PATH="$2"; shift 2;;
+        --required-nodes) MIN_NODES=$2; shift 2;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -233,12 +236,28 @@ else
 ##    VMs changes in future, you can run cleanup-env and then recreate with
 ##    more nodes.
 ##    ::
+### --end
 
-# Node definitions are cheap but redeploying testenv's is not.
-# Set NODE_CNT high enough for typical CI and Dev deployments for the
-# forseeable future
+# Set NODE_CNT to a default value.  This does not account for any of the *SCALE variables
+# very deliberately.  The reason for this is so that edits to those variables without thought
+# by the user as to the nodes to deploy upon may expose interesting error conditions.
+### --include
 NODE_CNT=${NODE_CNT:-15}
+### --end
 
+# If passed a requirement, make sure we satisfy it
+if [ -n "$MIN_NODES" ]; then
+    # If NODE_CNT won't satisfy our MIN_NODES settings give the error to the user
+    if (( $NODE_CNT < $MIN_NODES )) ; then
+        echo "ERROR: Not enough VMs will be created for the requested scale"
+        echo "$MIN_NODES needed, but $NODE_CNT being created"
+        echo "To ensure the correct number of nodes will be created you could:"
+        echo "    export NODE_CNT=$MIN_NODES"
+        exit 1
+    fi
+fi
+
+### --include
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
 fi
