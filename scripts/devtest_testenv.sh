@@ -218,11 +218,32 @@ else
 ##    more nodes.
 ##    ::
 
-# Node definitions are cheap but redeploying testenv's is not.
-# Set NODE_CNT high enough for typical CI and Dev deployments for the
-# forseeable future
-NODE_CNT=${NODE_CNT:-15}
+# Currently devtest.sh uses a single seed, a single undercloud node, and then
+# variables for the overcloud scale
+#     Seed  + Undercloud + Overcloud Controllers + Overcloud Compute Nodes
+# There is also a desire to have a minimum of 15 nodes created, so cater for
+# all cases.
+### --end
+TMP_CNT=$(( 1 + 1 + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_COMPUTESCALE ))
+(( $TMP_CNT < 15 )) || NODE_CNT=${NODE_CNT:-$TMP_CNT}
 
+### --include
+NODE_CNT=${NODE_CNT:-15}
+### --end
+
+# At this point we are either honouring the environment NODE_CNT or have set it to
+# the required value if 1 + 1 + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_COMPUTESCALE > 15
+# otherwise the it will be set to the minimum of 15 or honour the environment setting.
+# If NODE_CNT now won't satisfy our OVERCLOUD_*SCALE settings error, becase we will likely
+# fail later anyway.
+if (( $NODE_CNT < $TMP_CNT )) ; then
+    echo "ERROR: Not enough VMs will be created for the requested scale"
+    echo "$TMP_CNT needed, but $NODE_CNT being created"
+    echo "$TMP_CNT is created from 1 + 1 + OVERCLOUD_CONTROLSCALE + OVERCLOUD_COMPUTESCALE"
+    exit 1
+fi
+
+### --include
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
 fi
