@@ -148,20 +148,6 @@ POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
 
 
-## #. Nova-baremetal and Ironic require different Heat templates
-##    and different options.
-##    ::
-
-if [ "$USE_IRONIC" -eq 0 ] ; then
-    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
-    HEAT_UNDERCLOUD_EXTRA_OPTS="-P PowerSSHHost=${POWER_HOST} -P PowerManager=${POWER_MANAGER} -P PowerUserName=${POWER_USER}"
-    REGISTER_SERVICE_OPTS=""
-else
-    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
-    HEAT_UNDERCLOUD_EXTRA_OPTS="-P IronicPassword=${UNDERCLOUD_IRONIC_PASSWORD}"
-    REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
-fi
-
 ## #. We need an environment file to store the parameters we're gonig to give
 ##    heat.::
 
@@ -173,6 +159,22 @@ if [ -e "${HEAT_ENV}" ]; then
     ENV_JSON=$(cat "${HEAT_ENV}")
 else
     ENV_JSON='{"parameters":{}}'
+fi
+
+## #. Nova-baremetal and Ironic require different Heat templates
+##    and different options.
+##    ::
+
+if [ "$USE_IRONIC" -eq 0 ] ; then
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
+    ENV_JSON=$(jq .parameters.PowerSSHHost=\"${POWER_HOST}\" <<< $ENV_JSON)
+    ENV_JSON=$(jq .parameters.PowerManager=\"${POWER_MANAGER}\" <<< $ENV_JSON)
+    ENV_JSON=$(jq .parameters.PowerUserName=\"${POWER_USER}\" <<< $ENV_JSON)
+    REGISTER_SERVICE_OPTS=""
+else
+    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
+    ENV_JSON=$(jq .parameters.IronicPassword=\"${UNDERCLOUD_IRONIC_PASSWORD}\" <<< $ENV_JSON)
+    REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
 fi
 
 ## #. Set parameters we need to deploy a KVM cloud.::
