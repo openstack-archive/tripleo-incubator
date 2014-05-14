@@ -210,10 +210,10 @@ else #nodocs
 ##    more nodes.
 ##    ::
 
-# Node definitions are cheap but redeploying testenv's is not.
-# Set NODE_CNT high enough for typical CI and Dev deployments for the
-# forseeable future
-NODE_CNT=${NODE_CNT:-15}
+# Currently devtest.sh uses a single seed, a single undercloud node, and then
+# variables for the overcloud scale
+#     Seed  + Undercloud + Overcloud Controllers + Overcloud Compute Nodes
+NODE_CNT=$(( 1 + 1 + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_COMPUTESCALE ))
 
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
