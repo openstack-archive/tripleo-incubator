@@ -64,3 +64,6 @@ done
 for NAME in $(sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\($SEED_NAME\|$BAREMETAL_REGEX\)" ); do
   sudo virsh vol-delete --pool $LIBVIRT_VOL_POOL $NAME
 done
+
+rm -f $TRIPLEO_ROOT/{undercloud,overcloud}-env.json
+
