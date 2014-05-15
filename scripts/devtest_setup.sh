@@ -301,8 +301,8 @@ fi
 ##          http_access allow localhost
 ##          http_access deny all
 ##          http_port 3128
-##          cache_dir aufs /var/spool/squid3 5000 24 256
 ##          maximum_object_size 1024 MB
+##          cache_dir aufs /var/spool/squid3 5000 24 256
 ##          coredump_dir /var/spool/squid3
 ##          refresh_pattern ^ftp:       1440    20% 10080
 ##          refresh_pattern ^gopher:    1440    0%  1440
