@@ -27,34 +27,12 @@ fi
 chmod 0600 ~/.ssh/authorized_keys
 
 # packages
-os=unsupported
-if [ -f /etc/redhat-release ]; then
-  if $(grep -Eqs 'Red Hat Enterprise Linux Server release 6|CentOS release 6' /etc/redhat-release); then
-    if [ -f /etc/yum.repos.d/epel.repo ]; then
-      echo EPEL repository is required to install python-pip for RHEL/CentOS.
-      echo See http://fedoraproject.org/wiki/EPEL
-       exit 1
-    fi
-  fi
-  os=redhat
-fi
-
-if [ -f /etc/debian_version ]; then
-  os=debian
-fi
-
-if [ -f /etc/SuSE-release ]; then
-  os=suse
-  # Need these in path for sudo service & usermod to work
-  PATH=/sbin:/usr/sbin:$PATH
-fi
-
-if [ "$os" = "unsupported" ]; then
+if [ "$TRIPLEO_OS_DISTRO" = "unsupported" ]; then
   echo This script has not been tested outside of Fedora, RHEL, and Ubuntu variants.
-  echo Aborting.
+  echo Make sure you have installed all the needed dependencies or subsequent steps will fail.
 fi
 
-if [ "$os" = "debian" ]; then
+if [ "$TRIPLEO_OS_FAMILY" = "debian" ]; then
   if $(grep -Eqs 'Ubuntu 12.04' /etc/lsb-release); then
     #adding Ubuntu Cloud Archive Repository only if not present : bug https://bugs.launchpad.net/tripleo/+bug/1212237
     #Ubuntu 12.04 has a too-old libvirt-bin but a newer one is present in the Ubuntu cloud archive.
@@ -72,8 +50,13 @@ if [ "$os" = "debian" ]; then
   sudo service libvirt-bin restart
 fi
 
-if [ "$os" = "redhat" ]; then
+if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
   # For RHEL/CentOS, python-pip is in EPEL
+  if [ "$TRIPLEO_OS_DISTRO" = "redhat" -o "$TRIPLEO_OS_DISTRO" = "centos" ] && [ ! -f /etc/yum.repos.d/epel.repo ]; then
+    echo EPEL repository is required to install python-pip for RHEL/CentOS.
+    echo See http://fedoraproject.org/wiki/EPEL
+    exit 1
+  fi
   sudo yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv openvswitch python-yaml net-tools redhat-lsb-core libxslt-devel jq openssh-server libffi-devel which glusterfs-api
 
   sudo service libvirtd restart
@@ -81,7 +64,9 @@ if [ "$os" = "redhat" ]; then
   sudo chkconfig openvswitch on
 fi
 
-if [ "$os" = "suse" ]; then
+if [ "$TRIPLEO_OS_FAMILY" = "suse" ]; then
+  # Need these in path for sudo service & usermod to work
+  PATH=/sbin:/usr/sbin:$PATH
   # TODO: this is a bit fragile, and assumes openSUSE, not SLES
   suse_version=$(awk '/VERSION/ { print $3 }' /etc/SuSE-release)
   if [ ! -f /etc/zypp/repos.d/Cloud_OpenStack_Master.repo ]; then
@@ -98,8 +83,8 @@ if [ "$os" = "suse" ]; then
 fi
 
 # libvirtd group
-case "$os" in
-    'Debian' | 'suse')
+case "$TRIPLEO_OS_DISTRO" in
+    'debian' | 'suse')
         LIBVIRTD_GROUP='libvirt'
         ;;
     *)
@@ -108,7 +93,7 @@ case "$os" in
 esac
 getent group $LIBVIRTD_GROUP || sudo groupadd $LIBVIRTD_GROUP
 
-if [ "$os" = "suse" ]; then
+if [ "$TRIPLEO_OS_FAMILY" = "suse" ]; then
     # kvm_intel/amd is autoloaded on SUSE, but without
     # proper permissions. the kvm package will install an udev rule,
     # so lets activate that one:
@@ -118,7 +103,7 @@ if [ "$os" = "suse" ]; then
     fi
 fi
 
-if [ "$os" = "redhat" ]; then
+if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
     libvirtd_file=/etc/libvirt/libvirtd.conf
     if ! sudo grep -q "^unix_sock_group" $libvirtd_file; then
         sudo sed -i "s/^#unix_sock_group.*/unix_sock_group = \"$LIBVIRTD_GROUP\"/g" $libvirtd_file
