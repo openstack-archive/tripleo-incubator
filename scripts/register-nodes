@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -xeu
 set -o pipefail
 
 SERVICE_HOST=${1:-""}
@@ -65,9 +65,10 @@ for pos in $(seq 0 $node_count); do
             ironic node-update $NODE_ID add $(jq -r '"driver_info/ssh_address=" + .pm_addr + " driver_info/ssh_username=" + .pm_user + " driver_info/ssh_key_filename=/mnt/state/var/lib/ironic/virtual-power-key driver_info/ssh_virt_type=virsh"' <<< $NODE_JSON) ;;
         *) echo "Unknown power type $PM_TYPE" ; exit 1 ;;
         esac
+
         # Don't wait for periodic task.
         # set nodes power state to off
-        ironic node-set-power-state $NODE_ID off
+        ironic --debug node-set-power-state $NODE_ID off
     fi
 done
 
