@@ -105,7 +105,9 @@ export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 
-## #. Set distribution used for VMs (fedora, opensuse, ubuntu).
+## #. Set distribution used for VMs (fedora, opensuse, ubuntu). If unset, this
+##    will match TRIPLEO_OS_DISTRO, which is automatically gathered by devtest
+##    and represent your build host distro (where the devtest code runs).
 ## 
 ##    For Fedora, set SELinux permissive mode(currently the default when using Fedora)::
 ## 
