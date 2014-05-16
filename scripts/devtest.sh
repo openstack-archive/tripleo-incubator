@@ -260,6 +260,15 @@ source $SCRIPT_HOME/devtest_variables.sh  #nodocs
 
 devtest_setup.sh $CONTINUE
 
+### --end
+
+if [ -f /.dockerenv ]; then
+    echo "Running inside Docker, relaxing libvirt permissions."
+    docker-mangle-libvirt
+fi
+
+### --include
+
 ## #. See :doc:`devtest_testenv` for documentation. This step creates the
 ##    seed VM, as well as "baremetal" VMs for the under/overclouds. Details
 ##    of the created VMs are written to ``$TE_DATAFILE``.
