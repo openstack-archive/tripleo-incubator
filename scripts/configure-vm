@@ -82,12 +82,6 @@ def main():
 
     # Configure the bus type for the target disk device
     params['diskbus'] = args.diskbus
-
-    if os.path.exists("/usr/bin/kvm"): # Debian
-        params['emulator'] = "/usr/bin/kvm"
-    elif os.path.exists("/usr/bin/qemu-kvm"): # Redhat
-        params['emulator'] = "/usr/bin/qemu-kvm"
-
     nicparams = {
         'nicdriver': args.libvirt_nic_driver,
         'bminterface': args.baremetal_interface,
@@ -138,4 +132,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
