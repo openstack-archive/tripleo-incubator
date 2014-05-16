@@ -254,16 +254,16 @@ fi #nodocs
 ## #. (Optional) Run cleanup-env to delete VM's and storage pools from previous
 ##    devtest runs. Use this if you are creating a new test environment.
 ##    ::
-## 
-##         cleanup-env
 
-### --end
-if [ "${TRIPLEO_CLEANUP:-0}" = "1"  ]; then
-    echo "Cleaning up vm's/storage from previous devtest runs"
+if [ "${TRIPLEO_CLEANUP:-0}" = "1"  ]; then #nodocs
+    echo "Cleaning up vm's/storage from previous devtest runs" #nodocs
     cleanup-env
-fi
+fi #nodocs
 
-### --include
+## #. Ensure current user can manage libvirt resources
+##    ::
+
+set-usergroup-membership
 
 ## .. rubric:: Footnotes
 ## .. [#f3] Setting Up Squid Proxy
