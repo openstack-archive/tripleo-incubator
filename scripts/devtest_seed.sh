@@ -125,7 +125,7 @@ SEED_COMP_PORT="${SEED_COMP_PORT:-27410}"
 SEED_IMAGE_ID="${SEED_IMAGE_ID:-seedImageID}"
 
 # Firewalld interferes with our seed completion signal
-if systemctl status firewalld; then
+if systemctl status firewalld |egrep -q 'Active: active'; then
     if ! sudo firewall-cmd --list-ports | grep "$SEED_COMP_PORT/tcp"; then
         echo 'Firewalld is running and the seed completion port is not open.'
         echo 'To continue you must either stop firewalld or open the port with:'
