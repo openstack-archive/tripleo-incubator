@@ -3,7 +3,7 @@
   <memory unit='KiB'>%(memory)s</memory>
   <vcpu>%(cpus)s</vcpu>
   <os>
-    <type arch='%(arch)s' machine='pc-1.0'>hvm</type>
+    <type arch='%(arch)s'>hvm</type>
     <boot dev='%(bootdev)s'/>
     <bootmenu enable='no'/>
   </os>
@@ -17,7 +17,6 @@
   <on_reboot>restart</on_reboot>
   <on_crash>restart</on_crash>
   <devices>
-    <emulator>%(emulator)s</emulator>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2' cache='unsafe'/>
       <source file='%(imagefile)s'/>

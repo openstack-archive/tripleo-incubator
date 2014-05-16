@@ -75,11 +75,6 @@ def main():
     if args.image is not None:
         params['imagefile'] = args.image
 
-    if os.path.exists("/usr/bin/kvm"): # Debian
-        params['emulator'] = "/usr/bin/kvm"
-    elif os.path.exists("/usr/bin/qemu-kvm"): # Redhat
-        params['emulator'] = "/usr/bin/qemu-kvm"
-
     nicparams = {
         'nicdriver': args.libvirt_nic_driver,
         'bminterface': args.baremetal_interface,
