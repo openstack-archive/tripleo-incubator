@@ -245,6 +245,7 @@ ENV_JSON=$(jq .parameters.AdminPassword=\"${OVERCLOUD_ADMIN_PASSWORD}\" <<< $ENV
 ENV_JSON=$(jq .parameters.AdminToken=\"${OVERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.CinderPassword=\"${OVERCLOUD_CINDER_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.CeilometerPassword=\"${OVERCLOUD_CEILOMETER_PASSWORD}\" <<< $ENV_JSON)
+ENV_JSON=$(jq .parameters.CeilometerMeteringSecret=\"${OVERCLOUD_ADMIN_TOKEN}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.CloudName=\"${OVERCLOUD_NAME}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.GlancePassword=\"${OVERCLOUD_GLANCE_PASSWORD}\" <<< $ENV_JSON)
 ENV_JSON=$(jq .parameters.HeatPassword=\"${OVERCLOUD_HEAT_PASSWORD}\" <<< $ENV_JSON)
