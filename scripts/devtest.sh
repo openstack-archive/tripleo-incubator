@@ -250,6 +250,10 @@ source $SCRIPT_HOME/devtest_variables.sh  #nodocs
 
 devtest_setup.sh $CONTINUE
 
+if [ -f /.dockerenv ]; then
+    docker-mangle-libvirt
+fi
+
 ## #. See :doc:`devtest_testenv` for documentation. This step creates the
 ##    seed VM, as well as "baremetal" VMs for the under/overclouds. Details
 ##    of the created VMs are written to ``$TE_DATAFILE``.

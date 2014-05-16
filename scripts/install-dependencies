@@ -74,10 +74,17 @@ if [ "$TRIPLEO_OS_FAMILY" = "suse" ]; then
       sudo -E zypper -n ar -f http://download.opensuse.org/repositories/Cloud:/OpenStack:/Master/openSUSE_$suse_version/Cloud:OpenStack:Master.repo
       sudo -E zypper -n --gpg-auto-import-keys ref
   fi
-  sudo -E zypper --non-interactive install \
-    python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
-    python-devel gcc audit python-virtualenv openvswitch-switch python-PyYAML net-tools \
-    lsb-release libxslt-devel jq
+  sudo -E zypper --non-interactive install --no-recommends openvswitch-switch \
+      python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
+      python-devel gcc audit python-virtualenv python-PyYAML net-tools arping2 \
+      lsb-release libxslt-devel jq libffi48-devel libyaml-devel curl make
   sudo service libvirtd restart
   sudo service openvswitch-switch restart
+  # Sigh, these are not SUID by default in opensuse and they really should be.
+  # Since every other distro gives them either a SUID bit or CAP_NET_RAW,
+  # it is not too much of a security risk to make them SUID here to keep from
+  # having to call them with sudo everywhere else.
+  if [ -f /.dockerenv ]; then
+      sudo chmod u+s /usr/bin/ping /usr/bin/ping6 /sbin/arp
+  fi
 fi

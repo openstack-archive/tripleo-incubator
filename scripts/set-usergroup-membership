@@ -39,7 +39,7 @@ if [ "$REMOTE_OPERATIONS" != 1 -a -n "$TE_DATAFILE" -a -e "$TE_DATAFILE" ]; then
 fi
 
 if [ $REMOTE_OPERATIONS != 1 ]; then
-  if ! id | grep -qw $LIBVIRTD_GROUP; then
+  if ! id | grep -qw $LIBVIRTD_GROUP && ! [ -f /.dockerenv ]; then
      echo "adding $USER to group $LIBVIRTD_GROUP"
      sudo usermod -a -G $LIBVIRTD_GROUP $USER
 
