@@ -219,7 +219,7 @@ echo "Waiting for SSH hostkey."
 wait_for 30 1 "ssh-keyscan $VM_IP 2>&1 | grep \"$VM_IP.*OpenSSH\""
 
 # Remove the hostkey, new instance == new key.
-ssh-keygen -R $(os-apply-config -m $TE_DATAFILE --key baremetal-network.gateway-ip --type netaddress --key-default '192.0.2.1') || true
+ssh-keygen -R $(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.ip --type netaddress --key-default '192.0.2.1') || true
 
 echo "element(s): $ALWAYS_ELEMENTS $DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS booted and ready."
 echo "SEED_IP=$VM_IP"
