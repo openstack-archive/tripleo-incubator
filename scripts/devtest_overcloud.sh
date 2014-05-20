@@ -338,13 +338,10 @@ fi
 echo "Waiting for the overcloud stack to be ready" #nodocs
 # Make time out 60 mins as like the Heat stack-create default timeout.
 wait_for_stack_ready 360 10 $STACKNAME
-OVERCLOUD_IP=$(nova list | grep "notCompute0.*ctlplane\|controller.*ctlplane" | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+
+OVERCLOUD_ENDPOINT=$(heat output-show $STACKNAME KeystoneURL)
+OVERCLOUD_IP=$(echo $OVERCLOUD_ENDPOINT | awk -F '[/:]' '{print $4}')
 ### --end
-# If we're forcing a specific public interface, we'll want to advertise that as
-# the public endpoint for APIs.
-if [ -n "$NeutronPublicInterfaceIP" ]; then
-    OVERCLOUD_IP=$(echo ${NeutronPublicInterfaceIP} | sed -e s,/.*,,)
-fi
 
 ### --include
 
@@ -356,8 +353,7 @@ ssh-keygen -R $OVERCLOUD_IP
 ## #. Export the overcloud endpoint and credentials to your test environment.
 ##    ::
 
-OVERCLOUD_ENDPOINT="http://$OVERCLOUD_IP:5000/v2.0"
-NEW_JSON=$(jq '.overcloud.password="'${OVERCLOUD_ADMIN_PASSWORD}'" | .overcloud.endpoint="'${OVERCLOUD_ENDPOINT}'" | .overcloud.endpointhost="'${OVERCLOUD_IP}'"' $TE_DATAFILE)
+NEW_JSON=$(jq '.overcloud.password="'${OVERCLOUD_ADMIN_PASSWORD}'" | .overcloud.endpoint='${OVERCLOUD_ENDPOINT}' | .overcloud.endpointhost="'${OVERCLOUD_IP}'"' $TE_DATAFILE)
 echo $NEW_JSON > $TE_DATAFILE
 
 ## #. Source the overcloud configuration::
