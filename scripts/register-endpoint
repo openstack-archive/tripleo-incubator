@@ -153,6 +153,13 @@ if [ "dashboard" != "$TYPE" ]; then
             keystone user-role-add $DEBUG --tenant-id $ADMIN_TENANT \
                                  --user-id $SVC_USER \
                                  --role-id $ADMIN_ROLE
+            #swift polling requires ResellerAdmin role to be added to the Ceilometer user
+            RESELLER_ADMIN_ROLE=$(keystone $DEBUG role-list | awk '/ reselleradmin / {print $2}' IGNORECASE = 1 )
+            if [ -z "$RESELLER_ADMIN_ROLE" ]; then
+                keystone user-role-add $DEBUG --tenant-id $ADMIN_TENANT \
+                                     --user-id $SVC_USER \
+                                     --role-id $RESELLER_ADMIN_ROLE
+            fi
         fi
     fi
 fi
