@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Workflow+1: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: lifeless <robertc@robertcollins.net>
+Code-Review+2: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Code-Review+1: Nicholas Randon <nicholas.randon@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 21 May 2014 07:10:14 +0000
+Reviewed-on: https://review.openstack.org/90983
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
