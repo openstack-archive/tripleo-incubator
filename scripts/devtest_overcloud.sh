@@ -384,6 +384,9 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
     init-keystone -p $OVERCLOUD_ADMIN_PASSWORD $OVERCLOUD_ADMIN_TOKEN \
         $OVERCLOUD_IP admin@example.com heat-admin@$OVERCLOUD_IP \
         ${SSLBASE:+--ssl $PUBLIC_API_URL}
+    # Creating these roles to be used by tenants using swift
+    keystone role-create --name=swiftoperator
+    keystone role-create --name=ResellerAdmin
     setup-endpoints $OVERCLOUD_IP \
         --cinder-password $OVERCLOUD_CINDER_PASSWORD \
         --glance-password $OVERCLOUD_GLANCE_PASSWORD \
@@ -394,9 +397,6 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
         --ceilometer-password $OVERCLOUD_CEILOMETER_PASSWORD \
         ${SSLBASE:+--ssl $PUBLIC_API_URL}
     keystone role-create --name heat_stack_user
-    # Creating these roles to be used by tenants using swift
-    keystone role-create --name=swiftoperator
-    keystone role-create --name=ResellerAdmin
     user-config
 ##             setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
     setup-neutron "" "" 10.0.0.0/8 "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
