@@ -107,7 +107,7 @@ NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-40} NO
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint::
 
-##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=40 NODE_ARCH=amd64
+##         NODE_CPU=1 NODE_MEM=3072 NODE_DISK=40 NODE_ARCH=amd64
 
 
 ## #. Configure a network for your test environment.
