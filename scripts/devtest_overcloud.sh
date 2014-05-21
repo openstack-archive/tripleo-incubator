@@ -244,6 +244,7 @@ fi
 ENV_JSON=$(jq '.parameters += {
     "AdminPassword": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
     "AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
+    "CeilometerMeteringSecret": "'"${OVERCLOUD_CEILOMETER_SECRET}"'",
     "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
     "CloudName": "'"${OVERCLOUD_NAME}"'",
     "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
