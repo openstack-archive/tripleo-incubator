@@ -179,7 +179,9 @@ fi
 
 ## #. Set parameters we need to deploy a KVM cloud.::
 
-ENV_JSON=$(jq '.parameters += {
+ENV_JSON=$(jq '.parameters = {
+    "MysqlInnodbBufferPoolSize": 100
+  } + .parameters + {
     "AdminPassword": "'"${UNDERCLOUD_ADMIN_PASSWORD}"'",
     "AdminToken": "'"${UNDERCLOUD_ADMIN_TOKEN}"'",
     "CeilometerPassword": "'"${UNDERCLOUD_CEILOMETER_PASSWORD}"'",
@@ -192,8 +194,7 @@ ENV_JSON=$(jq '.parameters += {
     "BaremetalArch": "'"${NODE_ARCH}"'",
     "PowerSSHPrivateKey": "'"${POWER_KEY}"'",
     "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'"
-  }
-  | {"parameters": {"MysqlInnodbBufferPoolSize": 100}} + .' <<< $ENV_JSON)
+  }' <<< $ENV_JSON)
 
 ## #. Save the finished environment file.::
 
