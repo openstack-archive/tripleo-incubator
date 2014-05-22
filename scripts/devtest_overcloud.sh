@@ -226,7 +226,7 @@ else
   source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 fi #nodocs
 
-## #. We need an environment file to store the parameters we're gonig to give
+## #. We need an environment file to store the parameters we're going to give
 ##    heat.::
 
 HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/overcloud-env.json"}
@@ -242,8 +242,6 @@ fi
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq '.parameters = {
-    "MysqlInnodbBufferPoolSize": 100
-  } + .parameters + {
     "AdminPassword": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
     "AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
     "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
@@ -252,6 +250,7 @@ ENV_JSON=$(jq '.parameters = {
     "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
     "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
     "HypervisorNeutronPublicInterface": "'"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}"'",
+    "MysqlInnodbBufferPoolSize": 100,
     "NeutronBridgeMappings": "'"${OVERCLOUD_BRIDGE_MAPPINGS}"'",
     "NeutronFlatNetworks": "'"${OVERCLOUD_FLAT_NETWORKS}"'",
     "NeutronPassword": "'"${OVERCLOUD_NEUTRON_PASSWORD}"'",
@@ -264,19 +263,18 @@ ENV_JSON=$(jq '.parameters = {
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
     "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
-  }' <<< $ENV_JSON)
+  } + .parameters' <<< $ENV_JSON)
 
 ### --end
 # Options we haven't documented as such
 ENV_JSON=$(jq '.parameters = {
-    "ControlVirtualInterface": "'${OVERCLOUD_VIRTUAL_INTERFACE}'"
-  } + .parameters + {
+    "ControlVirtualInterface": "'${OVERCLOUD_VIRTUAL_INTERFACE}'",
     "ImageUpdatePolicy": "'${OVERCLOUD_IMAGE_UPDATE_POLICY}'",
     "NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
     "NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
     "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
     "NeutronControlPlaneID": "'${NeutronControlPlaneID}'"
-  }' <<< $ENV_JSON)
+  } + .parameters' <<< $ENV_JSON)
 ### --include
 
 ## #. Save the finished environment file.::
