@@ -273,7 +273,8 @@ ENV_JSON=$(jq '.parameters += {
     "NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
     "NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
     "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
-    "NeutronControlPlaneID": "'${NeutronControlPlaneID}'"
+    "NeutronControlPlaneID": "'${NeutronControlPlaneID}'",
+    "SnmpdReadonlyUserPassword": "'"${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}"'",
   }
   | {"parameters": {"ControlVirtualInterface": "'${OVERCLOUD_VIRTUAL_INTERFACE}'"}} + .' <<< $ENV_JSON)
 ### --include
