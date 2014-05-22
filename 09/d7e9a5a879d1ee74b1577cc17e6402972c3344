@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Code-Review+2: Chris Jones <cmsj@tenshu.net>
+Code-Review+2: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Workflow+1: Clint 'SpamapS' Byrum <clint@ubuntu.com>
+Code-Review+1: Richard Su <rwsu@redhat.com>
+Code-Review+1: jan grant <jan.grant@hp.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Code-Review+1: Alexis Lee <alexisl@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 22 May 2014 00:23:28 +0000
+Reviewed-on: https://review.openstack.org/88252
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
