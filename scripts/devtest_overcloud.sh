@@ -300,6 +300,10 @@ ENV_JSON=$(jq '.parameters = {
 jq . > "${HEAT_ENV}" <<< $ENV_JSON
 chmod 0600 "${HEAT_ENV}"
 
+## #. Add Keystone certs/key into the environment file.::
+
+generate-keystone-pki --heatenv $HEAT_ENV
+
 ## #. Deploy an overcloud::
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \

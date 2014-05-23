@@ -80,6 +80,9 @@ else
     jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal={}| .[0]' config.json $TE_DATAFILE > tmp_local.json
 fi
 
+# Add Keystone certs/key into the environment file
+generate-keystone-pki --heatenv tmp_local.json -s
+
 # Apply custom BM network settings to the seeds local.json config
 BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
 # FIXME: Once we support jq 1.3 we can use --arg here instead of writing
@@ -99,7 +102,6 @@ jq -s '
  .[0]' tmp_local.json $TE_DATAFILE cidr.json > local.json
 rm tmp_local.json
 rm cidr.json
-
 
 ### --end
 # If running in a CI environment then the user and ip address should be read
