@@ -5,6 +5,8 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
+source $SCRIPT_HOME/devtest_common_functions
+
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
@@ -79,6 +81,14 @@ else
 # - sets the nova.compute_manager to avoid race conditions on ironic startup.
     jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal={}| .[0]' config.json $TE_DATAFILE > tmp_local.json
 fi
+
+set_keystone_certs SEED
+NEW_JSON=$(jq "
+.keystone.ca_certificate = \"${CA_CERT}\"|
+.keystone.signing_key = \"${SIGNING_KEY}\"|
+.keystone.signing_certificate = \"${SIGNING_CERT}\"" tmp_local.json)
+echo $NEW_JSON > tmp_local.json
+
 
 # Apply custom BM network settings to the seeds local.json config
 BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
