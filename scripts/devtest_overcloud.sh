@@ -118,7 +118,7 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         baremetal boot-stack cinder-api cinder-volume cinder-tgt ceilometer-collector \
         ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
         os-collect-config horizon neutron-network-node dhcp-all-interfaces \
-        swift-proxy swift-storage keepalived \
+        swift-proxy swift-storage keepalived keystone-pki \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
@@ -243,6 +243,14 @@ else
     ENV_JSON='{"parameters":{}}'
 fi
 
+export CERT_TMP_DIR=$(mktemp -t -d --tmpdir=${TMP_DIR:-/tmp} cert.XXXXXXXX)
+generate-keystone-pki $CERT_TMP_DIR
+CA_KEY=$(<$CERT_TMP_DIR/ca_key.pem)
+CA_CERT=$(<$CERT_TMP_DIR/ca_cert.pem)
+SIGNING_KEY=$(<$CERT_TMP_DIR/signing_key.pem)
+SIGNING_CERT=$(<$CERT_TMP_DIR/signing_cert.pem)
+rm -rf $CERT_TMP_DIR
+
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq '.parameters = {
@@ -269,7 +277,11 @@ ENV_JSON=$(jq '.parameters = {
     "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
-    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
+    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
+    "KeystoneCAKey": "'"${CA_KEY}"'",
+    "KeystoneCACertificate": "'"${CA_CERT}"'",
+    "KeystoneSigningKey": "'"${SIGNING_KEY}"'",
+    "KeystoneSigningCertificate": "'"${SIGNING_CERT}"'"
   }' <<< $ENV_JSON)
 
 ### --end
