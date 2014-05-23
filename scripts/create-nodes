@@ -63,7 +63,10 @@ for idx in $(seq 0 $TOTAL) ; do
          --memory $MEM \
          --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
   mac=$(get-vm-mac $vm_name)
-  JSON=$(jq ".nodes=(.nodes + [{mac:[\"$mac\"], cpu:\"$CPU\", memory:\"$2\", disk:\"$DISK\", arch:\"$4\", pm_user:\"$SSH_USER\", pm_addr:\"$HOSTIP\", pm_password:.[\"ssh-key\"], pm_type:\"pxe_ssh\"}])" <<< $JSON)
+  # NOTE(gfidente): pm_password (previously set to ssh-key) does not seem to be
+  # used by the virtual power driver which instead reads the key file from its
+  # virtual_power_host_key setting.
+  JSON=$(jq ".nodes=(.nodes + [{mac:[\"$mac\"], cpu:\"$CPU\", memory:\"$2\", disk:\"$DISK\", arch:\"$4\", pm_user:\"$SSH_USER\", pm_addr:\"$HOSTIP\", pm_password:see_virtual_power_host_key, pm_type:\"pxe_ssh\"}])" <<< $JSON)
 
 done
 jq . <<< $JSON > $TE_DATAFILE
