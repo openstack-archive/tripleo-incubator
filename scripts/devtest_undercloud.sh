@@ -9,6 +9,8 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 HEAT_ENV=
 
+source $SCRIPT_HOME/devtest_common_functions.sh
+
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
@@ -199,6 +201,8 @@ else
     HEAT_OP=stack-create
 fi
 
+set_keystone_certs UNDERCLOUD
+
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq '.parameters = {
@@ -216,7 +220,10 @@ ENV_JSON=$(jq '.parameters = {
     "undercloudImage": "'"${UNDERCLOUD_ID}"'",
     "BaremetalArch": "'"${NODE_ARCH}"'",
     "PowerSSHPrivateKey": "'"${POWER_KEY}"'",
-    "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'"
+    "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'",
+    "KeystoneCACertificate": "'"${CA_CERT}"'",
+    "KeystoneSigningKey": "'"${SIGNING_KEY}"'",
+    "KeystoneSigningCertificate": "'"${SIGNING_CERT}"'"
   }' <<< $ENV_JSON)
 
 ## #. Save the finished environment file.::
