@@ -9,6 +9,8 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 HEAT_ENV=
 
+source $SCRIPT_HOME/devtest_common_functions.sh
+
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
@@ -250,6 +252,8 @@ else
     ENV_JSON='{"parameters":{}}'
 fi
 
+set_keystone_certs OVERCLOUD
+
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq '.parameters = {
@@ -277,7 +281,10 @@ ENV_JSON=$(jq '.parameters = {
     "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
-    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
+    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
+    "KeystoneCACertificate": "'"${CA_CERT}"'",
+    "KeystoneSigningKey": "'"${SIGNING_KEY}"'",
+    "KeystoneSigningCertificate": "'"${SIGNING_CERT}"'"
   }' <<< $ENV_JSON)
 
 ### --end

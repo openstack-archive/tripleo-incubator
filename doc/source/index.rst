@@ -9,6 +9,7 @@ TripleO Incubator
 
    devtest
    devtest_variables
+   devtest_common_functions
    devtest_setup
    devtest_testenv
    devtest_ramdisk
