@@ -239,6 +239,14 @@ else
     ENV_JSON='{"parameters":{}}'
 fi
 
+export CERT_TMP_DIR=$(mktemp -t -d --tmpdir=${TMP_DIR:-/tmp} cert.XXXXXXXX)
+generate-keystone-pki $CERT_TMP_DIR
+CA_KEY=$(<$CERT_TMP_DIR/ca_key.pem)
+CA_CERT=$(<$CERT_TMP_DIR/ca_cert.pem)
+SIGNING_KEY=$(<$CERT_TMP_DIR/signing_key.pem)
+SIGNING_CERT=$(<$CERT_TMP_DIR/signing_cert.pem)
+rm -rf $CERT_TMP_DIR
+
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq '.parameters += {
@@ -261,7 +269,11 @@ ENV_JSON=$(jq '.parameters += {
     "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
-    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
+    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
+    "KeystoneCAKey": "'"${CA_KEY}"'",
+    "KeystoneCACertificate": "'"${CA_CERT}"'",
+    "KeystoneSigningKey": "'"${SIGNING_KEY}"'",
+    "KeystoneSigningCertificate": "'"${SIGNING_CERT}"'"
   }' <<< $ENV_JSON)
 # Preserve user supplied buffer size in the environment, defaulting to 100 for VM usage.
 ENV_JSON=$(jq '.parameters.MysqlInnodbBufferPoolSize=(.parameters.MysqlInnodbBufferPoolSize | 100)' <<< $ENV_JSON)
