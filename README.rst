@@ -1,5 +1,5 @@
 OpenStack on OpenStack, or TripleO
-===================================
+==================================
 
 Welcome to our TripleO incubator! TripleO is our pithy term for OpenStack
 deployed on and with OpenStack. This repository is our staging area, where we
@@ -75,7 +75,8 @@ a full HA story in place, which leads to requiring a long lived seed facility
 rather than a fully self-sustaining infrastructure.  We track bugs affecting
 TripleO itself at https://bugs.launchpad.net/tripleo/.
 
-### Diskimage-builder
+Diskimage-builder
+^^^^^^^^^^^^^^^^^
 
 The lowest layer in the dependency stack, diskimage-builder, can be used to
 customise generic disk images for use with Nova bare metal. It can also be
@@ -83,7 +84,8 @@ used to provide build-time specialisation for disk images. Diskimage-builder
 is quite mature and can be downloaded from
 https://git.openstack.org/cgit/openstack/diskimage-builder.
 
-### Nova bare-metal / Ironic
+Nova bare-metal / Ironic
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The next layer up, In OpenStack Grizzly Nova bare-metal is able to deliver
 ephemeral instances to physical machines with multiple architectures.
@@ -113,14 +115,15 @@ Caveats / limitations:
    there is no instance).
  - HA support is rudimentary at the moment : need to use corosync+pacemaker
    (work is in progress to have multiple bare-metal compute hosts dynamically
-    take over each others configuration)
+   take over each others configuration)
  - Dynamic VLAN support is not yet implemented (but was specced at the Havana
    summit). Workaround is to manually configure it via Nova userdata.
    https://bugs.launchpad.net/tripleo/+bug/1174149
  - Node deployment to large numbers of nodes can saturate networks - content is
    deployed using dd + iscsi (rather than e.g. bittorrent).
 
-### Heat
+Heat
+^^^^
 
 Heat is the orchestration layer in TripleO - it glues the various services
 together in the cluster, arbitrates deployments and reconfiguration.
@@ -139,7 +142,8 @@ Caveats / limitations:
    rather than also coordinating with monitoring systems. Workaround by 
    tying your monitoring back into Heat to trigger rollbacks.
 
-### os-apply-config/os-refresh-config/os-collect-config
+os-apply-config/os-refresh-config/os-collect-config
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These tools work with the Heat delivered metadata to create configuration
 files on disk (os-apply-config), and to trigger in-instance reconfiguration
@@ -158,7 +162,8 @@ os-collect-config subscribes to the Heat metadata we're using, and then invokes
 hooks - it can be used to drive os-refresh-config, or Chef/Puppet/Salt or other
 configuration management tools.
 
-### tripleo-image-elements
+tripleo-image-elements
+^^^^^^^^^^^^^^^^^^^^^^
 
 These diskimage-builder elements create build-time specialised disk/partition
 images for TripleO. The elements build images with software installed but
@@ -176,7 +181,8 @@ Caveats/Limitations:
    sense such as running a very minimal number of nodes but still wanting HA).
    This is primarily (but not entirely) configuration.
 
-### tripleo-heat-templates
+tripleo-heat-templates
+^^^^^^^^^^^^^^^^^^^^^^
 
 These templates provide the rules describing how to deploy the baremetal
 undercloud and virtual overclouds. This also includes a python module used
@@ -191,23 +197,21 @@ Additionally as by definition it will replace existing facilities (be those
 manual or automated) within an organisation, some care is needed to make
 migration, or integration smooth.
 
-This is a sufficiently complex topic, we've created a dedicated document for
-it - [Deploying TripleO] (http://docs.openstack.org/developer/tripleo-incubator/deploying.html).
-A related document is the
-instructions for doing [Dev/Test of TripleO] (http://docs.openstack.org/developer/tripleo-incubator/devtest.html)
+This is a sufficiently complex topic, we've created a dedicated document for it - :doc:`deploying`
+A related document is the instructions for doing :doc:`Dev/Test of TripleO <devtest>`
 
 Architecture
 ------------
 
-There is a [high level presentation] (presentations/TripleO architecture overview.odp)
-accompanying these docs.
+There is a :download:`high level presentation <../../presentations/TripleO
+architecture overview.odp>` accompanying these docs.
 
-We start with an [image builder]
-(https://git.openstack.org/cgit/openstack/diskimage-builder/), and rules for that to
-[build OpenStack images] (https://git.openstack.org/cgit/openstack/tripleo-image-elements/).
-We then use [Heat] (https://git.openstack.org/cgit/openstack/heat) to orchestrate deployment
-of those images onto bare metal using the [Nova baremetal driver]
-(https://wiki.openstack.org/wiki/Baremetal).
+We start with an `image builder
+<https://git.openstack.org/cgit/openstack/diskimage-builder/>`_, and rules for that to
+`build OpenStack images <https://git.openstack.org/cgit/openstack/tripleo-image-elements/>`_.
+We then use `Heat <https://git.openstack.org/cgit/openstack/heat>`_ to orchestrate deployment
+of those images onto bare metal using the `Nova baremetal driver
+<https://wiki.openstack.org/wiki/Baremetal>`_.
 
 Eventually we will have the Heat instance we use to deploy both the undercloud
 and overcloud hosted in the undercloud. That depends on a full-HA setup so that
@@ -225,9 +229,9 @@ So this gives us three clouds:
 
 1. A KVM hosted single-node bare-metal cloud that owns a small set of machines
    we deploy the undercloud onto. This is the 'seed cloud'.
-1. A baremetal hosted single-node bare-metal cloud that owns the rest of the
+2. A baremetal hosted single-node bare-metal cloud that owns the rest of the
    datacentre and we deploy the overcloud onto. The is the 'under cloud'.
-1. A baremetal hosted many-node KVM cloud which is deployed on the undercloud.
+3. A baremetal hosted many-node KVM cloud which is deployed on the undercloud.
    This is the user facing cloud - the 'over cloud'.
 
 Within each machine we use small focused tools for converting Heat metadata to
@@ -250,9 +254,9 @@ OpenStack on OpenStack with three distinct clouds:
 1. A seed cloud, runs baremetal nova-compute and deploys instances on bare
    metal. Hosted in a KVM or similar virtual machine within a manually
    installed machine. This is used to deploy the under cloud.
-1. The under cloud, runs baremetal nova-compute and deploys instances on bare
+2. The under cloud, runs baremetal nova-compute and deploys instances on bare
    metal, is managed and used by the cloud sysadmins.
-1. The over cloud, which runs using the same images as the under cloud, but as
+3. The over cloud, which runs using the same images as the under cloud, but as
    a tenant on the undercloud, and delivers virtualised compute machines rather
    than bare metal machines.
 
@@ -285,9 +289,9 @@ Stage N
 OpenStack on itself: OpenStack on OpenStack with one cloud:
 
 1. The under cloud is used ts in Stage 1.
-1. KVM or Xen Nova compute nodes are deployed into the cloud as part of the
+2. KVM or Xen Nova compute nodes are deployed into the cloud as part of the
    admin tenant, and offer their compute capacity to the under cloud.
-1. Low overhead services can be redeployed as virtual machines rather than
+3. Low overhead services can be redeployed as virtual machines rather than
    physical (as long as they are machines which the cluster can be rebooted
    without.
 
@@ -310,18 +314,18 @@ Principles
 1. Developer tools (like disk-image-builder) should have a non-intrusive
    footprint on the machine of users. Requiring changing of global settings
    is poor form.
-1. Where possible we run upstream code and settings without modification - e.g.
+2. Where possible we run upstream code and settings without modification - e.g.
    we strongly prefer to use upstream defaults rather than our own. Only if
    there is no right setting in production should we change things.
-1. We only prototype tools in tripleo-incubator: when they are ready for
+3. We only prototype tools in tripleo-incubator: when they are ready for
    production use with stable APIs, we move them to some appropriate
    repository.
-1. We include everyone who wants to deploy OpenStack using OpenStack tooling
+4. We include everyone who wants to deploy OpenStack using OpenStack tooling
    in the TripleO community - we support folk that want to use packages
    rather than source, or Xen rather than KVM, or Puppet / chef / salt etc.
-1. Simple is hard to achieve but very valuable - and we value it. Things
+5. Simple is hard to achieve but very valuable - and we value it. Things
    that complect or confound concepts may need more design work to work well.
-1. We use OpenStack projects in preference to any others (even possibly to the
+6. We use OpenStack projects in preference to any others (even possibly to the
    exclusion of alternative backends). For instance, we have a hard dependency
    on Heat, rather than alternative cluster definition tools. This says nothing
    about the quality of such tools, rather that we want a virtuous circle where
@@ -343,9 +347,9 @@ your nodes directly with the seed - the seed and the undercloud are
 functionally identical and can both deploy an overcloud.
 
 When building lots of images, be sure to pass -u and --offline into
-diskimage-builder. One way to do this is via DIB\_COMMON\_ELEMENTS though this
-doesn't affect the demo 'user' image we build at the end of
-``devtest_overcloud.sh``. To affect that, export NODE\_DIST - which will affect
+diskimage-builder. One way to do this is via ``DIB_COMMON_ELEMENTS`` though this
+doesn't affect the demo `user` image we build at the end of
+``devtest_overcloud.sh``. To affect that, export ``NODE_DIST`` - which will affect
 all images. e.g. ``ubuntu --offline -u``. --offline prevents all cache
 freshness checks and ensures the elements like ``pypi`` which use some online
 resources disable those resources (if possible).
