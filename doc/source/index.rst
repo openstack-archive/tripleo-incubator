@@ -4,6 +4,7 @@ TripleO Incubator
 .. toctree::
    :maxdepth: 1
 
+   README
    userguide
 
    devtest
