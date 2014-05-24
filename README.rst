@@ -1,5 +1,5 @@
 OpenStack on OpenStack, or TripleO
-===================================
+==================================
 
 Welcome to our TripleO incubator! TripleO is our pithy term for OpenStack
 deployed on and with OpenStack. This repository is our staging area, where we
