@@ -106,6 +106,8 @@ fi
 ## This document is extracted from devtest.sh, our automated bring-up story for
 ## CI/experimentation.
 
+## More details about the TripleO project and its goals can be found in :download:`README.md<../../README.md>`
+
 ## Permissions
 ## -----------
 
