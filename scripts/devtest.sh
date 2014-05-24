@@ -114,6 +114,9 @@ fi
 ##    notes (such as those relating to setting up local mirrors for apt and
 ##    pypi) will probably be helpful for everyone.
 
+## More details about the TripleO project and its goals can be found in the
+## :doc:`README <README>`
+
 ## Permissions
 ## -----------
 
