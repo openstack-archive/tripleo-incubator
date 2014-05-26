@@ -202,25 +202,9 @@ fi
 ##    use is your own, but you can also setup a dedicated user if you choose.
 ##    ::
 
-mkdir -p $TRIPLEO_ROOT
-cd $TRIPLEO_ROOT
-
-## #. git clone this repository to your local machine.
-##    The DIB_REPOLOCATION_tripleo_incubator and DIB_REPOREF_tripleo_incubator
-##    environment variables will be honoured, if set.
-##    ::
-
 ### --end
 if [ "$USE_CACHE" == "0" ] ; then
-  if [ ! -d $TRIPLEO_ROOT/tripleo-incubator ]; then
-### --include
-    git clone ${DIB_REPOLOCATION_tripleo_incubator:-"https://git.openstack.org/openstack/tripleo-incubator"} tripleo-incubator
-    pushd tripleo-incubator
-    git checkout ${DIB_REPOREF_tripleo_incubator:-master}
-    popd
-### --end
-
-  elif [ -z "${ZUUL_REF:-''}" ]; then
+  if [ -z "${ZUUL_REF:-''}" ]; then
     cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
   fi
 fi
