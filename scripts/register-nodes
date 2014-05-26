@@ -28,11 +28,11 @@ for pos in $(seq 0 $node_count); do
     NODE_JSON=$(jq ".[$pos]" <<< $NODES)
     if [ $USE_IRONIC -eq 0 ]; then
         # setup nova-baremetal nodes
-        for var in pm_addr pm_user pm_password cpu memory disk ; do
+        for var in pm_addr pm_user cpu memory disk ; do
             eval "$var='$(jq -r .$var <<< $NODE_JSON)'"
         done
         id=$(nova baremetal-node-create --pm_address="$pm_addr" \
-            --pm_user="$pm_user" --pm_password="$pm_password" $SERVICE_HOST \
+            --pm_user="$pm_user" --pm_password="unused" $SERVICE_HOST \
             $cpu $memory $disk $(jq -r ".mac[0]" <<< $NODE_JSON) | \
             awk '$2=="id" {print $4}')
         MACS=$(jq ".mac - [.mac[0]]" <<< $NODE_JSON)
