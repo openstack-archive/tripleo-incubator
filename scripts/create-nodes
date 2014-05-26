@@ -38,7 +38,7 @@ fi
 JSON=$(jq .nodes=[] $TE_DATAFILE)
 
 EXTRAOPTS=
-if [[ $DIB_COMMON_ELEMENTS == *enable-serial-console* ]]; then
+if [[ ${DIB_COMMON_ELEMENTS:-} == *enable-serial-console* ]]; then
     EXTRAOPTS="--enable-serial-console"
 fi
 
