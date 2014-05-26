@@ -94,7 +94,6 @@ SERVICE_TENANT_ID=$(keystone tenant-create --name=service | awk '$2=="id" {print
 
 # Roles
 ADMIN_ROLE_ID=$(keystone role-create --name=admin | awk '$2=="id" {print $4}')
-MEMBER_ROLE_ID=$(keystone role-create --name=Member | awk '$2=="id" {print $4}')
 
 # Users
 ADMIN_USER_ID=$(keystone user-create --name=admin \

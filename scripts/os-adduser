@@ -71,9 +71,9 @@ if [ -z "$ADMIN_ROLE" ]; then
     echo "Could not find admin role" >&2
     exit 1
 fi
-MEMBER_ROLE=$(keystone role-get Member| awk '$2=="id" {print $4}')
+MEMBER_ROLE=$(keystone role-get _member_| awk '$2=="id" {print $4}')
 if [ -z "$MEMBER_ROLE" ]; then
-    echo "Could not find Member role" >&2
+    echo "Could not find _member_ role" >&2
     exit 1
 fi
 ADMIN_USER_ID=$(keystone user-get admin | awk '$2=="id" {print $4}')
