@@ -81,6 +81,10 @@ NeutronControlPlaneID=$(neutron net-show ctlplane | grep ' id ' | awk '{print $4
 # python-novaclient: Ib1511653904d4f95ab03fb471669175127004582
 OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 
+# A client-side timeout in minutes for creating or updating the overcloud
+# Heat stack.
+OVERCLOUD_STACK_TIMEOUT=${OVERCLOUD_STACK_TIMEOUT:-60}
+
 ### --include
 ## devtest_overcloud
 ## =================
@@ -301,7 +305,10 @@ if [ -e $TRIPLEO_ROOT/tripleo-heat-templates/controller.yaml ] ; then
     CONTROLLER_IMAGE_PARAM=controllerImage
 fi
 
+# create stack with a 6 hour timeout, and allow wait_for_stack_ready
+# to impose a realistic timeout.
 heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
+    -t 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
     -P "$CONTROLLER_IMAGE_PARAM=${OVERCLOUD_CONTROL_ID}" \
@@ -341,8 +348,7 @@ fi
 ##    ::
 
 echo "Waiting for the overcloud stack to be ready" #nodocs
-# Make time out 60 mins as like the Heat stack-create default timeout.
-wait_for_stack_ready 360 10 $STACKNAME
+wait_for_stack_ready $(($OVERCLOUD_STACK_TIMEOUT * 60 / 10)) 10 $STACKNAME
 OVERCLOUD_IP=$(nova list | grep "notCompute0.*ctlplane\|controller.*ctlplane" | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 ### --end
 # If we're forcing a specific public interface, we'll want to advertise that as
