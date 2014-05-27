@@ -66,6 +66,12 @@ if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
         horizon"
 fi
 
+## #. Specifiy a client-side timeout in minutes for creating or updating the
+##    overcloud Heat stack.
+##    ::
+
+UNDERCLOUD_STACK_TIMEOUT=${UNDERCLOUD_STACK_TIMEOUT:-60}
+
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
 ##    meant to be used to pass additional arguments to disk-image-create.
@@ -206,6 +212,7 @@ jq . > "${HEAT_ENV}" <<< $ENV_JSON
 make -C $TRIPLEO_ROOT/tripleo-heat-templates $HEAT_UNDERCLOUD_TEMPLATE
 
 heat stack-create -e $HEAT_ENV \
+    -c 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/$HEAT_UNDERCLOUD_TEMPLATE \
     undercloud
 
@@ -218,7 +225,7 @@ heat stack-create -e $HEAT_ENV \
 
 echo "Waiting for the undercloud stack to be ready" #nodocs
 # Make time out 60 mins as like the Heat stack-create default timeout.
-wait_for_stack_ready 360 10 undercloud
+wait_for_stack_ready $(($UNDERCLOUD_STACK_TIMEOUT * 60 / 10)) 10 undercloud
 UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
 ## #. We don't (yet) preserve ssh keys on rebuilds.
