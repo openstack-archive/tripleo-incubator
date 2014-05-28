@@ -1,0 +1,249 @@
+#!/bin/bash
+#
+# Copyright 2014 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+# Configure Keystone to use LDAP as authentication backend.
+# Usage of LDAP backend is triggered by setting OVERCLOUD_KEYSTONE_USE_LDAP
+# to "yes", "true" or "1". A set of LDAP_* variables (see below) is used to 
+# set different configuration aspects. Configuration is generated in JSON
+# format and exported as OVERCLOUD_EXTRA_CONFIG variable (to be consumed by
+# "configuration pass-through" feature). 
+
+set -eu
+set -o pipefail
+
+function validate_required() {
+    set +u
+    eval ${1}=${!1}
+    set -u
+    if [ -z "${!1}" ]; then
+        echo "ERROR: environment variable ${1} must be set"
+        exit 1
+    fi
+}
+
+function validate() {
+    set +u
+    eval ${1}=${!1}
+    set -u
+    if [ -z "${!1}" ]; then
+        eval ${1}=${2}
+    fi
+}
+
+function comment_or_option() {
+    set +u
+    OPT_NAME=$1
+    OPT_VALUE=$2
+    set -u
+    if [ -z "${OPT_VALUE}" ]; then
+        echo "{ \"comment\": \"${OPT_NAME} =\" }"
+    else
+        echo "{ \"option\": \"${OPT_NAME}\", \"value\": \"${OPT_VALUE}\" }"
+    fi
+}
+
+if [ ${OVERCLOUD_KEYSTONE_USE_LDAP:-0} -ne 0 ]; then
+    OVERCLOUD_EXTRA_CONFIG=${OVERCLOUD_EXTRA_CONFIG:-'{}'}
+
+    validate_required LDAP_URL
+    validate LDAP_USER ""
+    validate LDAP_PASSWORD ""
+    validate_required LDAP_SUFFIX
+    validate LDAP_QUERY_SCOPE "sub"
+    validate LDAP_USER_TREE_DN "ou=Users,${LDAP_SUFFIX}"
+    validate LDAP_USER_FILTER ""
+    validate LDAP_USER_OBJECTCLASS ""
+    validate LDAP_USER_ID_ATTRIBUTE ""
+    validate LDAP_USER_NAME_ATTRIBUTE ""
+    validate LDAP_USER_MAIL_ATTRIBUTE ""
+    validate LDAP_USER_PASS_ATTRIBUTE ""
+    validate LDAP_USER_ENABLED_ATTRIBUTE ""
+    validate LDAP_USER_ENABLED_MASK ""
+    validate LDAP_USER_ENABLED_DEFAULT "False"
+    validate LDAP_USER_ATTRIBUTE_IGNORE ""
+    validate LDAP_USER_DEFAULT_PROJECT_ID_ATTRIBUTE ""
+    validate LDAP_USER_ENABLED_EMULATION ""
+    validate LDAP_USER_ENABLED_EMULATION_DN ""
+    validate LDAP_GROUP_TREE_DN "ou=Groups,${LDAP_SUFFIX}"
+    validate LDAP_GROUP_FILTER ""
+    validate LDAP_GROUP_OBJECTCLASS ""
+    validate LDAP_GROUP_ID_ATTRIBUTE ""
+    validate LDAP_GROUP_NAME_ATTRIBUTE ""
+    validate LDAP_GROUP_MEMBER_ATTRIBUTE ""
+    validate LDAP_GROUP_DESC_ATTRIBUTE ""
+    validate LDAP_GROUP_ATTRIBUTE_IGNORE ""
+    validate LDAP_USE_TLS "False"
+    validate LDAP_TLS_CACERTFILE "/etc/keystone/ldap.crt"
+    validate LDAP_TLS_REQ_CERT "demand"
+
+    KEYSTONE_LDAP_CONFIG=$(cat <<-EOF
+{
+    "keystone": {
+        "config": [
+            {
+                "section": "identity",
+                "values": [
+                    { "option": "driver", "value": "keystone.identity.backends.ldap.Identity" },
+                    { "comment": "This references the domain to use for all Identity API v2 requests (which are" },
+                    { "comment": "not aware of domains). A domain with this ID will be created for you by" },
+                    { "comment": "keystone-manage db_sync in migration 008.  The domain referenced by this ID" },
+                    { "comment": "cannot be deleted on the v3 API, to prevent accidentally breaking the v2 API." },
+                    { "comment": "There is nothing special about this domain, other than the fact that it must" },
+                    { "comment": "exist to order to maintain support for your v2 clients." },
+                    { "comment": "default_domain_id = default" },
+                    { "comment": "A subset (or all) of domains can have their own identity driver, each with" },
+                    { "comment": "their own partial configuration file in a domain configuration directory." },
+                    { "comment": "Only values specific to the domain need to be placed in the domain specific" },
+                    { "comment": "configuration file. This feature is disabled by default; set" },
+                    { "comment": "domain_specific_drivers_enabled to True to enable." },
+                    { "comment": "domain_specific_drivers_enabled = False" },
+                    { "comment": "domain_config_dir = /etc/keystone/domains" },
+                    { "comment": "Maximum supported length for user passwords; decrease to improve performance." },
+                    { "comment": "max_password_length = 4096" },
+                    { "comment": "Maximum number of entities that will be returned in an identity collection" },
+                    { "comment": "list_limit =" }
+                ]
+            },
+            {
+                "section": "assignment",
+                "values": [
+                    { "option": "driver", "value": "keystone.assignment.backends.sql.Assignment" },
+                    { "comment": "Assignment specific caching toggle. This has no effect unless the global" },
+                    { "comment": "caching option is set to True" },
+                    { "comment": "caching = True" },
+                    { "comment": "Assignment specific cache time-to-live (TTL) in seconds." },
+                    { "comment": "cache_time =" },
+                    { "comment": "Maximum number of entities that will be returned in an assignment collection" },
+                    { "comment": "list_limit =" }
+                ]
+            },
+            {
+                "section": "ldap",
+                "values": [
+                    { "option": "url", "value": "${LDAP_URL}" },
+                    $(comment_or_option user_filter ${LDAP_USER}),
+                    $(comment_or_option user_filter ${LDAP_PASSWORD}),
+                    { "option": "suffix", "value": "${LDAP_SUFFIX}" },
+                    { "comment": "use_dumb_member = False" },
+                    { "comment": "allow_subtree_delete = False" },
+                    { "comment": "dumb_member = cn=dumb,dc=example,dc=com" },
+                    { "comment": "Maximum results per page; a value of zero ('0') disables paging (default)" },
+                    { "comment": "page_size = 0" },
+                    { "comment": "The LDAP dereferencing option for queries. This can be either 'never'," },
+                    { "comment": "'searching', 'always', 'finding' or 'default'. The 'default' option falls" },
+                    { "comment": "back to using default dereferencing configured by your ldap.conf." },
+                    { "comment": "alias_dereferencing = default" },
+                    { "comment": "The LDAP scope for queries, this can be either 'one'" },
+                    { "comment": "(onelevel/singleLevel) or 'sub' (subtree/wholeSubtree)" },
+                    { "option": "query_scope", "value": "${LDAP_QUERY_SCOPE}" },
+                    { "option": "user_tree_dn", "value": "${LDAP_USER_TREE_DN}" },
+                    $(comment_or_option user_filter ${LDAP_USER_FILTER}),
+                    $(comment_or_option user_objectclass ${LDAP_USER_OBJECTCLASS}),
+                    $(comment_or_option user_id_attribute ${LDAP_USER_ID_ATTRIBUTE}),
+                    $(comment_or_option user_name_attribute ${LDAP_USER_NAME_ATTRIBUTE}),
+                    $(comment_or_option user_mail_attribute ${LDAP_USER_MAIL_ATTRIBUTE}),
+                    $(comment_or_option user_pass_attribute ${LDAP_USER_PASS_ATTRIBUTE}),
+                    $(comment_or_option user_enabled_attribute ${LDAP_USER_ENABLED_ATTRIBUTE}),
+                    $(comment_or_option user_enabled_mask ${LDAP_USER_ENABLED_MASK}),
+                    $(comment_or_option user_enabled_default ${LDAP_USER_ENABLED_DEFAULT}),
+                    $(comment_or_option user_attribute_ignore ${LDAP_USER_ATTRIBUTE_IGNORE}),
+                    $(comment_or_option user_default_project_id_attribute ${LDAP_USER_DEFAULT_PROJECT_ID_ATTRIBUTE}),
+                    { "option": "user_allow_create", "value": "False" },
+                    { "option": "user_allow_update", "value": "False" },
+                    { "option": "user_allow_delete", "value": "False" },
+                    $(comment_or_option user_enabled_emulation ${LDAP_USER_ENABLED_EMULATION}),
+                    $(comment_or_option user_enabled_emulation_dn ${LDAP_USER_ENABLED_EMULATION_DN}),
+                    { "comment": "tenant_tree_dn = ou=Projects,${LDAP_SUFFIX}" },
+                    { "comment": "tenant_filter =" },
+                    { "comment": "tenant_objectclass = groupOfNames" },
+                    { "comment": "tenant_domain_id_attribute = businessCategory" },
+                    { "comment": "tenant_id_attribute = cn" },
+                    { "comment": "tenant_member_attribute = member" },
+                    { "comment": "tenant_name_attribute = ou" },
+                    { "comment": "tenant_desc_attribute = desc" },
+                    { "comment": "tenant_enabled_attribute = enabled" },
+                    { "comment": "tenant_attribute_ignore =" },
+                    { "option": "tenant_allow_create", "value": "False" },
+                    { "option": "tenant_allow_update", "value": "False" },
+                    { "option": "tenant_allow_delete", "value": "False" },
+                    { "comment": "tenant_enabled_emulation = False" },
+                    { "comment": "tenant_enabled_emulation_dn =" },
+                    { "comment": "role_tree_dn = ou=Roles,${LDAP_SUFFIX}" },
+                    { "comment": "role_filter =" },
+                    { "comment": "role_objectclass = organizationalRole" },
+                    { "comment": "role_id_attribute = cn" },
+                    { "comment": "role_name_attribute = ou" },
+                    { "comment": "role_member_attribute = roleOccupant" },
+                    { "comment": "role_attribute_ignore =" },
+                    { "option": "role_allow_create", "value": "False" },
+                    { "option": "role_allow_update", "value": "False" },
+                    { "option": "role_allow_delete", "value": "False" },
+                    { "option": "group_tree_dn", "value": "${LDAP_GROUP_TREE_DN}" },
+                    $(comment_or_option group_filter ${LDAP_GROUP_FILTER}),
+                    $(comment_or_option group_objectclass ${LDAP_GROUP_OBJECTCLASS}),
+                    $(comment_or_option group_id_attribute ${LDAP_GROUP_ID_ATTRIBUTE}),
+                    $(comment_or_option group_name_attribute ${LDAP_GROUP_NAME_ATTRIBUTE}),
+                    $(comment_or_option group_member_attribute ${LDAP_GROUP_MEMBER_ATTRIBUTE}),
+                    $(comment_or_option group_desc_attribute ${LDAP_GROUP_DESC_ATTRIBUTE}),
+                    $(comment_or_option group_attribute_ignore ${LDAP_GROUP_ATTRIBUTE_IGNORE}),
+                    { "option": "group_allow_create", "value": "False" },
+                    { "option": "group_allow_update", "value": "False" },
+                    { "option": "group_allow_delete", "value": "False" },
+                    { "comment": "ldap TLS options" },
+                    { "comment": "if both tls_cacertfile and tls_cacertdir are set then" },
+                    { "comment": "tls_cacertfile will be used and tls_cacertdir is ignored" },
+                    { "comment": "valid options for tls_req_cert are demand, never, and allow" },
+                    { "option": "use_tls", "value": "${LDAP_USE_TLS}" },
+                    $(comment_or_option tls_cacertfile ${LDAP_TLS_CACERTFILE}),
+                    { "comment": "tls_cacertdir =" },
+                    $(comment_or_option tls_req_cert ${LDAP_TLS_REQ_CERT}),
+                    { "comment": "Additional attribute mappings can be used to map ldap attributes to internal" },
+                    { "comment": "keystone attributes. This allows keystone to fulfill ldap objectclass" },
+                    { "comment": "requirements. An example to map the description and gecos attributes to a" },
+                    { "comment": "user's name would be:" },
+                    { "comment": "user_additional_attribute_mapping = description:name, gecos:name" },
+                    { "comment": "domain_additional_attribute_mapping =" },
+                    { "comment": "group_additional_attribute_mapping =" },
+                    { "comment": "role_additional_attribute_mapping =" },
+                    { "comment": "project_additional_attribute_mapping =" },
+                    { "comment": "user_additional_attribute_mapping =" }
+                ]
+            }
+        ]
+    }
+}
+EOF
+)
+    OVERCLOUD_EXTRA_CONFIG=$(json_merge.py "${OVERCLOUD_EXTRA_CONFIG}" "${KEYSTONE_LDAP_CONFIG}")
+
+    LDAP_TLS_CACERTFILE_CONTENT=${LDAP_TLS_CACERTFILE_CONTENT:-}
+    if [ -n "${LDAP_TLS_CACERTFILE_CONTENT}" ]; then
+        # Convert ${LDAP_TLS_CACERTFILE_CONTENT} to a single-line representation
+        LDAP_TLS_CACERTFILE_CONTENT=$(echo "${LDAP_TLS_CACERTFILE_CONTENT}" | perl -p -e 's/\r?\n/\\n/g')
+        # Wrap as JSON
+        LDAP_TLS_CACERTFILE_CONTENT=$(cat <<-EOF
+{
+    "keystone_ldap_cacertfile": "${LDAP_TLS_CACERTFILE_CONTENT}"
+}
+EOF
+)
+        # Merge into OVERCLOUD_EXTRA_CONFIG JSON
+        OVERCLOUD_EXTRA_CONFIG=$(json_merge.py "${OVERCLOUD_EXTRA_CONFIG}" "${LDAP_TLS_CACERTFILE_CONTENT}")
+    fi
+
+    export OVERCLOUD_EXTRA_CONFIG
+fi

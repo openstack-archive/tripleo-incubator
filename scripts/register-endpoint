@@ -143,23 +143,30 @@ if [ "dashboard" != "$TYPE" ]; then
     # Some services have multiple endpoints, the user doesn't need to be recreated
     USER_ID=$(keystone user-get $NAME | awk '$2=="id" { print $4 }')
     if [ -z "$USER_ID" ]; then
-        SVC_USER=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
+        USER_ID=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
+    fi
+    if ! keystone user-role-list --tenant-id $SERVICE_TENANT --user-id $USER_ID | grep -q " $ADMIN_ROLE "; then
+        echo "Creating user-role assignment for user $NAME, role admin, tenant service"
         keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
-                               --user-id $SVC_USER \
+                               --user-id $USER_ID \
                                --role-id $ADMIN_ROLE
-        #Add the admin tenant role for ceilometer user to enable polling services
-        if  [ "metering" == "$TYPE" ]; then
-            ADMIN_TENANT=$(keystone $DEBUG tenant-list | awk '/ admin / {print $2}')
+    fi
+    #Add the admin tenant role for ceilometer user to enable polling services
+    if  [ "metering" == "$TYPE" ]; then
+        ADMIN_TENANT=$(keystone $DEBUG tenant-list | awk '/ admin / {print $2}')
+        if ! keystone user-role-list --tenant-id $ADMIN_TENANT --user-id $USER_ID | grep -q " $ADMIN_ROLE "; then
+            echo "Creating user-role assignment for user $NAME, role admin, tenant admin"
             keystone user-role-add $DEBUG --tenant-id $ADMIN_TENANT \
-                                 --user-id $SVC_USER \
+                                 --user-id $USER_ID \
                                  --role-id $ADMIN_ROLE
             #swift polling requires ResellerAdmin role to be added to the Ceilometer user
             RESELLER_ADMIN_ROLE=$(keystone $DEBUG role-list | awk '/ ResellerAdmin / {print $2}')
             keystone user-role-add $DEBUG --tenant-id $ADMIN_TENANT \
-                                 --user-id $SVC_USER \
+                                 --user-id $USER_ID \
                                  --role-id $RESELLER_ADMIN_ROLE
         fi
     fi
+
 fi
 SERVICE_ID=$(keystone $DEBUG service-create --name=$NAME --type=$TYPE "$DESCRIPTION" | awk '/ id / {print $4}')
 keystone endpoint-create $DEBUG --region "$REGION" --service-id $SERVICE_ID \
