@@ -106,6 +106,13 @@ if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
 fi
 
+## #. Add Keystone/LDAP integration to Overcloud
+##    ::
+
+if [ ${OVERCLOUD_KEYSTONE_USE_LDAP:-0} -ne 0 ]; then
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS} keystone-ldap"
+fi
+
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
@@ -187,6 +194,9 @@ OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
 ##    required by the template ExtraConfig parameter.
 
 OVERCLOUD_EXTRA_CONFIG=${OVERCLOUD_EXTRA_CONFIG:-''}
+
+## #. Optionally configure Keystone to use external LDAP server as backend
+source ${SCRIPT_HOME}/setup-keystone-ldap
 
 ## #. Choose whether to deploy or update. Use stack-update to update::
 
