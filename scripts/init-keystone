@@ -96,10 +96,13 @@ SERVICE_TENANT_ID=$(keystone tenant-create --name=service | awk '$2=="id" {print
 ADMIN_ROLE_ID=$(keystone role-create --name=admin | awk '$2=="id" {print $4}')
 
 # Users
-ADMIN_USER_ID=$(keystone user-create --name=admin \
-    --tenant-id="$ADMIN_TENANT_ID" \
-    --pass="$PASSWORD" \
-    --email="$ADMIN_EMAIL" | awk '$2=="id" {print $4}')
+ADMIN_USER_ID=$(keystone user-get admin | awk '$2=="id" { print $4 }')
+if [ -z "${ADMIN_USER_ID}" ]; then
+    ADMIN_USER_ID=$(keystone user-create --name=admin \
+        --tenant-id="$ADMIN_TENANT_ID" \
+        --pass="$PASSWORD" \
+        --email="$ADMIN_EMAIL" | awk '$2=="id" {print $4}')
+fi
 
 # User Roles
 keystone user-role-add --user-id $ADMIN_USER_ID --role-id $ADMIN_ROLE_ID --tenant-id $ADMIN_TENANT_ID
