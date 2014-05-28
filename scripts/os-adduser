@@ -16,7 +16,6 @@
 # under the License.
 
 set -eu
-set -o pipefail
 
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
@@ -72,9 +71,11 @@ if [ -z "$ADMIN_ROLE" ]; then
     exit 1
 fi
 MEMBER_ROLE=$(keystone role-get _member_| awk '$2=="id" {print $4}')
+# Role _member_ is implicitly created by Keystone only while creating a new user
+# If no users were created, need to create a role explicitly
 if [ -z "$MEMBER_ROLE" ]; then
-    echo "Could not find _member_ role" >&2
-    exit 1
+    MEMBER_ROLE=$(keystone role-create --name=_member_ | awk '$2=="id" {print $4}')
+    echo "Created role _member_ with id ${MEMBER_ROLE}" >&2
 fi
 ADMIN_USER_ID=$(keystone user-get admin | awk '$2=="id" {print $4}')
 if [ -z "$ADMIN_USER_ID" ]; then
@@ -96,15 +97,29 @@ else
     fi
 fi
 
-USER_ID=$(keystone user-create --name=$NAME \
-        --pass="$PASSWORD" \
-       --email=$EMAIL | awk '$2=="id" {print $4}')
+USER_ID=$(keystone user-get $NAME | awk '$2=="id" {print $4}')
 if [ -z "$USER_ID" ]; then
-    echo "Failed to create tenant $NAME" >&2
-    exit 1
+    USER_ID=$(keystone user-create --name=$NAME \
+            --pass="$PASSWORD" \
+            --email=$EMAIL | awk '$2=="id" {print $4}')
+    if [ -z "$USER_ID" ]; then
+        echo "Failed to create user $NAME" >&2
+        exit 1
+    else
+        echo "Created user $NAME with password '$PASSWORD'"
+    fi
 else
-    echo "Created user $NAME with password '$PASSWORD'"
+    echo "User $NAME with id $USER_ID already exists"
 fi
 
-keystone user-role-add --user-id $USER_ID --role-id $MEMBER_ROLE --tenant-id $USER_TENANT_ID
-keystone user-role-add --user-id $ADMIN_USER_ID --role-id $ADMIN_ROLE --tenant-id $USER_TENANT_ID
+if keystone user-role-list --user-id $USER_ID --tenant-id $USER_TENANT_ID | grep -q "\s$MEMBER_ROLE\s"; then
+    echo "Role $MEMBER_ROLE is already granted for user $USER_ID with tenant $USER_TENANT_ID"
+else
+    keystone user-role-add --user-id $USER_ID --role-id $MEMBER_ROLE --tenant-id $USER_TENANT_ID
+fi
+
+if keystone user-role-list --user-id $ADMIN_USER_ID --tenant-id $USER_TENANT_ID | grep -q "\s$ADMIN_ROLE\s"; then
+    echo "Role $ADMIN_ROLE is already granted for user $ADMIN_USER_ID with tenant $USER_TENANT_ID"
+else
+    keystone user-role-add --user-id $ADMIN_USER_ID --role-id $ADMIN_ROLE --tenant-id $USER_TENANT_ID
+fi
