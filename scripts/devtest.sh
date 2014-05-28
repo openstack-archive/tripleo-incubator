@@ -49,7 +49,7 @@ USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,existing-environment,trash-my-machine,nodes:,bm-networks:,no-undercloud -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,existing-environment,help,trash-my-machine,nodes:,bm-networks:,no-undercloud -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -64,7 +64,7 @@ while true ; do
         --bm-networks) NETS_ARG="--bm-networks $2"; shift 2;;
         --no-undercloud) NO_UNDERCLOUD="true"; shift 1;;
         -c) USE_CACHE=1; shift 1;;
-        -h) show_options 0;;
+        -h|--help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
