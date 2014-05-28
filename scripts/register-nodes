@@ -67,7 +67,7 @@ for pos in $(seq 0 $node_count); do
         esac
         # Don't wait for periodic task.
         # set nodes power state to off
-        ironic node-set-power-state $NODE_ID off
+        wait_for 10 1 ironic node-set-power-state $NODE_ID off
     fi
 done
 
