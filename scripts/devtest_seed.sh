@@ -12,6 +12,7 @@ function show_options () {
     echo
     echo "Options:"
     echo "      -h             -- this help"
+    echo "      -c             -- re-use existing source/images if they exist."
     echo "      --build-only   -- build the needed images but don't deploy them."
     echo "      --all-nodes    -- use all the nodes in the testenv rather than"
     echo "                        just the first one."
@@ -21,7 +22,7 @@ function show_options () {
 
 BUILD_ONLY=
 
-TEMP=$(getopt -o h -l all-nodes,build-only,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l all-nodes,build-only,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -30,6 +31,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --all-nodes) ALL_NODES="true"; shift 1;;
+        -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="--build-only"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
