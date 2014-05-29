@@ -7,6 +7,11 @@ Learning
 Learning how TripleO all works is essential. Working through :doc:`devtest` is
 highly recommended.
 
+Overview
+--------
+
+.. image:: overview.svg
+
 Setup
 -----
 
