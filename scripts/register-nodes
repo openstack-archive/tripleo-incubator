@@ -31,6 +31,8 @@ for pos in $(seq 0 $node_count); do
         for var in pm_addr pm_user pm_password cpu memory disk ; do
             eval "$var='$(jq -r .$var <<< $NODE_JSON)'"
         done
+        # Clamp pm_password to 255 characters.
+        pm_password=$(echo $pm_password | cut -b1-255)
         id=$(nova baremetal-node-create --pm_address="$pm_addr" \
             --pm_user="$pm_user" --pm_password="$pm_password" $SERVICE_HOST \
             $cpu $memory $disk $(jq -r ".mac[0]" <<< $NODE_JSON) | \
