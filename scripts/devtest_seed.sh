@@ -199,8 +199,12 @@ fi
 ##    ::
 
 echo "Waiting for seed node to configure br-ctlplane..." #nodocs
-wait_for 30 10 ping -c 1 $BM_NETWORK_SEED_IP
-ssh-keyscan -t rsa $BM_NETWORK_SEED_IP >>~/.ssh/known_hosts
+# If ssh-keyscan fails to connect, it returns 0. So grep to see if it succeeded.
+wait_for 3 10 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP \| tee -a ~/.ssh/known_hosts \| grep "\"^$BM_NETWORK_SEED_IP ssh-rsa \""
+
+# ssh-keyscan can succeed before the machine is fully ssh-able, so we have to wait again.
+wait_for 3 10 ssh -o StrictHostKeyChecking=no -t root@$BM_NETWORK_SEED_IP echo >/dev/null
+
 init-keystone -o $BM_NETWORK_SEED_IP -t unset -e admin@example.com -p unset -u root
 setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
 keystone role-create --name heat_stack_user
