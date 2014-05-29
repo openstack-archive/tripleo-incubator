@@ -201,6 +201,10 @@ fi
 echo "Waiting for seed node to configure br-ctlplane..." #nodocs
 wait_for 30 10 ping -c 1 $BM_NETWORK_SEED_IP
 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP >>~/.ssh/known_hosts
+
+# Wait for ssh demon to be fully running.
+wait_for 20 1 ssh -o StrictHostKeyChecking=no -t root@$BM_NETWORK_SEED_IP echo >/dev/null
+
 init-keystone -p unset unset $BM_NETWORK_SEED_IP admin@example.com root@$BM_NETWORK_SEED_IP
 setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
 keystone role-create --name heat_stack_user
