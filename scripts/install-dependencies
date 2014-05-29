@@ -58,23 +58,23 @@ if [ "$os" = "debian" ]; then
   if $(grep -Eqs 'Ubuntu 12.04' /etc/lsb-release); then
     #adding Ubuntu Cloud Archive Repository only if not present : bug https://bugs.launchpad.net/tripleo/+bug/1212237
     #Ubuntu 12.04 has a too-old libvirt-bin but a newer one is present in the Ubuntu cloud archive.
-    sudo apt-get update
-    DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes ubuntu-cloud-keyring
+    sudo -E apt-get update
+    DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes ubuntu-cloud-keyring
     (grep -Eqs "precise-updates/grizzly" /etc/apt/sources.list.d/cloud-archive.list) || echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
 ' | sudo tee -a /etc/apt/sources.list.d/cloud-archive.list
     #adding precise-backports universe repository for jq package
     sudo add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports universe"
   fi
   # packages
-  sudo apt-get update
-  DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc python-virtualenv openvswitch-switch libssl-dev curl python-yaml parted lsb-release libxml2-dev libxslt1-dev jq openssh-server libffi-dev kpartx
+  sudo -E apt-get update
+  DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc python-virtualenv openvswitch-switch libssl-dev curl python-yaml parted lsb-release libxml2-dev libxslt1-dev jq openssh-server libffi-dev kpartx
 
   sudo service libvirt-bin restart
 fi
 
 if [ "$os" = "redhat" ]; then
   # For RHEL/CentOS, python-pip is in EPEL
-  sudo yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv openvswitch python-yaml net-tools redhat-lsb-core libxslt-devel jq openssh-server libffi-devel which glusterfs-api
+  sudo -E yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv openvswitch python-yaml net-tools redhat-lsb-core libxslt-devel jq openssh-server libffi-devel which
 
   sudo service libvirtd restart
   sudo service openvswitch restart
@@ -86,10 +86,10 @@ if [ "$os" = "suse" ]; then
   suse_version=$(awk '/VERSION/ { print $3 }' /etc/SuSE-release)
   if [ ! -f /etc/zypp/repos.d/Cloud_OpenStack_Master.repo ]; then
       # Add Cloud:OpenStack:Master (Project that follows master branch with daily updates)
-      sudo zypper -n ar -f http://download.opensuse.org/repositories/Cloud:/OpenStack:/Master/openSUSE_$suse_version/Cloud:OpenStack:Master.repo
-      sudo zypper -n --gpg-auto-import-keys ref
+      sudo -E zypper -n ar -f http://download.opensuse.org/repositories/Cloud:/OpenStack:/Master/openSUSE_$suse_version/Cloud:OpenStack:Master.repo
+      sudo -E zypper -n --gpg-auto-import-keys ref
   fi
-  sudo zypper --non-interactive install \
+  sudo -E zypper --non-interactive install \
     python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
     python-devel gcc audit python-virtualenv openvswitch-switch python-PyYAML net-tools \
     lsb-release libxslt-devel jq
