@@ -247,6 +247,7 @@ ENV_JSON=$(jq '.parameters = {
     "AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
     "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
     "CloudName": "'"${OVERCLOUD_NAME}"'",
+    "controllerImage": "'"${OVERCLOUD_CONTROL_ID}"'",
     "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
     "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
     "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
@@ -295,16 +296,9 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
 
 ### --end
 
-# This param name will soon change from 'notCompute' --> 'controller'
-CONTROLLER_IMAGE_PARAM=notcomputeImage
-if [ -e $TRIPLEO_ROOT/tripleo-heat-templates/controller.yaml ] ; then
-    CONTROLLER_IMAGE_PARAM=controllerImage
-fi
-
 heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
-    -P "$CONTROLLER_IMAGE_PARAM=${OVERCLOUD_CONTROL_ID}" \
     $STACKNAME
 
 ### --include
