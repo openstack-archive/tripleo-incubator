@@ -78,6 +78,11 @@ else
     jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal={}| .[0]' config.json $TE_DATAFILE > tmp_local.json
 fi
 
+# Get details required to set-up a Mock heat call back from the seed form os-collect-config.
+HOST_IP=$(os-apply-config -m $TE_DATAFILE --key host-ip --type netaddress --key-default '')
+ENV_NUM=$(os-apply-config -m $TE_DATAFILE --key env-num --type int --key-default 0)
+COMP_IP=$(ip route get "$HOST_IP" | awk '/'"$HOST_IP"'/ {print $NF}')
+
 # Apply custom BM network settings to the seeds local.json config
 BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
 # FIXME: Once we support jq 1.3 we can use --arg here instead of writing
@@ -94,6 +99,8 @@ jq -s '
 (.[0]["local-ipv4"] = $bm_seed_ip)|
 (.[0].bootstack.public_interface_ip = $bm_seed_ip + "/" + $cidr_config.cidr)|
 (.[0].bootstack.masquerade_networks = ($config["baremetal-network"].cidr // "192.0.2.0/24"))|
+(.[0]["completion-signal"] = "http://'"${COMP_IP}"':'"${SEED_COMP_PORT:=2741${ENV_NUM}}"'")|
+(.[0]["instance-id"] = "'"${SEED_IMAGE_ID:=seedImageID}"'")|
  .[0]' tmp_local.json $TE_DATAFILE cidr.json > local.json
 rm tmp_local.json
 rm cidr.json
@@ -104,7 +111,6 @@ rm cidr.json
 # from the json describing the environment
 REMOTE_OPERATIONS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key remote-operations --type raw --key-default '')
 if [ -n "$REMOTE_OPERATIONS" ] ; then
-    HOST_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key host-ip --type netaddress --key-default '')
     SSH_USER=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default 'root')
     sed -i "s/\"192.168.122.1\"/\"$HOST_IP\"/" local.json
     sed -i "s/\"user\": \".*\?\",/\"user\": \"$SSH_USER\",/" local.json
@@ -199,8 +205,18 @@ fi
 ##    ::
 
 echo "Waiting for seed node to configure br-ctlplane..." #nodocs
-wait_for 30 10 ping -c 1 $BM_NETWORK_SEED_IP
-ssh-keyscan -t rsa $BM_NETWORK_SEED_IP >>~/.ssh/known_hosts
+
+# Mock HEATs callback mechanism
+# Setup timeout for nc while we wait for os-apply-config to complete or not on seed node
+# Mock up a call-back to the seed
+timeout 480 sh -c 'printf "HTTP/1.0 200 OK\n\n\n" | nc -l '"$COMP_IP"' '"$SEED_COMP_PORT"' | grep '$SEED_IMAGE_ID
+
+# Wait for network
+wait_for 10 1 ping -c 1 $BM_NETWORK_SEED_IP
+
+# If ssh-keyscan fails to connect, it returns 0. So grep to see if it succeeded
+ssh-keyscan -t rsa $BM_NETWORK_SEED_IP | tee -a ~/.ssh/known_hosts | grep -q "^$BM_NETWORK_SEED_IP ssh-rsa "
+
 init-keystone -o $BM_NETWORK_SEED_IP -t unset -e admin@example.com -p unset -u root
 setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
 keystone role-create --name heat_stack_user
