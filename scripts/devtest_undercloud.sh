@@ -8,6 +8,7 @@ SCRIPT_HOME=$(dirname $0)
 
 BUILD_ONLY=
 HEAT_ENV=
+USE_MONITORING=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -15,15 +16,16 @@ function show_options () {
     echo "Deploys a baremetal cloud via heat."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --heat-env     -- path to a JSON heat environment file."
-    echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
+    echo "      -h                -- this help"
+    echo "      --build-only      -- build the needed images but don't deploy them."
+    echo "      --heat-env        -- path to a JSON heat environment file."
+    echo "                           Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
+    echo "      --use-monitoring  -- add monitoring services to the undercloud"
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,heat-env:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,heat-env:,help,use-monitoring,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -33,6 +35,7 @@ while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
+        --use-monitoring) USE_MONITORING="1"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -71,6 +74,14 @@ fi
 ##    ::
 
 UNDERCLOUD_STACK_TIMEOUT=${UNDERCLOUD_STACK_TIMEOUT:-60}
+
+## #. Add monitoring to Undercloud
+##    ::
+
+if [ -n "${USE_MONITORING}" ] ; then
+    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS check_mk-agent check_mk-server \
+        icinga-cgi"
+fi
 
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
