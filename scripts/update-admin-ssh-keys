@@ -1,0 +1,54 @@
+#!/bin/bash
+set -eu
+set -o pipefail
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(dirname $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME"
+    echo
+    echo "Pull the latest tripleo-cd-admin ssh keys into a user account."
+    echo
+    echo "Assumes it is running as that user."
+    echo
+    echo "Options:"
+    echo "    -h|--help -- This help."
+    echo
+    exit $1
+}
+
+
+TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -h|--help) show_options 0;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+if [ -n "${1:-}" ]; then
+    show_options 1
+fi
+
+cd ~
+mkdir -p .ssh
+chmod 0700 .ssh
+mkdir -p .cache/tripleo-cd
+
+# Get the keys
+cd .cache/tripleo-cd
+if [ ! -d tripleo-incubator ]; then
+    git clone https://git.openstack.org/openstack/tripleo-incubator
+    cd tripleo-incubator
+else
+    cd tripleo-incubator
+    git pull
+fi
+cp tripleo-incubator/tripleo-cloud/tripleo-cd-ssh-keys ~/.ssh/authorized_keys
+chown 0400 ~/.ssh/authorized_keys
