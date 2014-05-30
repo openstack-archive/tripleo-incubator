@@ -290,6 +290,7 @@ fi
 ##    line or source the undercloudrc file.
 
 ##    ::
+
 ##         devtest_undercloud.sh $TE_DATAFILE
 ##         export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
 ##         source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
