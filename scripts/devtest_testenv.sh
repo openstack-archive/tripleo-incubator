@@ -234,11 +234,6 @@ else
 ##    more nodes.
 ##    ::
 
-# Node definitions are cheap but redeploying testenv's is not.
-# Set NODE_CNT high enough for typical CI and Dev deployments for the
-# forseeable future
-NODE_CNT=${NODE_CNT:-15}
-
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
 fi

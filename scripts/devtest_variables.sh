@@ -95,6 +95,23 @@ export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv"}
 
 export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
 
+## #. Choose the deploy image element to be used. `deploy-kexec` will relieve you of
+##    the need to wait for long hardware POST times, however it has known stability
+##    issues (please see https://bugs.launchpad.net/diskimage-builder/+bug/1240933).
+##    If stability is preferred over speed, use the `deploy-baremetal` image
+##    element (default) or `deploy-ironic` if using ironic.
+##    ::
+
+if [ $USE_IRONIC -eq 0 ]; then
+    # nova baremetal
+    export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-baremetal}
+    export DEPLOY_NAME=deploy-ramdisk
+else
+    # Ironic
+    export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-ironic}
+    export DEPLOY_NAME=deploy-ramdisk-ironic
+fi
+
 ## #. A messaging backend is required for the seed, undercloud, and overcloud
 ##    control node. It is not required for overcloud computes. The backend is
 ##    set through the ``*EXTRA_ARGS``.
@@ -131,6 +148,15 @@ if [ -z "${NODE_DIST:-}" ]; then
     fi
 fi
 ### --include
+
+## #. Set the number of baremetal nodes to create in the virtual test
+##    environment.
+##    ::
+
+# Node definitions are cheap but redeploying testenv's is not.
+# Set NODE_CNT high enough for typical CI and Dev deployments for the
+# forseeable future
+export NODE_CNT=${NODE_CNT:-15}
 
 ## #. Set size of root partition on our disk (GB). The remaining disk space
 ##    will be used for the persistent ephemeral disk to store node state.

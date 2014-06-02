@@ -41,21 +41,6 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 ## Deploy Ramdisk creation
 ## -----------------------
 
-## #. Choose the deploy image element to be used. `deploy-kexec` will relieve you of
-##    the need to wait for long hardware POST times, however it has known stability
-##    issues (please see https://bugs.launchpad.net/diskimage-builder/+bug/1240933).
-##    If stability is preferred over speed, use `deploy` image element (default).
-##    ::
-
-if [ $USE_IRONIC -eq 0 ]; then
-    # nova baremetal
-    DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-baremetal}
-    DEPLOY_NAME=deploy-ramdisk
-else
-    # Ironic
-    DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-ironic}
-    DEPLOY_NAME=deploy-ramdisk-ironic
-fi
 
 ## #. Create a deployment ramdisk + kernel. These are used by the seed cloud and
 ##    the undercloud for deployment to bare metal.
