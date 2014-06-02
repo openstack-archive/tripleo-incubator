@@ -13,6 +13,7 @@ openstack-tools
 scripts/cinder
 scripts/glance
 scripts/heat
+scripts/init-keystone
 scripts/ironic
 scripts/keystone
 scripts/nova
