@@ -264,8 +264,8 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 ## #. Perform setup of your undercloud.
 ##    ::
-init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
-    $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
+init-keystone -o $UNDERCLOUD_IP -t $UNDERCLOUD_ADMIN_TOKEN \
+    -e admin@example.com -p $UNDERCLOUD_ADMIN_PASSWORD -u heat-admin
 
 # Creating these roles to be used by tenants using swift
 keystone role-create --name=swiftoperator
