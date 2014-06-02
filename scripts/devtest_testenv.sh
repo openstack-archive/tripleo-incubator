@@ -106,7 +106,7 @@ fi
 
 ##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=40 NODE_ARCH=i386
 
-NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386} #nodocs
+NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386} NODE_CNT=${NODE_CNT:-15} #nodocs
 
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint (3GB minimum - we suggest 4GB)::
@@ -233,11 +233,6 @@ else
 ##    VMs changes in future, you can run cleanup-env and then recreate with
 ##    more nodes.
 ##    ::
-
-# Node definitions are cheap but redeploying testenv's is not.
-# Set NODE_CNT high enough for typical CI and Dev deployments for the
-# forseeable future
-NODE_CNT=${NODE_CNT:-15}
 
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
