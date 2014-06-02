@@ -200,7 +200,6 @@ fi
 ##    connections from virbr0 -  VirtPowerManager will boot VMs by sshing into the
 ##    host machine and issuing libvirt/virsh commands. The user these instructions
 ##    use is your own, but you can also setup a dedicated user if you choose.
-##    ::
 
 ### --end
 if [ "$USE_CACHE" == "0" ] ; then

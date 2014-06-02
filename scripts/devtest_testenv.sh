@@ -73,7 +73,7 @@ done
 ##   ``devtest_testenv.sh $TE_DATAFILE`` so we should declare
 ##   a JSONFILE variable (which equals to the first positional
 ##   argument) explicitly.
-## ::
+##   ::
 
 ##      JSONFILE=${JSONFILE:-$TE_DATAFILE}
 

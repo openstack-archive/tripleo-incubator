@@ -280,6 +280,7 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 ## #. Perform setup of your undercloud.
 ##    ::
+
 init-keystone -o $UNDERCLOUD_IP -t $UNDERCLOUD_ADMIN_TOKEN \
     -e admin@example.com -p $UNDERCLOUD_ADMIN_PASSWORD -u heat-admin
 
