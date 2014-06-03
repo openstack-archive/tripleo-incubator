@@ -215,11 +215,9 @@ wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" 
 ## #. Create unique credentials::
 
 ### --end
-if [ -e tripleo-overcloud-passwords ]; then
-  echo "Re-using existing passwords in $PWD/tripleo-overcloud-passwords"
-  # Add any new passwords since the file was generated
-  setup-overcloud-passwords tripleo-overcloud-passwords
-  source tripleo-overcloud-passwords
+if [ -e $TRIPLEO_ROOT/tripleo-overcloud-passwords ]; then
+  echo "Re-using existing passwords in $TRIPLEO_ROOT/tripleo-overcloud-passwords"
+  source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 else
 ### --include
   setup-overcloud-passwords $TRIPLEO_ROOT/tripleo-overcloud-passwords
