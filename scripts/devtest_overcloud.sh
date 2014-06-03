@@ -85,6 +85,9 @@ OVERCLOUD_IMAGE_UPDATE_POLICY=${OVERCLOUD_IMAGE_UPDATE_POLICY:-'REBUILD'}
 # Heat stack.
 OVERCLOUD_STACK_TIMEOUT=${OVERCLOUD_STACK_TIMEOUT:-60}
 
+# The private instance fixed IP network range
+OVERCLOUD_FIXED_RANGE_CIDR=${OVERCLOUD_FIXED_RANGE_CIDR:-"10.0.0.0/8"}
+
 ### --include
 ## devtest_overcloud
 ## =================
@@ -408,7 +411,7 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
     keystone role-create --name heat_stack_user
     user-config
 ##             setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
-    setup-neutron "" "" 10.0.0.0/8 "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
+    setup-neutron "" "" $OVERCLOUD_FIXED_RANGE_CIDR "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
 
 ## #. If you want a demo user in your overcloud (probably a good idea).
 ##    ::
