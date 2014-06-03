@@ -1,0 +1,16 @@
+Verified+2: Jenkins
+Code-Review+1: Jon-Paul Sullivan (jp_at_hp) <jonpaul.sullivan@hp.com>
+Code-Review+1: Tom Hancock <tom.hancock@hp.com>
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Code-Review+1: Giulio Fidente <gfidente@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+1: Richard Su <rwsu@redhat.com>
+Code-Review+2: Jan Provaznik <jan.provaznik@gmail.com>
+Workflow+1: Jan Provaznik <jan.provaznik@gmail.com>
+Code-Review+1: Petr Blaho <pblaho@redhat.com>
+Code-Review+1: Alexis Lee <alexisl@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 03 Jun 2014 12:43:54 +0000
+Reviewed-on: https://review.openstack.org/92400
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
