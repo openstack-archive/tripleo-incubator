@@ -190,7 +190,7 @@ fi
 
 function poll_vm {
   if [ -z "$VM_IP" ]; then
-    MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+    MAC=$(virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
     VM_IP=$(arp -n | grep $MAC | awk '{print $1}')
   fi
   [ -z $VM_IP ] && return 1
@@ -203,7 +203,7 @@ if [ -n "$REMOTE_OPERATIONS" ]; then
   ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh start ${IMAGE_NAME}_$ENV_NUM
   VM_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type netaddress --key-default '')
 else
-  sudo virsh start $IMAGE_NAME
+  virsh start $IMAGE_NAME
 fi
 
 echo "Waiting for $IMAGE_NAME VM to boot."

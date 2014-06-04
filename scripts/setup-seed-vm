@@ -101,8 +101,8 @@ case $ARCH in
 esac
 
 which virsh >/dev/null || die "Error: virsh not found in path"
-sudo virsh destroy $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
-sudo virsh undefine $IMAGE_NAME --managed-save 2>/dev/null || echo "$IMAGE_NAME VM not defined"
+virsh destroy $IMAGE_NAME 2>/dev/null || echo "$IMAGE_NAME VM not running"
+virsh undefine $IMAGE_NAME --managed-save 2>/dev/null || echo "$IMAGE_NAME VM not defined"
 sudo touch /var/lib/libvirt/images/$IMAGE_NAME.qcow2
 
 EXTRAOPTS=
@@ -126,5 +126,5 @@ configure-vm $EXTRAOPTS \
        --libvirt-nic-driver $LIBVIRT_NIC_DRIVER \
        --seed
 
-MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+MAC=$(virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
 echo "Seed VM created with MAC ${MAC}"

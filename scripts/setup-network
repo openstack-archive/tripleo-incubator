@@ -17,7 +17,7 @@ virsh net-autostart ${BRIDGE_NAME}
 virsh net-start ${BRIDGE_NAME}
 
 # start default if needed and configure it to autostart
-default_net=$(sudo virsh net-list --all --persistent | grep default | awk 'BEGIN{OFS=":";} {print $2,$3}')
+default_net=$(virsh net-list --all --persistent | grep default | awk 'BEGIN{OFS=":";} {print $2,$3}')
 state=${default_net%%:*}
 autostart=${default_net##*:}
 

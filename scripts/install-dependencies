@@ -127,13 +127,13 @@ if [ "$os" = "redhat" ]; then
     fi
 fi
 
-REMOTE_OPERATIONS=${REMOTE_OPERATIONS:-0}
-if [ "$REMOTE_OPERATIONS" != 1 -a -n "$TE_DATAFILE" -a -e "$TE_DATAFILE" ]; then
+REMOTE_OPERATIONS=${REMOTE_OPERATIONS:-}
+if [ -n "$REMOTE_OPERATIONS" -a -n "$TE_DATAFILE" -a -e "$TE_DATAFILE" ]; then
   REMOTE_OPERATIONS=$(jq '.["remote-operations"]' $TE_DATAFILE)
   REMOTE_OPERATIONS=${REMOTE_OPERATIONS//\"}
 fi
 
-if [ $REMOTE_OPERATIONS != 1 ]; then
+if [ -n $REMOTE_OPERATIONS ]; then
   if ! id | grep -qw $LIBVIRTD_GROUP; then
      echo "adding $USER to group $LIBVIRTD_GROUP"
      sudo usermod -a -G $LIBVIRTD_GROUP $USER
