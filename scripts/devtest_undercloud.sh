@@ -264,9 +264,13 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 ## #. Perform setup of your undercloud.
 ##    ::
-
 init-keystone -p $UNDERCLOUD_ADMIN_PASSWORD $UNDERCLOUD_ADMIN_TOKEN \
     $UNDERCLOUD_IP admin@example.com heat-admin@$UNDERCLOUD_IP
+
+# Creating these roles to be used by tenants using swift
+keystone role-create --name=swiftoperator
+keystone role-create --name=ResellerAdmin
+
 setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD \
     --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
     --heat-password $UNDERCLOUD_HEAT_PASSWORD \
@@ -275,9 +279,6 @@ setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASS
     --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
     $REGISTER_SERVICE_OPTS
 keystone role-create --name heat_stack_user
-# Creating these roles to be used by tenants using swift
-keystone role-create --name=swiftoperator
-keystone role-create --name=ResellerAdmin
 
 user-config
 
