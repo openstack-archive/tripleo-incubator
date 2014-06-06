@@ -125,9 +125,12 @@ setup-network $NUM
 
 BRIDGE=
 SEED_ARGS="-a $NODE_ARCH"
-if [ -n "$NUM" -a -n "$OVSBRIDGE" ]; then
+if [ -n "$NUM" ]; then
+    SEED_ARGS="$SEED_ARGS -o seed_${NUM}"
+fi
+if [ -n "$OVSBRIDGE" ]; then
     BRIDGE="brbm${NUM}"
-    SEED_ARGS="$SEED_ARGS -o seed_${NUM} -b $BRIDGE -p $OVSBRIDGE"
+    SEED_ARGS="$SEED_ARGS -b $BRIDGE -p $OVSBRIDGE"
 fi
 setup-seed-vm $SEED_ARGS -c ${SEED_CPU:-1} -m $((1024 * ${SEED_MEM:-2048}))
 

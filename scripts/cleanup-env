@@ -20,40 +20,41 @@ SCRIPT_NAME=$(basename $0)
 LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
 function show_options() {
-    echo "Usage: $SCRIPT_NAME"
+    echo "Usage: $SCRIPT_NAME [-n NUM]"
     echo
     echo "Cleanup vm state left behind by previous runs"
     echo
     echo "    -n                     -- Test environment number to clean up."
-    echo "    -o seed_name           -- Name of the seed to clean up."
-    echo "                              If not provided, seed_n will be assumed"
-    echo "                              if -n is used; or simply seed if -n is"
-    echo "                              not provided. "
+    echo
+    echo "If provided, NUM is the environment number to be cleaned up."
+    echo "If not provided, the default environment will be cleaned."
     exit 1
 }
 
 NUM=
 
-TEMP=$(getopt -o h,n:,o: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then show_options; fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
 
 while true ; do
-    case "$1" in
-        -n) NUM="$2" ; shift 2 ;;
-        -o) SEED_NAME="$2" ; shift 2 ;;
-        --) shift ; break ;;
-        *) echo "Error: unsupported option $1." ; show_options ;;
-    esac
+  case "$1" in
+    -h) show_options ;;
+    -n) NUM="$2" ; shift 2 ;;
+    --) shift ; break ;;
+    *) echo "Error: unsupported option $1." ; show_options ;;
+  esac
 done
 
+SEED_NAME=seed
+BRIDGE_NAME=
+
 if [ -n "$NUM" ]; then
-  SEED_NAME="${SEED_NAME:-seed_${NUM}}"
+  SEED_NAME="seed_${NUM}"
   BRIDGE_NAME="brbm${NUM}"
 fi
-SEED_NAME="${SEED_NAME:-seed}"
 
 BAREMETAL_REGEX="baremetal${BRIDGE_NAME}"
 for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
