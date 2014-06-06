@@ -69,6 +69,12 @@ function load_image() {
     fi
 
     if [ ! -e "$KERNEL" -o ! -e "$RAMDISK" ] ; then
+        DIGK=$(which disk-image-get-kernel || echo $DIB_PATH/bin/disk-image-get-kernel)
+        if [ ! -e $DIGK ]; then
+            echo "Error: unable to locate disk-image-get-kernel"
+            exit 1
+        fi
+
         echo "Warning: Kernel ($KERNEL) or initrd ($RAMDISK) for specified file $FILE not found."
         echo "         Trying to extract them with disk-image-get-kernel now."
         echo "         Please add the \"baremetal\" element to your image-build."
@@ -136,11 +142,6 @@ fi
 which glance >/dev/null || ( echo "Error: unable to locate glance"; exit 1 )
 
 DIB_PATH=${DIB_PATH:-$SCRIPT_HOME/../../diskimage-builder}
-DIGK=$(which disk-image-get-kernel || echo $DIB_PATH/bin/disk-image-get-kernel)
-if [ ! -e $DIGK ]; then
-    echo "Error: unable to locate disk-image-get-kernel"
-    exit 1
-fi
 
 # Attempt to get the OS credentials, or die.
 [ -z "$OS_AUTH_URL" ] && [ -z "$OS_USERNAME" ] && [ -z "$OS_PASSWORD" ] && \
