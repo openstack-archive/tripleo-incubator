@@ -58,6 +58,7 @@ if [ "$os" = "debian" ]; then
   if $(grep -Eqs 'Ubuntu 12.04' /etc/lsb-release); then
     #adding Ubuntu Cloud Archive Repository only if not present : bug https://bugs.launchpad.net/tripleo/+bug/1212237
     #Ubuntu 12.04 has a too-old libvirt-bin but a newer one is present in the Ubuntu cloud archive.
+    sudo apt-get update
     DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes ubuntu-cloud-keyring
     (grep -Eqs "precise-updates/grizzly" /etc/apt/sources.list.d/cloud-archive.list) || echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
 ' | sudo tee -a /etc/apt/sources.list.d/cloud-archive.list
