@@ -328,10 +328,17 @@ heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
 ## #. While we wait for the stack to come up, build an end user disk image and
 ##    register it with glance.::
 
-TEST_IMAGE_DIB_EXTRA_ARGS=${TEST_IMAGE_DIB_EXTRA_ARGS:-''} #nodocs
-if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    USE_CIRROS=${USE_CIRROS:-0} #nodocs
-    if [ "$USE_CIRROS" == "0" ] ; then #nodocs
+USER_IMG_NAME="user.qcow2"
+### --end
+USE_CIRROS=${USE_CIRROS:-0}
+if [ "$USE_CIRROS" != "0" ]; then
+    USER_IMG_NAME="user-cirros.qcow2"
+fi
+
+TEST_IMAGE_DIB_EXTRA_ARGS=${TEST_IMAGE_DIB_EXTRA_ARGS:-''}
+if [ ! -e $TRIPLEO_ROOT/$USER_IMG_NAME -o "$USE_CACHE" == "0" ] ; then
+    if [ "$USE_CIRROS" == "0" ] ; then
+### --include
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST vm $TEST_IMAGE_DIB_EXTRA_ARGS \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/user 2>&1 | tee $TRIPLEO_ROOT/dib-user.log
 ### --end
@@ -340,11 +347,11 @@ if [ ! -e $TRIPLEO_ROOT/user.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
             http://download.cirros-cloud.net/version/released >(cat) 1>&2)
         IMAGE_ID=cirros-${VERSION}-${NODE_ARCH/amd64/x86_64}-disk.img
         MD5SUM=$($TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
-            http://download.cirros-cloud.net/${VERSION}/MD5SUMS >(cat) 1>&2 | awk '/$IMAGE_ID/ {print $1}')
+            http://download.cirros-cloud.net/${VERSION}/MD5SUMS >(cat) 1>&2 | awk "/$IMAGE_ID/ {print \$1}")
         $TRIPLEO_ROOT/diskimage-builder/elements/cache-url/bin/cache-url \
-            http://download.cirros-cloud.net/${VERSION}/${IMAGE_ID} $TRIPLEO_ROOT/user.qcow2}
+            http://download.cirros-cloud.net/${VERSION}/${IMAGE_ID} $TRIPLEO_ROOT/$USER_IMG_NAME
         pushd $TRIPLEO_ROOT
-        echo "$MD5SUM user.qcow2" | md5sum --check -
+        echo "$MD5SUM *$USER_IMG_NAME" | md5sum --check -
         popd
     fi
 fi
@@ -428,7 +435,7 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
 ##    ::
 
     glance image-create --name user --public --disk-format qcow2 \
-        --container-format bare --file $TRIPLEO_ROOT/user.qcow2
+        --container-format bare --file $TRIPLEO_ROOT/$USER_IMG_NAME
 
 fi #nodocs
 
