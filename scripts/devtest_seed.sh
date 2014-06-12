@@ -81,27 +81,26 @@ fi
 # Apply custom BM network settings to the seeds local.json config
 ENV_NUM=$(os-apply-config -m $TE_DATAFILE --key env-num --type int --key-default 0)
 BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
-# FIXME: Once we support jq 1.3 we can use --arg here instead of writing
-# cidr.json as the 3rd input file
-echo "{ \"cidr\": \"${BM_NETWORK_CIDR##*/}\" }" > cidr.json
 jq -s '
-.[1] as $config |
-.[2] as $cidr_config |
-($config["baremetal-network"].seed.ip // "192.0.2.1") as $bm_seed_ip |
-($config["host-ip"]) as $bm_host |
-(.[0].heat |= (
-    .watch_server_url="http://" + $bm_seed_ip + ":8003"|
-    .waitcondition_server_url="http://" + $bm_seed_ip + ":8000/v1/waitcondition"|
-    .metadata_server_url="http://" + $bm_seed_ip + ":8000"))|
-(.[0]["local-ipv4"] = $bm_seed_ip)|
-(.[0].bootstack.public_interface_ip = $bm_seed_ip + "/" + $cidr_config.cidr)|
-(.[0].bootstack.masquerade_networks = ($config["baremetal-network"].cidr // "192.0.2.0/24"))|
-(.[0]["completion-signal"] = "http://" + $bm_host + ":'"${SEED_COMP_PORT:=2741${ENV_NUM}}"'")|
-(.[0]["instance-id"] = "'"${SEED_IMAGE_ID:=seedImageID}"'")|
- .[0]' tmp_local.json $TE_DATAFILE cidr.json > local.json
+  .[1]["baremetal-network"] as $bm
+| ($bm.seed.ip // "192.0.2.1") as $bm_seed_ip
+| .[1]["host-ip"] as $host_ip
+| .[0]
+| . + {
+  "local-ipv4": ($bm_seed_ip),
+  "completion-signal": ("http://" + $host_ip + ":'"${SEED_COMP_PORT:=2741${ENV_NUM}}"'"),
+  "instance-id": "'"${SEED_IMAGE_ID:=seedImageID}"'",
+  "bootstack": (.bootstack + {
+    "public_interface_ip": ($bm_seed_ip + "/'"${BM_NETWORK_CIDR##*/}"'"),
+    "masquerade_networks": [($bm.cidr // "192.0.2.0/24")]
+  }),
+  "heat": (.heat + {
+    "watch_server_url": ("http://" + $bm_seed_ip + ":8003"),
+    "waitcondition_server_url": ("http://" + $bm_seed_ip + ":8000/v1/waitcondition"),
+    "metadata_server_url": ("http://" + $bm_seed_ip + ":8000")
+  })
+}' tmp_local.json $TE_DATAFILE > local.json
 rm tmp_local.json
-rm cidr.json
-
 
 ### --end
 # If running in a CI environment then the user and ip address should be read
