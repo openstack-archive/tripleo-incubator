@@ -80,7 +80,7 @@ fi
 
 # Apply custom BM network settings to the seeds local.json config
 ENV_NUM=$(os-apply-config -m $TE_DATAFILE --key env-num --type int --key-default 0)
-BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
+BM_NETWORK_CIDR=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
 # FIXME: Once we support jq 1.3 we can use --arg here instead of writing
 # cidr.json as the 3rd input file
 echo "{ \"cidr\": \"${BM_NETWORK_CIDR##*/}\" }" > cidr.json
@@ -107,9 +107,9 @@ rm cidr.json
 # If running in a CI environment then the user and ip address should be read
 # from the json describing the environment
 HOST_IP=$(os-apply-config -m $TE_DATAFILE --key host-ip --type netaddress --key-default '')
-REMOTE_OPERATIONS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key remote-operations --type raw --key-default '')
+REMOTE_OPERATIONS=$(os-apply-config -m $TE_DATAFILE --key remote-operations --type raw --key-default '')
 if [ -n "$REMOTE_OPERATIONS" ] ; then
-    SSH_USER=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default 'root')
+    SSH_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw --key-default 'root')
     sed -i "s/\"192.168.122.1\"/\"$HOST_IP\"/" local.json
     sed -i "s/\"user\": \".*\?\",/\"user\": \"$SSH_USER\",/" local.json
 fi
@@ -151,7 +151,7 @@ fi
 ##    The IP address of the VM's eth0 is printed out at the end of boot-seed-vm, or
 ##    you can query the testenv json which is updated by boot-seed-vm::
 
-SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type netaddress)
+SEED_IP=$(os-apply-config -m $TE_DATAFILE --key seed-ip --type netaddress)
 
 ## #. Add a route to the baremetal bridge via the seed node (we do this so that
 ##    your host is isolated from the networking of the test environment.
@@ -162,10 +162,10 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 
 # These are not persistent, if you reboot, re-run them.
 
-BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
-BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
+BM_NETWORK_SEED_IP=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
+BM_NETWORK_GATEWAY=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
 if [ $BM_NETWORK_GATEWAY == $BM_NETWORK_SEED_IP ]; then
-    ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
+    ROUTE_DEV=$(os-apply-config -m $TE_DATAFILE --key seed-route-dev --type netdevice --key-default virbr0)
     sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
 fi
 
@@ -231,8 +231,8 @@ wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'ena
 echo "Waiting for neutron API and L2 agent to be available"
 wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*\"" #nodocs
 
-BM_NETWORK_SEED_RANGE_START=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.range-start --type raw --key-default '192.0.2.2')
-BM_NETWORK_SEED_RANGE_END=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.range-end --type raw --key-default '192.0.2.20')
+BM_NETWORK_SEED_RANGE_START=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.range-start --type raw --key-default '192.0.2.2')
+BM_NETWORK_SEED_RANGE_END=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.range-end --type raw --key-default '192.0.2.20')
 setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $BM_NETWORK_SEED_IP ctlplane
 
 ## #. Nova quota runs up with the defaults quota so overide the default to
