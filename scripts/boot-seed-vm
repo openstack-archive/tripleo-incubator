@@ -226,4 +226,4 @@ echo "SEED_IP=$VM_IP"
 echo
 echo "to login:   ssh root@$VM_IP"
 NEW_JSON=$(jq '.["seed-ip"]="'${VM_IP}'"' $TE_DATAFILE)
-echo $NEW_JSON > $TE_DATAFILE
+echo "$NEW_JSON" > $TE_DATAFILE
