@@ -148,7 +148,7 @@ export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 ##    ::
 
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
-export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
+export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-3}
 
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
