@@ -16,6 +16,11 @@ Currently found here:
 
 * tripleo-cd-ssh-keys: The ssh keys for people in tripleo-cd-admins.
 
+The script update-admin-ssh-keys will copy the tripleo-cd-ssh-keys file on top
+of the authorized\_keys file for the current user - making it an easy way to
+self-maintain (as long as you trust the SSL infrastructure to ensure the right
+repo is being copied :)).
+
 Policy on adding / removing people:
  - get consensus/supermajority for adds from existing triple-cd-admins members.
  - remove folk at own request or if idle for extended period.
