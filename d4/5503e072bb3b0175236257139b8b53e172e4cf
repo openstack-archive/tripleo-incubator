@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Workflow+1: lifeless <robertc@robertcollins.net>
+Code-Review+1: Petr Blaho <pblaho@redhat.com>
+Code-Review+2: Gregory Haynes <greg@greghaynes.net>
+Submitted-by: Jenkins
+Submitted-at: Fri, 13 Jun 2014 00:01:32 +0000
+Reviewed-on: https://review.openstack.org/96644
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
