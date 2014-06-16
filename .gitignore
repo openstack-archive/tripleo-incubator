@@ -21,6 +21,7 @@ scripts/nova
 scripts/neutron
 scripts/openstack
 scripts/os-apply-config
+scripts/register-nodes
 scripts/swift
 
 .tox

@@ -67,7 +67,7 @@ if [ -z "$JSON_PATH" ]; then
 fi
 
 NODES=$(cat $JSON_PATH)
-register-nodes $SERVICE_HOST <(echo $NODES)
+register-nodes -s $SERVICE_HOST -n <(echo $NODES)
 
 if [ $USE_IRONIC -eq 0 ]; then
     deploy_base=deploy-ramdisk
