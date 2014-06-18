@@ -63,6 +63,9 @@ if [ "$os" = "debian" ]; then
     (grep -Eqs "precise-updates/grizzly" /etc/apt/sources.list.d/cloud-archive.list) || echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
 ' | sudo tee -a /etc/apt/sources.list.d/cloud-archive.list
     #adding precise-backports universe repository for jq package
+    if ! command -v add-apt-repository; then
+      DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes python-software-properties
+    fi
     sudo add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports universe"
   fi
   # packages
