@@ -241,6 +241,14 @@ HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/overcloud-env.json"}
 ## #. Read the heat env in for updating.::
 
 if [ -e "${HEAT_ENV}" ]; then
+### --end
+    if [ "$(stat -c %a ${HEAT_ENV})" != "600" ]; then
+        echo "Error: Heat environment cache \"${HEAT_ENV}\" not set to permissions of 0600."
+# We should exit 1 so all the users from before the permissions
+# requirement dont have their HEAT_ENV files ignored in a nearly silent way
+        exit 1
+    fi
+### --include
     ENV_JSON=$(cat "${HEAT_ENV}")
 else
     ENV_JSON='{"parameters":{}}'
@@ -291,6 +299,7 @@ ENV_JSON=$(jq '.parameters = {
 ## #. Save the finished environment file.::
 
 jq . > "${HEAT_ENV}" <<< $ENV_JSON
+chmod 0600 "${HEAT_ENV}"
 
 ## #. Deploy an overcloud::
 
