@@ -71,7 +71,6 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
-NeutronControlPlaneID=$(neutron net-show ctlplane | grep ' id ' | awk '{print $4}')
 # This will stop being a parameter once rebuild ``--preserve-ephemeral`` is fully
 # merged. For now, it requires manual effort to use, so it should be opt-in.
 # Since it's not an end-user thing yet either, we don't document it in the
@@ -132,6 +131,7 @@ fi #nodocs
 
 if [ -z "$BUILD_ONLY" ]; then #nodocs
 OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
+NeutronControlPlaneID=$(neutron net-show ctlplane | grep ' id ' | awk '{print $4}')
 fi #nodocs
 
 ## #. Create your overcloud compute image. This is the image the undercloud
