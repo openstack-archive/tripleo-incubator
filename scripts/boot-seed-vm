@@ -112,10 +112,10 @@ if [ -z "$TE_DATAFILE" ]; then
     show_options 1
 fi
 
-HOST_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key host-ip --type netaddress --key-default '')
-REMOTE_OPERATIONS=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key remote-operations --type raw --key-default '')
+HOST_IP=$(os-apply-config -m $TE_DATAFILE --key host-ip --type netaddress --key-default '')
+REMOTE_OPERATIONS=$(os-apply-config -m $TE_DATAFILE --key remote-operations --type raw --key-default '')
 if [ -n "$HOST_IP" ]; then
-  SSH_USER=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key ssh-user --type raw --key-default '')
+  SSH_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw --key-default '')
   if [ -n "$SSH_USER" ]; then
     SSH_USER="${SSH_USER}@"
   fi
@@ -123,7 +123,7 @@ if [ -n "$HOST_IP" ]; then
   echo $VM_HOST
 fi
 
-ENV_NUM=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key env-num --type int --key-default 0)
+ENV_NUM=$(os-apply-config -m $TE_DATAFILE --key env-num --type int --key-default 0)
 
 if [ $CREATE_IMAGE  ]; then
 
@@ -201,7 +201,7 @@ export -f poll_vm
 
 if [ -n "$REMOTE_OPERATIONS" ]; then
   ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh start ${IMAGE_NAME}_$ENV_NUM
-  VM_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type netaddress --key-default '')
+  VM_IP=$(os-apply-config -m $TE_DATAFILE --key seed-ip --type netaddress --key-default '')
 else
   sudo virsh start $IMAGE_NAME
 fi
