@@ -496,7 +496,7 @@ fi
 ## #. After which, you should be able to ping it
 ##    ::
 
-wait_for 30 10 ping -c 1 $FLOATINGIP
+wait_for 300 10 ping -c 1 $FLOATINGIP
 
 ### --end
 
