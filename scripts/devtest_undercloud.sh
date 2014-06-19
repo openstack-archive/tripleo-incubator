@@ -289,10 +289,10 @@ keystone role-create --name heat_stack_user
 
 user-config
 
-BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
-BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
-BM_NETWORK_UNDERCLOUD_RANGE_START=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-start --type raw --key-default '192.0.2.21')
-BM_NETWORK_UNDERCLOUD_RANGE_END=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.undercloud.range-end --type raw --key-default '192.0.2.40')
+BM_NETWORK_CIDR=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
+BM_NETWORK_GATEWAY=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
+BM_NETWORK_UNDERCLOUD_RANGE_START=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.undercloud.range-start --type raw --key-default '192.0.2.21')
+BM_NETWORK_UNDERCLOUD_RANGE_END=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.undercloud.range-end --type raw --key-default '192.0.2.40')
 setup-neutron $BM_NETWORK_UNDERCLOUD_RANGE_START $BM_NETWORK_UNDERCLOUD_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $UNDERCLOUD_IP ctlplane
 
 ## #. Nova quota runs up with the defaults quota so overide the default to
