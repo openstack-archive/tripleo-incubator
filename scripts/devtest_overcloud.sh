@@ -445,6 +445,21 @@ wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'ena
 wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*$STACKNAME-novacompute\"" #nodocs
 ##         wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*overcloud-novacompute\""
 
+## #. _`Test if Undercloud Ceilometer monitors the Overcloud hardware
+##    ::
+
+if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
+    ## switch to Undercloud
+    source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
+    ## check if some hardware meter has been created, that means Ceilometer got at least one hardware sample
+    wait_for 5 10 ceilometer meter-list \| grep 'hardware.disk.size.total'
+    ## switch back to Overcloud
+    source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
+fi
+
+### --end
+
+
 ## #. Log in as a user.
 ##    ::
 
