@@ -414,8 +414,14 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
         --neutron-password $OVERCLOUD_NEUTRON_PASSWORD \
         --nova-password $OVERCLOUD_NOVA_PASSWORD \
         --swift-password $OVERCLOUD_SWIFT_PASSWORD \
+        ${SSLBASE:+--ssl $PUBLIC_API_URL}
+
+if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
+    setup-endpoints $OVERCLOUD_IP \
         --ceilometer-password $OVERCLOUD_CEILOMETER_PASSWORD \
         ${SSLBASE:+--ssl $PUBLIC_API_URL}
+fi
+
     keystone role-create --name heat_stack_user
     user-config
 ##             setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
