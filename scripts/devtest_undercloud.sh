@@ -206,7 +206,6 @@ ENV_JSON=$(jq '.parameters = {
   } + .parameters + {
     "AdminPassword": "'"${UNDERCLOUD_ADMIN_PASSWORD}"'",
     "AdminToken": "'"${UNDERCLOUD_ADMIN_TOKEN}"'",
-    "CeilometerPassword": "'"${UNDERCLOUD_CEILOMETER_PASSWORD}"'",
     "SnmpdReadonlyUserPassword": "'"${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}"'",
     "GlancePassword": "'"${UNDERCLOUD_GLANCE_PASSWORD}"'",
     "HeatPassword": "'"${UNDERCLOUD_HEAT_PASSWORD}"'",
@@ -218,6 +217,16 @@ ENV_JSON=$(jq '.parameters = {
     "PowerSSHPrivateKey": "'"${POWER_KEY}"'",
     "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'"
   }' <<< $ENV_JSON)
+
+#Add Ceilometer to env only if USE_UNDERCLOUD_UI is specified
+
+if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
+    ENV_JSON=$(jq '.parameters = {
+        "MysqlInnodbBufferPoolSize": 100
+      } + .parameters + {
+        "CeilometerPassword": "'"${UNDERCLOUD_CEILOMETER_PASSWORD}"'"
+      }' <<< $ENV_JSON)
+fi
 
 ## #. Save the finished environment file.::
 
@@ -279,13 +288,24 @@ init-keystone -o $UNDERCLOUD_IP -t $UNDERCLOUD_ADMIN_TOKEN \
 keystone role-create --name=swiftoperator
 keystone role-create --name=ResellerAdmin
 
-setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD \
-    --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
-    --heat-password $UNDERCLOUD_HEAT_PASSWORD \
-    --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
-    --nova-password $UNDERCLOUD_NOVA_PASSWORD \
-    --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
-    $REGISTER_SERVICE_OPTS
+
+# Create service endpoints and optionally include Ceilometer for UI support
+if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
+    setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD \
+        --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+        --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+        --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
+        --nova-password $UNDERCLOUD_NOVA_PASSWORD \
+        --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
+        $REGISTER_SERVICE_OPTS
+else
+    setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+        --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+        --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
+        --nova-password $UNDERCLOUD_NOVA_PASSWORD \
+        --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
+        $REGISTER_SERVICE_OPTS
+fi
 keystone role-create --name heat_stack_user
 
 user-config
