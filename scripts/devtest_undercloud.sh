@@ -207,6 +207,7 @@ ENV_JSON=$(jq '.parameters = {
     "AdminPassword": "'"${UNDERCLOUD_ADMIN_PASSWORD}"'",
     "AdminToken": "'"${UNDERCLOUD_ADMIN_TOKEN}"'",
     "CeilometerPassword": "'"${UNDERCLOUD_CEILOMETER_PASSWORD}"'",
+    "SnmpdReadonlyUserPassword": "'"${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}"'",
     "GlancePassword": "'"${UNDERCLOUD_GLANCE_PASSWORD}"'",
     "HeatPassword": "'"${UNDERCLOUD_HEAT_PASSWORD}"'",
     "NovaPassword": "'"${UNDERCLOUD_NOVA_PASSWORD}"'",
