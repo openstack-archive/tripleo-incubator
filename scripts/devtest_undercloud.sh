@@ -279,13 +279,24 @@ init-keystone -o $UNDERCLOUD_IP -t $UNDERCLOUD_ADMIN_TOKEN \
 keystone role-create --name=swiftoperator
 keystone role-create --name=ResellerAdmin
 
-setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD \
-    --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
-    --heat-password $UNDERCLOUD_HEAT_PASSWORD \
-    --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
-    --nova-password $UNDERCLOUD_NOVA_PASSWORD \
-    --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
-    $REGISTER_SERVICE_OPTS
+
+# Create service endpoints and optionally include Ceilometer for UI support
+if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
+    setup-endpoints $UNDERCLOUD_IP --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD \
+        --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+        --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+        --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
+        --nova-password $UNDERCLOUD_NOVA_PASSWORD \
+        --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
+        $REGISTER_SERVICE_OPTS
+else
+    setup-endpoints $UNDERCLOUD_IP --glance-password $UNDERCLOUD_GLANCE_PASSWORD \
+        --heat-password $UNDERCLOUD_HEAT_PASSWORD \
+        --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD \
+        --nova-password $UNDERCLOUD_NOVA_PASSWORD \
+        --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD \
+        $REGISTER_SERVICE_OPTS
+fi
 keystone role-create --name heat_stack_user
 
 user-config

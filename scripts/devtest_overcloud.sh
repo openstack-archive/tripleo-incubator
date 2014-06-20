@@ -218,10 +218,6 @@ fi
 expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE ))
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" -ge $expected_nodes ]
 
-## #. Set password for Overcloud SNMPd, same password needs to be set in Undercloud Ceilometer
-
-UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD=${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD:-''}
-
 ## #. Create unique credentials::
 
 ### --end
@@ -289,10 +285,8 @@ ENV_JSON=$(jq '.parameters = {
     "NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
     "NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
     "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
-    "NeutronControlPlaneID": "'${NeutronControlPlaneID}'",
-    "SnmpdReadonlyUserPassword": "'${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}'",
+    "NeutronControlPlaneID": "'${NeutronControlPlaneID}'"
   }' <<< $ENV_JSON)
-
 ### --include
 
 ## #. Save the finished environment file.::
