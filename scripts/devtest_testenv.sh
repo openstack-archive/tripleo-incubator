@@ -18,6 +18,8 @@ function show_options () {
     echo "                              the public interface of the seed."
     echo "    -h                     -- This help."
     echo "    -n                     -- Test environment number to add the seed to."
+    echo "    -s                     -- SSH private key path to inject into the JSON."
+    echo "                              If not supplied, defaults to ~/.ssh/id_rsa_virt_power"
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
     echo "                              The schema for nodes can be found in the devtest_setup"
     echo "                              documentation."
@@ -38,8 +40,9 @@ NODES_PATH=
 NETS_PATH=
 NUM=
 OVSBRIDGE=
+SSH_KEY=~/.ssh/id_rsa_virt_power
 
-TEMP=$(getopt -o h,n:,b: -l nodes:,bm-networks: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -52,6 +55,7 @@ while true ; do
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
+        -s) SSH_KEY="$2" ; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -182,13 +186,13 @@ POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.Virtual
 ##    ::
 
 # generate ssh authentication keys if they don't exist
-if [ ! -f ~/.ssh/id_rsa_virt_power ]; then
-    ssh-keygen -t rsa -N "" -C virtual-power-key -f ~/.ssh/id_rsa_virt_power
+if [ ! -f $SSH_KEY ]; then
+    ssh-keygen -t rsa -N "" -C virtual-power-key -f $SSH_KEY
 fi
 
 # make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
 # that is copied into images via ``local-config``
-if ! grep -qF "$(cat ~/.ssh/id_rsa_virt_power.pub)" ~/.ssh/authorized_keys; then
+if ! grep -qF "$(cat ${SSH_KEY}.pub)" ~/.ssh/authorized_keys; then
     cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
     chmod 0600 ~/.ssh/authorized_keys
 fi
@@ -202,7 +206,7 @@ jq "." <<EOF > $JSONFILE
     "host-ip":"$HOSTIP",
     "power_manager":"$POWER_MANAGER",
     "seed-ip":"$SEEDIP",
-    "ssh-key":"$(cat ~/.ssh/id_rsa_virt_power)",
+    "ssh-key":"$(cat $SSH_KEY)",
     "ssh-user":"$SSH_USER"
 }
 EOF
