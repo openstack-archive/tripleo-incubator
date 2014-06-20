@@ -12,21 +12,26 @@ function show_options () {
     echo "Assumes it is running as that user."
     echo
     echo "Options:"
+    echo "    -u|--users -- Update passwords for individual user accounts"
+    echo "                  instead of the root account."
     echo "    -h|--help -- This help."
     echo
     exit $1
 }
 
 
-TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o hu -l help,users -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
 
+INDIVIDUAL_USERS=
+
 while true ; do
     case "$1" in
         -h|--help) show_options 0;;
+        -u|--users) shift ; INDIVIDUAL_USERS=1;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -51,12 +56,34 @@ else
     git pull
 fi
 TMP_SSH_KEYS=$(mktemp)
-for file in tripleo-cloud/ssh-keys/*; do
-    cat $file >> $TMP_SSH_KEYS
+for FILE in tripleo-cloud/ssh-keys/*; do
+    if [ -n "$INDIVIDUAL_USERS" ]; then
+        USER=$(basename $FILE)
+        if ! getent passwd $USER &>/dev/null; then
+            groupadd $USER
+            useradd -m -g $USER $USER
+        fi
+        mkdir -p /home/$USER/.ssh
+        cat $FILE > /home/$USER/.ssh/authorized_keys
+        chown -R $USER:$USER /home/$USER/.ssh
+        chmod 700 /home/$USER/.ssh
+        cp -f $FILE /home/$USER/.ssh/authorized_keys
+        touch /etc/sudoers.d/$USER
+        chmod 0440 /etc/sudoers.d/$USER
+        echo "$USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USER
+    else
+        cat $FILE >> $TMP_SSH_KEYS
+    fi
 done
 
-# Allow tripleo-incubator stuff that wants to add local keys...
-# they'll get wiped on the next run (and obviously aren't relevant for bm
-# access).
-chmod 0600 $TMP_SSH_KEYS
-mv $TMP_SSH_KEYS ~/.ssh/authorized_keys
+if [ -z "$INDIVIDUAL_USERS" ]; then
+    # Allow tripleo-incubator stuff that wants to add local keys...
+    # they'll get wiped on the next run (and obviously aren't relevant for bm
+    # access).
+    chmod 0600 $TMP_SSH_KEYS
+    mv $TMP_SSH_KEYS ~/.ssh/authorized_keys
+else
+    # in individual users mode lets... lets check sudo syntax
+    visudo -c -q
+    rm $TMP_SSH_KEYS
+fi
