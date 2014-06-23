@@ -419,10 +419,11 @@ You may be able to run devtest on other distributions though, such as
 CentOS, Debian, openSUSE and RHEL.
 The devtest code tries to identify the OS you use and match it against
 all major distributions (CentOS, Debian, Fedora, openSUSE, RHEL,
-SUSE and Ubuntu).
+SUSE and Ubuntu). By default, the undercloud and overcloud images will
+be built using the same OS that devtest is running on, but this can be
+changed via environment variables to decouple them.
 If you use any other distribution not listed above, the script will identify
 your machine as unsupported.
-
 
 Security
 --------
