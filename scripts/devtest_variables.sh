@@ -177,4 +177,10 @@ else
     export USE_MARIADB=0
 fi
 
+## #. Set the path to save undercloud and overcloud passwords.
+##    ::
+
+export UNDERCLOUD_PASSWORDS_FILE=${UNDERCLOUD_PASSWORDS_FILE:-"$TRIPLEO_ROOT/tripleo-undercloud-passwords"}
+export OVERCLOUD_PASSWORDS_FILE=${OVERCLOUD_PASSWORDS_FILE:-"$TRIPLEO_ROOT/tripleo-overcloud-passwords"}
+
 ### --end
