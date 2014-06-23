@@ -215,19 +215,12 @@ wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" 
 
 UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD=${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD:-''}
 
-## #. Create unique credentials::
+## #. Create unique credentials(save to $TRIPLEO_ROOT/tripleo-overcloud-passwords
+##    by default, and can be specified to other places by changing OVERCLOUD_PASSWORDS.)
+##    ::
 
-### --end
-if [ -e tripleo-overcloud-passwords ]; then
-  echo "Re-using existing passwords in $PWD/tripleo-overcloud-passwords"
-  # Add any new passwords since the file was generated
-  setup-overcloud-passwords tripleo-overcloud-passwords
-  source tripleo-overcloud-passwords
-else
-### --include
-  setup-overcloud-passwords $TRIPLEO_ROOT/tripleo-overcloud-passwords
-  source $TRIPLEO_ROOT/tripleo-overcloud-passwords
-fi #nodocs
+setup-overcloud-passwords $OVERCLOUD_PASSWORDS
+source $OVERCLOUD_PASSWORDS
 
 ## #. We need an environment file to store the parameters we're gonig to give
 ##    heat.::
