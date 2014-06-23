@@ -111,8 +111,9 @@ NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 
 ## #. Create secrets for the cloud. The secrets will be written to a file
-##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
-##    that you need to source into your shell environment.
+##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default, and can be specified
+##    to other places by changing UNDERCLOUD_PASSWORDS.)that you need to source
+##    into your shell environment.
 ##    
 ##    .. note::
 ##      
@@ -129,17 +130,8 @@ UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 ##      
 ##    ::
 
-### --end
-if [ -e tripleo-undercloud-passwords ]; then
-  echo "Re-using existing passwords in $PWD/tripleo-undercloud-passwords"
-  # Add any new passwords since the file was generated
-  setup-undercloud-passwords tripleo-undercloud-passwords
-  source tripleo-undercloud-passwords
-else
-### --include
-  setup-undercloud-passwords $TRIPLEO_ROOT/tripleo-undercloud-passwords
-  source $TRIPLEO_ROOT/tripleo-undercloud-passwords
-fi #nodocs
+setup-undercloud-passwords $UNDERCLOUD_PASSWORDS
+source $UNDERCLOUD_PASSWORDS
 
 ## #. Pull out needed variables from the test environment definition.
 ##    ::
