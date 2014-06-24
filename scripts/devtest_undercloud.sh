@@ -151,7 +151,15 @@ POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
-wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
+hypervisor_stats () {
+  nova hypervisor-stats | awk '
+    $2=="count" && $4 >= '"$1"' { c++ };
+    $2=="memory_mb" && $4 > 0 { c++ };
+    END { if (c != 2) exit 1 }'
+}
+export -f hypervisor_stats
+
+wait_for 20 3 hypervisor_stats 1
 
 
 ## #. We need an environment file to store the parameters we're gonig to give
