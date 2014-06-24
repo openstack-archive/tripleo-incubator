@@ -216,7 +216,10 @@ fi
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
 expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE ))
-wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" -ge $expected_nodes ]
+wait_for 20 3 [ nova hypervisor-stats | awk '
+  $2=="count" && $4 >= '"$expected_nodes"' { c++ };
+  $2=="memory_mb" && $4 > 0 { c++ };
+  END { if (c != 2) exit 1 }' ]
 
 ## #. Create unique credentials::
 
