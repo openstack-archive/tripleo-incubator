@@ -1,0 +1,18 @@
+resources:
+  controller:
+    template: overcloud-controlleronly.yaml
+    outputs: [ Hosts, ControlVirtualIP ]
+    inputs: [ Hosts ]
+  compute0:
+    template: standalone-nova-compute.yaml
+    outputs: [ Hosts ]
+    inputs: [ Hosts, ControlVirtualIP ]
+    aliases:
+      ControlVirtualIP:
+        rename: true
+        aliases: 
+          - RabbitHost
+          - GlanceHost
+          - KeystoneHost
+          - NovaApiHost
+          - NeutronHost
