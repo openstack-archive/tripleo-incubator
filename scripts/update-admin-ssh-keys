@@ -50,8 +50,13 @@ else
     cd tripleo-incubator
     git pull
 fi
-cp -f tripleo-cloud/tripleo-cd-ssh-keys ~/.ssh/authorized_keys
+TMP_SSH_KEYS=$(mktemp)
+for file in tripleo-cloud/ssh-keys/*; do
+    cat $file >> $TMP_SSH_KEYS
+done
+
 # Allow tripleo-incubator stuff that wants to add local keys...
 # they'll get wiped on the next run (and obviously aren't relevant for bm
 # access).
-chmod 0600 ~/.ssh/authorized_keys
+chmod 0600 $TMP_SSH_KEYS
+mv $TMP_SSH_KEYS ~/.ssh/authorized_keys
