@@ -1,0 +1,65 @@
+#!/bin/bash
+set -eu
+
+# libvirtd group
+case "$TRIPLEO_OS_DISTRO" in
+    'debian' | 'suse')
+        LIBVIRTD_GROUP='libvirt'
+        ;;
+    *)
+        LIBVIRTD_GROUP='libvirtd'
+        ;;
+esac
+getent group $LIBVIRTD_GROUP || sudo groupadd $LIBVIRTD_GROUP
+
+if [ "$TRIPLEO_OS_FAMILY" = "suse" ]; then
+    # kvm_intel/amd is autoloaded on SUSE, but without
+    # proper permissions. the kvm package will install an udev rule,
+    # so lets activate that one:
+    if [ "$(sudo readlink -f /proc/1/root)" = "/" ]; then
+        sudo /sbin/udevadm control --reload-rules  || :
+        sudo /sbin/udevadm trigger || :
+    fi
+fi
+
+if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
+    libvirtd_file=/etc/libvirt/libvirtd.conf
+    if ! sudo grep -q "^unix_sock_group" $libvirtd_file; then
+        sudo sed -i "s/^#unix_sock_group.*/unix_sock_group = \"$LIBVIRTD_GROUP\"/g" $libvirtd_file
+        sudo sed -i 's/^#auth_unix_rw.*/auth_unix_rw = "none"/g' $libvirtd_file
+        sudo sed -i 's/^#unix_sock_rw_perms.*/unix_sock_rw_perms = "0770"/g' $libvirtd_file
+        sudo service libvirtd restart
+    fi
+fi
+
+REMOTE_OPERATIONS=${REMOTE_OPERATIONS:-0}
+if [ "$REMOTE_OPERATIONS" != 1 -a -n "$TE_DATAFILE" -a -e "$TE_DATAFILE" ]; then
+  REMOTE_OPERATIONS=$(jq '.["remote-operations"]' $TE_DATAFILE)
+  REMOTE_OPERATIONS=${REMOTE_OPERATIONS//\"}
+fi
+
+if [ $REMOTE_OPERATIONS != 1 ]; then
+  if ! id | grep -qw $LIBVIRTD_GROUP; then
+     echo "adding $USER to group $LIBVIRTD_GROUP"
+     sudo usermod -a -G $LIBVIRTD_GROUP $USER
+
+     echo "$USER was just added to the $LIBVIRTD_GROUP.  Devtest will not"
+     echo "be able to continue until you start a new session to pick up the"
+     echo "new group membership.  This can be done by either logging out and"
+     echo "back in, or running:"
+     echo
+     echo "sudo su -l $USER"
+     echo
+     echo "To verify that your group membership is correct, you can use the"
+     echo "following command:"
+     echo
+     echo "id | grep $LIBVIRTD_GROUP"
+     echo
+     echo "Once you have verified your group membership, you should be able to"
+     echo "re-run devtest successfully or continue with devtest_testenv."
+     # We have to exit non-zero so the calling script knows to stop.
+     exit 1
+  fi
+else
+  echo $TE_DATAFILE says to use remote operations\; not adding $USER to $LIBVIRTD_GROUP
+fi
