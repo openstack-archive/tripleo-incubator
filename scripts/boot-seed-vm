@@ -38,6 +38,10 @@ else
     SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-ironic"
 fi
 
+if [ "$USE_MARIADB" -eq 0 ] ; then
+    SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS mariadb-rpm"
+fi
+
 if [[ "$DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS" != *enable-serial-console* ]]; then
     SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS remove-serial-console"
 fi
