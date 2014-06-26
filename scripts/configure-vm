@@ -6,7 +6,10 @@ import random
 
 import libvirt
 
-templatedir = os.path.dirname(os.path.dirname(__file__)) + '/templates'
+templatedir = os.path.join(
+                os.path.dirname(
+                  os.path.dirname(
+                    os.path.abspath(__file__))), 'templates')
 
 def generate_bm_mac_address():
     """Generate an Ethernet MAC address suitable for baremetal testing."""
