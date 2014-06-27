@@ -241,6 +241,11 @@ if [ "$USE_CACHE" = "0" ] ; then #nodocs
     setup-clienttools
 fi #nodocs
 
+## #. Ensure current user can manage libvirt resources
+##    ::
+
+set-usergroup-membership
+
 ## .. rubric:: Footnotes
 ## .. [#f3] Setting Up Squid Proxy
 ## 
