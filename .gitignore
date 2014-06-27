@@ -11,6 +11,7 @@
 doc/source/devtest*.rst
 openstack-tools
 scripts/cinder
+scripts/generate-keystone-pki
 scripts/glance
 scripts/heat
 scripts/init-keystone
