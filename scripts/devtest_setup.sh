@@ -121,18 +121,52 @@ fi
 ##    192.0.2.0/24 is used. The following fields are available (along
 ##    with the default values for each field):
 ##    ::
-## 
-##          "baremetal-network": {
+
+##          {
 ##              "cidr": "192.0.2.0/24",
 ##              "gateway-ip": "192.0.2.1",
 ##              "seed": {
 ##                  "ip": "192.0.2.1",
 ##                  "range-start": "192.0.2.2",
 ##                  "range-end": "192.0.2.20"
+##                  "public_vlan": (null),
 ##              },
 ##              "undercloud": {
 ##                  "range-start": "192.0.2.21",
 ##                  "range-end": "192.0.2.40"
+##                  "public_vlan": (null)
+##              }
+##          }
+
+##    The public_vlan keys default to absent, which is suitable for a flat
+##    networking environment. When exterior access will be on a vlan they
+##    should be filled out. For instance, if TEST-NET-2 were our exterior
+##    subnet on VLAN 10, we might have the following as our baremetal network,
+##    to use a baremetal router on .1, the seed on .2, and a handful of
+##    addresses for both the seed and the undercloud dhcp pools::
+
+##          {
+##              "cidr": "192.0.2.0/24",
+##              "gateway-ip": "198.51.100.1",
+##              "seed": {
+##                  "ip": "192.0.2.1",
+##                  "range-start": "192.0.2.2",
+##                  "range-end": "192.0.2.20",
+##                  "public_vlan": {
+##                      "tag": 10,
+##                      "ip": "198.51.100.2/24",
+##                      "start": "198.51.100.3",
+##                      "finish": "198.51.100.10"
+##                  }
+##              },
+##              "undercloud": {
+##                  "range-start": "192.0.2.21",
+##                  "range-end": "192.0.2.40",
+##                  "public_vlan": {
+##                      "tag": 10,
+##                      "start": "198.51.100.11",
+##                      "finish": "198.51.100.20"
+##                  }
 ##              }
 ##          }
 
