@@ -82,6 +82,16 @@ fi
 
 # Apply custom BM network settings to the seeds local.json config
 BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
+BM_VLAN_SEED_TAG=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.public_vlan.tag --type netaddress --key-default '')
+BM_VLAN_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.public_vlan.ip --type netaddress --key-default '')
+if [ -n "$BM_VLAN_SEED_IP" ]; then
+    BM_VLAN_SEED_IP_ADDR=$(python -c "import netaddr; print netaddr.IPNetwork('$BM_VLAN_SEED_IP').ip")
+    BM_VLAN_SEED_IP_NETWORK=$(python -c "import netaddr; print netaddr.IPNetwork('$BM_VLAN_SEED_IP').network")
+    BM_VLAN_SEED_IP_PREFIX=$(python -c "import netaddr; print netaddr.IPNetwork('$BM_VLAN_SEED_IP').prefixlen")
+    echo "{ \"public_interface_tag\": \"${BM_VLAN_SEED_TAG}\", \"public_interface_tag_ip\": \"${BM_VLAN_SEED_IP}\" }" > bm-vlan.json
+else
+    echo "{}" > bm-vlan.json
+fi
 # FIXME: Once we support jq 1.3 we can use --arg here instead of writing
 # cidr.json as the 3rd input file
 echo "{ \"cidr\": \"${BM_NETWORK_CIDR##*/}\" }" > cidr.json
@@ -96,9 +106,11 @@ jq -s '
 (.[0]["local-ipv4"] = $bm_seed_ip)|
 (.[0].bootstack.public_interface_ip = $bm_seed_ip + "/" + $cidr_config.cidr)|
 (.[0].bootstack.masquerade_networks = ($config["baremetal-network"].cidr // "192.0.2.0/24"))|
- .[0]' tmp_local.json $TE_DATAFILE cidr.json > local.json
+(.[0].neutron.ovs += .[3])|
+ .[0]' tmp_local.json $TE_DATAFILE cidr.json bm-vlan.json > local.json
 rm tmp_local.json
 rm cidr.json
+rm bm-vlan.json
 
 
 ### --end
@@ -162,9 +174,10 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 
 BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
 BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
-if [ $BM_NETWORK_GATEWAY == $BM_NETWORK_SEED_IP ]; then
+if [ $BM_NETWORK_GATEWAY = $BM_NETWORK_SEED_IP -o $BM_NETWORK_GATEWAY = $BM_VLAN_SEED_IP_ADDR ]; then
     ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
     sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
+    sudo ip route replace $BM_VLAN_SEED_IP_NETWORK/$BM_VLAN_SEED_IP_PREFIX via $SEED_IP
 fi
 
 ## #. Mask the seed API endpoint out of your proxy settings
