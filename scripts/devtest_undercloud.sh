@@ -175,18 +175,45 @@ else
     ENV_JSON='{"parameters":{}}'
 fi
 
+## #. Detect if we are deploying with a VLAN for API endpoints / floating IPS.
+##    This is done by looking for a 'public' network in Neutron, and if found
+##    we pull out the VLAN id and pass that into Heat, as well as using a VLAN
+##    enabled Heat template.
+
+if (neutron net-list | grep -q public); then
+    VLAN_ID=$(neutron net-show public | awk '/provider:segmentation_id/ { print $4 }')
+else
+    VLAN_ID=
+fi
+
 ## #. Nova-baremetal and Ironic require different Heat templates
 ##    and different options.
 ##    ::
 
 if [ "$USE_IRONIC" -eq 0 ] ; then
+    if [ -n "$VLAN_ID" ]; then
+        echo "VLANs not supported with Nova-BM" >&2
+        exit 1
+    fi
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
     ENV_JSON=$(jq .parameters.PowerSSHHost=\"${POWER_HOST}\" <<< $ENV_JSON)
     ENV_JSON=$(jq .parameters.PowerManager=\"${POWER_MANAGER}\" <<< $ENV_JSON)
     ENV_JSON=$(jq .parameters.PowerUserName=\"${POWER_USER}\" <<< $ENV_JSON)
     REGISTER_SERVICE_OPTS=""
 else
-    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
+    if [ -n "$VLAN_ID" ]; then
+        HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic-vlan.yaml"
+        ENV_JSON=$(jq .parameters.NeutronPublicInterfaceTag=\"${VLAN_ID}\" <<< $ENV_JSON)
+	# This should be in the heat template, but see
+	# https://bugs.launchpad.net/heat/+bug/1336656
+	# note that this will break if there are more than one subnet, as if
+	# more reason to fix the bug is needed :).
+	PUBLIC_SUBNET_ID=$(neutron net-show public | awk '/subnets/ { print $4 }')
+	VLAN_GW=$(neutron subnet-show $PUBLIC_SUBNET_ID | awk '/gateway_ip/ { print $4}')
+        ENV_JSON=$(jq .parameters.NeutronPublicInterfaceDefaultRoute=\"${VLAN_GW}\" <<< $ENV_JSON)
+    else
+        HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
+    fi
     ENV_JSON=$(jq .parameters.IronicPassword=\"${UNDERCLOUD_IRONIC_PASSWORD}\" <<< $ENV_JSON)
     REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
 fi
@@ -287,6 +314,19 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 
 ## #. Perform setup of your undercloud.
 ##    ::
+
+### Derek: this step hangs.
+### because we are now multipathed - host -> seed -> int_public -> undercloud_int_public and host-> seed ->ctlplane -> undercloud_controlplane
+### but the undercloud route table has only one default path (int_public -> seed int_public) and so rp_filter kicks in there.
+### Then the seed also kicks in with rp_filter because the reply packets have a
+### source of undercloud_ctlplane, which should be on seed_ctlplane, but they are
+### sent via seed int_public because their target is 192.168.122.1
+### We can
+### A - make sure the public endpoint registration etc is all for undercloud_int_public
+###   and ping only on undercloud_int_public
+### B - disable rp_filter on seed and everything else
+### C - masquerade the 192.168.122.1 source on the seed
+### I think A is right.
 
 init-keystone -o $UNDERCLOUD_IP -t $UNDERCLOUD_ADMIN_TOKEN \
     -e admin@example.com -p $UNDERCLOUD_ADMIN_PASSWORD -u heat-admin
