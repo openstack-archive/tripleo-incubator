@@ -101,6 +101,7 @@ OVERCLOUD_STACK_TIMEOUT=${OVERCLOUD_STACK_TIMEOUT:-60}
 
 # The private instance fixed IP network range
 OVERCLOUD_FIXED_RANGE_CIDR=${OVERCLOUD_FIXED_RANGE_CIDR:-"10.0.0.0/8"}
+OVERCLOUD_FIXED_RANGE_GATEWAY=${OVERCLOUD_FIXED_RANGE_GATEWAY:-"10.0.0.1"}
 
 ### --include
 ## devtest_overcloud
@@ -142,7 +143,6 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
 fi #nodocs
 
 ## #. Unless you are just building the images, load the image into Glance.
-
 ##    ::
 
 if [ -z "$BUILD_ONLY" ]; then #nodocs
@@ -212,13 +212,15 @@ NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
 OVERCLOUD_NTP_SERVER=${OVERCLOUD_NTP_SERVER:-''}
 
 ## #. If you want to permit VM's access to bare metal networks, you need
-##    to define flat-networks and bridge mappings in Neutron::
+##    to define flat-networks and bridge mappings in Neutron. We default
+##    to creating one called datacentre, which we use to grant external
+##    network access to VMs::
 ##    ::
 
-OVERCLOUD_FLAT_NETWORKS=${OVERCLOUD_FLAT_NETWORKS:-''}
-OVERCLOUD_BRIDGE_MAPPINGS=${OVERCLOUD_BRIDGE_MAPPINGS:-''}
-OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-''}
-OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-''}
+OVERCLOUD_FLAT_NETWORKS=${OVERCLOUD_FLAT_NETWORKS:-'datacentre'}
+OVERCLOUD_BRIDGE_MAPPINGS=${OVERCLOUD_BRIDGE_MAPPINGS:-'datacentre:br-ex'}
+OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-'br-ex'}
+OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-'eth0'}
 OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
 
 ## #. If you are using SSL, your compute nodes will need static mappings to your
@@ -227,6 +229,29 @@ OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
 ##    template looks up the controller address within the cloud::
 
 OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
+
+## #. Detect if we are deploying with a VLAN for API endpoints / floating IPs.
+##    This is done by looking for a 'public' network in Neutron, and if found
+##    we pull out the VLAN id and pass that into Heat, as well as using a VLAN
+##    enabled Heat template.
+##    ::
+
+if (neutron net-list | grep -q public); then
+    VLAN_ID=$(neutron net-show public | awk '/provider:segmentation_id/ { print $4 }')
+    NeutronPublicInterfaceTag="$VLAN_ID"
+    # This should be in the heat template, but see
+    # https://bugs.launchpad.net/heat/+bug/1336656
+    # note that this will break if there are more than one subnet, as if
+    # more reason to fix the bug is needed :).
+    PUBLIC_SUBNET_ID=$(neutron net-show public | awk '/subnets/ { print $4 }')
+    VLAN_GW=$(neutron subnet-show $PUBLIC_SUBNET_ID | awk '/gateway_ip/ { print $4}')
+    BM_VLAN_CIDR=$(neutron subnet-show $PUBLIC_SUBNET_ID | awk '/cidr/ { print $4}')
+    NeutronPublicInterfaceDefaultRoute="${VLAN_GW}"
+    export CONTROLEXTRA=overcloud-vlan-port.yaml
+else
+    VLAN_ID=
+    NeutronPublicInterfaceTag=
+fi
 
 ## #. TripleO explicitly models key settings for OpenStack, as well as settings
 ##    that require cluster awareness to configure. To configure arbitrary
@@ -326,6 +351,7 @@ ENV_JSON=$(jq '.parameters = {
     "NeutronFlatNetworks": "'"${OVERCLOUD_FLAT_NETWORKS}"'",
     "NeutronPassword": "'"${OVERCLOUD_NEUTRON_PASSWORD}"'",
     "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
+    "NeutronPublicInterfaceTag": "'"${NeutronPublicInterfaceTag}"'",
     "NovaComputeLibvirtType": "'"${OVERCLOUD_LIBVIRT_TYPE}"'",
     "NovaPassword": "'"${OVERCLOUD_NOVA_PASSWORD}"'",
     "NtpServer": "'"${OVERCLOUD_NTP_SERVER}"'",
@@ -495,6 +521,7 @@ set -u #nodocs
 
 ## #. If we updated the cloud we don't need to do admin setup again - skip down to `Wait for Nova Compute`_.
 
+
 if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
 
 ## #. Perform admin setup of your overcloud.
@@ -525,7 +552,8 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
     "float": {
         "cidr": "10.0.0.0/8",
         "name": "default-net",
-        "nameserver": "$OVERCLOUD_NAMESERVER"
+        "nameserver": "$OVERCLOUD_NAMESERVER",
+        "segmentation_id": "$NeutronPublicInterfaceTag"
     },
     "external": {
         "name": "ext-net",

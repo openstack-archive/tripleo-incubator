@@ -48,7 +48,7 @@ if [ "$TRIPLEO_OS_FAMILY" = "debian" ]; then
   fi
   # packages
   sudo -E apt-get update
-  DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc python-virtualenv openvswitch-switch libssl-dev curl python-yaml parted lsb-release libxml2-dev libxslt1-dev jq openssh-server libffi-dev kpartx
+  DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc python-virtualenv openvswitch-switch libssl-dev curl python-yaml parted lsb-release libxml2-dev libxslt1-dev jq openssh-server libffi-dev kpartx python-netaddr
 
   sudo service libvirt-bin restart
 fi
@@ -60,7 +60,7 @@ if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
     echo See http://fedoraproject.org/wiki/EPEL
     exit 1
   fi
-  sudo -E yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv openvswitch python-yaml net-tools redhat-lsb-core libxslt-devel jq openssh-server libffi-devel which glusterfs-api
+  sudo -E yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv openvswitch python-yaml net-tools redhat-lsb-core libxslt-devel jq openssh-server libffi-devel which glusterfs-api python-netaddr
 
   sudo service libvirtd restart
   sudo service openvswitch restart
@@ -80,7 +80,7 @@ if [ "$TRIPLEO_OS_FAMILY" = "suse" ]; then
   sudo -E zypper --non-interactive install \
     python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
     python-devel gcc audit python-virtualenv openvswitch-switch python-PyYAML net-tools \
-    lsb-release libxslt-devel jq libffi-devel
+    lsb-release libxslt-devel jq libffi-devel python-netaddr
   sudo service libvirtd restart
   sudo service openvswitch-switch restart
 fi
