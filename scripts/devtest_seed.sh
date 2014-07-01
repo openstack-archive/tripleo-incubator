@@ -138,10 +138,29 @@ if systemctl status firewalld; then
 fi
 
 # Apply custom BM network settings to the seeds local.json config
+# Because the seed runs under libvirt and usually isn't in routing tables for
+# access to the networks behind it, we setup masquerading for the bm networks,
+# which permits outbound access from the machines we've deployed.
+# If the seed is not the router (e.g. real machines are being used) then these
+# rules are harmless.
 BM_NETWORK_CIDR=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
+BM_VLAN_SEED_TAG=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.public_vlan.tag --type netaddress --key-default '')
+BM_VLAN_SEED_IP=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.public_vlan.ip --type netaddress --key-default '')
+if [ -n "$BM_VLAN_SEED_IP" ]; then
+    BM_VLAN_SEED_IP_ADDR=$(python -c "import netaddr; print netaddr.IPNetwork('$BM_VLAN_SEED_IP').ip")
+    BM_VLAN_SEED_IP_CIDR=$(python -c "import netaddr; print '%s/%s' % (netaddr.IPNetwork('$BM_VLAN_SEED_IP').network, netaddr.IPNetwork('$BM_VLAN_SEED_IP').prefixlen)")
+    echo "{ \"ovs\": {\"public_interface_tag\": \"${BM_VLAN_SEED_TAG}\", \"public_interface_tag_ip\": \"${BM_VLAN_SEED_IP}\"}, \"masquerade\": [\"${BM_VLAN_SEED_IP}\"] }" > bm-vlan.json
+else
+    echo "{ \"ovs\": {}, \"masquerade\": [] }" > bm-vlan.json
+fi
+BM_BRIDGE_ROUTE=$(jq -r '.["baremetal-network"].seed.physical_bridge_route // {}' $TE_DATAFILE)
+BM_CTL_ROUTE_PREFIX=$(jq -r '.["baremetal-network"].seed.physical_bridge_route.prefix // ""' $TE_DATAFILE)
+BM_CTL_ROUTE_VIA=$(jq -r '.["baremetal-network"].seed.physical_bridge_route.via // ""' $TE_DATAFILE)
 jq -s '
   .[1]["baremetal-network"] as $bm
 | ($bm.seed.ip // "192.0.2.1") as $bm_seed_ip
+| .[2] as $bm_vlan
+| .[3] as $bm_bridge_route
 | .[0]
 | . + {
   "local-ipv4": $bm_seed_ip,
@@ -149,7 +168,7 @@ jq -s '
   "instance-id": "'"${SEED_IMAGE_ID}"'",
   "bootstack": (.bootstack + {
     "public_interface_ip": ($bm_seed_ip + "/'"${BM_NETWORK_CIDR##*/}"'"),
-    "masquerade_networks": [$bm.cidr // "192.0.2.0/24"]
+    "masquerade_networks": ([$bm.cidr // "192.0.2.0/24"] + $bm_vlan.masquerade)
   }),
   "heat": (.heat + {
     "watch_server_url": ("http://" + $bm_seed_ip + ":8003"),
@@ -157,10 +176,13 @@ jq -s '
     "metadata_server_url": ("http://" + $bm_seed_ip + ":8000")
   }),
   "neutron": (.neutron + {
-    "ovs": (.neutron.ovs + { "local_ip": $bm_seed_ip })
+    "ovs": (.neutron.ovs + $bm_vlan.ovs + {"local_ip": $bm_seed_ip } + {
+      "physical_bridge_route": $bm_bridge_route
+    })
   })
-}' tmp_local.json $TE_DATAFILE > local.json
+}' tmp_local.json $TE_DATAFILE bm-vlan.json <(echo "$BM_BRIDGE_ROUTE") > local.json
 rm tmp_local.json
+rm bm-vlan.json
 
 ### --end
 # If running in a CI environment then the user and ip address should be read
@@ -227,9 +249,12 @@ SEED_IP=$(os-apply-config -m $TE_DATAFILE --key seed-ip --type netaddress)
 
 BM_NETWORK_SEED_IP=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
 BM_NETWORK_GATEWAY=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
-if [ $BM_NETWORK_GATEWAY == $BM_NETWORK_SEED_IP ]; then
+if [ $BM_NETWORK_GATEWAY = $BM_NETWORK_SEED_IP -o $BM_NETWORK_GATEWAY = ${BM_VLAN_SEED_IP_ADDR:-''} ]; then
     ROUTE_DEV=$(os-apply-config -m $TE_DATAFILE --key seed-route-dev --type netdevice --key-default virbr0)
     sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
+    if [ -n "$BM_VLAN_SEED_IP" ]; then
+        sudo ip route replace $BM_VLAN_SEED_IP_CIDR via $SEED_IP
+    fi
 fi
 
 ## #. Mask the seed API endpoint out of your proxy settings
@@ -295,12 +320,20 @@ wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep 
 
 BM_NETWORK_SEED_RANGE_START=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.range-start --type raw --key-default '192.0.2.2')
 BM_NETWORK_SEED_RANGE_END=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.range-end --type raw --key-default '192.0.2.20')
+
+if [ -n "$BM_VLAN_SEED_TAG" ]; then
+    # With a public VLAN, the gateway address is on the public LAN.
+    CTL_GATEWAY=
+else
+    CTL_GATEWAY=$BM_NETWORK_GATEWAY
+fi
+
 SEED_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key seed.nameserver --type netaddress --key-default '')
 NETWORK_JSON=$(mktemp)
 jq "." <<EOF > $NETWORK_JSON
 {
     "physical": {
-        "gateway": "$BM_NETWORK_GATEWAY",
+        "gateway": "$CTL_GATEWAY",
         "metadata_server": "$BM_NETWORK_SEED_IP",
         "cidr": "$BM_NETWORK_CIDR",
         "allocation_start": "$BM_NETWORK_SEED_RANGE_START",
@@ -310,8 +343,39 @@ jq "." <<EOF > $NETWORK_JSON
     }
 }
 EOF
+if [ -n "$BM_CTL_ROUTE_PREFIX" -a -n "$BM_CTL_ROUTE_VIA" ]; then
+    $EXTRA_ROUTE = "{\"destination\": \"$BM_CTL_ROUTE_PREFIX\", \"nexthop\": \"$BM_CTL_ROUTE_VIA\"\}"
+    $TMP_NETWORK=$(mktemp)
+    jq ".[\"physical\"][\"extra_routes\"]=[$EXTRA_ROUTE]" < $NETWORK_JSON > $TMP_NETWORK
+    mv $TMP_NETWORK $NETWORK_JSON
+fi
 setup-neutron -n $NETWORK_JSON
 rm $NETWORK_JSON
+# Is there a public network as well? If so configure it.
+if [ -n "$BM_VLAN_SEED_TAG" ]; then
+    BM_VLAN_SEED_START=$(jq -r '.["baremetal-network"].seed.public_vlan.start' $TE_DATAFILE)
+    BM_VLAN_SEED_END=$(jq -r '.["baremetal-network"].seed.public_vlan.finish' $TE_DATAFILE)
+    BM_VLAN_SEED_TAG=$(jq -r '.["baremetal-network"].seed.public_vlan.tag' $TE_DATAFILE)
+
+    PUBLIC_NETWORK_JSON=$(mktemp)
+    jq "." <<EOF > $PUBLIC_NETWORK_JSON
+{
+    "physical": {
+        "gateway": "$BM_NETWORK_GATEWAY",
+        "metadata_server": "$BM_NETWORK_SEED_IP",
+        "cidr": "$BM_VLAN_SEED_IP_CIDR",
+        "allocation_start": "$BM_VLAN_SEED_START",
+        "allocation_end": "$BM_VLAN_SEED_END",
+        "name": "public",
+        "nameserver": "$SEED_NAMESERVER",
+        "segmentation_id": "$BM_VLAN_SEED_TAG",
+        "enabled_dhcp": false
+    }
+}
+EOF
+    rm $PUBLIC_NETWORK_JSON
+    setup-neutron -n $PUBLIC_NETWORK_JSON
+fi
 
 ## #. Nova quota runs up with the defaults quota so overide the default to
 ##    allow unlimited cores, instances and ram.
