@@ -84,7 +84,24 @@ fi
 generate-keystone-pki --heatenv tmp_local.json -s
 
 # Apply custom BM network settings to the seeds local.json config
+# Because the seed runs under libvirt and usually isn't in routing tables for
+# access to the networks behind it, we setup masquerading for the bm networks,
+# which permits outbound access from the machines we've deployed.
+# If the seed is not the router (e.g. real machines are being used) then these
+# rules are harmless.
 BM_NETWORK_CIDR=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
+BM_VLAN_SEED_TAG=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.public_vlan.tag --type netaddress --key-default '')
+BM_VLAN_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.public_vlan.ip --type netaddress --key-default '')
+if [ -n "$BM_VLAN_SEED_IP" ]; then
+    BM_VLAN_SEED_IP_ADDR=$(python -c "import netaddr; print netaddr.IPNetwork('$BM_VLAN_SEED_IP').ip")
+    BM_VLAN_SEED_IP_CIDR=$(python -c "import netaddr; print '%s/%s' % (netaddr.IPNetwork('$BM_VLAN_SEED_IP').network, netaddr.IPNetwork('$BM_VLAN_SEED_IP').prefixlen)")
+    echo "{ \"ovs\": {\"public_interface_tag\": \"${BM_VLAN_SEED_TAG}\", \"public_interface_tag_ip\": \"${BM_VLAN_SEED_IP}\"}, \"masquerade\": [\"${BM_VLAN_SEED_IP}\"] }" > bm-vlan.json
+else
+    echo "{ \"ovs\": {}, \"masquerade\": [] }" > bm-vlan.json
+fi
+BM_BRIDGE_ROUTE=$(jq -r '.["baremetal-network"].seed.physical_bridge_route // {}' $TE_DATAFILE)
+BM_CTL_ROUTE_PREFIX=$(jq -r '.["baremetal-network"].seed.physical_bridge_route.prefix // ""' $TE_DATAFILE)
+BM_CTL_ROUTE_VIA=$(jq -r '.["baremetal-network"].seed.physical_bridge_route.via // ""' $TE_DATAFILE)
 # FIXME: Once we support jq 1.3 we can use --arg here instead of writing
 # cidr.json as the 3rd input file
 echo "{ \"cidr\": \"${BM_NETWORK_CIDR##*/}\" }" > cidr.json
@@ -98,10 +115,13 @@ jq -s '
     .metadata_server_url="http://" + $bm_seed_ip + ":8000"))|
 (.[0]["local-ipv4"] = $bm_seed_ip)|
 (.[0].bootstack.public_interface_ip = $bm_seed_ip + "/" + $cidr_config.cidr)|
-(.[0].bootstack.masquerade_networks = ($config["baremetal-network"].cidr // "192.0.2.0/24"))|
- .[0]' tmp_local.json $TE_DATAFILE cidr.json > local.json
+(.[0].bootstack.masquerade_networks = [$config["baremetal-network"].cidr // "192.0.2.0/24"] + .[3].masquerade)|
+(.[0].neutron.ovs += .[3].ovs)|
+(.[0].neutron.ovs.physical_bridge_route = .[4])|
+ .[0]' tmp_local.json $TE_DATAFILE cidr.json bm-vlan.json <(echo "$BM_BRIDGE_ROUTE") > local.json
 rm tmp_local.json
 rm cidr.json
+rm bm-vlan.json
 
 ### --end
 # If running in a CI environment then the user and ip address should be read
@@ -164,9 +184,12 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 
 BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
 BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
-if [ $BM_NETWORK_GATEWAY == $BM_NETWORK_SEED_IP ]; then
+if [ $BM_NETWORK_GATEWAY = $BM_NETWORK_SEED_IP -o $BM_NETWORK_GATEWAY = ${BM_VLAN_SEED_IP_ADDR:-''} ]; then
     ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
     sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
+    if [ -n "$BM_VLAN_SEED_IP" ]; then
+        sudo ip route replace $BM_VLAN_SEED_IP_CIDR via $SEED_IP
+    fi
 fi
 
 ## #. Mask the seed API endpoint out of your proxy settings
@@ -223,7 +246,23 @@ wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep 
 
 BM_NETWORK_SEED_RANGE_START=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.range-start --type raw --key-default '192.0.2.2')
 BM_NETWORK_SEED_RANGE_END=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.range-end --type raw --key-default '192.0.2.20')
-setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $BM_NETWORK_SEED_IP ctlplane
+if [ -n "$BM_VLAN_SEED_TAG" ]; then
+    # With a public VLAN, the gateway address is on the public LAN.
+    CTL_GATEWAY=
+else
+    CTL_GATEWAY=$BM_NETWORK_GATEWAY
+fi
+setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END \
+    $BM_NETWORK_CIDR "$CTL_GATEWAY" $BM_NETWORK_SEED_IP ctlplane "" "" \
+    "" "" "" "${BM_CTL_ROUTE_PREFIX}" "${BM_CTL_ROUTE_VIA}"
+# Is there a public network as well? If so configure it.
+if [ -n "$BM_VLAN_SEED_TAG" ]; then
+    BM_VLAN_SEED_START=$(jq -r '.["baremetal-network"].seed.public_vlan.start' $TE_DATAFILE)
+    BM_VLAN_SEED_END=$(jq -r '.["baremetal-network"].seed.public_vlan.finish' $TE_DATAFILE)
+    BM_VLAN_SEED_TAG=$(jq -r '.["baremetal-network"].seed.public_vlan.tag' $TE_DATAFILE)
+    setup-neutron $BM_VLAN_SEED_START $BM_VLAN_SEED_END $BM_VLAN_SEED_IP_CIDR \
+        $BM_NETWORK_GATEWAY "" ctlplane "" "" "" $BM_VLAN_SEED_TAG public
+fi
 
 ## #. Nova quota runs up with the defaults quota so overide the default to
 ##    allow unlimited cores, instances and ram.
