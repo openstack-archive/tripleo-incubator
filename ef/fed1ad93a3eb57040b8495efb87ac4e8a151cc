@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Code-Review+1: Jon-Paul Sullivan (jp_at_hp) <jonpaul.sullivan@hp.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+1: jan grant <jan.grant@hp.com>
+Code-Review+2: Petr Blaho <pblaho@redhat.com>
+Workflow+1: Petr Blaho <pblaho@redhat.com>
+Code-Review+2: Jay Dobies <jason.dobies@redhat.com>
+Code-Review+1: Alexis Lee <alexisl@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 01 Jul 2014 14:36:14 +0000
+Reviewed-on: https://review.openstack.org/102816
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
