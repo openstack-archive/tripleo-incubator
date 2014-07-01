@@ -5,7 +5,7 @@
 # Assumes an OpenStack rc file has been sourced already to provide credentials
 # and endpoint information.
 
-set -eu
+set -eux
 set -o pipefail
 
 # Future work:
@@ -23,8 +23,10 @@ NETWORK_GATEWAY=$4
 # Where the metadata service is - ideally nova-bm would manage this:
 # https://bugs.launchpad.net/tripleo/+bug/1239481
 METADATA_SERVER=$5
-# If non-empty create a provider flat network with this name otherwise create a
-# virtual network and setup a router etc.
+# If non-empty create a provider network with this name otherwise create a
+# virtual network and setup a router etc. The network will be flat unless
+# $10 - the network tag - is non-empty, in which case a vlan network will be
+# created.
 PHYSICAL_NETWORK=${6:-""}
 # Start of floating range
 FLOATING_START=${7:-""}
@@ -32,6 +34,13 @@ FLOATING_START=${7:-""}
 FLOATING_END=${8:-""}
 # Floating CIDR
 FLOATING_CIDR=${9:-""}
+# VLAN tag for physical networks
+PHYSICAL_NETWORK_TAG=${10:-""}
+# Network name for VLANs
+PHYSICAL_NETWORK_TAG_NAME=${11:-""}
+# Route pushed out on subnet via DHCP e.g. 1.2.3.0/24 1.2.3.4
+ADDITIONAL_ROUTE_PREFIX=${12:-""}
+ADDITIONAL_ROUTE_VIA=${13:-""}
 
 # Create command line parameters
 if [ -n "$ALLOCATION_START" -a -n "$ALLOCATION_END" ] ; then
@@ -43,9 +52,26 @@ TENANT_ID=$(keystone tenant-list | grep ' admin ' | awk '{print $2}')
 
 if [ -n "$PHYSICAL_NETWORK" ] ; then
     # Underclouds
-    NET_NAME=$PHYSICAL_NETWORK
-    NET_EXTRA="--tenant_id $TENANT_ID --provider:network_type flat --provider:physical_network $PHYSICAL_NETWORK"
-    SUBNET_EXTRA="--tenant_id $TENANT_ID --host_routes type=dict list=true destination=169.254.169.254/32,nexthop=$METADATA_SERVER"
+    if [ -n "$PHYSICAL_NETWORK_TAG" ]; then
+        NET_NAME=$PHYSICAL_NETWORK_TAG_NAME
+        NET_SEGMENT="--provider:segmentation_id $PHYSICAL_NETWORK_TAG"
+        NET_TYPE=vlan
+    else
+        NET_NAME=$PHYSICAL_NETWORK
+        NET_SEGMENT=
+        NET_TYPE=flat
+    fi
+    NET_EXTRA="--tenant_id $TENANT_ID --provider:network_type $NET_TYPE --provider:physical_network $PHYSICAL_NETWORK $NET_SEGMENT"
+    SUBNET_EXTRA="--tenant_id $TENANT_ID"
+    if [ -n "$METADATA_SERVER" ]; then
+        SUBNET_EXTRA="$SUBNET_EXTRA --host-route destination=169.254.169.254/32,nexthop=$METADATA_SERVER"
+    fi
+    if [ -n "$NET_SEGMENT" ]; then
+        # Disable DHCP for tagged provider networks - at least for now all our
+        # use cases do not need a DHCPd (public networks and enterprise
+        # provider networks)
+        SUBNET_EXTRA="$SUBNET_EXTRA --disable-dhcp"
+    fi
 else
     # Overclouds
     NET_NAME="default-net"
@@ -54,7 +80,13 @@ else
 fi
 
 NET_ID=$(neutron net-create $NET_NAME $NET_EXTRA | grep ' id ' | awk '{print $4}')
-SUBNET_ID=$(neutron subnet-create --ip_version 4 ${ALLOCATION_POOL:+--allocation-pool $ALLOCATION_POOL} ${NETWORK_GATEWAY:+--gateway $NETWORK_GATEWAY} $NET_ID $NETWORK_CIDR $SUBNET_EXTRA | grep ' id ' | awk '{print $4}')
+SUBNET_ID=$(neutron subnet-create --ip_version 4 \
+    ${ALLOCATION_POOL:+--allocation-pool $ALLOCATION_POOL} \
+    ${NETWORK_GATEWAY:+--gateway $NETWORK_GATEWAY} \
+    ${NETWORK_GATEWAY:---no-gateway} $NET_ID $NETWORK_CIDR \
+    $SUBNET_EXTRA \
+    ${ADDITIONAL_ROUTE_PREFIX:+--host-route destination=$ADDITIONAL_ROUTE_PREFIX,nexthop=$ADDITIONAL_ROUTE_VIA} \
+    | grep ' id ' | awk '{print $4}')
 
 if [ -z "$PHYSICAL_NETWORK" ] ; then
     neutron router-create default-router
