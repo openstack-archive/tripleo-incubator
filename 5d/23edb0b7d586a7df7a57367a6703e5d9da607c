@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Workflow+1: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+2: Tomas Sedovic <tomas@sedovic.cz>
+Code-Review+2: Chris Jones <cmsj@tenshu.net>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+2: Jay Dobies <jason.dobies@redhat.com>
+Code-Review+1: Dougal Matthews <dougal@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 02 Jul 2014 17:48:19 +0000
+Reviewed-on: https://review.openstack.org/96383
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
