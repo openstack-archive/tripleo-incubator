@@ -36,7 +36,6 @@ Further Information
 
    deploying
    resources
-   neutron_notes
    troubleshooting
 
 
