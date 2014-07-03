@@ -24,6 +24,14 @@ pip install -U 'pbr>=0.5.21,<1.0'
 
 pip install -U python-cinderclient python-novaclient python-glanceclient python-heatclient python-keystoneclient python-neutronclient python-swiftclient python-ironicclient python-openstackclient os-apply-config os-cloud-config
 
+# If we're testing os-apply-config or os-cloud-config, we want the version
+# under test.
+echo "<<< HERE >>>"
+echo "ZUUL_REF: $ZUUL_REF"
+echo "ZUUL_PROJECT: $ZUUL_PROJECT"
+echo "ZUUL_CHANGE: $ZUUL_CHANGE"
+echo "ZUUL_PATCHSET: $ZUUL_PATCHSET"
+
 for tool in os-apply-config cinder nova glance heat keystone neutron swift ironic openstack init-keystone; do
   ln -sf $VENV_HOME/bin/$tool $BASE/scripts/$tool ;
 done
