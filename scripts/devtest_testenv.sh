@@ -216,10 +216,7 @@ EOF
 ##    for more details
 ##    ::
 
-if [ -n "$NETS_PATH" ]; then
-  JSON=$(jq -s '.[0]["baremetal-network"]=.[1] | .[0]' $JSONFILE $NETS_PATH)
-  echo "${JSON}" > $JSONFILE
-fi
+devtest_update_network.sh ${NETS_PATH:+--bm-networks $NETS_PATH} $JSONFILE
 
 ## #. If you have an existing set of nodes to use, use them.
 ##    ::
