@@ -4,7 +4,7 @@ TripleO Incubator
 Getting Started
 ---------------
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    README
    userguide
