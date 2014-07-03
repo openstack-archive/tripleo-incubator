@@ -2,10 +2,10 @@ Deploying TripleO
 =================
 
 Components
-==========
+----------
 
 Essential Components
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 Essential components make up the self-deploying infrastructure that is
 the heart of TripleO.
@@ -28,7 +28,7 @@ the heart of TripleO.
 -  Authentication and service catalog (Keystone)
 
 Additional Components
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 These components add value to the TripleO story, making it safer to
 upgrade and evolve an environment, but are secondary to the core thing
@@ -39,7 +39,7 @@ itself.
 -  Monitoring and alerting (Ceilometer/nagios/etc)
 
 Dependencies
-============
+------------
 
 Each component can only be deployed once its dependencies are available.
 
@@ -50,7 +50,7 @@ number of vendors, which will permit you to run diskimage-builder to get
 going.
 
 Diskimage-builder
------------------
+^^^^^^^^^^^^^^^^^
 
 An internet connection is also required to download the various packages
 used in preparing each image.
@@ -61,14 +61,14 @@ of TripleO is in use. Avoiding Heat is useful when doing a incremental
 adoption of TripleO (see later in this document).
 
 Baremetal machine deployment
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Baremetal deployments are delivered via Nova. Additionally, the network
 must be configured so that the baremetal host machine can receive TFTP
 from any physical machine that is being booted.
 
 Nova
-----
+^^^^
 
 Nova depends on Keystone, Glance and Neutron. In future Cinder will be
 one of the dependencies.
@@ -88,39 +88,39 @@ There are three ways the service can be deployed:
    TripleO.
 
 Cinder
-------
+^^^^^^
 
 Cinder is needed for persistent storage on bare metal machines. That
 aspect of TripleO is not yet available : when an instance is deleted,
 the storage is deleted with it.
 
 Neutron
--------
+^^^^^^^
 
 Neutron depends on Keystone. The same three deployment options exist as
 for Nova. The Neutron network node(s) must be the only DHCP servers on
 the network.
 
 Glance
-------
+^^^^^^
 
 Glance depends on Keystone. The same three deployment options exist as
 for Nova.
 
 Keystone
---------
+^^^^^^^^
 
 Keystone has no external dependencies. The same three deployment options
 exist as for Nova.
 
 Heat
-----
+^^^^
 
 Heat depends on Nova, Cinder and Keystone. The same three deployment
 options exist as for Nova.
 
 In-instance configuration
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The os-config-applier and os-refresh-config tools depend on Heat to
 provide cluster configuration metadata. They can be used before Heat is
@@ -136,7 +136,7 @@ avoid conflicting when organisations with an investment in
 Chef/Puppet/Salt start using TripleO.
 
 Deploying TripleO incrementally
-===============================
+-------------------------------
 
 The general sequence is:
 
@@ -157,7 +157,7 @@ The general sequence is:
    services onto it, and then continuing up the stack.
 
 Current caveats / workarounds
-=============================
+-----------------------------
 
 These are all documented in README.rst and in the
 `TripleO bugtracker`_.
@@ -165,7 +165,7 @@ These are all documented in README.rst and in the
 .. _`TripleO bugtracker`: https://launchpad.net/tripleo
 
 No API driven persistent storage
---------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Every 'nova boot' will reset the data on the machine it deploys to. To
 do incremental image based updates they have to be done within the
@@ -174,14 +174,14 @@ written rules to split out persistent data into another partition - so
 some assembly required.
 
 VLANs for physical nodes require customised images (rather than just metadata).
--------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you require VLANs you should create a diskimage-builder element to
 add the vlan package and vlan configuration to /etc/network/interfaces
 as a first-boot rule.
 
 New seed image creation returns tmpfs space errors (systems with < 9GB of RAM)
-------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Creating a new seed image takes up to 4.5GB of space inside a /tmp/imageXXXXX
 directory. tmpfs can take up to 50% of RAM and systems with less than 9GB of
@@ -196,10 +196,10 @@ prevent the space errors by:
 If you are using ``boot-seed-vm``, set the environment variable ``DIB_NO_TMPFS=1``.
 
 Example deployments (possible today)
-====================================
+------------------------------------
 
 Baremetal only
---------------
+^^^^^^^^^^^^^^
 
 In this scenario you make use of the baremetal driver to deploy
 unspecialised machine images, and perform specialisation using
@@ -287,7 +287,7 @@ HOWTO
    connect to your Chef/Puppet/Salt environments.
 
 Baremetal with Heat
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 In this scenario you use the baremetal driver to deploy specialised
 machine images which are orchestrated by Heat.
@@ -327,7 +327,7 @@ HOWTO
    the image id of your cfn-tools customised image.
 
 GRE Neutron OpenStack managed by Heat
------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this scenario we build on Baremetal with Heat to deploy a full
 OpenStack orchestrated by Heat, with specialised disk images for
@@ -489,12 +489,12 @@ Deploy Overcloud
 Follow devtest again, but modify the images you build per the undercloud notes, and for machines you put public services on, follow the undercloud notes to fix them up.
 
 Example deployments (future)
-============================
+----------------------------
 
 WARNING: Here be draft notes.
 
 VM seed + bare metal under cloud
---------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 -  need to be aware nova metadata wont be available after booting as the
    default rule assumes this host never initiates requests

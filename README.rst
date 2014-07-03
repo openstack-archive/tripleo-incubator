@@ -245,10 +245,11 @@ allocation, and other essential operational tasks.
 
 
 Development plan
-================
+----------------
+
 
 Stage 1 - Implemented but not polished
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 OpenStack on OpenStack with three distinct clouds:
 
@@ -275,7 +276,7 @@ deploying behind firewalls and other restricted networking environments.
 Enrollment of machines is manual, as is hardware setup including RAID.
 
 Stage 2 - being worked on
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 OpenStack on OpenStack with two distinct clouds. The seed cloud from stage 1
 is replaced by a full HA configuration in the undercloud, permitting it to
@@ -285,7 +286,7 @@ undercloud will be done using a seed cloud, but that will hand-off to the
 undercloud and stop existing once the undercloud is live.
 
 Stage N
--------
+^^^^^^^
 
 OpenStack on itself: OpenStack on OpenStack with one cloud:
 
@@ -307,10 +308,10 @@ Infrastructure such as Glance, Swift and Keystone will be solely owned by the
 one cloud: there is no duplication needed.
 
 Developer introduction and guidelines
-=====================================
+-------------------------------------
 
 Principles
-----------
+^^^^^^^^^^
 
 1. Developer tools (like disk-image-builder) should have a non-intrusive
    footprint on the machine of users. Requiring changing of global settings
@@ -335,13 +336,13 @@ Principles
    effort of other people.
 
 Getting started
----------------
+^^^^^^^^^^^^^^^
 
 See the TripleO userguide for basic setup instructions - as a developer you
 need to be set up as a user too.
 
 Efficient development
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 When working on overcloud features using virtual machines, just register all
 your nodes directly with the seed - the seed and the undercloud are
@@ -374,7 +375,7 @@ large and interfere with efficient development. Dive under and run the
 core tools directly - that's what they are for.
 
 Iterating on in-instance code
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are broadly three sets of code for TripleO - the heat templates which
 define the cluster, the code that runs within instances to map heat metadata
@@ -386,7 +387,7 @@ them but then if it fails ssh into the instance, tweak the state and re-run the
 code (e.g. by running ``os-collect-config --force --one``).
 
 Iterating on heat templates
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can use heat stack-update to update a deployed stack which will take effect
 immediately as long as the image id's have not changed - this permits testing
@@ -394,7 +395,7 @@ different metadata mappings without waiting for full initial deployments to take
 effect.
 
 Iterating on post-deploy code
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Generally speaking, just run API calls to put state back to whatever it would
 be before your code runs. E.g. if you are testing nova flavor management code
@@ -402,14 +403,14 @@ you might delete all the flavors and recreate the initial defaults, then just
 run your specific code again.
 
 Caveats
-=======
+-------
 
 It is important to consider some unresolved issues in this plan.
 
 .. _tested_platforms:
 
 Tested platforms
-----------------
+^^^^^^^^^^^^^^^^
 
 At this moment, the distributions that are tested by the CI systems are Ubuntu
 and Fedora. Currently, we specifically test Ubuntu Trusty VMs and Fedora 20 VMs,
@@ -430,7 +431,7 @@ If you use any other distribution not listed above, the script will identify
 your machine as unsupported.
 
 Security
---------
+^^^^^^^^
 
 Nova baremetal does nothing to secure transfers via PXE on the
 network. This means that a node spoofing DHCP and TFTP on the provisioning
@@ -445,7 +446,7 @@ SDN is in place. This carries the same attack vector as the PXE problems noted
 above, and so should be given similar consideration.
 
 Machine State
--------------
+^^^^^^^^^^^^^
 
 Currently there is no way to guarantee preservation (or deletion) of any of the
 drive contents on a machine if it is deleted in nova baremetal. The planned
