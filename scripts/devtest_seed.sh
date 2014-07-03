@@ -4,6 +4,8 @@ set -eu
 set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
+BRIDGE=brbm
+GATEWAY=bm-gw
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -162,9 +164,18 @@ SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-ip --type neta
 
 BM_NETWORK_SEED_IP=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.seed.ip --type raw --key-default '192.0.2.1')
 BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
+ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
+# remove virtual install gateway if it exists
+ovs-vsctl -- --if-exists del-port $GATEWAY
 if [ $BM_NETWORK_GATEWAY == $BM_NETWORK_SEED_IP ]; then
-    ROUTE_DEV=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key seed-route-dev --type netdevice --key-default virbr0)
     sudo ip route replace $BM_NETWORK_CIDR dev $ROUTE_DEV via $SEED_IP
+else
+    if ip route | grep $BM_NETWORK_CIDR | grep $ROUTE_DEV; then
+        ip route delete $BM_NETWORK_CIDR dev $ROUTE_DEV
+    fi
+    ovs-vsctl add-port $BRIDGE $GATEWAY -- set interface $GATEWAY type=internal
+    SLASH=$(echo $BM_NETWORK_CIDR | awk '{print substr($0,index($0,"/"))}')
+    ip addr add $BM_NETWORK_GATEWAY$SLASH  dev $GATEWAY
 fi
 
 ## #. Mask the seed API endpoint out of your proxy settings
