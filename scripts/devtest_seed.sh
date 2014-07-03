@@ -62,22 +62,48 @@ cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
 ##    ::
 
 if [ $USE_IRONIC -eq 0 ]; then
+# Deletes .ironic as it's unused.
 # Sets:
 # - bm node arch
 # - bm power manager
 # - ssh power host
 # - ssh power key
 # - ssh power user
-# - sets the ironic key to "" to disable configuration looking for Ironic
-#   settings.
-    jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))|.[0].ironic=""| .[0]' config.json $TE_DATAFILE > tmp_local.json
+    jq -s '
+        .[1] as $config
+        | .[0]
+        | .nova.baremetal as $bm
+        | with_entries(select(.key != "ironic")) + {
+            "nova": (.nova + {
+                "baremetal": ($bm + {
+                    "arch": $config.arch,
+                    "power_manager": $config.power_manager,
+                    "virtual_power": ($bm.virtual_power + {
+                        "user": $config["ssh-user"],
+                        "ssh_host": $config["host-ip"],
+                        "ssh_key": $config["ssh-key"]
+                    })
+                })
+            })
+        }' config.json $TE_DATAFILE > tmp_local.json
 else
+# Deletes .nova.baremetal as it's unused.
 # Sets:
-# - ironic.virtual_power_ssh_key(needed until https://review.openstack.org/#/c/80376 lands).
-# - nova.compute_driver to ironic.nova.virt.ironic.driver.IronicDriver
-# - sets the nova.baremetal key to "{}" to disable configuration looking for baremetal configuration.
-# - sets the nova.compute_manager to avoid race conditions on ironic startup.
-    jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal={}| .[0]' config.json $TE_DATAFILE > tmp_local.json
+# - ironic.virtual_power_ssh_key.
+# - nova.compute_driver to ironic.nova.virt.ironic.driver.IronicDriver.
+# - nova.compute_manager to avoid race conditions on ironic startup.
+    jq -s '
+        .[1] as $config
+        | .[0]
+        | . + {
+            "ironic": (.ironic + {
+                "virtual_power_ssh_key": $config["ssh-key"],
+            }),
+            "nova": ((.nova | with_entries(select(.key != "baremetal")))) + {
+                "compute_driver": "ironic.nova.virt.ironic.driver.IronicDriver",
+                "compute_manager": "ironic.nova.compute.manager.ClusteredComputeManager",
+            })
+        }' config.json $TE_DATAFILE > tmp_local.json
 fi
 
 # Apply custom BM network settings to the seeds local.json config
