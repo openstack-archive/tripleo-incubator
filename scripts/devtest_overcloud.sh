@@ -262,6 +262,7 @@ ENV_JSON=$(jq '.parameters = {
     "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
     "CloudName": "'"${OVERCLOUD_NAME}"'",
     "controllerImage": "'"${OVERCLOUD_CONTROL_ID}"'",
+    "DbPassword": "'"${OVERCLOUD_DATABASE_PASSWORD}"'",
     "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
     "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
     "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
