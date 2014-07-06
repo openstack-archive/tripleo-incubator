@@ -44,6 +44,8 @@ function show_options () {
     echo "    --debug                 -- Debug the API calls made."
     echo "    --ssl                   -- Use SSL public endpoints. Takes the hostname to"
     echo "                               use for the public endpoints."
+    echo "    --public                -- Use non-SSL public endpoints. Takes the ip/hostname"
+    echo "                               to use for the public endpoints."
     echo
     echo "For instance: $SCRIPT_NAME 192.0.2.1"
     echo "For instance(ssl): $SCRIPT_NAME --ssl mysite.org 192.0.2.1"
@@ -62,9 +64,10 @@ SWIFT_PASSWORD=""
 TUSKAR_PASSWORD=""
 ENABLE_HORIZON=""
 SSL=""
+PUBLIC=""
 REGION="regionOne" #NB: This is the keystone default.
 
-TEMP=`getopt -o r: -l region:,debug,ceilometer-password:,cinder-password:,glance-password:,heat-password:,ironic-password:,neutron-password:,nova-password:,swift-password:,tuskar-password:,enable-horizon,ssl: -n $SCRIPT_NAME -- "$@"`
+TEMP=`getopt -o r: -l region:,debug,ceilometer-password:,cinder-password:,glance-password:,heat-password:,ironic-password:,public:,neutron-password:,nova-password:,swift-password:,tuskar-password:,enable-horizon,ssl: -n $SCRIPT_NAME -- "$@"`
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -81,6 +84,7 @@ while true ; do
         --ironic-password) export IRONIC_PASSWORD=$2; shift 2 ;;
         --neutron-password) export NEUTRON_PASSWORD=$2; shift 2 ;;
         --nova-password) export NOVA_PASSWORD=$2; shift 2 ;;
+	--public) export PUBLIC=$2; shift 2 ;;
         --swift-password) export SWIFT_PASSWORD=$2; shift 2 ;;
         --tuskar-password) export TUSKAR_PASSWORD=$2; shift 2 ;;
         --enable-horizon) export ENABLE_HORIZON=--enable-horizon; shift 1;;
@@ -102,6 +106,8 @@ INTERNAL_HOST=http://${HOST}:
 
 if [ -n "$SSL" ]; then
     PUBLIC_HOST=https://${SSL}:
+elif [ -n "$PUBLIC" ]; then
+    PUBLIC_HOST=http://${PUBLIC}:
 else
     PUBLIC_HOST=$INTERNAL_HOST
 fi
