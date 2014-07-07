@@ -19,7 +19,7 @@ the heart of TripleO.
 -  Machine image creation (Diskimage-builder)
 
 -  In-instance configuration management
-   (os-config-applier+os-refresh-config, and/or Chef/Puppet/Salt)
+   (os-apply-config+os-refresh-config, and/or Chef/Puppet/Salt)
 
 -  Image management (Glance)
 
@@ -122,12 +122,12 @@ options exist as for Nova.
 In-instance configuration
 -------------------------
 
-The os-config-applier and os-refresh-config tools depend on Heat to
+The os-apply-config and os-refresh-config tools depend on Heat to
 provide cluster configuration metadata. They can be used before Heat is
 functional if a statically prepared metadata file is placed in the Heat
 path : this is how the bootstrap node works.
 
-os-config-applier and os-refresh-config can be used in concert with
+os-apply-config and os-refresh-config can be used in concert with
 Chef/Puppet/Salt, or not used at all, if you configure your services via
 Chef/Puppet/Salt.
 

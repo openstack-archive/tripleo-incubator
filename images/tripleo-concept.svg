@@ -377,7 +377,7 @@
   <g
      inkscape:groupmode="layer"
      id="layer7"
-     inkscape:label="os-config-applier"
+     inkscape:label="os-apply-config"
      style="display:inline">
     <g
        id="g4036"
@@ -402,7 +402,7 @@
            y="351.91745"
            x="464.43744"
            id="tspan3887-4"
-           sodipodi:role="line">os-config-applier</tspan></text>
+           sodipodi:role="line">os-apply-config</tspan></text>
     </g>
   </g>
   <g
