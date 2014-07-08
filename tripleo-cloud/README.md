@@ -39,4 +39,3 @@ Implementation of adding / removing people:
  - Update the 'default' keyring on the CD undercloud 'admin' user to the
    current keyring here.
  - Add them to https://docs.google.com/spreadsheet/ccc?key=0AlLkXwa7a4bpdERqN0p5RjNMQUJJeDdhZ05fRVUxUnc&usp=sharing
- - In future, we need to create per-user accounts too.
