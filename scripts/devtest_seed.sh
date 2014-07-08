@@ -248,8 +248,7 @@ if [ -n "$BM_VLAN_SEED_TAG" ]; then
 else
     CTL_GATEWAY=$BM_NETWORK_GATEWAY
 fi
-# TODO - pass BM_CTL_ROUTE_PREFIX and BM_CTL_ROUTE_VIA into setup-neutron and use that to add a second push route.
-setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWORK_CIDR "$CTL_GATEWAY" $BM_NETWORK_SEED_IP ctlplane
+setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWORK_CIDR "$CTL_GATEWAY" $BM_NETWORK_SEED_IP ctlplane "" "" "" "" "" ${BM_CTL_ROUTE_PREFIX:+$BM_CTL_ROUTE_PREFIX,nexthop=$BM_CTL_ROUTE_VIA}
 # Is there a public network as well? If so configure it.
 if [ -n "$BM_VLAN_SEED_TAG" ]; then
     BM_VLAN_SEED_START=$(jq -r '.["baremetal-network"].seed.public_vlan.start' $TE_DATAFILE)
