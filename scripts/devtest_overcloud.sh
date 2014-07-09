@@ -210,6 +210,7 @@ fi
 
 expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE ))
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" -ge $expected_nodes ]
+wait_for 90 1 [ "\$(nova hypervisor-stats | awk '\$2==\"vcpus\" { print \$4}')" != "0" ]
 
 ## #. Set password for Overcloud SNMPd, same password needs to be set in Undercloud Ceilometer
 
