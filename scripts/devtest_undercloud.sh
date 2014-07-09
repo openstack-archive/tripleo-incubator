@@ -239,6 +239,10 @@ fi
 jq . > "${HEAT_ENV}" <<< $ENV_JSON
 chmod 0600 "${HEAT_ENV}"
 
+## #. Add Keystone certs/key into the environment file.::
+
+generate-keystone-pki --heatenv $HEAT_ENV
+
 ## #. Deploy an undercloud.
 ##    ::
 
