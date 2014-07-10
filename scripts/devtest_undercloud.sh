@@ -207,7 +207,7 @@ else
     HEAT_OP=stack-create
 fi
 
-## #. Set parameters we need to deploy a KVM cloud.::
+## #. Set parameters we need to deploy a baremetal undercloud::
 
 ENV_JSON=$(jq '.parameters = {
     "MysqlInnodbBufferPoolSize": 100
