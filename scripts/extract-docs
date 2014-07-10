@@ -53,5 +53,7 @@ EXTRA=${1:-""}
 for script in $(ls $SCRIPT_HOME/../scripts/devtest*.sh) ; do
     bname=${script##*/}
     noext=${bname%.sh}
+    # Skip devtest_functions.sh
+    [ "$bname" == "devtest_functions.sh" ] && continue
     awk -f $SCRIPT_HOME/extract-docs.awk $script > $SCRIPT_HOME/../doc/source/$noext.rst
 done
