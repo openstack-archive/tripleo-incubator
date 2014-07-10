@@ -6,7 +6,10 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
+source $SCRIPT_HOME/devtest_functions.sh
+
 BUILD_ONLY=
+PARALLEL_BUILD=
 HEAT_ENV=
 
 function show_options () {
@@ -15,15 +18,17 @@ function show_options () {
     echo "Deploys a KVM cloud via heat."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --heat-env     -- path to a JSON heat environment file."
-    echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
+    echo "      -h                -- this help"
+    echo "      --build-only      -- build the needed images but don't deploy them."
+    echo "      --parallel-build  -- Perform the builds in parallel"
+    echo "                           It requires that --build-only is also used"
+    echo "      --heat-env        -- path to a JSON heat environment file."
+    echo "                           Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,heat-env:help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,heat-env:help,parallel-build -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -32,12 +37,18 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
+        --parallel-build) PARALLEL_BUILD="1"; export DIB_APT_LOCAL_CACHE=0; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
 done
+
+if [ -n "$PARALLEL_BUILD" -a -z "$BUILD_ONLY" ]; then
+    echo "Error: --parallel-build used without --build-only"
+    show_options 1
+fi
 
 set -x
 if [ -z "$BUILD_ONLY" ]; then
@@ -106,7 +117,15 @@ if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
 fi
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+### --end
+if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then
+    reset_monitor=$(echo $- | grep m || true)
+    if [ -z "$PARALLEL_BUILD" ]; then
+        set -o monitor
+    fi
+    (
+        [ -z "$reset_monitor" ] || set +o monitor
+### --include
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
         baremetal boot-stack cinder-api cinder-volume cinder-tgt ceilometer-collector \
@@ -115,7 +134,17 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         swift-proxy swift-storage keepalived haproxy \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
-fi #nodocs
+### --end
+    ) &
+    # Write out the pid for waiting later
+    new_pids=$!
+    # Bring back to the foreground if not running a parallel build
+    if [ -z "$PARALLEL_BUILD" ]; then
+        fg
+    fi
+fi
+
+### --include
 
 ## #. Unless you are just building the images, load the image into Glance.
 
@@ -129,13 +158,34 @@ fi #nodocs
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+### --end
+if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then
+    if [ -z "$PARALLEL_BUILD" ]; then
+        set -o monitor
+    fi
+    (
+        [ -z "$reset_monitor" ] || set +o monitor
+### --include
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute ntp hosts \
         baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
         dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
-fi #nodocs
+### --end
+    ) &
+    # Write out the pid for waiting later
+    new_pids="$new_pids $!"
+    # Bring back to the foreground if not running a parallel build
+    if [ -z "$PARALLEL_BUILD" ]; then
+        fg
+    fi
+fi
+
+# If we are running in parallel wait on all of the backgrounded tasks and report failures
+if [ -n "$PARALLEL_BUILD" ] ; then
+    wait_for_builds $new_pids
+fi
+### --include
 
 ## #. Load the image into Glance. If you are just building the images you are done.
 ##    ::
