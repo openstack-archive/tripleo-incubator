@@ -8,6 +8,8 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
+source $SCRIPT_HOME/devtest_functions.sh
+
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
@@ -30,6 +32,8 @@ function show_options () {
     echo "    --no-undercloud        -- Use the seed as the baremetal cloud to deploy the"
     echo "                              overcloud from."
     echo "    --build-only           -- Builds images but doesn't attempt to run them."
+    echo "    --parallel-build       -- Performs the image builds in parallel"
+    echo "                              Only has an effect in conjunction with --build-only"
     echo "    --heat-env-undercloud ENVFILE"
     echo "                           -- heat environment file for the undercloud."
     echo "    --heat-env-overcloud  ENVFILE"
@@ -45,6 +49,7 @@ function show_options () {
 }
 
 BUILD_ONLY=
+PARALLEL_BUILD=
 NODES_ARG=
 NO_UNDERCLOUD=
 NETS_ARG=
@@ -55,7 +60,9 @@ USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,existing-environment,help,trash-my-machine,nodes:,bm-networks:,no-undercloud,heat-env-overcloud:,heat-env-undercloud: -n $SCRIPT_NAME -- "$@")
+LONG_OPTS="build-only,existing-environment,help,trash-my-machine,nodes:,bm-networks:"
+LONG_OPTS="${LONG_OPTS},no-undercloud,heat-env-overcloud:,heat-env-undercloud:,parallel-build"
+TEMP=$(getopt -o h,c -l ${LONG_OPTS} -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -64,6 +71,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY=--build-only; shift 1;;
+        --parallel-build) PARALLEL_BUILD=--parallel-build; shift 1;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
@@ -77,6 +85,11 @@ while true ; do
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
 done
+
+if [ -n "$PARALLEL_BUILD" -a -z "$BUILD_ONLY" ]; then
+    echo "Error: --parallel-build used without --build-only"
+    show_options 1
+fi
 
 if [ -z "$CONTINUE" ]; then
     echo "Not running - this script is destructive and requires --trash-my-machine to run." >&2
@@ -271,9 +284,17 @@ fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
 
-DEVTEST_RD_START=$(date +%s) #nodocs
-devtest_ramdisk.sh
-DEVTEST_RD_END=$(date +%s) #nodocs
+## devtest_ramdisk.sh $BUILD_ONLY $PARALLEL_BUILD
+
+### --end
+
+DEVTEST_RD_START=$(date +%s)
+# Background the command, but bring it back to the foreground if not a parallel build
+reset_monitor=$(echo $- | grep m || true)
+new_pids=
+background_build devtest_ramdisk.sh $BUILD_ONLY $PARALLEL_BUILD
+DEVTEST_RD_END=$(date +%s)
+### --include
 
 ## #. See :doc:`devtest_seed` for documentation. If you are not deploying an
 ##    undercloud, (see below) then you will want to add --all-nodes to your
@@ -291,7 +312,7 @@ if [ -z "$NO_UNDERCLOUD" ]; then
 else
   ALLNODES="--all-nodes"
 fi
-devtest_seed.sh $BUILD_ONLY $ALLNODES
+background_build devtest_seed.sh $BUILD_ONLY $ALLNODES $PARALLEL_BUILD
 DEVTEST_SD_END=$(date +%s)
 export no_proxy=${no_proxy:-},$(os-apply-config --type netaddress -m $TE_DATAFILE --key baremetal-network.seed.ip --key-default '192.0.2.1')
 if [ -z "$BUILD_ONLY" ]; then
@@ -315,7 +336,8 @@ fi
 ### --end
 DEVTEST_UC_START=$(date +%s)
 if [ -z "$NO_UNDERCLOUD" ]; then
-    devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY $HEAT_ENV_UNDERCLOUD
+    background_build devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY $HEAT_ENV_UNDERCLOUD \
+        $PARALLEL_BUILD
     if [ -z "$BUILD_ONLY" ]; then
         export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
         source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
@@ -333,8 +355,14 @@ DEVTEST_UC_END=$(date +%s)
 ##         devtest_overcloud.sh
 ### --end
 DEVTEST_OC_START=$(date +%s)
-devtest_overcloud.sh $BUILD_ONLY $HEAT_ENV_OVERCLOUD
+background_build devtest_overcloud.sh $BUILD_ONLY $HEAT_ENV_OVERCLOUD $PARALLEL_BUILD
 DEVTEST_OC_END=$(date +%s)
+
+# If we are running in parallel wait on all of the backgrounded tasks and report failures
+if [ -n "$PARALLEL_BUILD" ] ; then
+    wait_for_builds $new_pids
+fi
+
 if [ -z "$BUILD_ONLY" ]; then
 ### --include
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key overcloud.endpointhost)
@@ -347,13 +375,19 @@ devtest_end.sh
 
 ### --end
 
-DEVTEST_END=$(date +%s) #nodocs
-DEVTEST_PERF_LOG="${TRIPLEO_ROOT}/devtest_perf.log" #nodocs
-TIMESTAMP=$(date "+[%Y-%m-%d %H:%M:%S]") #nodocs
-echo "${TIMESTAMP} Run comment  : ${DEVTEST_PERF_COMMENT:-"No Comment"}" >> ${DEVTEST_PERF_LOG} #nodocs
-echo "${TIMESTAMP} Total runtime: $((DEVTEST_END - DEVTEST_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
-echo "${TIMESTAMP}   ramdisk    : $((DEVTEST_RD_END - DEVTEST_RD_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
-echo "${TIMESTAMP}   seed       : $((DEVTEST_SD_END - DEVTEST_SD_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
-echo "${TIMESTAMP}   undercloud : $((DEVTEST_UC_END - DEVTEST_UC_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
-echo "${TIMESTAMP}   overcloud  : $((DEVTEST_OC_END - DEVTEST_OC_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
-echo "${TIMESTAMP} DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS}" >> ${DEVTEST_PERF_LOG} #nodocs
+DEVTEST_END=$(date +%s)
+DEVTEST_PERF_LOG="${TRIPLEO_ROOT}/devtest_perf.log"
+TIMESTAMP=$(date "+[%Y-%m-%d %H:%M:%S]")
+(
+    echo "${TIMESTAMP} Run comment  : ${DEVTEST_PERF_COMMENT:-"No Comment"}"
+    echo "${TIMESTAMP} Total runtime: $((DEVTEST_END - DEVTEST_START)) s"
+    if [ -n "${PARALLEL_BUILD}" ] ; then
+        echo "${TIMESTAMP} PARALLEL RUN  : No individual timings are generated"
+    else
+        echo "${TIMESTAMP}   ramdisk    : $((DEVTEST_RD_END - DEVTEST_RD_START)) s"
+        echo "${TIMESTAMP}   seed       : $((DEVTEST_SD_END - DEVTEST_SD_START)) s"
+        echo "${TIMESTAMP}   undercloud : $((DEVTEST_UC_END - DEVTEST_UC_START)) s"
+        echo "${TIMESTAMP}   overcloud  : $((DEVTEST_OC_END - DEVTEST_OC_START)) s"
+    fi
+    echo "${TIMESTAMP} DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS}" >> ${DEVTEST_PERF_LOG}
+) | tee -a ${DEVTEST_PERF_LOG}

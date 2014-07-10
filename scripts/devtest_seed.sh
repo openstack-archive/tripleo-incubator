@@ -11,18 +11,23 @@ function show_options () {
     echo "Deploys a baremetal cloud via virsh."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      -c             -- re-use existing source/images if they exist."
-    echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --all-nodes    -- use all the nodes in the testenv rather than"
-    echo "                        just the first one."
+    echo "      -h                -- this help"
+    echo "      -c                -- re-use existing source/images if they exist."
+    echo "      --build-only      -- build the needed images but don't deploy them."
+    echo "      --parallel-build  -- Perform the builds in parallel"
+    echo "                           This just passes the flag to boot-seed-vm, assuming that"
+    echo "                           devtest.sh has backgrounded this script"
+    echo "                           It requires that --build-only is also used"
+    echo "      --all-nodes       -- use all the nodes in the testenv rather than"
+    echo "                           just the first one."
     echo
     exit $1
 }
 
 BUILD_ONLY=
+PARALLEL_BUILD=
 
-TEMP=$(getopt -o c,h -l all-nodes,build-only,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l all-nodes,build-only,help,parallel-build -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -33,11 +38,17 @@ while true ; do
         --all-nodes) ALL_NODES="true"; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="--build-only"; shift 1;;
+        --parallel-build) PARALLEL_BUILD="--parallel-build"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
 done
+
+if [ -n "$PARALLEL_BUILD" -a -z "$BUILD_ONLY" ]; then
+    echo "Error: --parallel-build used without --build-only"
+    show_options 1
+fi
 
 set -x
 USE_CACHE=${USE_CACHE:-0}
@@ -135,8 +146,9 @@ if [ "$USE_CACHE" == "0" ] ; then
 else
     CACHE_OPT="-c"
 fi
-boot-seed-vm $CACHE_OPT $BUILD_ONLY -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-seed.log
+
+boot-seed-vm $CACHE_OPT $BUILD_ONLY $PARALLEL_BUILD -a $NODE_ARCH $NODE_DIST \
+        neutron-dhcp-agent 2>&1 | tee $TRIPLEO_ROOT/dib-seed.log
 
 if [ -n "${BUILD_ONLY}" ]; then
     exit 0
