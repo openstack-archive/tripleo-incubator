@@ -103,7 +103,7 @@ if [[ ! "\$PATH" =~ (^|:)"\$SCRIPTS_PATH"(:|$) ]]; then
 fi
 
 TIE_PATH=\$TRIPLEO_ROOT/tripleo-image-elements/elements
-if [[ ! "\$ELEMENTS_PATH" =~ (^|:)"\$TIE_PATH"(:|$) ]]; then
+if [[ "\${ELEMENTS_PATH:-}" !~ (^|:)"\$TIE_PATH"(:|$) ]]; then
     export ELEMENTS_PATH=\$TIE_PATH\${ELEMENTS_PATH:+":\$ELEMENTS_PATH"}
 fi
 
