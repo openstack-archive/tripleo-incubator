@@ -30,6 +30,8 @@ function show_options () {
     echo "    --no-undercloud        -- Use the seed as the baremetal cloud to deploy the"
     echo "                              overcloud from."
     echo "    --build-only           -- Builds images but doesn't attempt to run them."
+    echo "    --parallel-build       -- Performs the image builds in parallel"
+    echo "                              Only has an effect in conjunction with --build-only"
     echo "    --heat-env-undercloud ENVFILE"
     echo "                           -- heat environment file for the undercloud."
     echo "    --heat-env-overcloud  ENVFILE"
@@ -45,6 +47,7 @@ function show_options () {
 }
 
 BUILD_ONLY=
+PARALLEL_BUILD=
 NODES_ARG=
 NO_UNDERCLOUD=
 NETS_ARG=
@@ -55,7 +58,9 @@ USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,existing-environment,help,trash-my-machine,nodes:,bm-networks:,no-undercloud,heat-env-overcloud:,heat-env-undercloud: -n $SCRIPT_NAME -- "$@")
+LONG_OPTS="build-only,existing-environment,help,trash-my-machine,nodes:,bm-networks:"
+LONG_OPTS="${LONG_OPTS},no-undercloud,heat-env-overcloud:,heat-env-undercloud:,parallel-build"
+TEMP=$(getopt -o h,c -l ${LONG_OPTS} -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -64,6 +69,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY=--build-only; shift 1;;
+        --parallel-build) PARALLEL_BUILD=--parallel-build; shift 1;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
@@ -77,6 +83,11 @@ while true ; do
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
 done
+
+if [ -n "$PARALLEL_BUILD" -a -z "$BUILD_ONLY" ]; then
+    echo "Error: --parallel-build used without --build-only"
+    show_options 1
+fi
 
 if [ -z "$CONTINUE" ]; then
     echo "Not running - this script is destructive and requires --trash-my-machine to run." >&2
@@ -248,7 +259,7 @@ source $SCRIPT_HOME/devtest_variables.sh  #nodocs
 ##    unattended.
 ##    ::
 
-devtest_setup.sh $CONTINUE
+#devtest_setup.sh $CONTINUE
 
 ## #. See :doc:`devtest_testenv` for documentation. This step creates the
 ##    seed VM, as well as "baremetal" VMs for the under/overclouds. Details
@@ -271,9 +282,28 @@ fi #nodocs
 
 ## #. See :doc:`devtest_ramdisk` for documentation::
 
-DEVTEST_RD_START=$(date +%s) #nodocs
-devtest_ramdisk.sh
-DEVTEST_RD_END=$(date +%s) #nodocs
+### --end
+
+DEVTEST_RD_START=$(date +%s)
+# Background the command, but bring it back to the foreground if not a parallel build
+reset_monitor=$(echo $- | grep m || true)
+if [ -z "$PARALLEL_BUILD" ]; then
+    set -o monitor
+fi
+(
+    [ -z "$reset_monitor" ] || set +o monitor
+### --include
+devtest_ramdisk.sh $BUILD_ONLY $PARALLEL_BUILD
+### --end
+) &
+# Write out the pid for waiting later
+new_pids=$!
+# Bring back to the foreground if not running a parallel build
+if [ -z "$PARALLEL_BUILD" ]; then
+    fg
+fi
+DEVTEST_RD_END=$(date +%s)
+### --include
 
 ## #. See :doc:`devtest_seed` for documentation. If you are not deploying an
 ##    undercloud, (see below) then you will want to add --all-nodes to your
@@ -291,7 +321,18 @@ if [ -z "$NO_UNDERCLOUD" ]; then
 else
   ALLNODES="--all-nodes"
 fi
-devtest_seed.sh $BUILD_ONLY $ALLNODES
+# Background the command, but bring it back to the foreground if not a parallel build
+(
+    [ -z "$reset_monitor" ] || set +o monitor
+    devtest_seed.sh $BUILD_ONLY $ALLNODES $PARALLEL_BUILD
+) &
+new_pids="$new_pids $!"
+# Write out the pid for waiting later
+echo $! > $TRIPLEO_ROOT/dib-seed,pid
+# Bring back to the foreground if not running a parallel build
+if [ -z "$PARALLEL_BUILD" ]; then
+    fg
+fi
 DEVTEST_SD_END=$(date +%s)
 export no_proxy=${no_proxy:-},$(os-apply-config --type netaddress -m $TE_DATAFILE --key baremetal-network.seed.ip --key-default '192.0.2.1')
 if [ -z "$BUILD_ONLY" ]; then
@@ -315,7 +356,16 @@ fi
 ### --end
 DEVTEST_UC_START=$(date +%s)
 if [ -z "$NO_UNDERCLOUD" ]; then
-    devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY $HEAT_ENV_UNDERCLOUD
+    # Background the command, but bring it back to the foreground if not a parallel build
+    (
+        [ -z "$reset_monitor" ] || set +o monitor
+        devtest_undercloud.sh $TE_DATAFILE $BUILD_ONLY $HEAT_ENV_UNDERCLOUD $PARALLEL_BUILD
+    ) &
+    new_pids="$new_pids $!"
+    # Bring back to the foreground if not running a parallel build
+    if [ -z "$PARALLEL_BUILD" ]; then
+        fg
+    fi
     if [ -z "$BUILD_ONLY" ]; then
         export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key undercloud.endpointhost)
         source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
@@ -333,8 +383,47 @@ DEVTEST_UC_END=$(date +%s)
 ##         devtest_overcloud.sh
 ### --end
 DEVTEST_OC_START=$(date +%s)
-devtest_overcloud.sh $BUILD_ONLY $HEAT_ENV_OVERCLOUD
+# Background the command, but bring it back to the foreground if not a parallel build
+(
+    [ -z "$reset_monitor" ] || set +o monitor
+    devtest_overcloud.sh $BUILD_ONLY $HEAT_ENV_OVERCLOUD $PARALLEL_BUILD
+) &
+new_pids="$new_pids $!"
+# Bring back to the foreground if not running a parallel build
+if [ -z "$PARALLEL_BUILD" ]; then
+    fg
+fi
 DEVTEST_OC_END=$(date +%s)
+# If we are running in parallel wait on all of the backgrounded tasks and report failures
+if [ -n "$PARALLEL_BUILD" ] ; then
+    set +e
+    while : ; do
+        wait_pids=$(echo ${new_pids})
+        new_pids=
+        echo "Waiting on pids: $wait_pids" >&2
+        [[ -z "$wait_pids" ]]  && break
+        for pid in $wait_pids ; do
+            if ! ps -p $pid >/dev/null ; then
+                wait $pid
+                ret=$?
+                echo "Wait on $pid returned $ret"
+                if [[ $ret -ne 0 ]] ; then
+                    echo "Image build failure - exiting..." >&2
+                    pkill -TERM -P ${wait_pids// /,}
+                    wait
+                    exit 1
+                fi
+            else
+                new_pids="$new_pids${new_pids:+ }$pid"
+            fi
+        done
+        echo "Waiting for builds to finish: $(date)" >&2
+        sleep 20
+    done
+    # Just in case - wait for anything that may have been missed
+    wait
+    set -e
+fi
 if [ -z "$BUILD_ONLY" ]; then
 ### --include
 export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key overcloud.endpointhost)
@@ -351,6 +440,9 @@ DEVTEST_END=$(date +%s) #nodocs
 DEVTEST_PERF_LOG="${TRIPLEO_ROOT}/devtest_perf.log" #nodocs
 TIMESTAMP=$(date "+[%Y-%m-%d %H:%M:%S]") #nodocs
 echo "${TIMESTAMP} Run comment  : ${DEVTEST_PERF_COMMENT:-"No Comment"}" >> ${DEVTEST_PERF_LOG} #nodocs
+if [ -n "${PARALLEL_BUILD}" ] ; then # nodocs
+    echo "${TIMESTAMP} PARALLEL RUN  : Timings are invalidated" >> ${DEVTEST_PERF_LOG} #nodocs
+fi # nodocs
 echo "${TIMESTAMP} Total runtime: $((DEVTEST_END - DEVTEST_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
 echo "${TIMESTAMP}   ramdisk    : $((DEVTEST_RD_END - DEVTEST_RD_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
 echo "${TIMESTAMP}   seed       : $((DEVTEST_SD_END - DEVTEST_SD_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs

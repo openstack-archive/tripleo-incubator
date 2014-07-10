@@ -7,6 +7,7 @@ SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
 BUILD_ONLY=
+PARALLEL_BUILD=
 HEAT_ENV=
 
 function show_options () {
@@ -15,15 +16,19 @@ function show_options () {
     echo "Deploys a baremetal cloud via heat."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --heat-env     -- path to a JSON heat environment file."
-    echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
+    echo "      -h                -- this help"
+    echo "      --build-only      -- build the needed images but don't deploy them."
+    echo "      --parallel-build  -- Perform the builds in parallel"
+    echo "                           This just sets a unique ccache dir, assuming that"
+    echo "                           devtest.sh has backgrounded this script"
+    echo "                           It requires that --build-only is also used"
+    echo "      --heat-env        -- path to a JSON heat environment file."
+    echo "                           Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,heat-env:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,heat-env:,help,parallel-build -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -32,12 +37,18 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
+        --parallel-build) PARALLEL_BUILD="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
 done
+
+if [ -n "$PARALLEL_BUILD" -a -z "$BUILD_ONLY" ]; then
+    echo "Error: --parallel-build used without --build-only"
+    show_options 1
+fi
 
 set -x
 USE_CACHE=${USE_CACHE:-0}
@@ -78,7 +89,13 @@ UNDERCLOUD_STACK_TIMEOUT=${UNDERCLOUD_STACK_TIMEOUT:-60}
 ##    ::
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
-if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+### --end
+if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then
+    if [ -n "$PARALLEL_BUILD" ]; then
+        export DIB_CCACHE_DIR="$HOME/.cache/image-create/ccache-undercloud/"
+        export DIB_APT_LOCAL_CACHE=undercloud
+    fi
+### --include
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
     ntp baremetal boot-stack os-collect-config dhcp-all-interfaces \
