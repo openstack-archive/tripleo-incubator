@@ -58,6 +58,17 @@ USE_CACHE=${USE_CACHE:-0}
 
 cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
 
+## #. Config is read from local.json (and fall back to config.json for now).
+##    Check out the individual elements to see what config is supported.
+##    ::
+
+if [ -e "local.json" ]; then
+    CONFIG_FILE="local.json"
+else
+    echo "Deprecated: Using config.json rather than local.json" >&2
+    CONFIG_FILE="config.json"
+fi
+
 ## #. Ironic and Nova-Baremetal require different metadata to operate.
 ##    ::
 
@@ -70,14 +81,14 @@ if [ $USE_IRONIC -eq 0 ]; then
 # - ssh power user
 # - sets the ironic key to "" to disable configuration looking for Ironic
 #   settings.
-    jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))|.[0].ironic=""| .[0]' config.json $TE_DATAFILE > tmp_local.json
+    jq -s '.[1] as $config |(.[0].nova.baremetal |= (.virtual_power.user=$config["ssh-user"]|.virtual_power.ssh_host=$config["host-ip"]|.virtual_power.ssh_key=$config["ssh-key"]|.arch=$config.arch|.power_manager=$config.power_manager))|.[0].ironic=""| .[0]' $CONFIG_FILE $TE_DATAFILE > tmp_local.json
 else
 # Sets:
 # - ironic.virtual_power_ssh_key(needed until https://review.openstack.org/#/c/80376 lands).
 # - nova.compute_driver to ironic.nova.virt.ironic.driver.IronicDriver
 # - sets the nova.baremetal key to "{}" to disable configuration looking for baremetal configuration.
 # - sets the nova.compute_manager to avoid race conditions on ironic startup.
-    jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal={}| .[0]' config.json $TE_DATAFILE > tmp_local.json
+    jq -s '.[1] as $config |(.[0].ironic |= (.virtual_power_ssh_key=$config["ssh-key"]))|.[0].nova.compute_driver="ironic.nova.virt.ironic.driver.IronicDriver"|.[0].nova.compute_manager="ironic.nova.compute.manager.ClusteredComputeManager"|.[0].nova.baremetal={}| .[0]' $CONFIG_FILE $TE_DATAFILE > tmp_local.json
 fi
 
 # Add Keystone certs/key into the environment file
