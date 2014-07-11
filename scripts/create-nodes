@@ -30,7 +30,7 @@ LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
  virsh pool-define-as --name $LIBVIRT_VOL_POOL dir --target /var/lib/libvirt/images; virsh pool-autostart $LIBVIRT_VOL_POOL; virsh pool-start $LIBVIRT_VOL_POOL) >&2
 
 PREALLOC=
-if [ "$TRIPLEO_OS_FAMILY" = "debian" ]; then
+if [ "${TRIPLEO_OS_FAMILY:-}" = "debian" ]; then
   PREALLOC="--prealloc-metadata"
 fi
 
