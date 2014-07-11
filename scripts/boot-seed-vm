@@ -148,14 +148,14 @@ if [ -z "$BUILD_ONLY" ]; then
       # nova-baremetal doesn't kill these, they need to be destroyed to avoid conflicting with new CI runs,
       # this can be removed when we're exclusively using ironic.
       if [ "${USE_IRONIC:-0}" = "0" ] ; then
-          for NUM in $(seq 0 3) ; do
+          for NUM in $(seq 0 14) ; do
               ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy baremetalbrbm${ENV_NUM}_${NUM} || true
           done
       fi
   else
       virsh destroy $IMAGE_NAME || true
       if [ "${USE_IRONIC:-0}" = "0" ] ; then
-          for NUM in $(seq 0 3) ; do
+          for NUM in $(seq 0 14) ; do
               virsh destroy baremetal_${NUM} || true
           done
       fi
