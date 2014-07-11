@@ -181,6 +181,10 @@ OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
 
 OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
 
+## #. Customize the Cinder iscsi helper.
+##    If you are using LIO set this to lioadm. Defaults to tgtadm.
+OVERCLOUD_CINDER_ISCSI_HELPER=${OVERCLOUD_CINDER_ISCSI_HELPER=:-'tgtadm'}
+
 ## #. TripleO explicitly models key settings for OpenStack, as well as settings
 ##    that require cluster awareness to configure. To configure arbitrary
 ##    additional settings, provide a JSON string with them in the structure
@@ -260,6 +264,7 @@ ENV_JSON=$(jq '.parameters = {
     "CeilometerPassword": "'"${OVERCLOUD_CEILOMETER_PASSWORD}"'",
     "CeilometerMeteringSecret": "'"${OVERCLOUD_CEILOMETER_SECRET}"'",
     "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
+    "CinderISCSIHelper": "'"${OVERCLOUD_CINDER_ISCSI_HELPER}"'",
     "CloudName": "'"${OVERCLOUD_NAME}"'",
     "controllerImage": "'"${OVERCLOUD_CONTROL_ID}"'",
     "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
