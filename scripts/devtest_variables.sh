@@ -98,12 +98,14 @@ export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
 ## #. A messaging backend is required for the seed, undercloud, and overcloud
 ##    control node. It is not required for overcloud computes. The backend is
 ##    set through the ``*EXTRA_ARGS``.
-##    rabbitmq-server is the default backend. Another option is qpidd.
+##    rabbitmq-server is enabled by default. Another option is qpidd.
+##    For overclouds we also use ``*EXTRA_ARGS`` to set the cinder backend.
+##    cinder-tgt is enabled by default. Another option is cinder-lio.
 ##    ::
 
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
-export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
 
 ## #. Set distribution used for VMs (fedora, opensuse, ubuntu). If unset, this
 ##    will match TRIPLEO_OS_DISTRO, which is automatically gathered by devtest
