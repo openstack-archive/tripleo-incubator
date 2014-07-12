@@ -42,26 +42,34 @@ done
 set -x
 USE_CACHE=${USE_CACHE:-0}
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
-UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+
 ### --include
 ## devtest_undercloud
 ## ==================
+
+## #. Defines the list of the minimum required OpenStack services that will
+##    run in an undercloud.
+##    ::
+
+UNDERCLOUD_OS_SERVICES="glance heat-api heat-engine keystone \
+    neutron-dhcp-agent neutron-openvswitch-agent neutron-server nova-api \
+    rabbitmq-server"
 
 ## #. Specify whether to use the nova-baremetal or nova-ironic drivers
 ##    for provisioning within the undercloud.
 ##    ::
 
 if [ "$USE_IRONIC" -eq 0 ] ; then
-    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-baremetal"
+    UNDERCLOUD_OS_SERVICES="$UNDERCLOUD_OS_SERVICES nova-baremetal"
 else
-    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-ironic"
+    UNDERCLOUD_OS_SERVICES="$UNDERCLOUD_OS_SERVICES nova-ironic"
 fi
 
 ## #. Add extra elements for Undercloud UI
 ##    ::
 
 if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
-    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS ceilometer-collector \
+    UNDERCLOUD_OS_SERVICES="$UNDERCLOUD_OS_SERVICES ceilometer-collector \
         ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
         ceilometer-undercloud-config horizon"
 fi
@@ -77,12 +85,14 @@ UNDERCLOUD_STACK_TIMEOUT=${UNDERCLOUD_STACK_TIMEOUT:-60}
 ##    meant to be used to pass additional arguments to disk-image-create.
 ##    ::
 
+UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-''}
+
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
     -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
     ntp baremetal boot-stack os-collect-config dhcp-all-interfaces \
-    neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
+    $UNDERCLOUD_OS_SERVICES $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
     tee $TRIPLEO_ROOT/dib-undercloud.log
 ### --end
 fi
