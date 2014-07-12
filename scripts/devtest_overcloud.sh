@@ -68,7 +68,7 @@ PUBLIC_API_URL=${12:-''}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
-OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-''}
 OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
 
@@ -98,6 +98,14 @@ OVERCLOUD_FIXED_RANGE_CIDR=${OVERCLOUD_FIXED_RANGE_CIDR:-"10.0.0.0/8"}
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
+OVERCLOUD_CONTROL_OS_SERVICES="cinder-api cinder-volume cinder-tgt
+ceilometer-collector ceilometer-api ceilometer-agent-central
+ceilometer-agent-notification glance heat-api heat-engine
+horizon keystone neutron-network-node neutron-openvswitch-agent
+neutron-server nova-api swift-proxy swift-storage"
+
+OVERCLOUD_COMPUTE_OS_SERVICES="nova-kvm neutron-openvswitch-agent"
+
 ## #. Undercloud UI needs SNMPd for monitoring of every Overcloud node
 ##    ::
 
@@ -106,14 +114,15 @@ if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
 fi
 
+## #. Append auxiliary control services.
+OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS haproxy keepalived"
+
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
-        baremetal boot-stack cinder-api cinder-volume cinder-tgt ceilometer-collector \
-        ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
-        os-collect-config horizon neutron-network-node dhcp-all-interfaces \
-        swift-proxy swift-storage keepalived haproxy \
-        $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
+        baremetal boot-stack dhcp-all-interfaces os-collect-config \
+        $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS \
+        $OVERCLOUD_CONTROL_OS_SERVICES ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
 
@@ -132,8 +141,9 @@ fi #nodocs
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute ntp hosts \
-        baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-        dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
+        baremetal dhcp-all-interfaces os-collect-config \
+        $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS \
+        $OVERCLOUD_COMPUTE_OS_SERVICES 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
