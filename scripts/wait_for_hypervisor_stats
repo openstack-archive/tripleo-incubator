@@ -35,8 +35,15 @@ done
 
 EXPECTED_NODES=${1:-1}
 
+# NOTE(bnemec): If/when we have more flavors, this will need
+# to be expanded.
+VCPUS=$(nova flavor-show baremetal | awk '$2=="vcpus" { print $4 }')
+EXPECTED_VCPUS=$(($VCPUS*$EXPECTED_NODES))
+MEM=$(nova flavor-show baremetal | awk '$2=="ram" { print $4 }')
+EXPECTED_MEM=$(($MEM*$EXPECTED_NODES))
+
 nova hypervisor-stats | awk '
   $2=="count" && $4 >= '"$EXPECTED_NODES"' { c++ };
-  $2=="memory_mb" && $4 > 0 { c++ };
-  $2=="vcpus" && $4 >= '"$EXPECTED_NODES"' { c++ };
+  $2=="memory_mb" && $4 >= '"$EXPECTED_MEM"' { c++ };
+  $2=="vcpus" && $4 >= '"$EXPECTED_VCPUS"' { c++ };
   END { if (c != 3) exit 1 }'
