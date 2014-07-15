@@ -78,12 +78,13 @@ UNDERCLOUD_STACK_TIMEOUT=${UNDERCLOUD_STACK_TIMEOUT:-60}
 ##    ::
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
+UNDERCLOUD_IMAGE=${UNDERCLOUD_IMAGE:-"undercloud.qcow2"}
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-    -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
+    -a $NODE_ARCH -o $TRIPLEO_ROOT/$(echo $UNDERCLOUD_IMAGE | cut -d. -f1) \
     ntp baremetal boot-stack os-collect-config dhcp-all-interfaces \
     neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
-    tee $TRIPLEO_ROOT/dib-undercloud.log
+    tee $TRIPLEO_ROOT/dib-$(echo $UNDERCLOUD_IMAGE | cut -d. -f1).log
 ### --end
 fi
 if [ -n "$BUILD_ONLY" ]; then
@@ -97,7 +98,7 @@ fi
 ## #. Load the undercloud image into Glance:
 ##    ::
 
-UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
+UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/$UNDERCLOUD_IMAGE)
 
 
 ## #. Set the public interface of the undercloud network node:
