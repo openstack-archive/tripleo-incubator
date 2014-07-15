@@ -94,8 +94,12 @@ OVERCLOUD_FIXED_RANGE_CIDR=${OVERCLOUD_FIXED_RANGE_CIDR:-"10.0.0.0/8"}
 
 ##    ``$SSL_ELEMENT`` is used when building a cloud with SSL endpoints - it should be
 ##    set to openstack-ssl in that situation.
+
+##    ``$OVERCLOUD_COMPUTE_IMAGE`` and ``$OVERCLOUD_CONTROL_IMAGE`` can be used to override
+##    the default names of images created or loaded from cache.
 ##    ::
 
+##
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
 ## #. Undercloud UI needs SNMPd for monitoring of every Overcloud node
@@ -106,15 +110,18 @@ if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
 fi
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+OVERCLOUD_COMPUTE_IMAGE=${OVERCLOUD_COMPUTE_IMAGE:-"overcloud-compute"}
+OVERCLOUD_CONTROL_IMAGE=${OVERCLOUD_CONTROL_IMAGE:-"overcloud-control"}
+
+if [ ! -e $TRIPLEO_ROOT/$OVERCLOUD_CONTROL_IMAGE -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/$OVERCLOUD_CONTROL_IMAGE ntp hosts \
         baremetal boot-stack cinder-api cinder-volume cinder-tgt ceilometer-collector \
         ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
         os-collect-config horizon neutron-network-node dhcp-all-interfaces \
         swift-proxy swift-storage keepalived haproxy \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-control.log
+        tee $TRIPLEO_ROOT/dib-${OVERCLOUD_CONTROL_IMAGE}.log
 fi #nodocs
 
 ## #. Unless you are just building the images, load the image into Glance.
@@ -122,19 +129,19 @@ fi #nodocs
 ##    ::
 
 if [ -z "$BUILD_ONLY" ]; then #nodocs
-OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
+OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/$OVERCLOUD_CONTROL_IMAGE.qcow2)
 fi #nodocs
 
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+if [ ! -e $TRIPLEO_ROOT/$OVERCLOUD_COMPUTE_IMAGE -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute ntp hosts \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/$OVERCLOUD_COMPUTE_IMAGE ntp hosts \
         baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
         dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-compute.log
+        tee $TRIPLEO_ROOT/${OVERCLOUD_COMPUTE_IMAGE}.log
 fi #nodocs
 
 ## #. Load the image into Glance. If you are just building the images you are done.
@@ -147,7 +154,7 @@ if [ -n "$BUILD_ONLY" ]; then
 fi
 
 ### --include
-OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
+OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/$OVERCLOUD_COMPUTE_IMAGE.qcow2)
 
 ## #. For running an overcloud in VM's. For Physical machines, set to kvm:
 ##    ::
