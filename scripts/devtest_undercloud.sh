@@ -75,15 +75,19 @@ UNDERCLOUD_STACK_TIMEOUT=${UNDERCLOUD_STACK_TIMEOUT:-60}
 ## #. Create your undercloud image. This is the image that the seed nova
 ##    will deploy to become the baremetal undercloud. $UNDERCLOUD_DIB_EXTRA_ARGS is
 ##    meant to be used to pass additional arguments to disk-image-create.
+
+##    ``$UNDERCLOUD_IMAGE`` can be used to override the default name of images created
+##    or loaded from cache.
 ##    ::
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
+UNDERCLOUD_IMAGE=${UNDERCLOUD_IMAGE:-"undercloud.qcow2"}
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
 $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-    -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
+    -a $NODE_ARCH -o $TRIPLEO_ROOT/$UNDERCLOUD_IMAGE \
     ntp baremetal boot-stack os-collect-config dhcp-all-interfaces \
     neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
-    tee $TRIPLEO_ROOT/dib-undercloud.log
+    tee $TRIPLEO_ROOT/dib-$UNDERCLOUD_IMAGE
 ### --end
 fi
 if [ -n "$BUILD_ONLY" ]; then
@@ -97,7 +101,7 @@ fi
 ## #. Load the undercloud image into Glance:
 ##    ::
 
-UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
+UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/$UNDERCLOUD_IMAGE.qcow2)
 
 
 ## #. Set the public interface of the undercloud network node:
