@@ -50,8 +50,10 @@ for pos in $(seq 0 $node_count); do
             echo "Failed to get NODE_ID from created Ironic node."
             exit 1
         fi
-        # Common properties.
-        ironic node-update $NODE_ID add $(jq -r '"properties/cpus=" + (.cpu|tostring) + " properties/memory_mb=" + (.memory|tostring) + " properties/local_gb=" + (.disk|tostring) + " properties/cpu_arch=" + .arch' <<< $NODE_JSON)
+        # Common properties and capabilities.
+        properties=$(jq -r '"properties/cpus=" + (.cpu|tostring) + " properties/memory_mb=" + (.memory|tostring) + " properties/local_gb=" + (.disk|tostring)     + " properties/cpu_arch=" + .arch' <<< $NODE_JSON)
+        capabilities=$(jq -r 'if .capabilities then "properties/capabilities=" + .capabilities else empty end' <<< $NODE_JSON)
+        ironic node-update $NODE_ID add ${properties} ${capabilities}
 
         MAC_COUNT=$(($(jq ".mac | length" <<< $NODE_JSON) - 1))
         for pos in $(seq 0 $MAC_COUNT); do
