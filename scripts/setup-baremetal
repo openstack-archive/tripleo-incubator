@@ -34,6 +34,7 @@ function show_options () {
     echo "      -h             -- this help"
     echo "      --service-host -- nova bm service host to register nodes with"
     echo "      --nodes        -- JSON list of nodes to register"
+    echo "      --flavors      -- JSON list of flavors to create"
     echo
     exit $1
 }
@@ -41,7 +42,7 @@ function show_options () {
 SERVICE_HOST=""
 JSON_PATH=
 
-TEMP=$(getopt -o h -l help,service-host:,nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l help,service-host:,nodes:,flavors: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -52,6 +53,7 @@ while true ; do
         -h | --help) show_options 0;;
         --service-host) SERVICE_HOST="$2"; shift 2 ;;
         --nodes) JSON_PATH="$2"; shift 2 ;;
+        --flavors) FLAVORS_PATH="$2"; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -82,37 +84,72 @@ deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --public \
 deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --public \
     --disk-format ari < "$deploy_ramdisk" | awk ' / id / {print $4}')
 
-function cleanup_flavor () {
-    local FLAVOR_NAME=${1:?"cleanup_flavor requires a flavor name"}
-    if nova flavor-show "$FLAVOR_NAME" &> /dev/null; then
-        nova flavor-delete "$FLAVOR_NAME"
+
+# Remove all flavors
+flavor_ids=$(nova flavor-list | head -n -1 | tail -n +4 | cut -d" " -f2)
+for flavor_id in flavor_ids; do
+    nova flavor-delete ${flavor_id};
+done
+
+if [ -z "$FLAVORS_PATH" ] || [ ! -s "$FLAVORS_PATH" ]; then
+    # if no flavors file specified, or if the specified file is empty
+    # fallback to creating a single flavor called baremetal
+    mem=$(jq -r '.[0]["memory"]' <<< $NODES)
+    disk=$(jq -r '.[0]["disk"]' <<< $NODES)
+    cpu=$(jq -r '.[0]["cpu"]' <<< $NODES)
+    arch=$(jq -r '.[0]["arch"]' <<< $NODES)
+
+    ephemeral_disk=$(( $disk - $ROOT_DISK ))
+    if (( $ephemeral_disk < 0 )); then
+        echo "Error: NODE_DISK - ROOT_DISK must be >= 0 to specify size of ephemeral disk"
+        exit 1
     fi
-}
+ 
+    nova flavor-create baremetal \
+        --ephemeral $ephemeral_disk auto $mem $ROOT_DISK $cpu
+    nova flavor-key baremetal set "cpu_arch"="$arch" \
+        "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
+        "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id"
 
-# While we can't mix hypervisors, having non-baremetal flavors will just
-# confuse things.
-cleanup_flavor 'm1.tiny'
-cleanup_flavor 'm1.small'
-cleanup_flavor 'm1.medium'
-cleanup_flavor 'm1.large'
-cleanup_flavor 'm1.xlarge'
+else
+    # we are creating user-defined flavors
+    # these are in a json array of objects like:
+    #     { "name": "my_flavor",
+    #       "mem": 8192,
+    #       "disk": 10,
+    #       "cpu": 1,
+    #       "arch": "i386",
+    #       "extra_specs": {"foo":"bar"}
+    #      }
+    flavors=$(cat $FLAVORS_PATH)
+    flavor_idxs=$(( $(jq -r length flavors) - 1 ))
+    for pos in $(seq 0 $flavor_idxs); do
+        name=$(jq -r '.[$pos]["name"]' <<< $flavors)
 
-cleanup_flavor 'baremetal'
-# XXX(lifeless) this should be a loop making sure every node is represented
-# with a flavor.
-MEM=$(jq -r ".[0][\"memory\"]" <<< $NODES)
-DISK=$(jq -r ".[0][\"disk\"]" <<< $NODES)
-CPU=$(jq -r ".[0][\"cpu\"]" <<< $NODES)
-ARCH=$(jq -r ".[0][\"arch\"]" <<< $NODES)
+        mem=$(jq -r '.[$pos]["memory"]' <<< $flavors)
+        disk=$(jq -r '.[$pos]["disk"]' <<< $flavors)
+        cpu=$(jq -r '.[$pos]["cpu"]' <<< $flavors)
+        arch=$(jq -r '.[$pos]["arch"]' <<< $flavors)
 
-EPHEMERAL_DISK=$(( $DISK - $ROOT_DISK ))
-if (( $EPHEMERAL_DISK < 0 )); then
-    echo "Error: NODE_DISK - ROOT_DISK must be >= 0 to specify size of ephemeral disk"
-    exit 1
+        ephemeral_disk=$(( $disk - $ROOT_DISK ))
+        if (( $ephemeral_disk < 0 )); then
+            echo "Error: NODE_DISK - ROOT_DISK must be >= 0 to specify size of ephemeral disk"
+            exit 1
+        fi
+
+        extra_specs=$(jq -r '
+            .[$pos]["extra_specs"] as $es |
+            if $es then
+                $es | keys[] | . + "=" + $es[.]
+            else
+                empty
+            end' <<< $flavors)
+
+        nova flavor-create $name \
+            --ephemeral $ephemeral_disk auto $mem $ROOT_DISK $cpu
+        nova flavor-key baremetal set "cpu_arch"="$arch" \
+            "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
+            "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id" \
+            $extra_specs
+    done
 fi
-
-nova flavor-create baremetal \
-    --ephemeral $EPHEMERAL_DISK auto $MEM $ROOT_DISK $CPU
-nova flavor-key baremetal set "cpu_arch"="$ARCH" \
-    "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
-    "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id"
