@@ -331,6 +331,9 @@ nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin
 ## #. Register two baremetal nodes with your undercloud.
 ##    ::
 
-setup-baremetal --service-host undercloud --nodes <(jq '.nodes - [.nodes[0]]' $TE_DATAFILE)
+setup-baremetal \
+    --service-host undercloud \
+    --nodes <(jq '.nodes - [.nodes[0]]' $TE_DATAFILE) \
+    --flavors <(jq '.flavors' $TE_DATAFILE)
 
 ### --end
