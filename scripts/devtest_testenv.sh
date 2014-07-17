@@ -28,6 +28,10 @@ function show_options () {
     echo "                              The schema for baremetal-network can be found in"
     echo "                              the devtest_setup documentation."
     echo
+    echo "    --flavors FLAVORFILE   -- You are supplying your own list of flavor definitions."
+    echo "                              The schema for flavors can be found in the setup-baremetal"
+    echo "                              script."
+    echo
     echo "JSON-filename -- the path to write the environment description to."
     echo
     echo "Note: This adds a unique key to your authorised_keys file to permit "
@@ -42,7 +46,7 @@ NUM=
 OVSBRIDGE=
 SSH_KEY=~/.ssh/id_rsa_virt_power
 
-TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,flavors: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -52,6 +56,7 @@ while true ; do
     case "$1" in
         --nodes) NODES_PATH="$2"; shift 2;;
         --bm-networks) NETS_PATH="$2"; shift 2;;
+        --flavors) FLAVORS_PATH="$2"; shift 2;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -245,3 +250,12 @@ NODE_CNT=${NODE_CNT:-15}
 create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
 ### --end
 fi
+
+## #. If you have provided a definition of flavors, use that too.
+##    ::
+
+if [ -n "$FLAVORS_PATH" ]; then
+  JSON=$(jq -s '.[0].flavors=.[1] | .[0]' $JSONFILE $FLAVORS_PATH)
+  echo "${JSON}" > $JSONFILE
+fi
+
