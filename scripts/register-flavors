@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+
+import argparse
+import json
+import os
+
+from novaclient.client import Client
+
+nova_client = None
+
+
+def get_nova_client():
+    global nova_client
+    if nova_client is None:
+        nova_client = Client(2,
+            os.environ['OS_USERNAME'],
+            os.environ['OS_PASSWORD'],
+            os.environ['OS_TENANT_NAME'],
+            os.environ['OS_AUTH_URL'])
+    return nova_client
+
+
+def infer_missing_specs(flavors, nodes):
+    mandatory_flavor_keys = ['memory', 'cpu', 'disk', 'arch']
+    full_flavors = {}
+
+    for name, flavor in flavors.items():
+        matching_node = None
+        for node in nodes:
+            if "flavors" in node and name in node["flavors"]:
+                matching_node = node
+                break
+
+        for key in mandatory_flavor_keys:
+            if key not in flavor:
+                if matching_node is None or key not in matching_node:
+                    raise Exception("Mandatory '%s' not specified in "
+                                    "flavor '%s' or any node using it."
+                                    % (key, name))
+                flavor[key] = node[key]
+        full_flavors[name] = flavor
+
+    return full_flavors
+
+
+def parse_extra_specs(flavor):
+    extra_specs = {"cpu_arch": flavor["arch"]}
+    for key in ["deploy_kernel_id", "deploy_ramdisk_id"]:
+        if key in flavor:
+            extra_specs[key] = flavor[key]
+    if "extra_specs" in flavor:
+        for kv in flavor["extra_specs"].split(","):
+            k, v = kv.split(":")
+            extra_specs[k] = v
+    return extra_specs
+
+
+def register_flavors(flavors):
+    nova = get_nova_client()
+    for name, flavor in flavors.items():
+        ephemeral = flavor.get("ephemeral", 0)
+        if ephemeral < 0:
+            raise Exception("Ephemeral disk size must not be negative")
+        new_flavor = nova.flavors.create(
+            name,
+            flavor["memory"],
+            flavor["cpu"],
+            flavor["disk"],
+            ephemeral=ephemeral)
+        new_flavor.set_keys(parse_extra_specs(flavor))
+
+
+def load_json_files(args):
+    with open(args.flavors, 'r') as flavors_file:
+        flavors = json.load(flavors_file)
+    nodes = []
+    if args.nodes:
+        with open(args.nodes, 'r') as nodes_file:
+            nodes = json.load(nodes_file)
+    return flavors, nodes
+
+
+def delete_all_existing_flavors():
+    for flavor in get_nova_client().flavors.list():
+        flavor.delete()
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Register flavors defined in a json file. "
+        "Hardware specs may be omitted in the flavors file, in "
+        "which case they are inferred by inspecting the nodes "
+        "defined in the nodes file")
+    parser.add_argument('--teardown', action='store_true',
+        help='delete all existing flavors before creating new ones')
+    parser.add_argument('--flavors', required=True,
+        help='the flavors are defined in this file')
+    parser.add_argument('--nodes', required=False,
+        help='the nodes are defined in this file')
+    args = parser.parse_args()
+
+    flavors, nodes = load_json_files(args)
+
+    if args.teardown:
+        delete_all_existing_flavors()
+
+    full_flavors = infer_missing_specs(flavors, nodes)
+
+    register_flavors(full_flavors)
+
+main()

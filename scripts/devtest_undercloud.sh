@@ -333,9 +333,17 @@ setup-neutron $BM_NETWORK_UNDERCLOUD_RANGE_START $BM_NETWORK_UNDERCLOUD_RANGE_EN
 
 nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin | awk '$2=="id" {print $4}')
 
-## #. Register two baremetal nodes with your undercloud.
+## #. Register baremetal nodes with your undercloud.
 ##    ::
 
-setup-baremetal --service-host undercloud --nodes <(jq '.nodes - [.nodes[0]]' $TE_DATAFILE)
+baremetal_flavors_arg=
+if [[ -e "${TRIPLEO_ROOT}/flavors.json" ]]; then
+    baremetal_flavors_arg="--flavors ${TRIPLEO_ROOT}/flavors"
+fi
+
+setup-baremetal \
+    --service-host undercloud \
+    --nodes <(jq '.nodes - [.nodes[0]]' $TE_DATAFILE) \
+    $baremetal_flavors_arg
 
 ### --end

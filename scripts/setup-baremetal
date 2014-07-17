@@ -34,14 +34,16 @@ function show_options () {
     echo "      -h             -- this help"
     echo "      --service-host -- nova bm service host to register nodes with"
     echo "      --nodes        -- JSON list of nodes to register"
+    echo "      --flavors      -- JSON list of flavors to register"
     echo
     exit $1
 }
 
 SERVICE_HOST=""
-JSON_PATH=
+NODES_PATH=
+FLAVORS_PATH=
 
-TEMP=$(getopt -o h -l help,service-host:,nodes: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l help,service-host:,nodes:,flavors: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -51,7 +53,8 @@ while true ; do
     case "$1" in
         -h | --help) show_options 0;;
         --service-host) SERVICE_HOST="$2"; shift 2 ;;
-        --nodes) JSON_PATH="$2"; shift 2 ;;
+        --nodes) NODES_PATH="$2"; shift 2 ;;
+        --flavors) FLAVORS_PATH="$2"; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
@@ -66,7 +69,7 @@ if [ -z "$JSON_PATH" ]; then
     exit 1
 fi
 
-NODES=$(cat $JSON_PATH)
+NODES=$(cat $NODES_PATH)
 register-nodes -s $SERVICE_HOST -n <(echo $NODES)
 
 if [ $USE_IRONIC -eq 0 ]; then
@@ -82,37 +85,17 @@ deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --public \
 deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --public \
     --disk-format ari < "$deploy_ramdisk" | awk ' / id / {print $4}')
 
-function cleanup_flavor () {
-    local FLAVOR_NAME=${1:?"cleanup_flavor requires a flavor name"}
-    if nova flavor-show "$FLAVOR_NAME" &> /dev/null; then
-        nova flavor-delete "$FLAVOR_NAME"
-    fi
-}
-
-# While we can't mix hypervisors, having non-baremetal flavors will just
-# confuse things.
-cleanup_flavor 'm1.tiny'
-cleanup_flavor 'm1.small'
-cleanup_flavor 'm1.medium'
-cleanup_flavor 'm1.large'
-cleanup_flavor 'm1.xlarge'
-
-cleanup_flavor 'baremetal'
-# XXX(lifeless) this should be a loop making sure every node is represented
-# with a flavor.
-MEM=$(jq -r ".[0][\"memory\"]" <<< $NODES)
-DISK=$(jq -r ".[0][\"disk\"]" <<< $NODES)
-CPU=$(jq -r ".[0][\"cpu\"]" <<< $NODES)
-ARCH=$(jq -r ".[0][\"arch\"]" <<< $NODES)
-
-EPHEMERAL_DISK=$(( $DISK - $ROOT_DISK ))
-if (( $EPHEMERAL_DISK < 0 )); then
-    echo "Error: NODE_DISK - ROOT_DISK must be >= 0 to specify size of ephemeral disk"
-    exit 1
+# If no flavors specified, use the details of the first node instead and
+# call it "baremetal"
+if [[ -z "${FLAVORS_PATH}" ]]; then
+    flavors=$(jq -r '{"baremetal": .[0]}' <<< ${NODES})
+else
+    flavors=$(cat ${FLAVORS_PATH})
 fi
 
-nova flavor-create baremetal \
-    --ephemeral $EPHEMERAL_DISK auto $MEM $ROOT_DISK $CPU
-nova flavor-key baremetal set "cpu_arch"="$ARCH" \
-    "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
-    "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id"
+flavors=$(jq -r 'map(.ephemeral=.disk - '${ROOT_DISK}' |
+                     .deploy_kernel_id='"${deploy_kernel_id}"' |
+                     .deploy_ramdisk_id='"${deploy_ramdisk_id}"')' <<< $flavors)
+
+register-flavors --teardown --flavors <(echo $flavors) --nodes "${NODES_PATH}"
+

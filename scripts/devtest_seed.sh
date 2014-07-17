@@ -278,7 +278,15 @@ else #nodocs
 ##    Otherwise, if you are skipping the undercloud, you should register all
 ##    the nodes.::
 
-  setup-baremetal --service-host seed --nodes <(jq '.nodes' $TE_DATAFILE)
+    baremetal_flavors_arg=
+    if [[ -e "${TRIPLEO_ROOT}/flavors.json" ]]; then
+        baremetal_flavors_arg="--flavors ${TRIPLEO_ROOT}/flavors.json"
+    fi
+
+    setup-baremetal \
+        --service-host seed \
+        --nodes <(jq '.nodes' $TE_DATAFILE) \
+        $baremetal_flavors_arg
 fi #nodocs
 
 ##    If you need to collect the MAC address separately, see ``scripts/get-vm-mac``.
