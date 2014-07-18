@@ -1,0 +1,12 @@
+Verified+2: Jenkins
+Code-Review+2: Dan Prince <dprince@redhat.com>
+Code-Review+1: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+1: xu-haiwei <xu-haiwei@mxw.nes.nec.co.jp>
+Code-Review+1: jan grant <jan.grant@hp.com>
+Code-Review+2: Alexis Lee <alexisl@hp.com>
+Workflow+1: Alexis Lee <alexisl@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 18 Jul 2014 08:31:51 +0000
+Reviewed-on: https://review.openstack.org/104559
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
