@@ -43,6 +43,11 @@ set -x
 USE_CACHE=${USE_CACHE:-0}
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+
+if [ "$USE_MARIADB" -eq 1 ] ; then
+    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS mariadb-rpm"
+fi
+
 ### --include
 ## devtest_undercloud
 ## ==================
