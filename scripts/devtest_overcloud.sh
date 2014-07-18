@@ -117,6 +117,9 @@ fi
 if [ ${OVERCLOUD_KEYSTONE_USE_LDAP:-0} -ne 0 ]; then
     export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS} keystone-ldap"
     source ${SCRIPT_HOME}/setup-keystone-ldap
+elif [ ${OVERCLOUD_KEYSTONE_USE_LDAP_DOMAIN:-0} -ne 0 ]; then
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS} keystone-ldap-domain"
+    source ${SCRIPT_HOME}/setup-keystone-ldap
 fi
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
