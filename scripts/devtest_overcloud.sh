@@ -318,32 +318,20 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
            CONTROLSCALE=$OVERCLOUD_CONTROLSCALE \
 ##         heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
 ##             -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-##             -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
+##             -P "NovaComputeExtraConfig=${OVERCLOUD_COMPUTE_EXTRA_CONFIG}" \
+##             -P "ControllerExtraConfig=${OVERCLOUD_CONTROL_EXTRA_CONFIG}" \
 ##             overcloud
 
 ### --end
 
-# NOTE: Temporary change to allow HEAT template patches to land.
-#       Change-Id: Ieaee80e414130504a5e40e878a5a4ca1c196ca2b.
-if grep -q "Ref:\s*ExtraConfig" overcloud.yaml;
-then
-  # create stack with a 6 hour timeout, and allow wait_for_stack_ready
-  # to impose a realistic timeout.
-  heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
-    -t 360 \
-    -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-    -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
-    $STACKNAME
-else
-  # create stack with a 6 hour timeout, and allow wait_for_stack_ready
-  # to impose a realistic timeout.
-  heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
+# create stack with a 6 hour timeout, and allow wait_for_stack_ready
+# to impose a realistic timeout.
+heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
     -t 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "NovaComputeExtraConfig=${OVERCLOUD_COMPUTE_EXTRA_CONFIG}" \
     -P "ControllerExtraConfig=${OVERCLOUD_CONTROL_EXTRA_CONFIG}" \
     $STACKNAME
-fi
 
 ### --include
 
