@@ -329,7 +329,6 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
 heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
     -t 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
-    -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
     -P "NovaComputeExtraConfig=${OVERCLOUD_COMPUTE_EXTRA_CONFIG}" \
     -P "ControllerExtraConfig=${OVERCLOUD_CONTROL_EXTRA_CONFIG}" \
     $STACKNAME
