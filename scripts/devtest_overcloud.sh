@@ -192,6 +192,8 @@ OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
 ##    required by the template ExtraConfig parameter.
 
 OVERCLOUD_EXTRA_CONFIG=${OVERCLOUD_EXTRA_CONFIG:-''}
+OVERCLOUD_COMPUTE_EXTRA_CONFIG=${OVERCLOUD_COMPUTE_EXTRA_CONFIG:-$OVERCLOUD_EXTRA_CONFIG}
+OVERCLOUD_CONTROL_EXTRA_CONFIG=${OVERCLOUD_CONTROL_EXTRA_CONFIG:-$OVERCLOUD_EXTRA_CONFIG}
 
 ## #. Choose whether to deploy or update. Use stack-update to update::
 
@@ -328,6 +330,8 @@ heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
     -t 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
+    -P "NovaComputeExtraConfig=${OVERCLOUD_COMPUTE_EXTRA_CONFIG}" \
+    -P "ControllerExtraConfig=${OVERCLOUD_CONTROL_EXTRA_CONFIG}" \
     $STACKNAME
 
 ### --include
