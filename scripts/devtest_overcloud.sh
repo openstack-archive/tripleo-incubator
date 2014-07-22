@@ -102,12 +102,6 @@ OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS=${OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS:-'ntp 
 OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
 
-if [ "${USE_MARIADB:-}" = 1 ] ; then
-    OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS mariadb-rpm"
-    OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS mariadb-dev-rpm"
-    OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS mariadb-dev-rpm"
-fi
-
 # A client-side timeout in minutes for creating or updating the overcloud
 # Heat stack.
 OVERCLOUD_STACK_TIMEOUT=${OVERCLOUD_STACK_TIMEOUT:-60}
@@ -135,15 +129,6 @@ OVERCLOUD_FIXED_RANGE_NAMESERVER=${OVERCLOUD_FIXED_RANGE_NAMESERVER:-"8.8.8.8"}
 ##    ::
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
-
-## #. Undercloud UI needs SNMPd for monitoring of every Overcloud node
-##    ::
-
-if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
-    OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS snmpd"
-    OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
-    OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS snmpd"
-fi
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
@@ -219,11 +204,6 @@ fi
 
 ### --include
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
-
-## #. For running an overcloud in VM's. For Physical machines, set to kvm:
-##    ::
-
-OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
 
 ## #. Set the public interface of overcloud network node::
 ##    ::

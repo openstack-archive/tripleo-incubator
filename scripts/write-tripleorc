@@ -97,6 +97,7 @@ TE_DATAFILE
 TRIPLEO_ROOT
 UNDERCLOUD_DIB_EXTRA_ARGS
 USE_IRONIC
+USE_MARIADB
 USE_UNDERCLOUD_UI"
 
 for env_var in $ENV_VARS; do
@@ -121,7 +122,7 @@ if [[ ! "\$PATH" =~ (^|:)"\$SCRIPTS_PATH"(:|$) ]]; then
 fi
 
 TIE_PATH=\$TRIPLEO_ROOT/tripleo-image-elements/elements
-if [[ "\${ELEMENTS_PATH:-}" !~ (^|:)"\$TIE_PATH"(:|$) ]]; then
+if ! [[ "\${ELEMENTS_PATH:-}" =~ (^|:)"\$TIE_PATH"(:|$) ]]; then
     export ELEMENTS_PATH=\$TIE_PATH\${ELEMENTS_PATH:+":\$ELEMENTS_PATH"}
 fi
 

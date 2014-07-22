@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #
 # Variable definition for devtest.
 
@@ -103,23 +104,6 @@ export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv"}
 
 export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
 
-## #. Choose the deploy image element to be used. `deploy-kexec` will relieve you of
-##    the need to wait for long hardware POST times, however it has known stability
-##    issues (please see https://bugs.launchpad.net/diskimage-builder/+bug/1240933).
-##    If stability is preferred over speed, use the `deploy-baremetal` image
-##    element (default) or `deploy-ironic` if using ironic.
-##    ::
-
-if [ $USE_IRONIC -eq 0 ]; then
-    # nova baremetal
-    export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-baremetal}
-    export DEPLOY_NAME=deploy-ramdisk
-else
-    # Ironic
-    export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-ironic}
-    export DEPLOY_NAME=deploy-ramdisk-ironic
-fi
-
 ## #. A messaging backend is required for the seed, undercloud, and overcloud
 ##    control node. It is not required for overcloud computes. The backend is
 ##    set through the ``*EXTRA_ARGS``.
@@ -131,6 +115,28 @@ fi
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
+export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
+
+## #. Choose the deploy image element to be used. `deploy-kexec` will relieve you of
+##    the need to wait for long hardware POST times, however it has known stability
+##    issues (please see https://bugs.launchpad.net/diskimage-builder/+bug/1240933).
+##    If stability is preferred over speed, use the `deploy-baremetal` image
+##    element (default) or `deploy-ironic` if using ironic.
+##    ::
+
+if [ $USE_IRONIC -eq 0 ]; then
+    # nova baremetal
+    export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-baremetal}
+    export DEPLOY_NAME=deploy-ramdisk
+    export SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-baremetal"
+    export UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-baremetal"
+else
+    # Ironic
+    export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-ironic}
+    export DEPLOY_NAME=deploy-ramdisk-ironic
+    export SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS nova-ironic"
+    export UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-ironic"
+fi
 
 ## #. The block storage nodes are deployed with the cinder-tgt backend by
 ##    default too. Alteratives are cinder-lio and cinder-volume-nfs. Make sure
@@ -188,6 +194,11 @@ export ROOT_DISK=${ROOT_DISK:-10}
 
 export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 
+## #. For running an overcloud in VM's. For Physical machines, set to kvm:
+##    ::
+
+export OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
+
 ## #. Set number of compute, control and block storage nodes for the overcloud.
 ##    Only a value of 1 for OVERCLOUD_CONTROLSCALE is currently supported.
 ##    ::
@@ -229,11 +240,44 @@ else
     export USE_MARIADB=0
 fi
 
+if [ "${USE_MARIADB:-}" = 1 ] ; then
+    export SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS mariadb-rpm"
+    export UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS mariadb-rpm"
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS mariadb-rpm"
+    export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS mariadb-dev-rpm"
+    export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS mariadb-dev-rpm"
+fi
+
+if [[ "$DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS" != *enable-serial-console* ]]; then
+    export SEED_DIB_EXTRA_ARGS="${SEED_DIB_EXTRA_ARGS:-} remove-serial-console"
+fi
+
+## #. Undercloud UI needs SNMPd for monitoring of every Overcloud node
+##    ::
+
+if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
+    export UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS \
+        ceilometer-collector ceilometer-api ceilometer-agent-central \
+        ceilometer-agent-notification ceilometer-undercloud-config horizon"
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS snmpd"
+    export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
+    export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS snmpd"
+fi
 
 ## #. You can choose between using the old-style merge.py script for putting
 ##    together or the newer way of doing it directly via Heat.
 ##    ::
 
 export USE_MERGEPY=${USE_MERGEPY:-1}
+
+## #. Clean up duplicate DIB elements
+##    ::
+
+export DIB_COMMON_ELEMENTS=$(printf '%s\n' $DIB_COMMON_ELEMENTS | sort -u)
+export SEED_DIB_EXTRA_ARGS=$(printf '%s\n' $SEED_DIB_EXTRA_ARGS | sort -u)
+export UNDERCLOUD_DIB_EXTRA_ARGS=$(printf '%s\n' $UNDERCLOUD_DIB_EXTRA_ARGS | sort -u)
+export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=$(printf '%s\n' $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS | sort -u)
+export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=$(printf '%s\n' $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS | sort -u)
+export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=$(printf '%s\n' $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS | sort -u)
 
 ### --end
