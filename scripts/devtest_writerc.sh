@@ -12,15 +12,22 @@ set -o pipefail
 ##      write-tripleorc --overwrite $TRIPLEO_ROOT/tripleorc
 
 ### --end
+
 if [ -e tripleorc ]; then
-  echo "Resetting existing $PWD/tripleorc with new values"
   tripleorc_path=$PWD/tripleorc
 else
   tripleorc_path=$TRIPLEO_ROOT/tripleorc
 fi
-write-tripleorc --overwrite $tripleorc_path
 
-echo "devtest.sh completed."
+if [ -e $tripleorc_path ]; then
+    tripleorc_bak="${tripleorc_path}.backup"
+    echo "Resetting existing $PWD/tripleorc with new values"
+    echo "A copy of the existing tripleorc may be found in"
+    echo "${tripleorc_bak}"
+    cp $tripleorc_path $tripleorc_bak
+fi
+
+write-tripleorc --overwrite $tripleorc_path
 echo source $tripleorc_path to restore all values
 echo ""
 
@@ -29,8 +36,4 @@ echo ""
 ##    ::
 
 ##      source $TRIPLEO_ROOT/tripleorc
-
-
-## The End!
-## 
 ### --end
