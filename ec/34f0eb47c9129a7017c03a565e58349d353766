@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Jon-Paul Sullivan (jp_at_hp) <jonpaul.sullivan@hp.com>
+Workflow+1: Jon-Paul Sullivan (jp_at_hp) <jonpaul.sullivan@hp.com>
+Code-Review+2: Gregory Haynes <greg@greghaynes.net>
+Submitted-by: Jenkins
+Submitted-at: Tue, 22 Jul 2014 18:12:00 +0000
+Reviewed-on: https://review.openstack.org/100163
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
