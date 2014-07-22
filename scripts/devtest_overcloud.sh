@@ -220,11 +220,6 @@ fi
 ### --include
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
 
-## #. For running an overcloud in VM's. For Physical machines, set to kvm:
-##    ::
-
-OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
-
 ## #. Set the public interface of overcloud network node::
 ##    ::
 

@@ -230,10 +230,25 @@ else
 fi
 
 
+
 ## #. You can choose between using the old-style merge.py script for putting
 ##    together or the newer way of doing it directly via Heat.
 ##    ::
 
 export USE_MERGEPY=${USE_MERGEPY:-1}
 
+## #. Save your devtest environment::
+
+##      write-tripleorc --overwrite $tripleorc_path
 ### --end
+
+if [ -e tripleorc ]; then
+  echo "Resetting existing $PWD/tripleorc with new values"
+  tripleorc_path=$PWD/tripleorc
+else
+  tripleorc_path=$TRIPLEO_ROOT/tripleorc
+fi
+write-tripleorc --overwrite $tripleorc_path
+
+
+
