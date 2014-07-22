@@ -75,6 +75,16 @@ export USE_UNDERCLOUD_UI=${USE_UNDERCLOUD_UI:-1}
 
 export USE_IRONIC=${USE_IRONIC:-0}
 
+if [ $USE_IRONIC -eq 0 ]; then
+    # nova baremetal
+    export DEPLOY_IMAGE_ELEMENT=deploy-baremetal
+    export DEPLOY_NAME=deploy-ramdisk
+else
+    # Ironic
+    export DEPLOY_IMAGE_ELEMENT=deploy-ironic
+    export DEPLOY_NAME=deploy-ramdisk-ironic
+fi
+
 ## #. Set a list of image elements that should be included in all image builds.
 ##    Note that stackuser is only for debugging support - it is not suitable for
 ##    a production network. This is also the place to include elements such as
@@ -104,6 +114,11 @@ export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+
+## #. For running an overcloud in VM's. For Physical machines, set to kvm:
+##    ::
+
+export OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
 
 ## #. Set distribution used for VMs (fedora, opensuse, ubuntu). If unset, this
 ##    will match TRIPLEO_OS_DISTRO, which is automatically gathered by devtest
@@ -177,4 +192,16 @@ else
     export USE_MARIADB=0
 fi
 
+## #. Save your devtest environment::
+
+##      write-tripleorc --overwrite $TRIPLEO_ROOT/tripleorc
 ### --end
+
+if [ -e tripleorc ]; then
+  echo "Resetting existing $PWD/tripleorc with new values"
+  tripleorc_path=$PWD/tripleorc
+else
+  tripleorc_path=$TRIPLEO_ROOT/tripleorc
+fi
+write-tripleorc --overwrite $tripleorc_path
+
