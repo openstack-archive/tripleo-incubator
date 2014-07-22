@@ -53,32 +53,9 @@ USE_CACHE=${USE_CACHE:-0}
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 
-if [ "${USE_MARIADB:-}" = 1 ] ; then
-    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS mariadb-rpm"
-fi
-
 ### --include
 ## devtest_undercloud
 ## ==================
-
-## #. Specify whether to use the nova-baremetal or nova-ironic drivers
-##    for provisioning within the undercloud.
-##    ::
-
-if [ "$USE_IRONIC" -eq 0 ] ; then
-    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-baremetal"
-else
-    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS nova-ironic"
-fi
-
-## #. Add extra elements for Undercloud UI
-##    ::
-
-if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
-    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS ceilometer-collector \
-        ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
-        ceilometer-undercloud-config horizon"
-fi
 
 ## #. Specifiy a client-side timeout in minutes for creating or updating the
 ##    undercloud Heat stack.
