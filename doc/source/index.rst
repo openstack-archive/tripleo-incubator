@@ -23,6 +23,7 @@ Detailed notes
    devtest_variables
    devtest_setup
    devtest_testenv
+   devtest_update_network
    devtest_ramdisk
    devtest_seed
    devtest_undercloud
