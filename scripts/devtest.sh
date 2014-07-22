@@ -256,6 +256,11 @@ fi
 ##        source scripts/devtest_variables.sh
 source $SCRIPT_HOME/devtest_variables.sh  #nodocs
 
+## #. Write `tripleorc` at the start of the run so it can be sourced to
+##    restore the current state should a run fail::
+
+devtest_writerc.sh
+
 ## #. See :doc:`devtest_setup` for documentation.
 ##    $CONTINUE should be set to '--trash-my-machine' to have it execute
 ##    unattended.
@@ -354,9 +359,12 @@ export no_proxy=$no_proxy,$(os-apply-config --type raw -m $TE_DATAFILE --key ove
 source $TRIPLEO_ROOT/tripleo-incubator/overcloudrc
 fi #nodocs
 
-## #. See :doc:`devtest_end` for documentation::
+## #. Write `tripleorc` at the end of the run so it can be sourced to
+##    restore the current state::
 
-devtest_end.sh
+devtest_writerc.sh
+
+echo "devtest.sh completed."
 
 ### --end
 

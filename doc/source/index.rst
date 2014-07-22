@@ -22,6 +22,7 @@ Detailed notes
    :maxdepth: 1
 
    devtest_variables
+   devtest_writerc
    devtest_setup
    devtest_testenv
    devtest_update_network
@@ -29,7 +30,6 @@ Detailed notes
    devtest_seed
    devtest_undercloud
    devtest_overcloud
-   devtest_end
 
 Further Information
 -------------------
