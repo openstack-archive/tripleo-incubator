@@ -131,6 +131,7 @@ fi
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
+export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
 
 ## #. The block storage nodes are deployed with the cinder-tgt backend by
 ##    default too. Alteratives are cinder-lio and cinder-volume-nfs. Make sure
@@ -188,6 +189,11 @@ export ROOT_DISK=${ROOT_DISK:-10}
 
 export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 
+## #. For running an overcloud in VM's. For Physical machines, set to kvm:
+##    ::
+
+export OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
+
 ## #. Set number of compute, control and block storage nodes for the overcloud.
 ##    Only a value of 1 for OVERCLOUD_CONTROLSCALE is currently supported.
 ##    ::
@@ -236,4 +242,15 @@ fi
 
 export USE_MERGEPY=${USE_MERGEPY:-1}
 
+## #. Save your devtest environment::
+
+##      write-tripleorc --overwrite $tripleorc_path
 ### --end
+
+if [ -e tripleorc ]; then
+  echo "Resetting existing $PWD/tripleorc with new values"
+  tripleorc_path=$PWD/tripleorc
+else
+  tripleorc_path=$TRIPLEO_ROOT/tripleorc
+fi
+write-tripleorc --overwrite $tripleorc_path
