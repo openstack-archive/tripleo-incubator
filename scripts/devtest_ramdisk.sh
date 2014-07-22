@@ -42,6 +42,8 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 ## -----------------------
 
 
+
+
 ## #. Create a deployment ramdisk + kernel. These are used by the seed cloud and
 ##    the undercloud for deployment to bare metal.
 ##    ::
