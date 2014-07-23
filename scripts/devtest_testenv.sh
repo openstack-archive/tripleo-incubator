@@ -32,6 +32,8 @@ function show_options () {
     echo "                              The schema for flavors can be found in the setup-baremetal"
     echo "                              script."
     echo
+    echo "    --keep-vms             -- Prevent cleanup of virsh instances"
+    echo
     echo "JSON-filename -- the path to write the environment description to."
     echo
     echo "Note: This adds a unique key to your authorised_keys file to permit "
@@ -46,8 +48,9 @@ FLAVORS_PATH=
 NUM=
 OVSBRIDGE=
 SSH_KEY=~/.ssh/id_rsa_virt_power
+KEEP_VMS=0
 
-TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,flavors: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,flavors:,keep-vms -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -58,6 +61,7 @@ while true ; do
         --nodes) NODES_PATH="$2"; shift 2;;
         --bm-networks) NETS_PATH="$2"; shift 2;;
         --flavors) FLAVORS_PATH="$2"; shift 2;;
+        --keep-vms) KEEP_VMS=1;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -147,10 +151,12 @@ SEED_CPU=${SEED_CPU:-${NODE_CPU}}
 SEED_MEM=${SEED_MEM:-${NODE_MEM}}
 
 #Clean up any prior environment
-if [ -n "$NUM" ]; then
-  cleanup-env -n $NUM
-else
-  cleanup-env
+if [ $KEEP_VMS == 0 ]; then
+  if [ -n "$NUM" ]; then
+    cleanup-env -n $NUM
+  else
+    cleanup-env
+  fi
 fi
 
 #Now start creating the new environment
