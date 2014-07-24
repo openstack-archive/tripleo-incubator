@@ -49,6 +49,8 @@ if [ -n "$PARALLEL_BUILD" -a -z "$BUILD_ONLY" ]; then
     echo "Error: --parallel-build used without --build-only"
     show_options 1
 fi
+PARALLEL_BUILD="1"
+export DIB_APT_LOCAL_CACHE=0
 
 set -x
 if [ -z "$BUILD_ONLY" ]; then
