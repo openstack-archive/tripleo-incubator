@@ -75,6 +75,8 @@ TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this scri
 if [ "${USE_MARIADB:-}" = 1 ] ; then
     OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS mariadb-rpm"
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS mariadb-dev-rpm"
+elif [ "${USE_PERCONA:-}" = 1 ] ; then
+    OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS percona"
 fi
 
 # A client-side timeout in minutes for creating or updating the overcloud

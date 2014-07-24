@@ -209,8 +209,10 @@ export TE_DATAFILE=${TE_DATAFILE:-"$TRIPLEO_ROOT/testenv.json"}
 
 if [[ $NODE_DIST =~ .*(fedora|rhel|centos).* ]] ; then
     export USE_MARIADB=1
-else
+    export USE_PERCONA=0
+elif [[ "$NODE_DIST" =~ .*(ubuntu|debian).* ]] ; then
     export USE_MARIADB=0
+    export USE_PERCONA=1
 fi
 
 ### --end

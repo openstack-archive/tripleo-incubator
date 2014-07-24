@@ -40,6 +40,8 @@ fi
 
 if [ "${USE_MARIADB:-}" = 1 ] ; then
     SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS mariadb-rpm"
+elif [ "${USE_PERCONA:-}" = 1 ] ; then
+    SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS percona"
 fi
 
 if [[ "$DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS" != *enable-serial-console* ]]; then
