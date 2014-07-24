@@ -46,6 +46,8 @@ UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 
 if [ "$USE_MARIADB" -eq 1 ] ; then
     UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS mariadb-rpm"
+elif [ "$USE_PERCONA" -eq 1 ]; then
+    UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS percona-deb"
 fi
 
 ### --include

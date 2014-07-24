@@ -177,4 +177,10 @@ else
     export USE_MARIADB=0
 fi
 
+if [ "$TRIPLEO_OS_FAMILY" = "debian" ]; then
+    export USE_PERCONA=1
+else
+    export USE_PERCONA=0
+fi
+
 ### --end
