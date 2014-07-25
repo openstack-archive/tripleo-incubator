@@ -47,6 +47,9 @@ export TRIPLEO_ROOT=${TRIPLEO_ROOT:-} #nodocs
 ## to ~/.cache/tripleo if the var is found empty and the dir exists.
 if [ -z "$TRIPLEO_ROOT" -a -d ~/.cache/tripleo ]; then
   echo "WARNING: Defaulting TRIPLEO_ROOT to ~/.cache/tripleo"
+  echo "         Other environment variables are based on \$TRIPLEO_ROOT so"
+  echo "         if you intend changing it, please source devtest_variables.sh"
+  echo "         again afterwards."
   TRIPLEO_ROOT=~/.cache/tripleo
 fi
 
