@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+SCRIPT_NAME=$(basename $0)
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [<nodes>] [options]"
+    echo
+    echo "Waits for \`nova hypervisor-stats\` to show some memory + vcpus are available."
+    echo
+    echo "Positional arguments:"
+    echo "      nodes          -- The number of nodes to wait for, defaults to 1."
+    echo
+    echo "Options:"
+    echo "      -h / --help    -- this help"
+    echo
+    exit $1
+}
+
+TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -h | --help) show_options 0;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; exit 1 ;;
+    esac
+done
+
+EXPECTED_NODES=${1:-1}
+
+nova hypervisor-stats | awk '
+  $2=="count" && $4 >= '"$EXPECTED_NODES"' { c++ };
+  $2=="memory_mb" && $4 > 0 { c++ };
+  $2=="vcpus" && $4 >= '"$EXPECTED_NODES"' { c++ };
+  END { if (c != 3) exit 1 }'
