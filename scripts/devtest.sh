@@ -346,7 +346,7 @@ DEVTEST_UC_END=$(date +%s)
 ##         devtest_overcloud.sh
 ### --end
 DEVTEST_OC_START=$(date +%s)
-devtest_overcloud.sh $BUILD_ONLY $NO_MERGEPY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD
+# devtest_overcloud.sh $BUILD_ONLY $NO_MERGEPY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD
 DEVTEST_OC_END=$(date +%s)
 if [ -z "$BUILD_ONLY" ]; then
 ### --include
