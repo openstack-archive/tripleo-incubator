@@ -66,6 +66,9 @@ OVERCLOUD_SSL_CERT=${SSLBASE:+$(<$SSLBASE.crt)}
 OVERCLOUD_SSL_KEY=${SSLBASE:+$(<$SSLBASE.key)}
 PUBLIC_API_URL=${12:-''}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
+# If set, the name of a CA certificate file on disk to import the contents of.
+SSLCA=${13:-''}
+OVERCLOUD_SSL_CA_CERT=${SSLCA:+$($<$SSLCA)}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
@@ -281,6 +284,7 @@ ENV_JSON=$(jq '.parameters = {
     "SwiftHashSuffix": "'"${OVERCLOUD_SWIFT_HASH}"'",
     "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
+    "SSLCACertificate": "'"${OVERCLOUD_SSL_CA_CERT}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
     "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
   }' <<< $ENV_JSON)
