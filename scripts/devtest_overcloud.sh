@@ -281,6 +281,7 @@ ENV_JSON=$(jq '.parameters = {
     "SwiftHashSuffix": "'"${OVERCLOUD_SWIFT_HASH}"'",
     "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
+    "SSLCACertificate": "'"${OVERCLOUD_SSL_CA_CERT}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
     "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
   }' <<< $ENV_JSON)
