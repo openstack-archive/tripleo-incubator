@@ -285,9 +285,12 @@ set -u #nodocs
 ## #. Export the undercloud endpoint and credentials to your test environment.
 ##    ::
 
-UNDERCLOUD_ENDPOINT="http://$UNDERCLOUD_IP:5000/v2.0"
-NEW_JSON=$(jq '.undercloud.password="'${UNDERCLOUD_ADMIN_PASSWORD}'" | .undercloud.endpoint="'${UNDERCLOUD_ENDPOINT}'" | .undercloud.endpointhost="'${UNDERCLOUD_IP}'"' $TE_DATAFILE)
-echo $NEW_JSON > $TE_DATAFILE
+NEW_JSON=$(jq '. + {"undercloud": (.undercloud + {
+                        "password": "'"${UNDERCLOUD_ADMIN_PASSWORD}"'",
+                        "endpoint": ("http://" + "'"$UNDERCLOUD_IP"'" + ":5000/v2.0"),
+                        "endpointhost": "'"${UNDERCLOUD_IP}"'"
+                    })}' $TE_DATAFILE)
+echo "$NEW_JSON" > $TE_DATAFILE
 
 ## #. Source the undercloud configuration:
 ##    ::
