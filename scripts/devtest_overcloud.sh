@@ -15,10 +15,13 @@ function show_options () {
     echo "Deploys a KVM cloud via heat."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --heat-env     -- path to a JSON heat environment file."
-    echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
+    echo "      -h               -- this help"
+    echo "      --build-only     -- build the needed images but don't deploy them."
+    echo "      --heat-env       -- path to a JSON heat environment file."
+    echo "                          Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
+    echo "      --user-heat-env  -- path to a JSON heat environment file containing user"
+    echo "                          settings. Defaults to "
+    echo "                          \$TRIPLEO_ROOT/overcloud-user-env.json."
     echo
     exit $1
 }
@@ -33,6 +36,7 @@ while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
+        --user-heat-env) USER_HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -44,11 +48,27 @@ if [ -z "$BUILD_ONLY" ]; then
     OS_PASSWORD=${OS_PASSWORD:?"OS_PASSWORD is not set. Undercloud credentials are required"}
 fi
 
+# Warn about old env vars we now ignore
+for OLD_VAR in OVERCLOUD_NAME \
+               OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE \
+               OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE \
+               OVERCLOUD_BRIDGE_MAPPINGS \
+               OVERCLOUD_FLAT_NETWORKS \
+               NeutronPublicInterface \
+               OVERCLOUD_LIBVIRT_TYPE \
+               OVERCLOUD_NTP_SERVER; do
+
+    if [ -n "${!OLD_VAR}" ]; then
+        echo "WARNING: ${OLD_VAR} is deprecated and ignored, please set this in the" \
+             " HEAT_ENV file (${HEAT_ENV})" 1>&2
+    fi
+done
+
 # Parameters for tripleo-cd - see the tripleo-cd element.
 # NOTE(rpodolyaka): retain backwards compatibility by accepting both positional
 #                   arguments and environment variables. Positional arguments
 #                   take precedence over environment variables
-NeutronPublicInterface=${1:-${NeutronPublicInterface:-'eth0'}}
+NeutronPublicInterface=${1:-'eth0'}
 NeutronPublicInterfaceIP=${2:-${NeutronPublicInterfaceIP:-''}}
 NeutronPublicInterfaceRawDevice=${3:-${NeutronPublicInterfaceRawDevice:-''}}
 NeutronPublicInterfaceDefaultRoute=${4:-${NeutronPublicInterfaceDefaultRoute:-''}}
@@ -149,37 +169,11 @@ fi
 ### --include
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
 
-## #. For running an overcloud in VM's. For Physical machines, set to kvm:
-##    ::
-
-OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
-
-## #. Set the public interface of overcloud network node::
-##    ::
-
-NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
-
-## #. Set the NTP server for the overcloud::
-##    ::
-
-OVERCLOUD_NTP_SERVER=${OVERCLOUD_NTP_SERVER:-''}
-
 ## #. If you want to permit VM's access to bare metal networks, you need
 ##    to define flat-networks and bridge mappings in Neutron::
 ##    ::
 
-OVERCLOUD_FLAT_NETWORKS=${OVERCLOUD_FLAT_NETWORKS:-''}
-OVERCLOUD_BRIDGE_MAPPINGS=${OVERCLOUD_BRIDGE_MAPPINGS:-''}
-OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-''}
-OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-''}
 OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
-
-## #. If you are using SSL, your compute nodes will need static mappings to your
-##    endpoint in ``/etc/hosts`` (because we don't do dynamic undercloud DNS yet).
-##    set this to the DNS name you're using for your SSL certificate - the heat
-##    template looks up the controller address within the cloud::
-
-OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
 
 ## #. TripleO explicitly models key settings for OpenStack, as well as settings
 ##    that require cluster awareness to configure. To configure arbitrary
@@ -233,6 +227,7 @@ fi #nodocs
 ##    heat.::
 
 HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/overcloud-env.json"}
+USER_HEAT_ENV=${USER_HEAT_ENV:-"${TRIPLEO_ROOT}/overcloud-user-env.json"}
 
 ## #. Read the heat env in for updating.::
 
@@ -250,29 +245,46 @@ else
     ENV_JSON='{"parameters":{}}'
 fi
 
+## #. Merge in the user heat env.::
+
+if [ -e "${USER_HEAT_ENV}" ]; then
+### --end
+    if [ "$(stat -c %a ${USER_HEAT_ENV})" != "600" ]; then
+        echo "Error: User heat environment file \"${USER_HEAT_ENV}\" not set to permissions of 0600."
+# We should exit 1 so all the users from before the permissions
+# requirement don't have their USER_HEAT_ENV files ignored in a nearly silent way
+        exit 1
+    fi
+### --include
+    ENV_JSON=$(jq -s '.[0] + .[1] + {"parameters": (.[0].parameters + .[1].parameters)}'
+        "${USER_HEAT_ENV}" <(echo "${ENV_JSON}"))
+fi
+
 ## #. Set parameters we need to deploy a KVM cloud.::
 
+# NeutronPublicInterface has a non-literal default value because it can be
+# passed in as a positional script argument.
 ENV_JSON=$(jq '.parameters = {
-    "MysqlInnodbBufferPoolSize": 100
+    "MysqlInnodbBufferPoolSize": 100,
+    "CloudName": "",
+    "HypervisorNeutronPhysicalBridge": "",
+    "HypervisorNeutronPublicInterface": "",
+    "NeutronBridgeMappings": "",
+    "NeutronFlatNetworks": "",
+    "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
+    "NovaComputeLibvirtType": "qemu",
+    "NtpServer": ""
   } + .parameters + {
     "AdminPassword": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
     "AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
     "CeilometerPassword": "'"${OVERCLOUD_CEILOMETER_PASSWORD}"'",
     "CeilometerMeteringSecret": "'"${OVERCLOUD_CEILOMETER_SECRET}"'",
     "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
-    "CloudName": "'"${OVERCLOUD_NAME}"'",
     "controllerImage": "'"${OVERCLOUD_CONTROL_ID}"'",
     "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
     "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
-    "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
-    "HypervisorNeutronPublicInterface": "'"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}"'",
-    "NeutronBridgeMappings": "'"${OVERCLOUD_BRIDGE_MAPPINGS}"'",
-    "NeutronFlatNetworks": "'"${OVERCLOUD_FLAT_NETWORKS}"'",
     "NeutronPassword": "'"${OVERCLOUD_NEUTRON_PASSWORD}"'",
-    "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
-    "NovaComputeLibvirtType": "'"${OVERCLOUD_LIBVIRT_TYPE}"'",
     "NovaPassword": "'"${OVERCLOUD_NOVA_PASSWORD}"'",
-    "NtpServer": "'"${OVERCLOUD_NTP_SERVER}"'",
     "SwiftHashSuffix": "'"${OVERCLOUD_SWIFT_HASH}"'",
     "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
