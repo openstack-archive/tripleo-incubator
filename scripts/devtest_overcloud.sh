@@ -391,9 +391,12 @@ ssh-keygen -R $OVERCLOUD_IP
 
 ## #. Export the overcloud endpoint and credentials to your test environment.
 ##    ::
-
-NEW_JSON=$(jq '.overcloud.password="'${OVERCLOUD_ADMIN_PASSWORD}'" | .overcloud.endpoint="'${OVERCLOUD_ENDPOINT}'" | .overcloud.endpointhost="'${OVERCLOUD_IP}'"' $TE_DATAFILE)
-echo $NEW_JSON > $TE_DATAFILE
+NEW_JSON=$(jq '. + {"overcloud": (.overcloud + {
+                        "password": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
+                        "endpoint": "'"${OVERCLOUD_ENDPOINT}"'",
+                        "endpointhost": "'"${OVERCLOUD_IP}"'"
+                    })}' $TE_DATAFILE)
+echo "$NEW_JSON" > $TE_DATAFILE
 
 ## #. Source the overcloud configuration::
 
