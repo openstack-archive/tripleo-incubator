@@ -15,10 +15,13 @@ function show_options () {
     echo "Deploys a baremetal cloud via heat."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --heat-env     -- path to a JSON heat environment file."
-    echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
+    echo "      -h               -- this help"
+    echo "      --build-only     -- build the needed images but don't deploy them."
+    echo "      --heat-env       -- path to a JSON heat environment file."
+    echo "                          Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
+    echo "      --user-heat-env  -- path to a JSON heat environment file containing user"
+    echo "                          settings. Defaults to "
+    echo "                          \$TRIPLEO_ROOT/undercloud-user-env.json."
     echo
     exit $1
 }
@@ -33,13 +36,24 @@ while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
+        --user-heat-env) USER_HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
 done
 
+# Warn about old env vars we now ignore
+for OLD_VAR in UNDERCLOUD_NTP_SERVER \
+               NeutronPublicInterface; do
+    if [ -n "${!OLD:-}" ]; then
+        echo "WARNING: ${OLD_VAR} is deprecated and ignored, please set this in the" \
+             " HEAT_ENV file (${HEAT_ENV})" 1>&2
+    fi
+done
+
 set -x
+
 USE_CACHE=${USE_CACHE:-0}
 TE_DATAFILE=${1:?"A test environment description is required as \$1."}
 UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-'rabbitmq-server'}
@@ -99,17 +113,6 @@ fi
 
 UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 
-
-## #. Set the public interface of the undercloud network node:
-##    ::
-
-NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
-
-## #. Set the NTP server for the undercloud::
-##    ::
-
-UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
-
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
 ##    that you need to source into your shell environment.
@@ -154,10 +157,11 @@ POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 wait_for 60 1 [ "\$(nova hypervisor-stats | awk '\$2==\"count\" { print \$4}')" != "0" ]
 
 
-## #. We need an environment file to store the parameters we're gonig to give
+## #. We need an environment file to store the parameters we're going to give
 ##    heat.::
 
 HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/undercloud-env.json"}
+USER_HEAT_ENV=${USER_HEAT_ENV:-"${TRIPLEO_ROOT}/undercloud-user-env.json"}
 
 ## #. Read the heat env in for updating.::
 
@@ -166,13 +170,28 @@ if [ -e "${HEAT_ENV}" ]; then
     if [ "$(stat -c %a ${HEAT_ENV})" != "600" ]; then
         echo "Error: Heat environment cache \"${HEAT_ENV}\" not set to permissions of 0600."
 # We should exit 1 so all the users from before the permissions
-# requirement dont have their HEAT_ENV files ignored in a nearly silent way
+# requirement don't have their HEAT_ENV files ignored in a nearly silent way
         exit 1
     fi
 ### --include
     ENV_JSON=$(cat "${HEAT_ENV}")
 else
     ENV_JSON='{"parameters":{}}'
+fi
+
+## #. Merge in the user heat env.::
+
+if [ -e "${USER_HEAT_ENV}" ]; then
+### --end
+    if [ "$(stat -c %a ${USER_HEAT_ENV})" != "600" ]; then
+        echo "Error: User heat environment file \"${USER_HEAT_ENV}\" not set to permissions of 0600."
+# We should exit 1 so all the users from before the permissions
+# requirement don't have their USER_HEAT_ENV files ignored in a nearly silent way
+        exit 1
+    fi
+### --include
+    ENV_JSON=$(jq -s '.[0] + .[1] + {"parameters": (.[0].parameters + .[1].parameters)}'
+        "${USER_HEAT_ENV}" <(echo "${ENV_JSON}"))
 fi
 
 ## #. Nova-baremetal and Ironic require different Heat templates
@@ -210,7 +229,9 @@ fi
 ## #. Set parameters we need to deploy a KVM cloud.::
 
 ENV_JSON=$(jq '.parameters = {
-    "MysqlInnodbBufferPoolSize": 100
+    "MysqlInnodbBufferPoolSize": 100,
+    "NeutronPublicInterface": "eth0",
+    "NtpServer": ""
   } + .parameters + {
     "AdminPassword": "'"${UNDERCLOUD_ADMIN_PASSWORD}"'",
     "AdminToken": "'"${UNDERCLOUD_ADMIN_TOKEN}"'",
@@ -219,11 +240,9 @@ ENV_JSON=$(jq '.parameters = {
     "HeatPassword": "'"${UNDERCLOUD_HEAT_PASSWORD}"'",
     "NovaPassword": "'"${UNDERCLOUD_NOVA_PASSWORD}"'",
     "NeutronPassword": "'"${UNDERCLOUD_NEUTRON_PASSWORD}"'",
-    "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
     "undercloudImage": "'"${UNDERCLOUD_ID}"'",
     "BaremetalArch": "'"${NODE_ARCH}"'",
-    "PowerSSHPrivateKey": "'"${POWER_KEY}"'",
-    "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'"
+    "PowerSSHPrivateKey": "'"${POWER_KEY}"'"
   }' <<< $ENV_JSON)
 
 #Add Ceilometer to env only if USE_UNDERCLOUD_UI is specified
