@@ -9,6 +9,7 @@ Getting Started
    README
    userguide
    devtest
+   HACKING
 
 Detailed notes
 ---------------
