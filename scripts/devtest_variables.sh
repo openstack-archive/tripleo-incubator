@@ -71,12 +71,17 @@ export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$TRIPLEO_ROOT/dib-utils/bin:
 
 export USE_UNDERCLOUD_UI=${USE_UNDERCLOUD_UI:-1}
 
-## #. We now support Ironic as the baremetal deployment layer. To use it just
-##    set ``USE_IRONIC=1``. The default is still Nova Baremetal until we've had some
-##    time to identify any kinks in the process.
+## #. Ironic is used as the default baremetal deployment layer. To use the
+##    deprecated Nova-Baremetal deployment layer set USE_IRONIC=0.
+##    Note however that as Nova-Baremetal is deprecated in Nova and TripleO
+##    support for it will be removed once it is removed from Nova.
 ##    ::
 
-export USE_IRONIC=${USE_IRONIC:-0}
+export USE_IRONIC=${USE_IRONIC:-1}
+
+if [ 0 -eq "$USE_IRONIC" ]; then
+    echo "Nova-baremetal is deprecated, please migrate to Ironic ASAP." >&2
+fi
 
 ## #. Set a list of image elements that should be included in all image builds.
 ##    Note that stackuser is only for debugging support - it is not suitable for
