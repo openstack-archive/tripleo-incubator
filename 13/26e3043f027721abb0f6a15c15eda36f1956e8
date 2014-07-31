@@ -1,0 +1,26 @@
+Verified+2: Jenkins
+Code-Review+1: Jon-Paul Sullivan (jp_at_hp) <jonpaul.sullivan@hp.com>
+Code-Review+1: Cian O'Driscoll <cian@hp.com>
+Code-Review+2: Ghe Rivero <ghe.rivero@gmail.com>
+Code-Review+1: Joe Gordon <joe.gordon0@gmail.com>
+Code-Review+1: Devananda van der Veen <devananda.vdv@gmail.com>
+Code-Review+1: stephen-mulcahy <stephen.mulcahy@hp.com>
+Code-Review+1: xu-haiwei <xu-haiwei@mxw.nes.nec.co.jp>
+Code-Review+2: Chris Jones <cmsj@tenshu.net>
+Code-Review+1: Giulio Fidente <gfidente@redhat.com>
+Code-Review+1: Michael Kerrin <michael.kerrin@hp.com>
+Code-Review+1: Richard Su <rwsu@redhat.com>
+Code-Review+2: Ladislav Smola <lsmola@redhat.com>
+Code-Review+2: Jay Dobies <jason.dobies@redhat.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Code-Review+2: Alexis Lee <lxsli@hp.com>
+Workflow+1: Alexis Lee <lxsli@hp.com>
+Code-Review+1: Steve Kowalik <steven@wedontsleep.org>
+Code-Review+1: Dougal Matthews <dougal@redhat.com>
+Code-Review+1: Nicholas Randon <nicholas.randon@hp.com>
+Code-Review+1: Motohiro Otsuka <ootsuka@mxs.nes.nec.co.jp>
+Submitted-by: Jenkins
+Submitted-at: Thu, 31 Jul 2014 12:59:54 +0000
+Reviewed-on: https://review.openstack.org/104060
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
