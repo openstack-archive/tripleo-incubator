@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Code-Review+2: Tomas Sedovic <tomas@sedovic.cz>
+Workflow+1: Tomas Sedovic <tomas@sedovic.cz>
+Code-Review+1: Michael Kerrin <michael.kerrin@hp.com>
+Code-Review+1: Richard Su <rwsu@redhat.com>
+Code-Review+2: Alexis Lee <lxsli@hp.com>
+Code-Review+1: Nicholas Randon <nicholas.randon@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 01 Aug 2014 10:21:49 +0000
+Reviewed-on: https://review.openstack.org/107437
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
