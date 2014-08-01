@@ -70,11 +70,13 @@ USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
+OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-''}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
 
 if [ "$USE_MARIADB" -eq 1 ] ; then
     OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS mariadb-rpm"
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS mariadb-dev-rpm"
+    OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS mariadb-dev-rpm"
 fi
 
 # A client-side timeout in minutes for creating or updating the overcloud
@@ -93,7 +95,7 @@ OVERCLOUD_FIXED_RANGE_CIDR=${OVERCLOUD_FIXED_RANGE_CIDR:-"10.0.0.0/8"}
 ##    This is the image the undercloud
 ##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
 
-##    ``$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS`` and ``$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS`` are
+##    ``$OVERCLOUD_*_DIB_EXTRA_ARGS`` (CONTROL, COMPUTE, BLOCKSTORAGE) are
 ##    meant to be used to pass additional build-time specific arguments to
 ##    ``disk-image-create``.
 
@@ -109,6 +111,7 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS snmpd"
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
+    OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS snmpd"
 fi
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
@@ -129,6 +132,29 @@ fi #nodocs
 if [ -z "$BUILD_ONLY" ]; then #nodocs
 OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 fi #nodocs
+
+## #. Create your block storage image if some block storage nodes are to be used. This
+##    is the image the undercloud deploys for the additional cinder-volume instances.
+##    ::
+
+if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
+    if [ ! -e $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume ntp hosts \
+            baremetal cinder-volume cinder-tgt os-collect-config \
+            dhcp-all-interfaces $DIB_COMMON_ELEMENTS \
+            $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
+            tee $TRIPLEO_ROOT/dib-overcloud-cinder-volume.log
+    fi #nodocs
+
+## #. And again load the image into Glance, unless you are just building the images.
+
+##    ::
+
+    if [ -z "$BUILD_ONLY" ]; then #nodocs
+    OVERCLOUD_BLOCKSTORAGE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2)
+    fi #nodocs
+fi
 
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
@@ -213,7 +239,7 @@ fi
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
-expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE ))
+expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_BLOCKSTORAGESCALE ))
 wait_for 60 1 wait_for_hypervisor_stats $expected_nodes
 
 ## #. Set password for Overcloud SNMPd, same password needs to be set in Undercloud Ceilometer
@@ -285,6 +311,12 @@ ENV_JSON=$(jq '.parameters = {
     "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
   }' <<< $ENV_JSON)
 
+if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
+    ENV_JSON=$(jq '.parameters = {} + .parameters + {
+        "BlockStorageImage": "'"${OVERCLOUD_BLOCKSTORAGE_ID}"'",
+      }' <<< $ENV_JSON)
+fi
+
 ### --end
 # Options we haven't documented as such
 NeutronControlPlaneID=$(neutron net-show ctlplane | grep ' id ' | awk '{print $4}')
@@ -314,6 +346,7 @@ generate-keystone-pki --heatenv $HEAT_ENV
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
            COMPUTESCALE=$OVERCLOUD_COMPUTESCALE \
            CONTROLSCALE=$OVERCLOUD_CONTROLSCALE \
+           BLOCKSTORAGESCALE=$OVERCLOUD_BLOCKSTORAGESCALE \
 ##         heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
 ##             -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
