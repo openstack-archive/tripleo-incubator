@@ -1,0 +1,18 @@
+Verified+2: Jenkins
+Code-Review+2: Dan Prince <dprince@redhat.com>
+Code-Review+2: Chris Jones <cmsj@tenshu.net>
+Code-Review+1: Giulio Fidente <gfidente@redhat.com>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Code-Review+1: Richard Su <rwsu@redhat.com>
+Code-Review+2: Ladislav Smola <lsmola@redhat.com>
+Code-Review+2: Jay Dobies <jason.dobies@redhat.com>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Code-Review+1: Ryan Brady <rbrady@redhat.com>
+Code-Review+2: Alexis Lee <lxsli@hp.com>
+Code-Review+1: Steve Kowalik <steven@wedontsleep.org>
+Submitted-by: Jenkins
+Submitted-at: Wed, 06 Aug 2014 23:34:32 +0000
+Reviewed-on: https://review.openstack.org/97284
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
