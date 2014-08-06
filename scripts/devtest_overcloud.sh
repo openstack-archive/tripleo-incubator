@@ -653,11 +653,13 @@ fi #nodocs
 
 wait_for -w 300 --delay 10 -- nova service-list --binary nova-compute 2\>/dev/null \| grep 'enabled.*\ up\ '
 
-## #. Wait for L2 Agent On Nova Compute
+## #. Wait for L2 Agent on all nodes. Lots of escaping here as we need
+##    to build a string that wait_for will pass to a shell to be
+##    executed.
 ##    ::
 
-wait_for -w 300 --delay 10 -- neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*-novacompute\"" #nodocs
-##         wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*-novacompute\""
+wait_for -w 300 --delay 10 [ $expected_nodes -eq \$\(neutron agent-list -f csv -c alive -c agent_type -c host \| grep '":-).*Open vSwitch agent.*"' \| wc -l\) ] #nodocs
+##         wait_for 30 10 [ $expected_nodes -eq \$\(neutron agent-list -f csv -c alive -c agent_type -c host \| grep '":-).*Open vSwitch agent.*"' \| wc -l\) ]
 
 ## #. Log in as a user.
 ##    ::
