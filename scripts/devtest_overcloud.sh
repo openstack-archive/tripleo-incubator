@@ -515,19 +515,22 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
     init-keystone -o $OVERCLOUD_IP -t $OVERCLOUD_ADMIN_TOKEN \
         -e admin.example.com -p $OVERCLOUD_ADMIN_PASSWORD -u heat-admin \
         ${SSLBASE:+-s $PUBLIC_API_URL} --no-pki-setup
-    # Creating these roles to be used by tenants using swift
-    keystone role-create --name=swiftoperator
-    keystone role-create --name=ResellerAdmin
-    setup-endpoints $OVERCLOUD_IP \
-        --cinder-password $OVERCLOUD_CINDER_PASSWORD \
-        --glance-password $OVERCLOUD_GLANCE_PASSWORD \
-        --heat-password $OVERCLOUD_HEAT_PASSWORD \
-        --neutron-password $OVERCLOUD_NEUTRON_PASSWORD \
-        --nova-password $OVERCLOUD_NOVA_PASSWORD \
-        --swift-password $OVERCLOUD_SWIFT_PASSWORD \
-        --ceilometer-password $OVERCLOUD_CEILOMETER_PASSWORD \
-        ${SSLBASE:+--ssl $PUBLIC_API_URL}
-    keystone role-create --name heat_stack_user
+
+    OVERCLOUD_ENDPOINTS='{
+        "ceilometer": {"password": "'"${OVERCLOUD_CEILOMETER_PASSWORD}"'"},
+        "cinder": {"password": "'"${OVERCLOUD_CINDER_PASSWORD}"'"},
+        "ec2": {"password": "'"${OVERCLOUD_GLANCE_PASSWORD}"'"},
+        "glance": {"password": "'"${OVERCLOUD_GLANCE_PASSWORD}"'"},
+        "heat": {"password": "'"${OVERCLOUD_HEAT_PASSWORD}"'"},
+        "neutron": {"password": "'"${OVERCLOUD_NEUTRON_PASSWORD}"'"},
+        "nova": {"password": "'"${OVERCLOUD_NOVA_PASSWORD}"'"},
+        "novav3": {"password": "'"${OVERCLOUD_NOVA_PASSWORD}"'"},
+        "swift": {"password": "'"${OVERCLOUD_SWIFT_PASSWORD}"'"},
+        "horizon": {"port": "'""'"}}'
+
+    setup-endpoints -s "$OVERCLOUD_ENDPOINTS" \
+        ${SSLBASE:+-s $PUBLIC_API_URL}
+
     user-config
     BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
     OVERCLOUD_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key overcloud.nameserver --type netaddress --key-default '8.8.8.8')
