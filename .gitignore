@@ -22,6 +22,8 @@ scripts/neutron
 scripts/openstack
 scripts/os-apply-config
 scripts/register-nodes
+scripts/setup-endpoints
+scripts/register-endpoint
 scripts/swift
 
 .tox
