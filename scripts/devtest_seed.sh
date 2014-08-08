@@ -245,15 +245,6 @@ set -u #nodocs
 
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 
-## #. If Ironic is in use, we need to setup a user for it.
-##    ::
-
-if [ $USE_IRONIC -eq 0 ]; then
-  IRONIC_OPT=
-else
-  IRONIC_OPT="--ironic-password unset"
-fi
-
 ## #. Perform setup of your seed cloud.
 ##    ::
 
@@ -270,11 +261,22 @@ wait_for 10 1 ping -c 1 $BM_NETWORK_SEED_IP
 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP | tee -a ~/.ssh/known_hosts | grep -q "^$BM_NETWORK_SEED_IP ssh-rsa "
 
 init-keystone -o $BM_NETWORK_SEED_IP -t unset -e admin@example.com -p unset -u root --no-pki-setup
-setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
-keystone role-create --name heat_stack_user
-# Creating these roles to be used by tenants using swift
-keystone role-create --name=swiftoperator
-keystone role-create --name=ResellerAdmin
+
+# Setup Keystone endpoints for seed.
+SEED_ENDPOINTS='{
+    "ec2": {"password": "unset"},
+    "glance": {"password": "unset"},
+    "heat": {"password": "unset"},
+    "neutron": {"password": "unset"},
+    "nova": {"password": "unset"},
+    "novav3": {"password": "unset"}}'
+
+# If Ironic is in use, we need to setup a user for it.
+if [ $USE_IRONIC -ne 0 ]; then
+    SEED_ENDPOINTS=$(echo $SEED_ENDPOINTS | jq '.ironic.password = "unset"')
+fi
+
+setup-endpoints -s "$SEED_ENDPOINTS"
 
 echo "Waiting for nova to initialise..."
 wait_for 50 10 nova list
