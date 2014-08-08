@@ -211,11 +211,9 @@ if [ "$USE_IRONIC" -eq 0 ] ; then
     ENV_JSON=$(jq .parameters.PowerSSHHost=\"${POWER_HOST}\" <<< $ENV_JSON)
     ENV_JSON=$(jq .parameters.PowerManager=\"${POWER_MANAGER}\" <<< $ENV_JSON)
     ENV_JSON=$(jq .parameters.PowerUserName=\"${POWER_USER}\" <<< $ENV_JSON)
-    REGISTER_SERVICE_OPTS=""
 else
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
     ENV_JSON=$(jq .parameters.IronicPassword=\"${UNDERCLOUD_IRONIC_PASSWORD}\" <<< $ENV_JSON)
-    REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
 fi
 
 STACKNAME_UNDERCLOUD=${STACKNAME_UNDERCLOUD:-'undercloud'}
@@ -332,24 +330,27 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 init-keystone -o $UNDERCLOUD_IP -t $UNDERCLOUD_ADMIN_TOKEN \
     -e admin@example.com -p $UNDERCLOUD_ADMIN_PASSWORD -u heat-admin
 
-# Creating these roles to be used by tenants using swift
-keystone role-create --name=swiftoperator
-keystone role-create --name=ResellerAdmin
-
-
 # Create service endpoints and optionally include Ceilometer for UI support
-ENDPOINT_LIST="--glance-password $UNDERCLOUD_GLANCE_PASSWORD
-    --heat-password $UNDERCLOUD_HEAT_PASSWORD
-    --neutron-password $UNDERCLOUD_NEUTRON_PASSWORD
-    --nova-password $UNDERCLOUD_NOVA_PASSWORD
-    --tuskar-password $UNDERCLOUD_TUSKAR_PASSWORD"
+UNDERCLOUD_ENDPOINTS='{
+    "ec2": {"password": "'"${UNDERCLOUD_GLANCE_PASSWORD}"'"},
+    "glance": {"password": "'"${UNDERCLOUD_GLANCE_PASSWORD}"'"},
+    "heat": {"password": "'"${UNDERCLOUD_HEAT_PASSWORD}"'"},
+    "neutron": {"password": "'"${UNDERCLOUD_NEUTRON_PASSWORD}"'"},
+    "nova": {"password": "'"${UNDERCLOUD_NOVA_PASSWORD}"'"},
+    "novav3": {"password": "'"${UNDERCLOUD_NOVA_PASSWORD}"'"},
+    "tuskar": {"password": "'"${UNDERCLOUD_TUSKAR_PASSWORD}"'"}}'
 
 if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
-    ENDPOINT_LIST="$ENDPOINT_LIST --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD"
+    UNDERCLOUD_ENDPOINTS=$(echo $UNDERCLOUD_ENDPOINTS | jq '.ceilometer.password = "'"${UNDERCLOUD_CEILOMETER_PASSWORD}"'"')
 fi
 
-setup-endpoints $UNDERCLOUD_IP $ENDPOINT_LIST $REGISTER_SERVICE_OPTS
-keystone role-create --name heat_stack_user
+# If Ironic is in use, we need to setup a user for it.
+if [ $USE_IRONIC -ne 0 ]; then
+    UNDERCLOUD_ENDPOINTS=$(echo $UNDERCLOUD_ENDPOINTS | jq '.ironic.password = "'"${UNDERCLOUD_IRONIC_PASSWORD}"'"')
+fi
+
+setup-endpoints -s "$UNDERCLOUD_ENDPOINTS" \
+    ${SSLBASE:+-s $PUBLIC_API_URL}
 
 user-config
 
