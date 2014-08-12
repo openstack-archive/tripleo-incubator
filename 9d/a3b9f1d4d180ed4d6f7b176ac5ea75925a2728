@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Workflow+1: Derek Higgins <derekh@redhat.com>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 12 Aug 2014 13:36:04 +0000
+Reviewed-on: https://review.openstack.org/113110
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
