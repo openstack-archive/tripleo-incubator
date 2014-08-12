@@ -119,6 +119,7 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
         baremetal boot-stack cinder-api ceilometer-collector \
         ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
+        ceilometer-alarm-notifier ceilometer-alarm-evaluator \
         os-collect-config horizon neutron-network-node dhcp-all-interfaces \
         swift-proxy swift-storage keepalived haproxy \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
