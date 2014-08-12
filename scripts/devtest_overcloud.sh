@@ -312,8 +312,8 @@ generate-keystone-pki --heatenv $HEAT_ENV
 ## #. Deploy an overcloud::
 
 make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
-           COMPUTESCALE=$OVERCLOUD_COMPUTESCALE \
-           CONTROLSCALE=$OVERCLOUD_CONTROLSCALE \
+           COMPUTESCALE=$OVERCLOUD_COMPUTESCALE,${OVERCLOUD_COMPUTE_BLACKLIST:-} \
+           CONTROLSCALE=$OVERCLOUD_CONTROLSCALE,${OVERCLOUD_CONTROL_BLOCKLIST:-} \
 ##         heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
 ##             -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
