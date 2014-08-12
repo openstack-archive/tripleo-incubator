@@ -189,6 +189,14 @@ export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
 export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
 export OVERCLOUD_BLOCKSTORAGESCALE=${OVERCLOUD_BLOCKSTORAGESCALE:-0}
 
+## #. These optional variables can be set to remove dead nodes. See the merge.py
+##    help for details of use. These example lines would remove Compute1 and
+##    Compute3, and Control2 and Control4.
+##    ::
+
+##         export OVERCLOUD_COMPUTE_BLACKLIST=1,3
+##         export OVERCLOUD_CONTROL_BLACKLIST=2,4
+
 ## #. You need to make the tripleo image elements accessible to diskimage-builder:
 ##    ::
 
