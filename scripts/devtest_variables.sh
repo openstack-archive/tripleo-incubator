@@ -202,12 +202,12 @@ export TE_DATAFILE=${TE_DATAFILE:-"$TRIPLEO_ROOT/testenv.json"}
 
 ## #. By default Percona XtraDB Cluster is used when installing MySQL database,
 ##    set ``USE_MARIADB=1`` if you want use MariaDB instead, MariaDB is used by
-##    default on Fedora because MariaDB packages are included directly in
-##    distribution
+##    default on Fedora based distributions because MariaDB packages are included
+##    directly in distribution
 ##    ::
 
 
-if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
+if [[ $NODE_DIST =~ .*(fedora|rhel|centos).* ]] ; then
     export USE_MARIADB=1
 else
     export USE_MARIADB=0
