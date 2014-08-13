@@ -104,9 +104,9 @@ fi
 ##    32bit VMs
 ##    ::
 
-##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=40 NODE_ARCH=i386
+##         NODE_CPU=1 NODE_MEM=2572 NODE_DISK=40 NODE_ARCH=i386
 
-NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386} NODE_CNT=${NODE_CNT:-15} #nodocs
+NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2572} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386} NODE_CNT=${NODE_CNT:-15} #nodocs
 
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint (3GB minimum - we suggest 4GB)::
