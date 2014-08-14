@@ -476,7 +476,8 @@ if [ "stack-create" = "$HEAT_OP" ] ; then #nodocs
 ## #. So that you can deploy a VM.
 ##    ::
 
-    nova boot --key-name default --flavor m1.tiny --image user demo
+    IMAGE_ID=$(glance image-show user | awk '/ id / {print $4}')
+    nova boot --key-name default --flavor m1.tiny --block-device source=image,id=$IMAGE_ID,dest=volume,size=2,shutdown=preserve,bootindex=0 demo
 
 ## #. Add an external IP for it.
 ##    ::
