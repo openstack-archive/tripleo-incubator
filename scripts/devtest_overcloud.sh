@@ -65,6 +65,7 @@ SSLBASE=${11:-''}
 OVERCLOUD_SSL_CERT=${SSLBASE:+$(<$SSLBASE.crt)}
 OVERCLOUD_SSL_KEY=${SSLBASE:+$(<$SSLBASE.key)}
 PUBLIC_API_URL=${12:-''}
+OVERCLOUD_CONTROL_FIXED_IPS=${PUBLIC_API_URL:+"[{\"ip_address\": \"$PUBLIC_API_URL\"}]"}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
@@ -269,6 +270,7 @@ ENV_JSON=$(jq '.parameters = {
     "controllerImage": "'"${OVERCLOUD_CONTROL_ID}"'",
     "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
     "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
+    "ControlFixedIPs": "'"${OVERCLOUD_CONTROL_FIXED_IPS}"'",
     "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
     "HypervisorNeutronPublicInterface": "'"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}"'",
     "NeutronBridgeMappings": "'"${OVERCLOUD_BRIDGE_MAPPINGS}"'",
