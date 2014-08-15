@@ -257,6 +257,7 @@ fi
 
 ## #. Set parameters we need to deploy a KVM cloud.::
 
+NeutronControlPlaneID=$(neutron net-show ctlplane | grep ' id ' | awk '{print $4}')
 ENV_JSON=$(jq '.parameters = {
     "MysqlInnodbBufferPoolSize": 100
   } + .parameters + {
@@ -272,6 +273,7 @@ ENV_JSON=$(jq '.parameters = {
     "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
     "HypervisorNeutronPublicInterface": "'"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}"'",
     "NeutronBridgeMappings": "'"${OVERCLOUD_BRIDGE_MAPPINGS}"'",
+    "NeutronControlPlaneID": "'${NeutronControlPlaneID}'",
     "NeutronFlatNetworks": "'"${OVERCLOUD_FLAT_NETWORKS}"'",
     "NeutronPassword": "'"${OVERCLOUD_NEUTRON_PASSWORD}"'",
     "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
@@ -287,14 +289,12 @@ ENV_JSON=$(jq '.parameters = {
 
 ### --end
 # Options we haven't documented as such
-NeutronControlPlaneID=$(neutron net-show ctlplane | grep ' id ' | awk '{print $4}')
 ENV_JSON=$(jq '.parameters = {
     "ControlVirtualInterface": "'${OVERCLOUD_VIRTUAL_INTERFACE}'"
   } + .parameters + {
     "NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
     "NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
     "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
-    "NeutronControlPlaneID": "'${NeutronControlPlaneID}'",
     "SnmpdReadonlyUserPassword": "'${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}'",
   }' <<< $ENV_JSON)
 
