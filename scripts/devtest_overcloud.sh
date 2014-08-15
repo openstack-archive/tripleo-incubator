@@ -429,8 +429,9 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
         ${SSLBASE:+--ssl $PUBLIC_API_URL}
     keystone role-create --name heat_stack_user
     user-config
-##             setup-neutron "" "" 10.0.0.0/8 "" "" "" 192.0.2.45 192.0.2.64 192.0.2.0/24
-    setup-neutron "" "" $OVERCLOUD_FIXED_RANGE_CIDR "" "" "" $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
+##             setup-neutron "" "" 10.0.0.0/8 "" "" "" 8.8.8.8 192.0.2.45 192.0.2.64 192.0.2.0/24
+    OVERCLOUD_NAMESERVER=${OVERCLOUD_NAMESERVER:-"8.8.8.8"}
+    setup-neutron "" "" $OVERCLOUD_FIXED_RANGE_CIDR "" "" "" $OVERCLOUD_NAMESERVER $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
 
 ## #. If you want a demo user in your overcloud (probably a good idea).
 ##    ::

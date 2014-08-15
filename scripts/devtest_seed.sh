@@ -253,7 +253,8 @@ wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep 
 
 BM_NETWORK_SEED_RANGE_START=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.range-start --type raw --key-default '192.0.2.2')
 BM_NETWORK_SEED_RANGE_END=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.range-end --type raw --key-default '192.0.2.20')
-setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $BM_NETWORK_SEED_IP ctlplane
+SEED_NAMESERVER=${SEED_NAMESERVER:-""}
+setup-neutron $BM_NETWORK_SEED_RANGE_START $BM_NETWORK_SEED_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $BM_NETWORK_SEED_IP ctlplane $SEED_NAMESERVER
 
 ## #. Nova quota runs up with the defaults quota so overide the default to
 ##    allow unlimited cores, instances and ram.
