@@ -26,12 +26,14 @@ METADATA_SERVER=$5
 # If non-empty create a provider flat network with this name otherwise create a
 # virtual network and setup a router etc.
 PHYSICAL_NETWORK=${6:-""}
+# Use custom DNS server (neutron's server IP is used by default)
+NAMESERVER=${7:-""}
 # Start of floating range
-FLOATING_START=${7:-""}
+FLOATING_START=${8:-""}
 # End of floating range
-FLOATING_END=${8:-""}
+FLOATING_END=${9:-""}
 # Floating CIDR
-FLOATING_CIDR=${9:-""}
+FLOATING_CIDR=${10:-""}
 
 # Create command line parameters
 if [ -n "$ALLOCATION_START" -a -n "$ALLOCATION_END" ] ; then
@@ -50,7 +52,11 @@ else
     # Overclouds
     NET_NAME="default-net"
     NET_EXTRA="--shared"
-    SUBNET_EXTRA="--dns-nameservers list=true 8.8.8.8"
+    SUBNET_EXTRA=""
+fi
+
+if [ -n "$NAMESERVER" ] ; then
+    SUBNET_EXTRA="$SUBNET_EXTRA --dns-nameservers list=true $NAMESERVER"
 fi
 
 NET_ID=$(neutron net-create $NET_NAME $NET_EXTRA | grep ' id ' | awk '{print $4}')
