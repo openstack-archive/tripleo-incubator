@@ -118,29 +118,36 @@ UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
 ##    that you need to source into your shell environment.
-##    
+##
 ##    .. note::
-##      
+##
 ##      You can also make or change these later and
 ##      update the heat stack definition to inject them - as long as you also
 ##      update the keystone recorded password.
-##      
+##
 ##    .. note::
-##      
+##
 ##      There will be a window between updating keystone and
 ##      instances where they will disagree and service will be down. Instead
 ##      consider adding a new service account and changing everything across
 ##      to it, then deleting the old account after the cluster is updated.
-##      
+##
 ##    ::
 
 ### --end
+
+# We used to write these passwords in $CWD; so check to see if the file exists
+# there first. As well as providing backwards compatibility, this allows for
+# people to run multiple test environments on the same machine - just make sure
+# to have a different directory for running the scripts for each different
+# environment you wish to use.
 if [ -e tripleo-undercloud-passwords ]; then
   echo "Re-using existing passwords in $PWD/tripleo-undercloud-passwords"
   # Add any new passwords since the file was generated
   setup-undercloud-passwords tripleo-undercloud-passwords
   source tripleo-undercloud-passwords
 else
+# If we can't find the file in $CWD, look in the new default location
 ### --include
   setup-undercloud-passwords $TRIPLEO_ROOT/tripleo-undercloud-passwords
   source $TRIPLEO_ROOT/tripleo-undercloud-passwords

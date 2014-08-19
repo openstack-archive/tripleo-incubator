@@ -249,12 +249,18 @@ UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD=${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD:-''}
 ## #. Create unique credentials::
 
 ### --end
+# We used to write these passwords in $CWD; so check to see if the file exists
+# there first. As well as providing backwards compatibility, this allows for
+# people to run multiple test environments on the same machine - just make sure
+# to have a different directory for running the scripts for each different
+# environment you wish to use.
 if [ -e tripleo-overcloud-passwords ]; then
   echo "Re-using existing passwords in $PWD/tripleo-overcloud-passwords"
   # Add any new passwords since the file was generated
   setup-overcloud-passwords tripleo-overcloud-passwords
   source tripleo-overcloud-passwords
 else
+# If we can't find the file in $CWD, look in the new default location
 ### --include
   setup-overcloud-passwords $TRIPLEO_ROOT/tripleo-overcloud-passwords
   source $TRIPLEO_ROOT/tripleo-overcloud-passwords
