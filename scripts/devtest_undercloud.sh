@@ -146,6 +146,12 @@ else
   source $TRIPLEO_ROOT/tripleo-undercloud-passwords
 fi #nodocs
 
+## #. Export UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD to your environment
+##    so it can be applied to the SNMPd of all Overcloud nodes.
+
+NEW_JSON=$(jq '.undercloud.ceilometer_snmpd_password="'${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}'"' $TE_DATAFILE)
+echo $NEW_JSON > $TE_DATAFILE
+
 ## #. Pull out needed variables from the test environment definition.
 ##    ::
 
