@@ -298,6 +298,7 @@ ENV_JSON=$(jq '.parameters = {
     "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
     "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
     "HypervisorNeutronPublicInterface": "'"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}"'",
+    "MysqlRootPassword": "'"${OVERCLOUD_MYSQL_ROOT_PASSWORD}"'",
     "NeutronBridgeMappings": "'"${OVERCLOUD_BRIDGE_MAPPINGS}"'",
     "NeutronControlPlaneID": "'${NeutronControlPlaneID}'",
     "NeutronFlatNetworks": "'"${OVERCLOUD_FLAT_NETWORKS}"'",
