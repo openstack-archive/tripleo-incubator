@@ -218,7 +218,6 @@ ENV_JSON=$(jq '.parameters = {
     "SnmpdReadonlyUserPassword": "'"${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}"'",
     "GlancePassword": "'"${UNDERCLOUD_GLANCE_PASSWORD}"'",
     "HeatPassword": "'"${UNDERCLOUD_HEAT_PASSWORD}"'",
-    "MysqlRootPassword": "'"${UNDERCLOUD_MYSQL_ROOT_PASSWORD}"'",
     "NovaPassword": "'"${UNDERCLOUD_NOVA_PASSWORD}"'",
     "NeutronPassword": "'"${UNDERCLOUD_NEUTRON_PASSWORD}"'",
     "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
