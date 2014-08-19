@@ -135,6 +135,13 @@ UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 ##    ::
 
 ### --end
+
+# NOTE(tchayp): We used to write these passwords in $CWD; so check to see if the
+# file exists there first. As well as providing backwards compatibility, this
+# allows for people to run multiple test environments on the same machine - just
+# make sure to have a different directory for running the scripts for each
+# different environment you wish to use.
+#
 if [ -e tripleo-undercloud-passwords ]; then
   echo "Re-using existing passwords in $PWD/tripleo-undercloud-passwords"
   # Add any new passwords since the file was generated
