@@ -42,6 +42,8 @@ done
 set -x
 USE_CACHE=${USE_CACHE:-0}
 
+exit 1
+
 ### --include
 ## devtest_seed
 ## ============
