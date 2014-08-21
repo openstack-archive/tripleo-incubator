@@ -148,20 +148,20 @@ fi
 ## ~~~~
 
 ## In order to set the sudo session timeout higher, add this to /etc/sudoers::
-## 
+
 ##     Defaults    timestamp_timeout=240 # 4 hours
-## 
+
 ## This will result in 4 hour timeouts for sudo session credentials. To
 ## reset the timeout run::
-## 
+
 ##     sudo -k; sudo -v
-## 
+
 
 ## In order to set a user to full passwordless operation add this (typically
 ## near the end of /etc/sudoers)::
-## 
+
 ##     username    ALL = NOPASSWD: ALL
-## 
+
 
 ## Initial Checkout
 ## ----------------

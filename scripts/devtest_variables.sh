@@ -135,17 +135,17 @@ export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rab
 ## #. Set distribution used for VMs (fedora, opensuse, ubuntu). If unset, this
 ##    will match TRIPLEO_OS_DISTRO, which is automatically gathered by devtest
 ##    and represent your build host distro (where the devtest code runs).
-## 
+
 ##    For Fedora, set SELinux permissive mode(currently the default when using Fedora)::
-## 
+
 ##         export NODE_DIST="fedora selinux-permissive"
 
 ##    For openSUSE, use::
-## 
+
 ##         export NODE_DIST="opensuse"
 
 ##    For Ubuntu, use::
-## 
+
 ##         export NODE_DIST="ubuntu"
 
 ### --end

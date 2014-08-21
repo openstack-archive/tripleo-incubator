@@ -118,20 +118,20 @@ UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 ## #. Create secrets for the cloud. The secrets will be written to a file
 ##    ($TRIPLEO_ROOT/tripleo-undercloud-passwords by default)
 ##    that you need to source into your shell environment.
-##    
+
 ##    .. note::
-##      
+
 ##      You can also make or change these later and
 ##      update the heat stack definition to inject them - as long as you also
 ##      update the keystone recorded password.
-##      
+
 ##    .. note::
-##      
+
 ##      There will be a window between updating keystone and
 ##      instances where they will disagree and service will be down. Instead
 ##      consider adding a new service account and changing everything across
 ##      to it, then deleting the old account after the cluster is updated.
-##      
+
 ##    ::
 
 ### --end
@@ -261,7 +261,7 @@ heat $HEAT_OP -e $HEAT_ENV \
 ##    You can watch the console via ``virsh``/``virt-manager`` to observe the PXE
 ##    boot/deploy process.  After the deploy is complete, it will reboot into the
 ##    image.
-## 
+
 ## #. Get the undercloud IP from ``nova list``
 ##    ::
 
