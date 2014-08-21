@@ -74,8 +74,7 @@ for TOOL in $TOOLS; do
 
     # Write the manifest entry
     # Make a best guess at the branch to get the remote in use
-    branch=$(git symbolic-ref -q HEAD)
-    if [[ $? -eq 1 ]] ; then
+    if ! branch=$(git symbolic-ref -q HEAD) ; then
         # We are on a non-symbolic reference - try the first branch containing this ref
         branch=$(git branch --contains HEAD | grep -v '(no branch)' | head -1 | tr -d ' ')
     else
