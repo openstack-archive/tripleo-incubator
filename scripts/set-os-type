@@ -5,7 +5,9 @@ TRIPLEO_OS_DISTRO='unsupported' # Specific distro: centos, fedora, redhat, suse,
 
 if [ -f /etc/redhat-release ]; then
   TRIPLEO_OS_FAMILY='redhat'
-  if $(grep -Eqs 'Red Hat Enterprise Linux' /etc/redhat-release); then
+  if $(grep -Eqs 'Red Hat Enterprise Linux Server release 7' /etc/redhat-release); then
+    TRIPLEO_OS_DISTRO='rhel7'
+  elif $(grep -Eqs 'Red Hat Enterprise Linux' /etc/redhat-release); then
     TRIPLEO_OS_DISTRO='rhel'
   fi
   if $(grep -Eqs 'CentOS' /etc/redhat-release); then
