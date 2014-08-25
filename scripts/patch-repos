@@ -1,0 +1,146 @@
+#!/bin/bash
+#
+# Copyright 2014 Hewlett-Packard Development Company, L.P.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+#
+# Script to patch repos given gerrit change ids
+#
+
+set -eu
+set -o pipefail
+
+SCRIPT_NAME=$(basename $0)
+SCRIPT_HOME=$(cd $(dirname $0) ; pwd)
+
+# Common function for setting the name of the repo var for this repo
+function get_repo_var() {
+    repo_var=$(basename ${1})
+    repo_var=${repo_var//[^a-zA-Z0-9]/_}
+    echo ${repo_var} | tr '[A-Z]' '[a-z]'
+}
+
+function show_options () {
+    echo "Usage: $SCRIPT_NAME [options] <change_id> [...]"
+    echo
+    echo "Validates the commit to ensure it matches HP commit guidelines."
+    echo
+    echo "Options:"
+    echo "      -h               -- this help"
+    echo "      -g <gerrit_host> -- the hostname of the gerrit server"
+    echo "      -p <gerrit_port> -- the port of the gerrit server"
+    echo "      -b <branch>      -- the branch to apply changes to in the cloned repo"
+    echo "      -d               -- run with debug enabled"
+    echo
+    echo "<change_id> is either the legacy change id (short number) or the Change-Id"
+    echo "of the gerrit change to download and apply to the local repository."
+    echo
+    echo "If necessary the repository will be cloned into TRIPLEO_ROOT (${TRIPLEO_ROOT:-})"
+    echo "or to the local working directory ($(cd ${SCRIPT_HOME}/../../ ; pwd))"
+    echo "if TRIPLEO_ROOT is not set."
+    echo
+    echo "Once the local directories have been prepped you should use something like"
+    echo "tripleo-incubator/scripts/set-source-vars to set the appropraite variables to use"
+    echo "the modified repositories in a build"
+    echo
+    exit $1
+}
+
+# Set the working directory as per the help statement, above
+WORKING_DIR=${TRIPLEO_ROOT:-$(cd ${SCRIPT_HOME}/../../ ; pwd)}
+
+TEMP=$(getopt -o hg:p:db: -l help -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+GERRIT_HOST=
+GERRIT_PORT=
+DEBUG=
+CHANGE_IDS=
+BRANCH=
+
+while true ; do
+    case "$1" in
+        -h|--help) show_options 0 >&2;;
+        -g) GERRIT_HOST=$2 ; shift 2;;
+        -p) GERRIT_PORT=$2 ; shift 2;;
+        -b) BRANCH=$2 ; shift 2;;
+        -d) DEBUG=1 ; shift 1;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." >&2 ; show_options 1 >&2 ;;
+    esac
+done
+
+if [[ "$DEBUG" == "1" ]]; then
+    set -x
+fi
+
+if [[ -z "$GERRIT_HOST" ]]; then
+    echo "ERROR: You must specify the gerrit hostname" >&2
+    show_options 1 >&2
+fi
+
+if [[ -z "$@" ]]; then
+    echo "ERROR: You must specify at least one change id on the command line" >&2
+    show_options 1 >&2
+fi
+
+CHANGE_IDS="$@"
+
+# Move to the working dir
+if [[ ! -d "${WORKING_DIR}" ]] ; then
+    echo "Error - if specifying TRIPLEO_ROOT it must exist" >&2
+fi
+pushd ${WORKING_DIR}
+
+for change_id in $CHANGE_IDS; do
+    # Retrieve the patch set info for the given change id
+    patch_info=$(ssh $GERRIT_HOST${GERRIT_PORT:+ -p$GERRIT_PORT} gerrit query \
+        "change:'$change_id'" --current-patch-set --format JSON)
+
+    # First check that gerrit hasn't returned an error:
+    error="$(echo "$patch_info" | jq -s -r 'map(select(.type == "error")) | .[].message')"
+    if [[ -n "$error" ]]; then
+        echo "ERROR, gerrit query returned: $error" >&2
+        exit 1
+    fi
+
+    # Gerrit returns stats with the query, so we only select records that have a project
+    project=$(echo "$patch_info" | jq -s -r 'map(select(.project)) | .[].project')
+    ref=$(echo "$patch_info" | jq -s -r 'map(select(.project)) | .[].currentPatchSet.ref')
+
+    # Now apply the patch to the right cloned repo
+    dir=$(basename $project .git)
+    if [[ ! -d "$dir" ]]; then
+        git clone https://$GERRIT_HOST/$project
+        # Use the existing DIB_REPOREF to determine what branch we should be patching
+        dib_repo_ref=DIB_REPOREF_$(get_repo_var ${dir})
+        # Override with $BRANCH, if set, otherwise use env var, otherwise use master
+        checkout_ref=${BRANCH:-${!dib_repo_ref:-master}}
+        pushd $dir
+        # checkout the correct branch
+        git checkout ${checkout_ref}
+        popd
+    fi
+
+    # Patch the repo
+    pushd $dir
+    git fetch https://$GERRIT_HOST/$project $ref && git cherry-pick FETCH_HEAD
+    popd
+done
+
+# All done - return to starting location
+popd
