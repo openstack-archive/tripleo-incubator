@@ -22,6 +22,7 @@ scripts/neutron
 scripts/openstack
 scripts/os-apply-config
 scripts/register-nodes
+scripts/setup-neutron
 scripts/swift
 
 .tox

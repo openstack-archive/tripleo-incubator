@@ -331,7 +331,21 @@ BM_NETWORK_CIDR=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.cidr -
 BM_NETWORK_GATEWAY=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
 BM_NETWORK_UNDERCLOUD_RANGE_START=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.undercloud.range-start --type raw --key-default '192.0.2.21')
 BM_NETWORK_UNDERCLOUD_RANGE_END=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.undercloud.range-end --type raw --key-default '192.0.2.40')
-setup-neutron $BM_NETWORK_UNDERCLOUD_RANGE_START $BM_NETWORK_UNDERCLOUD_RANGE_END $BM_NETWORK_CIDR $BM_NETWORK_GATEWAY $UNDERCLOUD_IP ctlplane
+NETWORK_JSON=$(mktemp)
+jq "." <<EOF > $NETWORK_JSON
+{
+    "physical": {
+        "gateway": "$BM_NETWORK_GATEWAY",
+        "metadata_server": "$UNDERCLOUD_IP",
+        "cidr": "$BM_NETWORK_CIDR",
+        "allocation_start": "$BM_NETWORK_UNDERCLOUD_RANGE_START",
+        "allocation_end": "$BM_NETWORK_UNDERCLOUD_RANGE_END",
+        "name": "ctlplane"
+    }
+}
+EOF
+setup-neutron -n $NETWORK_JSON
+rm $NETWORK_JSON
 
 ## #. Nova quota runs up with the defaults quota so overide the default to
 ##    allow unlimited cores, instances and ram.
