@@ -3,7 +3,7 @@ set -eu
 
 # libvirtd group
 case "$TRIPLEO_OS_DISTRO" in
-    'debian' | 'suse')
+    'debian' | 'opensuse' | 'suse')
         LIBVIRTD_GROUP='libvirt'
         ;;
     *)
