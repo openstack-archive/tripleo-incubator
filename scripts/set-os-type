@@ -5,26 +5,26 @@ TRIPLEO_OS_DISTRO='unsupported' # Specific distro: centos, fedora, rhel,
                                 #                  opensuse, sles, ubuntu
 
 if [ -f /etc/redhat-release ]; then
-  TRIPLEO_OS_FAMILY='redhat'
-  if $(grep -Eqs 'Red Hat Enterprise Linux' /etc/redhat-release); then
-    TRIPLEO_OS_DISTRO='rhel'
-  fi
-  if $(grep -Eqs 'CentOS' /etc/redhat-release); then
-    TRIPLEO_OS_DISTRO='centos'
-  fi
-  if $(grep -Eqs 'Fedora' /etc/redhat-release); then
-    TRIPLEO_OS_DISTRO='fedora'
-  fi
+    TRIPLEO_OS_FAMILY='redhat'
+    if $(grep -Eqs 'Red Hat Enterprise Linux' /etc/redhat-release); then
+        TRIPLEO_OS_DISTRO='rhel'
+    fi
+    if $(grep -Eqs 'CentOS' /etc/redhat-release); then
+        TRIPLEO_OS_DISTRO='centos'
+    fi
+    if $(grep -Eqs 'Fedora' /etc/redhat-release); then
+        TRIPLEO_OS_DISTRO='fedora'
+    fi
 fi
 
 if [ -f /etc/debian_version ]; then
-  TRIPLEO_OS_FAMILY='debian'
-  if $(grep -Eqs 'Ubuntu' /etc/lsb-release); then
-    TRIPLEO_OS_DISTRO='ubuntu'
-  fi
-  if $(grep -Eqs 'Debian' /etc/os-release); then
-    TRIPLEO_OS_DISTRO='debian'
-  fi
+    TRIPLEO_OS_FAMILY='debian'
+    if $(grep -Eqs 'Ubuntu' /etc/lsb-release); then
+        TRIPLEO_OS_DISTRO='ubuntu'
+    fi
+    if $(grep -Eqs 'Debian' /etc/os-release); then
+        TRIPLEO_OS_DISTRO='debian'
+    fi
 fi
 
 if [ -f /etc/os-release ]; then
