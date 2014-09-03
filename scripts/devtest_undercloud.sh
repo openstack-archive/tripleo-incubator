@@ -165,7 +165,7 @@ POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 wait_for 60 1 wait_for_hypervisor_stats
 
 
-## #. We need an environment file to store the parameters we're gonig to give
+## #. We need an environment file to store the parameters we're going to give
 ##    heat.::
 
 HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/undercloud-env.json"}
