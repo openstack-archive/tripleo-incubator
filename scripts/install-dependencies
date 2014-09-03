@@ -80,7 +80,7 @@ if [ "$TRIPLEO_OS_FAMILY" = "suse" ]; then
   sudo -E zypper --non-interactive install \
     python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
     python-devel gcc audit python-virtualenv openvswitch-switch python-PyYAML net-tools \
-    lsb-release libxslt-devel jq
+    lsb-release libxslt-devel jq libffi-devel
   sudo service libvirtd restart
   sudo service openvswitch-switch restart
 fi
