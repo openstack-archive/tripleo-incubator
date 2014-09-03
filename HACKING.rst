@@ -29,6 +29,10 @@ Bash
 - Use ``set -e`` and ``set -o pipefail`` to exit early on errors.
 - Use ``set -u`` to catch typos in variable names.
 - Use ``$()`` not `````` for subshell commands.
+- Double quote if there's any chance of spaces. EG:
+  - ``"${VAR}"``
+  - ``"$(true)"``
+  - ``"$(echo "${VAR}")"``
 - Avoid repeated/copy-pasted code. Make it a function, or a shared script, etc.
 - A ``do`` goes on the same line as its ``for`` or ``while``
 - A ``then`` goes on the same line as its ``if``
