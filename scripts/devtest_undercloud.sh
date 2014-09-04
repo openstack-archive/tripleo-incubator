@@ -7,6 +7,7 @@ SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
 BUILD_ONLY=
+DEBUG_LOGGING=
 HEAT_ENV=
 
 function show_options () {
@@ -15,15 +16,16 @@ function show_options () {
     echo "Deploys a baremetal cloud via heat."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --heat-env     -- path to a JSON heat environment file."
-    echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
+    echo "      -h              -- this help"
+    echo "      --build-only    -- build the needed images but don't deploy them."
+    echo "      --debug-logging -- Turn on debug logging in the built cloud."
+    echo "      --heat-env      -- path to a JSON heat environment file."
+    echo "                         Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,heat-env:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,debug-logging,heat-env:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -32,6 +34,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
+        --debug-logging) DEBUG_LOGGING="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
@@ -236,6 +239,15 @@ ENV_JSON=$(jq '.parameters = {
     "PowerSSHPrivateKey": "'"${POWER_KEY}"'",
     "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'"
   }' <<< $ENV_JSON)
+
+
+### --end
+if [ "$DEBUG_LOGGING" = "1" ]; then
+    ENV_JSON=$(jq '.parameters = {} + .parameters + {
+        "Debug": "True",
+      }' <<< $ENV_JSON)
+fi
+### --include
 
 #Add Ceilometer to env only if USE_UNDERCLOUD_UI is specified
 
