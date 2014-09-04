@@ -7,6 +7,7 @@ SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
 BUILD_ONLY=
+DEBUG_LOGGING=
 HEAT_ENV=
 
 function show_options () {
@@ -17,13 +18,14 @@ function show_options () {
     echo "Options:"
     echo "      -h             -- this help"
     echo "      --build-only   -- build the needed images but don't deploy them."
+    echo "      --debug-loggig -- Turn on debug logging in the built overcloud."
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o h -l build-only,heat-env:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l build-only,debug-logging,heat-env:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -32,6 +34,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY="1"; shift 1;;
+        --debug-logging) DEBUG_LOGGING="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
@@ -312,6 +315,14 @@ ENV_JSON=$(jq '.parameters = {
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
     "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
   }' <<< $ENV_JSON)
+
+### --end
+if [ "$DEBUG_LOGGING" = "1" ]; then
+    ENV_JSON=$(jq '.parameters = .parameters + {
+        "Debug": "True",
+      }' <<< $ENV_JSON)
+fi
+### --include
 
 if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     ENV_JSON=$(jq '.parameters = {} + .parameters + {
