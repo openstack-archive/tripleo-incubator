@@ -137,7 +137,7 @@ get_ref() {
 }
 
 get_name() {
-    local remote_name=${1:-origin}
+    local remote_name=${1:-""}
     name=$(get_location ${remote_name})
     echo $(basename ${name##*:} .git)
 }
