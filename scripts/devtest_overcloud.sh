@@ -400,7 +400,7 @@ if [ ! -e $TRIPLEO_ROOT/$USER_IMG_NAME -o "$USE_CACHE" == "0" ] ; then
     fi
 fi
 ### --include
-## #. Get the overcloud IP from 'nova list'
+## #. Get the overcloud IP from the heat stack
 ##    ::
 
 echo "Waiting for the overcloud stack to be ready" #nodocs
