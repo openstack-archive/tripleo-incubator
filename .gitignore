@@ -10,6 +10,7 @@
 
 doc/source/devtest*.rst
 openstack-tools
+scripts/ceilometer
 scripts/cinder
 scripts/generate-keystone-pki
 scripts/glance
