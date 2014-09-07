@@ -83,6 +83,14 @@ if [ 0 -eq "$USE_IRONIC" ]; then
     echo "Nova-baremetal is deprecated, please migrate to Ironic ASAP." >&2
 fi
 
+## #. The Ironic compute driver recently moved into the Nova tree.
+##    Setting this option updates nova.conf in the seed and undercloud
+##    to use the new classes in the Nova source tree.
+##    ::
+
+export USE_IRONIC_NOVA_DRIVER=${USE_IRONIC_NOVA_DRIVER:-0}
+
+
 ## #. Set a list of image elements that should be included in all image builds.
 ##    Note that stackuser is only for debugging support - it is not suitable for
 ##    a production network. This is also the place to include elements such as

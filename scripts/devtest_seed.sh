@@ -89,25 +89,51 @@ if [ $USE_IRONIC -eq 0 ]; then
             })
         }' config.json $TE_DATAFILE > tmp_local.json
 else
+    if [ "$USE_IRONIC_NOVA_DRIVER" -eq 1 ]; then
+# Use the Ironic compute driver in the Nova tree
+# Unsets .nova.baremetal as it's unused.
+# TODO replace "baremetal": {} with del(.baremetal) when jq 1.3 is widely available.
+# Sets:
+# - ironic.virtual_power_ssh_key.
+# - nova.compute_driver to nova.virt.ironic.driver.IronicDriver.
+# - nova.scheduler_host_manager to nova.scheduler.ironic_host_manager.IronicHostManager
+# - nova.compute_manager to avoid race conditions on ironic startup.
+        jq -s '
+            .[1] as $config
+            | .[0]
+            | . + {
+                "ironic": (.ironic + {
+                    "virtual_power_ssh_key": $config["ssh-key"],
+                }),
+                "nova": (.nova  + {
+                    "baremetal": {},
+                    "compute_driver": "nova.virt.ironic.driver.IronicDriver",
+                    "compute_manager": "ironic.nova.compute.manager.ClusteredComputeManager",
+                    "scheduler_host_manager": "nova.scheduler.ironic_host_manager.IronicHostManager",
+                })
+            }' config.json $TE_DATAFILE > tmp_local.json
+
+    else
 # Unsets .nova.baremetal as it's unused.
 # TODO replace "baremetal": {} with del(.baremetal) when jq 1.3 is widely available.
 # Sets:
 # - ironic.virtual_power_ssh_key.
 # - nova.compute_driver to ironic.nova.virt.ironic.driver.IronicDriver.
 # - nova.compute_manager to avoid race conditions on ironic startup.
-    jq -s '
-        .[1] as $config
-        | .[0]
-        | . + {
-            "ironic": (.ironic + {
-                "virtual_power_ssh_key": $config["ssh-key"],
-            }),
-            "nova": (.nova  + {
-                "baremetal": {},
-                "compute_driver": "ironic.nova.virt.ironic.driver.IronicDriver",
-                "compute_manager": "ironic.nova.compute.manager.ClusteredComputeManager",
-            })
-        }' config.json $TE_DATAFILE > tmp_local.json
+        jq -s '
+            .[1] as $config
+            | .[0]
+            | . + {
+                "ironic": (.ironic + {
+                    "virtual_power_ssh_key": $config["ssh-key"],
+                }),
+                "nova": (.nova  + {
+                    "baremetal": {},
+                    "compute_driver": "ironic.nova.virt.ironic.driver.IronicDriver",
+                    "compute_manager": "ironic.nova.compute.manager.ClusteredComputeManager",
+                })
+            }' config.json $TE_DATAFILE > tmp_local.json
+    fi
 fi
 
 # Add Keystone certs/key into the environment file

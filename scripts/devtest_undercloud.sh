@@ -199,6 +199,10 @@ if [ "$USE_IRONIC" -eq 0 ] ; then
 else
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
     ENV_JSON=$(jq .parameters.IronicPassword=\"${UNDERCLOUD_IRONIC_PASSWORD}\" <<< $ENV_JSON)
+    if [ "$USE_IRONIC_NOVA_DRIVER" -eq 1 ]; then
+        ENV_JSON=$(jq .parameters.NovaComputeDriver=\"nova.virt.ironic.driver.IronicDriver\" <<< $ENV_JSON)
+        ENV_JSON=$(jq .parameters.NovaSchedulerHostManager=\"nova.scheduler.ironic_host_manager.IronicHostManager\" <<< $ENV_JSON)
+    fi
     REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
 fi
 
