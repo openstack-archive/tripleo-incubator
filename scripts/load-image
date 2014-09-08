@@ -94,19 +94,19 @@ function load_image() {
     fi
 
     kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" \
-                                    --public \
+                                    --is-public True \
                                     --disk-format aki \
                                     --file "$KERNEL" \
                                     | grep ' id ' | awk '{print $4}')
     ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd" \
-                                     --public \
+                                     --is-public True \
                                      --disk-format ari \
                                      --file "$RAMDISK" \
                                      | grep ' id ' | awk '{print $4}')
 
     # >&3 sends to the original stdout as this is what we are after
     glance image-create --name $GLANCE_IMAGE_NAME \
-                        --public \
+                        --is-public True \
                         --disk-format qcow2 \
                         --container-format bare \
                         --property kernel_id=$kernel_id \
