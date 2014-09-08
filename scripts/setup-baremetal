@@ -77,9 +77,9 @@ fi
 
 deploy_kernel=$TRIPLEO_ROOT/$deploy_base.kernel
 deploy_ramdisk=$TRIPLEO_ROOT/$deploy_base.initramfs
-deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --public \
+deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --is-public True \
     --disk-format aki < "$deploy_kernel" | awk ' / id / {print $4}')
-deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --public \
+deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --is-public True \
     --disk-format ari < "$deploy_ramdisk" | awk ' / id / {print $4}')
 
 function cleanup_flavor () {
