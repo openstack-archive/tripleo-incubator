@@ -68,9 +68,9 @@ set_common() {
 source_config_file() {
     filename=\$1
     if [[ -e \$filename ]] ; then
-        . \$filename
+        source \$filename
     elif [[ -e \${TRIPLEO_ROOT}/\$filename ]] ; then
-        . \${TRIPLEO_ROOT}/\$filename
+        source \${TRIPLEO_ROOT}/\$filename
     else
         echo "Could not find \$filename - sourcing may not work" >&2
     fi
@@ -81,7 +81,7 @@ update_tripleo_no_proxy() {
 }
 EOF
     # This file may not be there, depending on if the undercloud/overcloud are started yet
-    echo "[ -f ${TRIPLEO_ROOT}/tripleorc ] && . ${TRIPLEO_ROOT}/tripleorc"
+    echo "[ -f ${TRIPLEO_ROOT}/tripleorc ] && source ${TRIPLEO_ROOT}/tripleorc"
     # Need to reset TRIPLEO_ROOT after sourcing tripleorc
     echo "export TRIPLEO_ROOT=$TRIPLEO_ROOT"
     echo ". ${TRIPLEO_ROOT}/tripleo-incubator/scripts/devtest_variables.sh"
@@ -89,7 +89,7 @@ EOF
 
 set_seed() {
     cat << EOF
-. ${TRIPLEO_ROOT}/tripleo-incubator/seedrc
+source ${TRIPLEO_ROOT}/tripleo-incubator/seedrc
 export SEED_IP=\$(os-apply-config -m \$TE_DATAFILE --type raw --key seed-ip)
 export OS_AUTH_URL=http://\${SEED_IP}:5000/v2.0
 update_tripleo_no_proxy \${SEED_IP}
@@ -103,7 +103,7 @@ EOF
 set_undercloud() {
     cat << EOF
 source_config_file tripleo-undercloud-passwords
-. ${TRIPLEO_ROOT}/tripleo-incubator/undercloudrc
+source ${TRIPLEO_ROOT}/tripleo-incubator/undercloudrc
 export UNDERCLOUD_IP=\$(os-apply-config -m \$TE_DATAFILE --type raw --key undercloud.endpointhost)
 update_tripleo_no_proxy \$UNDERCLOUD_IP
 EOF
@@ -112,7 +112,7 @@ EOF
 set_overcloud() {
     cat << EOF
 source_config_file tripleo-overcloud-passwords
-. ${TRIPLEO_ROOT}/tripleo-incubator/overcloudrc-user
+source ${TRIPLEO_ROOT}/tripleo-incubator/overcloudrc-user
 export OVERCLOUD_IP=\$(os-apply-config -m \$TE_DATAFILE --type raw --key overcloud.endpointhost)
 update_tripleo_no_proxy \$OVERCLOUD_IP
 EOF
