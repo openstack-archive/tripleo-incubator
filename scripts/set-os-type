@@ -1,7 +1,8 @@
 #!/bin/bash
 
 TRIPLEO_OS_FAMILY='unsupported' # Generic OS Family: debian, redhat, suse
-TRIPLEO_OS_DISTRO='unsupported' # Specific distro: centos, fedora, redhat, suse, ubuntu
+TRIPLEO_OS_DISTRO='unsupported' # Specific distro: centos, fedora, rhel,
+                                #                  opensuse, sles, ubuntu
 
 if [ -f /etc/redhat-release ]; then
   TRIPLEO_OS_FAMILY='redhat'
@@ -26,10 +27,21 @@ if [ -f /etc/debian_version ]; then
   fi
 fi
 
+function get_os_release {
+    (
+        source /etc/os-release
+        echo $ID
+    )
+}
+
 if [ -f /etc/os-release ]; then
-    if $(egrep -qx "ID=opensuse" /etc/os-release); then
+    if [ "$(get_os_release)" = "opensuse" ]; then
         TRIPLEO_OS_FAMILY='suse'
         TRIPLEO_OS_DISTRO='opensuse'
+    fi
+    if [ "$(get_os_release)" = "sles" ]; then
+        TRIPLEO_OS_FAMILY='suse'
+        TRIPLEO_OS_DISTRO='sles'
     fi
 fi
 
