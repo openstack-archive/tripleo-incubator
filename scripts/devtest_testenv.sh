@@ -28,6 +28,8 @@ function show_options () {
     echo "                              The schema for baremetal-network can be found in"
     echo "                              the devtest_setup documentation."
     echo
+    echo "    --keep-vms             -- Prevent cleanup of virsh instances for"
+    echo "                              undercloud and overcloud"
     echo "JSON-filename -- the path to write the environment description to."
     echo
     echo "Note: This adds a unique key to your authorised_keys file to permit "
@@ -41,8 +43,9 @@ NETS_PATH=
 NUM=
 OVSBRIDGE=
 SSH_KEY=~/.ssh/id_rsa_virt_power
+KEEP_VMS=
 
-TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,keep-vms -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -52,6 +55,7 @@ while true ; do
     case "$1" in
         --nodes) NODES_PATH="$2"; shift 2;;
         --bm-networks) NETS_PATH="$2"; shift 2;;
+        --keep-vms) KEEP_VMS=1; shift;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -140,11 +144,17 @@ fi
 SEED_CPU=${SEED_CPU:-${NODE_CPU}}
 SEED_MEM=${SEED_MEM:-${NODE_MEM}}
 
-#Clean up any prior environment
-if [ -n "$NUM" ]; then
-  cleanup-env -n $NUM
-else
-  cleanup-env
+## #. Clean up any prior environment.  Unless the --keep-vms argument is
+##    passed to the script, VMs for the undercloud and overcloud are
+##    destroyed
+##    ::
+
+if [ -z "$KEEP_VMS" ]; then
+    if [ -n "$NUM" ]; then
+        cleanup-env -n $NUM
+    else
+        cleanup-env
+    fi
 fi
 
 #Now start creating the new environment
