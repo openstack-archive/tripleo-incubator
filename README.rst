@@ -208,13 +208,16 @@ There is a :download:`high level presentation <../../presentations/TripleO
 architecture overview.odp>` accompanying these docs.
 
 We start with an `image builder
-<https://git.openstack.org/cgit/openstack/diskimage-builder/>`_, and rules for that to
-`build OpenStack images <https://git.openstack.org/cgit/openstack/tripleo-image-elements/>`_.
-We then use `Heat <https://git.openstack.org/cgit/openstack/heat>`_ to orchestrate deployment
-of those images onto bare metal using the `Nova baremetal driver
-<https://wiki.openstack.org/wiki/Baremetal>`_.
+<https://git.openstack.org/cgit/openstack/diskimage-builder/>`_, and rules for
+that to `build OpenStack images
+<https://git.openstack.org/cgit/openstack/tripleo-image-elements/>`_.  We then
+use `Heat <https://git.openstack.org/cgit/openstack/heat>`_ to orchestrate
+deployment of those images onto bare metal. Currently Heat can use either the
+`Nova baremetal driver <https://wiki.openstack.org/wiki/Baremetal>`_ or `Ironic
+<https://wiki.openstack.org/wiki/Ironic>` - Ironic is the default. Both are
+tested in our CI process.
 
-Eventually we will have the Heat instance we use to deploy both the undercloud
+Eventually, we will have the Heat instance we use to deploy both the undercloud
 and overcloud hosted in the undercloud. That depends on a full-HA setup so that
 we can upgrade itself using rolling deploys... and we haven't implemented the
 full HA setup yet. Today, we deploy the undercloud from a Heat instance hosted
