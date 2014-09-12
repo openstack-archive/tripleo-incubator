@@ -149,20 +149,15 @@ fi
 if [ -z "$BUILD_ONLY" ]; then
   if [ -n "$REMOTE_OPERATIONS" ]; then
       ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
-      # nova-baremetal doesn't kill these, they need to be destroyed to avoid conflicting with new CI runs,
-      # this can be removed when we're exclusively using ironic.
-      if [ "${USE_IRONIC:-0}" = "0" ] ; then
-          for NUM in $(seq 0 14) ; do
-              ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy baremetalbrbm${ENV_NUM}_${NUM} || true
-          done
-      fi
+      # Ensure any existing VM's in the test environment are shutdown, so devtest always starts at a consistent point.
+      for NUM in $(seq 0 14) ; do
+          ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy baremetalbrbm${ENV_NUM}_${NUM} || true
+      done
   else
       virsh destroy $IMAGE_NAME || true
-      if [ "${USE_IRONIC:-0}" = "0" ] ; then
-          for NUM in $(seq 0 14) ; do
-              virsh destroy baremetal_${NUM} || true
-          done
-      fi
+      for NUM in $(seq 0 14) ; do
+          virsh destroy baremetal_${NUM} || true
+      done
   fi
 fi
 
