@@ -11,7 +11,13 @@ function show_options () {
     echo "Waits for \`nova hypervisor-stats\` to show some memory + vcpus are available."
     echo
     echo "Positional arguments:"
-    echo "      nodes          -- The number of nodes to wait for, defaults to 1."
+    echo "      nodes           -- The number of nodes to wait for, defaults to 1."
+    echo "      memory          -- The amount of memory to wait for in MB,"
+    echo "                         defaults to the amount of memory for the"
+    echo "                         baremetal flavor times the number of nodes."
+    echo "      vcpus           -- The number of nodes to wait for, defaults to 1."
+    echo "                         defaults to the number of vcpus for the"
+    echo "                         baremtal flavor times the number of nodes."
     echo
     echo "Options:"
     echo "      -h / --help    -- this help"
@@ -34,14 +40,22 @@ while true ; do
 done
 
 EXPECTED_NODES=${1:-1}
+EXPECTED_MEM=${2:-""}
+EXPECTED_VCPUS=${3:-""}
 
 # NOTE(bnemec): If/when we have more flavors, this will need
 # to be expanded.
-FLAVOR=$(nova flavor-show baremetal)
-VCPUS=$(echo "$FLAVOR" | awk '$2=="vcpus" { print $4 }')
-EXPECTED_VCPUS=$(($VCPUS*$EXPECTED_NODES))
-MEM=$(echo "$FLAVOR" | awk '$2=="ram" { print $4 }')
-EXPECTED_MEM=$(($MEM*$EXPECTED_NODES))
+if [ -z "$EXPECTED_VCPUS" ]; then
+    FLAVOR=$(nova flavor-show baremetal)
+    VCPUS=$(echo "$FLAVOR" | awk '$2=="vcpus" { print $4 }')
+    EXPECTED_VCPUS=$(($VCPUS*$EXPECTED_NODES))
+fi
+
+if [ -z "$EXPECTED_MEM" ]; then
+    FLAVOR=$(nova flavor-show baremetal)
+    MEM=$(echo "$FLAVOR" | awk '$2=="ram" { print $4 }')
+    EXPECTED_MEM=$(($MEM*$EXPECTED_NODES))
+fi
 
 nova hypervisor-stats | awk '
   $2=="count" && $4 >= '"$EXPECTED_NODES"' { c++ };
