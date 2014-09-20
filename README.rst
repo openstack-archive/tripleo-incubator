@@ -217,8 +217,9 @@ deployment of those images onto bare metal. Currently Heat can use either the
 <https://wiki.openstack.org/wiki/Ironic>` - Ironic is the default. Both are
 tested in our CI process.
 
-Eventually, we will have the Heat instance we use to deploy both the undercloud
-and overcloud hosted in the undercloud. That depends on a full-HA setup so that
+Eventually, we will have the Heat instance hosted in only the undercloud,
+which we'll use to deploy both the undercloud and overcloud.
+That depends on a full-HA setup so that
 we can upgrade itself using rolling deploys... and we haven't implemented the
 full HA setup yet. Today, we deploy the undercloud from a Heat instance hosted
 in a seed cloud just big enough to deploy the undercloud. Then the undercloud
