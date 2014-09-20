@@ -217,8 +217,9 @@ deployment of those images onto bare metal. Currently Heat can use either the
 <https://wiki.openstack.org/wiki/Ironic>` - Ironic is the default. Both are
 tested in our CI process.
 
-Eventually, we will have the Heat instance we use to deploy both the undercloud
-and overcloud hosted in the undercloud. That depends on a full-HA setup so that
+Eventually, we will have the Heat instance hosted in only the undercloud,
+which we'll use to deploy both the undercloud and overcloud.
+That depends on a full-HA setup so that
 we can upgrade itself using rolling deploys... and we haven't implemented the
 full HA setup yet. Today, we deploy the undercloud from a Heat instance hosted
 in a seed cloud just big enough to deploy the undercloud. Then the undercloud
@@ -293,7 +294,7 @@ Stage N
 
 OpenStack on itself: OpenStack on OpenStack with one cloud:
 
-1. The under cloud is used ts in Stage 1.
+1. The under cloud is used as in Stage 1.
 2. KVM or Xen Nova compute nodes are deployed into the cloud as part of the
    admin tenant, and offer their compute capacity to the under cloud.
 3. Low overhead services can be redeployed as virtual machines rather than
