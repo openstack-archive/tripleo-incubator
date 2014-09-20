@@ -139,7 +139,7 @@ Caveats / limitations:
    point. A special case of this is HA pairs, where ideally Heat would know
    to take one side down, then the other.
  - deployments/reconfigurations only pay attention to the Nova API status
-   rather than also coordinating with monitoring systems. Workaround by 
+   rather than also coordinating with monitoring systems. Workaround by
    tying your monitoring back into Heat to trigger rollbacks.
 
 os-apply-config/os-refresh-config/os-collect-config
@@ -167,7 +167,7 @@ tripleo-image-elements
 
 These diskimage-builder elements create build-time specialised disk/partition
 images for TripleO. The elements build images with software installed but
-not configured - and hooks to configure the software with os-apply-config. 
+not configured - and hooks to configure the software with os-apply-config.
 OpenStack is deployable via the elements that have been written but it is not
 yet setup for full HA. Downloadable from
 https://git.openstack.org/cgit/openstack/tripleo-image-elements.
@@ -217,12 +217,13 @@ deployment of those images onto bare metal. Currently Heat can use either the
 <https://wiki.openstack.org/wiki/Ironic>` - Ironic is the default. Both are
 tested in our CI process.
 
-Eventually, we will have the Heat instance we use to deploy both the undercloud
-and overcloud hosted in the undercloud. That depends on a full-HA setup so that
-we can upgrade itself using rolling deploys... and we haven't implemented the
-full HA setup yet. Today, we deploy the undercloud from a Heat instance hosted
-in a seed cloud just big enough to deploy the undercloud. Then the undercloud
-Heat instance deploys the overcloud.
+Eventually, we will have the Heat instance hosted in only the undercloud,
+which we'll use to deploy both the undercloud and overcloud. That depends
+on a full-HA setup so that it can upgrade itself using rolling deploys...
+and we haven't implemented the full HA setup yet. Today, we deploy the
+undercloud from a Heat instance hosted in a seed cloud just big enough
+to deploy the undercloud. Then the undercloud Heat instance deploys the
+overcloud.
 
 We use this self contained bare metal cloud to deploy a kvm (or Xen or
 whatever) OpenStack instance as a tenant of the bare metal cloud. In the
@@ -293,7 +294,7 @@ Stage N
 
 OpenStack on itself: OpenStack on OpenStack with one cloud:
 
-1. The under cloud is used ts in Stage 1.
+1. The under cloud is used as in Stage 1.
 2. KVM or Xen Nova compute nodes are deployed into the cloud as part of the
    admin tenant, and offer their compute capacity to the under cloud.
 3. Low overhead services can be redeployed as virtual machines rather than
