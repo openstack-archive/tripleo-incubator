@@ -39,6 +39,7 @@ Further Information
    deploying
    resources
    troubleshooting
+   CONTRIBUTING
 
 
 Indices and tables
