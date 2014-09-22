@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+2: Dan Prince <dprince@redhat.com>
+Workflow+1: Dan Prince <dprince@redhat.com>
+Code-Review+2: Derek Higgins <derekh@redhat.com>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Code-Review+2: Steve Kowalik <steven@wedontsleep.org>
+Submitted-by: Jenkins
+Submitted-at: Mon, 22 Sep 2014 19:57:06 +0000
+Reviewed-on: https://review.openstack.org/119671
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
