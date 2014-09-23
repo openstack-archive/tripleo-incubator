@@ -7,7 +7,7 @@
 # Set PS4 as early as possible if it is still at the default, so that
 # we have a useful trace output for everything when running devtest.sh
 # with bash -x ./devtest.sh
-if [ "$PS4" = "+ " ]; then
+if [ ${PS4MUNGE:-1} -eq 1 -a "$PS4" = "+ " ]; then
     export PS4='${BASH_SOURCE}@${LINENO}: '
 fi
 set -eu
