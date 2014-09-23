@@ -173,12 +173,10 @@ yet setup for full HA. Downloadable from
 https://git.openstack.org/cgit/openstack/tripleo-image-elements.
 
 Caveats/Limitations:
- - Full HA is not yet implemented
-   https://bugs.launchpad.net/neutron/+bug/1174132
  - Bootstrap removal is not yet implemented (depends on full HA).
  - Currently assumes two clouds: under cloud and over cloud. Long term we would
    like to be able to offer a single cloud for environments where that makes
-   sense such as running a very minimal number of nodes but still wanting HA).
+   sense such as running a very minimal number of nodes but still wanting HA.
    This is primarily (but not entirely) configuration.
 
 tripleo-heat-templates
