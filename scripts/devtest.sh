@@ -37,6 +37,7 @@ function show_options () {
     echo "    --no-undercloud        -- Use the seed as the baremetal cloud to deploy the"
     echo "                              overcloud from."
     echo "    --build-only           -- Builds images but doesn't attempt to run them."
+    echo "    --no-mergepy           -- Use the standalone Heat templates."
     echo "    --debug-logging        -- Enable debug logging in the undercloud and overcloud."
     echo "    --heat-env-undercloud ENVFILE"
     echo "                           -- heat environment file for the undercloud."
@@ -53,6 +54,7 @@ function show_options () {
 }
 
 BUILD_ONLY=
+NO_MERGEPY=
 DEBUG_LOGGING=
 NODES_ARG=
 NO_UNDERCLOUD=
@@ -64,7 +66,7 @@ USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,debug-logging,existing-environment,help,trash-my-machine,nodes:,bm-networks:,no-undercloud,heat-env-overcloud:,heat-env-undercloud: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,no-mergepy,debug-logging,existing-environment,help,trash-my-machine,nodes:,bm-networks:,no-undercloud,heat-env-overcloud:,heat-env-undercloud: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -73,6 +75,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY=--build-only; shift 1;;
+        --no-mergepy) NO_MERGEPY=--no-mergepy; shift 1;;
         --debug-logging) DEBUG_LOGGING=--debug-logging; shift 1;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
@@ -343,7 +346,7 @@ DEVTEST_UC_END=$(date +%s)
 ##         devtest_overcloud.sh
 ### --end
 DEVTEST_OC_START=$(date +%s)
-devtest_overcloud.sh $BUILD_ONLY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD
+devtest_overcloud.sh $BUILD_ONLY $NO_MERGEPY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD
 DEVTEST_OC_END=$(date +%s)
 if [ -z "$BUILD_ONLY" ]; then
 ### --include
