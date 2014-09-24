@@ -374,10 +374,17 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
 
 ### --end
 
+RESOURCE_REGISTRY=
+
+if [ -e "$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml" ]; then
+    RESOURCE_REGISTRY="-e $TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml"
+fi
+
 
 # create stack with a 6 hour timeout, and allow wait_for_stack_ready
 # to impose a realistic timeout.
 heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
+    $RESOURCE_REGISTRY \
     -t 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
