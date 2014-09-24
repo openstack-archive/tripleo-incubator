@@ -367,7 +367,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
            COMPUTESCALE=$OVERCLOUD_COMPUTESCALE,${OVERCLOUD_COMPUTE_BLACKLIST:-} \
            CONTROLSCALE=$OVERCLOUD_CONTROLSCALE,${OVERCLOUD_CONTROL_BLACKLIST:-} \
            BLOCKSTORAGESCALE=$OVERCLOUD_BLOCKSTORAGESCALE \
-##         heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
+##         heat $HEAT_OP -e "$HEAT_ENV" \
 ##             -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
 ##             overcloud
@@ -377,7 +377,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
 
 # create stack with a 6 hour timeout, and allow wait_for_stack_ready
 # to impose a realistic timeout.
-heat $HEAT_OP -e $TRIPLEO_ROOT/overcloud-env.json \
+heat $HEAT_OP -e "$HEAT_ENV" \
     -t 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
