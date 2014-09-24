@@ -350,6 +350,22 @@ ENV_JSON=$(jq '.parameters = {
     "SnmpdReadonlyUserPassword": "'${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}'",
   }' <<< $ENV_JSON)
 
+RESOURCE_REGISTRY=
+RESOURCE_REGISTRY_PATH="$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml"
+
+if [ -e "$RESOURCE_REGISTRY_PATH" ]; then
+    RESOURCE_REGISTRY="-e $RESOURCE_REGISTRY_PATH"
+    ENV_JSON=$(jq '.parameters = .parameters + {
+        "ControllerCount": '${OVERCLOUD_CONTROLSCALE}',
+        "ComputeCount": '${OVERCLOUD_COMPUTESCALE}'
+      }' <<< $ENV_JSON)
+    if [ -e "$TRIPLEO_ROOT/tripleo-heat-templates/cinder-storage.yaml" ]; then
+        ENV_JSON=$(jq '.parameters = .parameters + {
+            "BlockStorageCount": '${OVERCLOUD_BLOCKSTORAGESCALE}'
+          }' <<< $ENV_JSON)
+    fi
+fi
+
 ### --include
 
 ## #. Save the finished environment file.::
@@ -378,6 +394,7 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
 # create stack with a 6 hour timeout, and allow wait_for_stack_ready
 # to impose a realistic timeout.
 heat $HEAT_OP -e "$HEAT_ENV" \
+    $RESOURCE_REGISTRY \
     -t 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
