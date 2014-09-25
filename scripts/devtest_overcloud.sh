@@ -513,8 +513,8 @@ wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'ena
 ## #. Wait for L2 Agent On Nova Compute
 ##    ::
 
-wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*$STACKNAME-novacompute\"" #nodocs
-##         wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*overcloud-novacompute\""
+wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*-novacompute\"" #nodocs
+##         wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*-novacompute\""
 
 ## #. Log in as a user.
 ##    ::
