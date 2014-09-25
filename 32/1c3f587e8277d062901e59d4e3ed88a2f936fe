@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: Jon-Paul Sullivan (jp_at_hp) <jonpaul.sullivan@hp.com>
+Code-Review+2: Jay Dobies <jason.dobies@redhat.com>
+Code-Review+2: Steve Kowalik <steven@wedontsleep.org>
+Workflow+1: Steve Kowalik <steven@wedontsleep.org>
+Submitted-by: Jenkins
+Submitted-at: Thu, 25 Sep 2014 08:59:27 +0000
+Reviewed-on: https://review.openstack.org/123747
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
