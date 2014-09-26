@@ -124,13 +124,18 @@ fi
 ##    control node. It is not required for overcloud computes. The backend is
 ##    set through the ``*EXTRA_ARGS``.
 ##    rabbitmq-server is enabled by default. Another option is qpidd.
-##    For overclouds we also use ``*EXTRA_ARGS`` to set the cinder backend.
-##    cinder-tgt is enabled by default. Another option is cinder-lio.
-##    ::
+##    For overclouds we also use ``*EXTRA_ARGS`` to set the cinder backend and
+##    use cinder-tgt by default.
 
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
+
+## #. We deploy the block storage nodes with the cinder-tgt backend too,
+##    alteratively one can use cinder-lio or cinder-volume-nfs. Make sure to
+##    check the README files of the respective elements for configuring those
+
+export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
 
 ## #. Set distribution used for VMs (fedora, opensuse, ubuntu). If unset, this
 ##    will match TRIPLEO_OS_DISTRO, which is automatically gathered by devtest

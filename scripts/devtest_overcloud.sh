@@ -146,7 +146,7 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     if [ ! -e $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume ntp hosts \
-            baremetal cinder-volume os-collect-config \
+            baremetal os-collect-config \
             dhcp-all-interfaces $DIB_COMMON_ELEMENTS \
             $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
             tee $TRIPLEO_ROOT/dib-overcloud-cinder-volume.log
