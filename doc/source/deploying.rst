@@ -354,10 +354,10 @@ Prerequisites.
 Needed data
 ~~~~~~~~~~~
 
-- IPMI (address, user, password) details for the three non-manually installed
-  machines.
-
-- MAC addresses for all network interface cards in those same machines.
+- a JSON file describing your baremetal machines in a format described
+  in devtest_setup.sh (see: nodes), making sure to include all MAC addresses
+  for all network interface cards as well as the IPMI (address, user, password)
+  details for them.
 
 - 2 spare contiguous ip addresses on your L2 network for seed deployment.
 
@@ -369,8 +369,6 @@ Needed data
 - Public IP address to be your undercloud endpoint
 
 - Public IP address to be your overcloud endpoint
-
-- CPU count, memory in MB and disk in GB for your 4 machines.
 
 Install Seed
 ~~~~~~~~~~~~
@@ -385,11 +383,6 @@ Follow the 'devtest' guide but edit the seed config.json to:
 
 - change the power manager line nova.virt.baremetal.ipmi.IPMI and
   remove the virtual subsection.
-
-- register the undercloud machine with its details rather than generic virtual
-  ones - e.g::
-
-    setup-baremetal 24 98304 1500 amd64 $somemac undercloud $ipmi_ip $ipmi_user $ipmi_password
 
 - setup proxy arp (this and the related bits are used to avoid messing about
   with the public NIC and bridging: you may choose to use that approach
