@@ -482,9 +482,27 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
         ${SSLBASE:+--ssl $PUBLIC_API_URL}
     keystone role-create --name heat_stack_user
     user-config
-##             setup-neutron "" "" 10.0.0.0/8 "" "" "" 8.8.8.8 192.0.2.45 192.0.2.64 192.0.2.0/24
+    BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
     OVERCLOUD_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key overcloud.nameserver --type netaddress --key-default '8.8.8.8')
-    setup-neutron "" "" $OVERCLOUD_FIXED_RANGE_CIDR "" "" "" $OVERCLOUD_NAMESERVER $FLOATING_START $FLOATING_END $FLOATING_CIDR #nodocs
+    NETWORK_JSON=$(mktemp)
+    jq "." <<EOF > $NETWORK_JSON
+{
+    "float": {
+        "cidr": "10.0.0.0/8",
+        "name": "default-net",
+        "nameserver": "$OVERCLOUD_NAMESERVER"
+    },
+    "external": {
+        "name": "ext-net",
+        "cidr": "$FLOATING_CIDR",
+        "allocation_start": "$FLOATING_START",
+        "allocation_end": "$FLOATING_END",
+        "gateway": "$BM_NETWORK_GATEWAY"
+    }
+}
+EOF
+    setup-neutron -n $NETWORK_JSON
+    rm $NETWORK_JSON
 
 ## #. If you want a demo user in your overcloud (probably a good idea).
 ##    ::
