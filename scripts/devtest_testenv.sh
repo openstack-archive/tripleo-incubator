@@ -98,7 +98,7 @@ fi
 ##    ~2.7Gb, which means that a tight node will end up with a thrashing page
 ##    cache during glance -> local + local -> raw operations. This significantly
 ##    impairs performance. Of the four minimum VMs for TripleO simulation, two
-##    are nova baremetal nodes (seed and undercloud) and these need to be 2G or
+##    are nova baremetal nodes (seed and undercloud) and these need to be 3G or
 ##    larger. The hypervisor host in the overcloud also needs to be a decent size
 ##    or it cannot host more than one VM. The NODE_DISK is set to support
 ##    building 5 overcloud nodes when not using Ironic. If you are building a
@@ -108,12 +108,12 @@ fi
 ##    32bit VMs
 ##    ::
 
-##         NODE_CPU=1 NODE_MEM=2048 NODE_DISK=40 NODE_ARCH=i386
+##         NODE_CPU=1 NODE_MEM=3072 NODE_DISK=40 NODE_ARCH=i386
 
-NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-2048} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386} NODE_CNT=${NODE_CNT:-15} #nodocs
+NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-3072} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386} NODE_CNT=${NODE_CNT:-15} #nodocs
 
 ##    For 64bit it is better to create VMs with more memory and storage because of
-##    increased memory footprint (3GB minimum - we suggest 4GB)::
+##    increased memory footprint (we suggest 4GB)::
 
 ##         NODE_CPU=1 NODE_MEM=4096 NODE_DISK=40 NODE_ARCH=amd64
 
