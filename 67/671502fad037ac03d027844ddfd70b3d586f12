@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: Tomas Sedovic <tomas@sedovic.cz>
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Ben Nemec <openstack@nemebean.com>
+Code-Review+1: Stephanie Miller <stephane@alum.mit.edu>
+Submitted-by: Jenkins
+Submitted-at: Wed, 01 Oct 2014 18:06:07 +0000
+Reviewed-on: https://review.openstack.org/124347
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
