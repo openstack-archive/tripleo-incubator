@@ -51,12 +51,6 @@ Script Input
   line. It is preferred to place the data in a file and pass the filename.
   Using process substitution ``<()`` can help with this.
 
-Variables
-~~~~~~~~~
-- Within a shell script, variables that are defined for local use should be
-  lower_cased. Variables that are passed in or come from outside the script
-  should be UPPER_CASED.
-
 References
 ----------
 .. [1]  http://docs.openstack.org/developer/hacking/
