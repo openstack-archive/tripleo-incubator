@@ -96,7 +96,7 @@ SEED_ARCH=
 
 case $ARCH in
     i386) SEED_ARCH='i686'; ;;
-    amd64) SEED_ARCH='x86_64'; ;;
+    amd64|x86_64) SEED_ARCH='x86_64'; ;;
     *) echo "Unsupported arch $ARCH!" ; exit 1 ;;
 esac
 
