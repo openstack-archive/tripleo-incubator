@@ -1,0 +1,14 @@
+Verified+2: Jenkins
+Code-Review+1: Giulio Fidente <gfidente@redhat.com>
+Code-Review+2: Ladislav Smola <lsmola@redhat.com>
+Workflow+1: Ladislav Smola <lsmola@redhat.com>
+Code-Review+1: Jay Dobies <jason.dobies@redhat.com>
+Code-Review+1: Marios Andreou <marios@redhat.com>
+Code-Review+2: Steve Kowalik <steven@wedontsleep.org>
+Code-Review+1: James Polley <jp@jamezpolley.com>
+Code-Review+1: Dmitry Tantsur <dtantsur@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 02 Oct 2014 08:29:08 +0000
+Reviewed-on: https://review.openstack.org/123803
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
