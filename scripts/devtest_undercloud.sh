@@ -273,7 +273,7 @@ chmod 0600 "${HEAT_ENV}"
 
 ## #. Add Keystone certs/key into the environment file.::
 
-generate-keystone-pki --heatenv $HEAT_ENV
+generate-ssl-cert -heatenv $HEAT_ENV keystone
 
 ## #. Deploy an undercloud.
 ##    ::

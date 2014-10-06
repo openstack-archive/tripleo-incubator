@@ -112,7 +112,7 @@ else
 fi
 
 # Add Keystone certs/key into the environment file
-generate-keystone-pki --heatenv tmp_local.json -s
+generate-ssl-cert --heatenv tmp_local.json keystone
 
 # Get details required to set-up a callback heat call back from the seed from os-collect-config.
 HOST_IP=$(os-apply-config -m $TE_DATAFILE --key host-ip --type netaddress --key-default '192.168.122.1')
