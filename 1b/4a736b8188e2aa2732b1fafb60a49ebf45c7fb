@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Workflow+1: Marios Andreou <marios@redhat.com>
+Code-Review+2: Alexis Lee <lxsli@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 06 Oct 2014 08:12:49 +0000
+Reviewed-on: https://review.openstack.org/122930
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
