@@ -245,9 +245,7 @@ fi
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
 expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_BLOCKSTORAGESCALE ))
-expected_memory=$(jq ".nodes | map(.memory | tonumber) | add" $TE_DATAFILE)
-expected_vcpus=$(jq ".nodes | map(.cpu | tonumber) | add" $TE_DATAFILE)
-wait_for 60 1 wait_for_hypervisor_stats $expected_nodes $expected_memory $expected_vcpus
+wait_for 60 1 wait_for_hypervisor_stats $expected_nodes
 
 ## #. Set password for Overcloud SNMPd, same password needs to be set in Undercloud Ceilometer
 
