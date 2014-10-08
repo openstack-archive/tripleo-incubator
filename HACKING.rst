@@ -6,7 +6,7 @@ TripleO Style Guidelines
 - Step 3: Read on
 
 TripleO Specific Guidelines
------------------------------
+---------------------------
 
 There is plenty of code that does not adhere to these conventions currently.
 However it is useful to have conventions as consistently formatted code is
@@ -14,9 +14,16 @@ easier to read and less likely to hide bugs. New code should adhere to these
 conventions, and developers should consider sensible adjustment of existing
 code when working nearby.
 
-Spacing and Indentation
-~~~~~~~~~~~~~~~~~~~~~~~
+Formatting
+~~~~~~~~~~
 Please follow conventions described in OpenStack style guidelines [1]_ and Bashate [2]_.
+
+- Order lists whenever possible, whether in code or data. If the order doesn't
+  matter, use a case-insensitive alphabetical sort. This makes them easier to
+  compare with ``diff``-like tools.
+  - "a" < "B" < "c"
+  - "a" < "ab"
+  - "2" < "10"
 
 Bash
 ~~~~
