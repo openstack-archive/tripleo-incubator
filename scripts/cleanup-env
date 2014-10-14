@@ -57,9 +57,19 @@ if [ -n "$NUM" ]; then
 fi
 
 BAREMETAL_REGEX="baremetal${BRIDGE_NAME}"
+
+for NAME in $(sudo virsh list --name | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
+    sudo virsh destroy $NAME
+done
+
 for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
-  sudo virsh destroy $NAME
-  sudo virsh undefine --managed-save --remove-all-storage $NAME
+    if [ $NAME == $SEED_NAME ]; then
+        # handle seeds differently since their storage is not managed by libvirt
+        sudo virsh undefine --managed-save $NAME
+        sudo rm /var/lib/libvirt/images/$NAME.qcow2
+    else
+        sudo virsh undefine --managed-save --remove-all-storage $NAME
+    fi
 done
 
 for NAME in $(sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\($SEED_NAME\|$BAREMETAL_REGEX\)" ); do
