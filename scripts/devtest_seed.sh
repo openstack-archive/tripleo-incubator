@@ -11,18 +11,20 @@ function show_options () {
     echo "Deploys a baremetal cloud via virsh."
     echo
     echo "Options:"
-    echo "      -h             -- this help"
-    echo "      -c             -- re-use existing source/images if they exist."
-    echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --all-nodes    -- use all the nodes in the testenv rather than"
+    echo "      -h              -- this help"
+    echo "      -c              -- re-use existing source/images if they exist."
+    echo "      --build-only    -- build the needed images but don't deploy them."
+    echo "      --debug-logging -- Turn on debug logging in the seed."
+    echo "      --all-nodes     -- use all the nodes in the testenv rather than"
     echo "                        just the first one."
     echo
     exit $1
 }
 
 BUILD_ONLY=
+DEBUG_LOGGING=
 
-TEMP=$(getopt -o c,h -l all-nodes,build-only,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l all-nodes,build-only,debug-logging,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -33,6 +35,7 @@ while true ; do
         --all-nodes) ALL_NODES="true"; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="--build-only"; shift 1;;
+        --debug-logging) DEBUG_LOGGING="seed-debug-logging"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -174,7 +177,7 @@ if [ "$USE_CACHE" == "0" ] ; then
 else
     CACHE_OPT="-c"
 fi
-boot-seed-vm $CACHE_OPT $BUILD_ONLY -a $NODE_ARCH $NODE_DIST neutron-dhcp-agent 2>&1 | \
+boot-seed-vm $CACHE_OPT $BUILD_ONLY -a $NODE_ARCH $NODE_DIST $DEBUG_LOGGING neutron-dhcp-agent 2>&1 | \
         tee $TRIPLEO_ROOT/dib-seed.log
 
 if [ -n "${BUILD_ONLY}" ]; then
