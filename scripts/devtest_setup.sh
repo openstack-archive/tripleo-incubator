@@ -114,6 +114,9 @@ fi
 ##    Future iterations may add more Ironic power and deploy driver selections
 ##    here.
 
+##    See the `os-cloud-config documentation
+##    <http://docs.openstack.org/developer/os-cloud-config/usage.html#registering-nodes-with-a-baremetal-service>`_
+##    for a sample
 
 ## #. baremetal-network:  A mapping of metadata describing the bare metal cloud
 ##    network. This is a flat network which is used to bring up nodes via
