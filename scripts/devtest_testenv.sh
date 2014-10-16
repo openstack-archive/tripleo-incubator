@@ -21,8 +21,8 @@ function show_options () {
     echo "    -s                     -- SSH private key path to inject into the JSON."
     echo "                              If not supplied, defaults to ~/.ssh/id_rsa_virt_power"
     echo "    --nodes NODEFILE       -- You are supplying your own list of hardware."
-    echo "                              The schema for nodes can be found in the devtest_setup"
-    echo "                              documentation."
+    echo "                              A sample nodes definition can be found in the os-cloud-config"
+    echo "                              usage documentation."
     echo
     echo "    --bm-networks NETFILE  -- You are supplying your own network layout."
     echo "                              The schema for baremetal-network can be found in"
