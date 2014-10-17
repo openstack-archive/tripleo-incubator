@@ -124,6 +124,16 @@ COMP_IP=$(ip route get "$HOST_IP" | awk '/'"$HOST_IP"'/ {print $NF}')
 SEED_COMP_PORT="${SEED_COMP_PORT:-27410}"
 SEED_IMAGE_ID="${SEED_IMAGE_ID:-seedImageID}"
 
+# Firewalld interferes with our seed completion signal
+if systemctl status firewalld; then
+    if ! sudo firewall-cmd --list-ports | grep "$SEED_COMP_PORT/tcp"; then
+        echo 'Firewalld is running and the seed completion port is not open.'
+        echo 'To continue you must either stop firewalld or open the port with:'
+        echo "sudo firewall-cmd --add-port=$SEED_COMP_PORT/tcp"
+        exit 1
+    fi
+fi
+
 # Apply custom BM network settings to the seeds local.json config
 BM_NETWORK_CIDR=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
 jq -s '
