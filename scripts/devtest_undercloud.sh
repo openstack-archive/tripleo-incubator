@@ -9,6 +9,7 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 DEBUG_LOGGING=
 HEAT_ENV=
+FLAVOR="baremetal"
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -22,11 +23,13 @@ function show_options () {
     echo "      --debug-logging -- Turn on debug logging in the undercloud."
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
+    echo "      --flavor       -- flavor to use for the undercloud. Defaults"
+    echo "                        to 'baremetal'."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,debug-logging,heat-env:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l build-only,debug-logging,heat-env:,flavor:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -38,6 +41,7 @@ while true ; do
         --build-only) BUILD_ONLY="1"; shift 1;;
         --debug-logging) DEBUG_LOGGING="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
+        --flavor) FLAVOR="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -246,7 +250,8 @@ ENV_JSON=$(jq '.parameters = {
     "undercloudImage": "'"${UNDERCLOUD_ID}"'",
     "BaremetalArch": "'"${NODE_ARCH}"'",
     "PowerSSHPrivateKey": "'"${POWER_KEY}"'",
-    "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'"
+    "NtpServer": "'"${UNDERCLOUD_NTP_SERVER}"'",
+    "Flavor": "'"${FLAVOR}"'"
   }' <<< $ENV_JSON)
 
 

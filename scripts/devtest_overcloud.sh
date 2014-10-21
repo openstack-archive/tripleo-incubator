@@ -9,6 +9,8 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 DEBUG_LOGGING=
 HEAT_ENV=
+COMPUTE_FLAVOR="baremetal"
+CONTROL_FLAVOR="baremetal"
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -22,11 +24,15 @@ function show_options () {
     echo "      --debug-logging -- Turn on debug logging in the built overcloud."
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
+    echo "       --compute-flavor -- Nova flavor to use for compute nodes."
+    echo "                           Defaults to 'baremetal'."
+    echo "       --control-flavor -- Nova flavor to use for control nodes."
+    echo "                           Defaults to 'baremetal'."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,debug-logging,heat-env:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l build-only,debug-logging,heat-env:,compute-flavor:,control-flavor:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -38,6 +44,8 @@ while true ; do
         --build-only) BUILD_ONLY="1"; shift 1;;
         --debug-logging) DEBUG_LOGGING="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
+        --compute-flavor) COMPUTE_FLAVOR="$2"; shift 2;;
+        --control-flavor) CONTROL_FLAVOR="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -322,7 +330,9 @@ ENV_JSON=$(jq '.parameters = {
     "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
     "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
-    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'"
+    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
+    "OvercloudComputeFlavor": "'"${COMPUTE_FLAVOR}"'",
+    "OvercloudControlFlavor": "'"${CONTROL_FLAVOR}"'"
   }' <<< $ENV_JSON)
 
 ### --end
