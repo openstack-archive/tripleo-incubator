@@ -181,6 +181,20 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     fi #nodocs
 fi
 
+## #. Distributed virtual routing can be enabled by setting the environment variable
+##    ``OVERCLOUD_DISTRIBUTED_ROUTERS`` to ``True``.  By default the legacy centralized
+##    routing is enabled.
+
+##    If enabling distributed virtual routing for Neutron on the overcloud the compute node
+##    must have the ``neutron-router`` element installed.
+##    ::
+
+OVERCLOUD_DISTRIBUTED_ROUTERS=${OVERCLOUD_DISTRIBUTED_ROUTERS:-'False'}
+if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
+   ComputeNeutronRole=' neutron-router'
+   OVERCLOUD_COMPUTE_DIB_ELEMENTS=$OVERCLOUD_COMPUTE_DIB_ELEMENTS$ComputeNeutronRole
+fi
+
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
@@ -231,6 +245,29 @@ OVERCLOUD_BRIDGE_MAPPINGS=${OVERCLOUD_BRIDGE_MAPPINGS:-'datacentre:br-ex'}
 OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-'br-ex'}
 OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-'eth0'}
 OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
+
+## #. If enabling distributed virtual routing on the overcloud, some values need
+##    to be set so that Neutron DVR will work.
+##    ::
+
+NeutronAgentMode='dvr_snat'
+NeutronComputeAgentMode='dvr'
+NeutronAllowl3AgentFailover=${NeutronAllowl3AgentFailover:-'True'}
+if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
+   NeutronMechanismDrivers='openvswitch,l2population'
+   NeutronTunnelTypes='vxlan'
+   NeutronNetworkType='vxlan'
+   NeutronDVR='True'
+   OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${NeutronPhysicalBridge:-'br-ex'}
+   OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${NeutronPublicInterface:-''}
+   NeutronAllowL3AgentFailover='False'
+else
+   NeutronMechanismDrivers=${NeutronMechanismDrivers:-'openvswitch'}
+   NeutronTunnelTypes=${NeutronTunnelTypes:-'gre'}
+   NeutronNetworkType=${NeutronNetworkTypes:-'gre'}
+   NeutronDVR='False'
+   NeutronAllowL3AgentFailover='True'
+fi
 
 ## #. If you are using SSL, your compute nodes will need static mappings to your
 ##    endpoint in ``/etc/hosts`` (because we don't do dynamic undercloud DNS yet).
@@ -386,6 +423,18 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     ENV_JSON=$(jq '.parameters = {} + .parameters + {
         "BlockStorageImage": "'"${OVERCLOUD_BLOCKSTORAGE_ID}"'",
       }' <<< $ENV_JSON)
+fi
+
+if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
+    ENV_JSON=$(jq '.parameters = {} + .parameters + {
+    "NeutronDVR": "'${NeutronDVR}'",
+    "NeutronTunnelTypes": "'${NeutronTunnelTypes}'",
+    "NeutronNetworkType": "'${NeutronNetworkType}'",
+    "NeutronMechanismDrivers": "'${NeutronMechanismDrivers}'",
+    "NeutronAgentMode": "'${NeutronAgentMode}'",
+    "NeutronComputeAgentMode": "'${NeutronComputeAgentMode}'",
+    "NeutronAllowL3AgentFailover": "'${NeutronAllowL3AgentFailover}'",
+    }' <<< $ENV_JSON)
 fi
 
 ### --end
