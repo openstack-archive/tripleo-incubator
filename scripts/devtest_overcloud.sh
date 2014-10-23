@@ -1,4 +1,4 @@
-#!/bin/bash
+#/!/bin/bash
 
 set -eu
 set -o pipefail
@@ -172,11 +172,18 @@ fi
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
+OVERCLOUD_DISTRIBUTED_ROUTERS=${OVERCLOUD_DISTRIBUTED_ROUTERS:-'False'}
+if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
+   ComputeNeutronRole='neutron-router'
+else
+   ComputeNeutronRole='neutron-openvswitch-agent'
+fi
+
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute ntp hosts \
-        baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
+        baremetal nova-compute nova-kvm $ComputeNeutronRole os-collect-config \
         dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
@@ -217,6 +224,24 @@ OVERCLOUD_BRIDGE_MAPPINGS=${OVERCLOUD_BRIDGE_MAPPINGS:-''}
 OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-''}
 OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-''}
 OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
+NeutronAllowl3AgentFailover=${NeutronAllowl3AgentFailover:-'True'}
+if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
+   NeutronMechanismDrivers='openvswitch,l2population'
+   NeutronTunnelTypes='vxlan'
+   NeutronNetworkType='vxlan'
+   NeutronDVR='True'
+   ComputeNeutronRole='neutron-router'
+   OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${NeutronPhysicalBridge:-'br-ex'}
+   OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${NeutronPublicInterface:-''}
+   NeutronAllowL3AgentFailover='False'
+else
+   NeutronMechanismDrivers=${NeutronMechanismDrivers:-'openvswitch'}
+   NeutronTunnelTypes=${NeutronTunnelTypes:-'gre'}
+   NeutronNetworkType=${NeutronNetworkTypes:-'gre'}
+   NeutronDVR='False'
+   ComputeNeutronRole='neutron-openvswitch-agent'
+   NeutronAllowL3AgentFailover='True'
+fi
 
 ## #. If you are using SSL, your compute nodes will need static mappings to your
 ##    endpoint in ``/etc/hosts`` (because we don't do dynamic undercloud DNS yet).
@@ -323,6 +348,13 @@ ENV_JSON=$(jq '.parameters = {
     "NeutronFlatNetworks": "'"${OVERCLOUD_FLAT_NETWORKS}"'",
     "NeutronPassword": "'"${OVERCLOUD_NEUTRON_PASSWORD}"'",
     "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
+    "NeutronDVR": "'${NeutronDVR}'",
+    "NeutronTunnelTypes": "'${NeutronTunnelTypes}'",
+    "NeutronNetworkType": "'${NeutronNetworkType}'",
+    "NeutronMechanismDrivers": "'${NeutronMechanismDrivers}'",
+    "NeutronAgentMode": "dvr_snat",
+    "NeutronComputeAgentMode": "dvr",
+    "NeutronAllowL3AgentFailover": "'${NeutronAllowL3AgentFailover}'",
     "NovaComputeLibvirtType": "'"${OVERCLOUD_LIBVIRT_TYPE}"'",
     "NovaPassword": "'"${OVERCLOUD_NOVA_PASSWORD}"'",
     "NtpServer": "'"${OVERCLOUD_NTP_SERVER}"'",
