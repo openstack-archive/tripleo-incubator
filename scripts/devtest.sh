@@ -54,7 +54,7 @@ function show_options () {
 }
 
 BUILD_ONLY=
-NO_MERGEPY=
+NO_MERGEPY=--no-mergepy
 DEBUG_LOGGING=
 NODES_ARG=
 NO_UNDERCLOUD=
