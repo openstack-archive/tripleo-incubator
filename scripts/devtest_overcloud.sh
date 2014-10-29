@@ -9,10 +9,10 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 DEBUG_LOGGING=
 HEAT_ENV=
-COMPUTE_FLAVOR="baremetal"
-CONTROL_FLAVOR="baremetal"
-BLOCKSTORAGE_FLAVOR="baremetal"
-SWIFTSTORAGE_FLAVOR="baremetal"
+COMPUTE_FLAVOR=
+CONTROL_FLAVOR=
+BLOCKSTORAGE_FLAVOR=
+SWIFTSTORAGE_FLAVOR=
 USE_MERGEPY=1
 
 function show_options () {
@@ -29,15 +29,11 @@ function show_options () {
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
     echo "       --compute-flavor -- Nova flavor to use for compute nodes."
-    echo "                           Defaults to 'baremetal'."
     echo "       --control-flavor -- Nova flavor to use for control nodes."
-    echo "                           Defaults to 'baremetal'."
     echo "       --block-storage-flavor -- Nova flavor to use for block "
     echo "                                 storage nodes."
-    echo "                                 Defaults to 'baremetal'."
     echo "       --swift-storage-flavor -- Nova flavor to use for swift "
     echo "                                 storage nodes."
-    echo "                                 Defaults to 'baremetal'."
     echo
     exit $1
 }
@@ -314,6 +310,19 @@ if [ -e "${HEAT_ENV}" ]; then
 else
     ENV_JSON='{"parameters":{}}'
 fi
+
+FLAVOR=$(nova flavor-list | grep '^|' | grep -v '^| ID' | cut -d\  -f4)
+if [ $(echo $FLAVOR | wc -l) -gt 1 ]; then
+    echo "Can not automatically determine which flavor to use." >&2
+    echo "Please specify the flavor to use with --control-flavor," >&2
+    echo "--compute-flavor, --block-storage-flavor and" >&2
+    echo "--swift-storage-flavor" >&2
+    exit 1
+fi
+COMPUTE_FLAVOR=${COMPUTE_FLAVOR:-$FLAVOR}
+CONTROL_FLAVOR=${CONTROL_FLAVOR:-$FLAVOR}
+BLOCKSTORAGE_FLAVOR=${BLOCKSTORAGE_FLAVOR:-$FLAVOR}
+SWIFTSTORAGE_FLAVOR=${SWIFTSTORAGE_FLAVOR:-$FLAVOR}
 
 ## #. Set parameters we need to deploy a KVM cloud.::
 

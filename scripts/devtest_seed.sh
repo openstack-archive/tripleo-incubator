@@ -17,14 +17,16 @@ function show_options () {
     echo "      --debug-logging -- Turn on debug logging in the seed."
     echo "      --all-nodes     -- use all the nodes in the testenv rather than"
     echo "                        just the first one."
+    echo "      --flavor-file   -- specify a JSON file of flavors to create."
     echo
     exit $1
 }
 
 BUILD_ONLY=
 DEBUG_LOGGING=
+FLAVOR_FILE=
 
-TEMP=$(getopt -o c,h -l all-nodes,build-only,debug-logging,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l all-nodes,build-only,debug-logging,flavor-file:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -36,6 +38,7 @@ while true ; do
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="--build-only"; shift 1;;
         --debug-logging) DEBUG_LOGGING="seed-debug-logging"; shift 1;;
+        --flavor-file) FLAVOR_FILE="$2" ; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -318,14 +321,19 @@ nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin
 ##    If you are building an undercloud, register only the first node.
 ##    ::
 
+FLAVORS_DESC=
+if [ -n "$FLAVOR_FILE" ]; then
+    FLAVORS_DESC="--flavors $FLAVOR_FILE"
+fi
+
 if [ -z "${ALL_NODES:-}" ]; then #nodocs
-  setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
+  setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE) $FLAVORS_DESC
 else #nodocs
 
 ##    Otherwise, if you are skipping the undercloud, you should register all
 ##    the nodes.::
 
-  setup-baremetal --service-host seed --nodes <(jq '.nodes' $TE_DATAFILE)
+  setup-baremetal --service-host seed --nodes <(jq '.nodes' $TE_DATAFILE) $FLAVORS_DESC
 fi #nodocs
 
 ##    If you need to collect the MAC address separately, see ``scripts/get-vm-mac``.
