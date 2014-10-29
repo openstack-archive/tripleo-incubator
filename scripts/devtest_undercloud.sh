@@ -9,7 +9,8 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 DEBUG_LOGGING=
 HEAT_ENV=
-FLAVOR="baremetal"
+FLAVOR=
+FLAVORS_PATH=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -23,13 +24,13 @@ function show_options () {
     echo "      --debug-logging -- Turn on debug logging in the undercloud."
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
-    echo "      --flavor       -- flavor to use for the undercloud. Defaults"
-    echo "                        to 'baremetal'."
+    echo "      --flavor       -- flavor to use for the undercloud."
+    echo "      --flavors      -- specify a JSON file of flavors to create."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,debug-logging,heat-env:,flavor:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l build-only,debug-logging,heat-env:,flavor:flavors:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -42,6 +43,7 @@ while true ; do
         --debug-logging) DEBUG_LOGGING="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         --flavor) FLAVOR="$2"; shift 2;;
+        --flavors) FLAVORS_PATH="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -234,6 +236,12 @@ else
     HEAT_OP=stack-create
 fi
 
+FLAVOR=${FLAVOR:-$(nova flavor-list | grep '^|' | grep -v '^| ID' | cut -d\  -f4)}
+if [ $(echo $FLAVOR | wc -l) -gt 1 ]; then
+    echo "Flavor must be specified" >&2
+    exit 1
+fi
+
 ## #. Set parameters we need to deploy a baremetal undercloud::
 
 ENV_JSON=$(jq '.parameters = {
@@ -384,6 +392,11 @@ nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin
 ## #. Register two baremetal nodes with your undercloud.
 ##    ::
 
-setup-baremetal --service-host undercloud --nodes <(jq '.nodes - [.nodes[0]]' $TE_DATAFILE)
+FLAVORS_DESC=
+if [ -n "$FLAVORS_PATH" ]; then
+    FLAVORS_DESC="--flavors $FLAVORS_PATH"
+fi
+
+setup-baremetal --service-host undercloud --nodes <(jq '.nodes - [.nodes[0]]' $TE_DATAFILE) $FLAVORS_DESC
 
 ### --end
