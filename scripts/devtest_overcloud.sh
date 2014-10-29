@@ -9,8 +9,8 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 DEBUG_LOGGING=
 HEAT_ENV=
-COMPUTE_FLAVOR="baremetal"
-CONTROL_FLAVOR="baremetal"
+COMPUTE_FLAVOR=
+CONTROL_FLAVOR=
 USE_MERGEPY=1
 
 function show_options () {
@@ -27,9 +27,7 @@ function show_options () {
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
     echo "       --compute-flavor -- Nova flavor to use for compute nodes."
-    echo "                           Defaults to 'baremetal'."
     echo "       --control-flavor -- Nova flavor to use for control nodes."
-    echo "                           Defaults to 'baremetal'."
     echo
     exit $1
 }
@@ -303,6 +301,14 @@ if [ -e "${HEAT_ENV}" ]; then
 else
     ENV_JSON='{"parameters":{}}'
 fi
+
+FLAVOR=$(nova flavor-list | grep '^|' | grep -v '^| ID' | cut -d\  -f4)
+if [ $(echo $FLAVOR | wc -l) -gt 1 ]; then
+    echo "Flavors must be specified" >&2
+    exit 1
+fi
+COMPUTE_FLAVOR=${COMPUTE_FLAVOR:-$FLAVOR}
+CONTROL_FLAVOR=${CONTROL_FLAVOR:-$FLAVOR}
 
 ## #. Set parameters we need to deploy a KVM cloud.::
 
