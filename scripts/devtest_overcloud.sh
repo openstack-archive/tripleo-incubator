@@ -307,6 +307,7 @@ NeutronControlPlaneID=$(neutron net-show ctlplane | grep ' id ' | awk '{print $4
 ENV_JSON=$(jq '.parameters = {
     "MysqlInnodbBufferPoolSize": 100
   } + .parameters + {
+    "controller0HAProxyMySQLParams": "",
     "AdminPassword": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
     "AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
     "CeilometerPassword": "'"${OVERCLOUD_CEILOMETER_PASSWORD}"'",
