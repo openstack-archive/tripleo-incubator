@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+1: Steven Hardy <shardy@redhat.com>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Code-Review+2: Steve Kowalik <steven@wedontsleep.org>
+Workflow+1: Steve Kowalik <steven@wedontsleep.org>
+Code-Review+1: Stephanie Miller <stephane@alum.mit.edu>
+Submitted-by: Jenkins
+Submitted-at: Thu, 30 Oct 2014 05:02:38 +0000
+Reviewed-on: https://review.openstack.org/128832
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
