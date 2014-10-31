@@ -11,6 +11,7 @@ DEBUG_LOGGING=
 HEAT_ENV=
 COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
+USE_MERGEPY=1
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -21,6 +22,7 @@ function show_options () {
     echo "      -h             -- this help"
     echo "      -c             -- re-use existing source/images if they exist."
     echo "      --build-only   -- build the needed images but don't deploy them."
+    echo "      --no-mergepy   -- use the standalone Heat templates."
     echo "      --debug-logging -- Turn on debug logging in the built overcloud."
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
@@ -32,7 +34,7 @@ function show_options () {
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,debug-logging,heat-env:,compute-flavor:,control-flavor:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -42,6 +44,7 @@ while true ; do
     case "$1" in
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="1"; shift 1;;
+        --no-mergepy) USE_MERGEPY=0; shift 1;;
         --debug-logging) DEBUG_LOGGING="1"; shift 1;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         --compute-flavor) COMPUTE_FLAVOR="$2"; shift 2;;
@@ -360,6 +363,22 @@ ENV_JSON=$(jq '.parameters = {
     "SnmpdReadonlyUserPassword": "'${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}'",
   }' <<< $ENV_JSON)
 
+RESOURCE_REGISTRY=
+RESOURCE_REGISTRY_PATH="$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml"
+
+if [ "$USE_MERGEPY" -eq 0 ]; then
+    RESOURCE_REGISTRY="-e $RESOURCE_REGISTRY_PATH"
+    ENV_JSON=$(jq '.parameters = .parameters + {
+        "ControllerCount": '${OVERCLOUD_CONTROLSCALE}',
+        "ComputeCount": '${OVERCLOUD_COMPUTESCALE}'
+      }' <<< $ENV_JSON)
+    if [ -e "$TRIPLEO_ROOT/tripleo-heat-templates/cinder-storage.yaml" ]; then
+        ENV_JSON=$(jq '.parameters = .parameters + {
+            "BlockStorageCount": '${OVERCLOUD_BLOCKSTORAGESCALE}'
+          }' <<< $ENV_JSON)
+    fi
+fi
+
 ### --include
 
 ## #. Save the finished environment file.::
@@ -373,10 +392,6 @@ generate-keystone-pki --heatenv $HEAT_ENV
 
 ## #. Deploy an overcloud::
 
-make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
-           COMPUTESCALE=$OVERCLOUD_COMPUTESCALE,${OVERCLOUD_COMPUTE_BLACKLIST:-} \
-           CONTROLSCALE=$OVERCLOUD_CONTROLSCALE,${OVERCLOUD_CONTROL_BLACKLIST:-} \
-           BLOCKSTORAGESCALE=$OVERCLOUD_BLOCKSTORAGESCALE \
 ##         heat $HEAT_OP -e "$HEAT_ENV" \
 ##             -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
@@ -384,12 +399,22 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
 
 ### --end
 
+if [ "$USE_MERGEPY" -eq 1 ]; then
+    make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
+            COMPUTESCALE=$OVERCLOUD_COMPUTESCALE,${OVERCLOUD_COMPUTE_BLACKLIST:-} \
+            CONTROLSCALE=$OVERCLOUD_CONTROLSCALE,${OVERCLOUD_CONTROL_BLACKLIST:-} \
+            BLOCKSTORAGESCALE=$OVERCLOUD_BLOCKSTORAGESCALE
+    OVERCLOUD_TEMPLATE=$TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml
+else
+    OVERCLOUD_TEMPLATE=$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-without-mergepy.yaml
+fi
 
 # create stack with a 6 hour timeout, and allow wait_for_stack_ready
 # to impose a realistic timeout.
 heat $HEAT_OP -e "$HEAT_ENV" \
+    $RESOURCE_REGISTRY \
     -t 360 \
-    -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
+    -f "$OVERCLOUD_TEMPLATE" \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
     $STACKNAME
 
