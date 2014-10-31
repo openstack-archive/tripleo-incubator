@@ -22,6 +22,7 @@ set -eu
 TRIPLEO_ADDITIONAL_PULL_TOOLS=${TRIPLEO_ADDITIONAL_PULL_TOOLS:-}
 TOOLS="https://git.openstack.org/openstack/diskimage-builder
 https://git.openstack.org/openstack/dib-utils
+https://git.openstack.org/openstack/heat-templates
 https://git.openstack.org/openstack/tripleo-image-elements
 https://git.openstack.org/openstack/tripleo-heat-templates
 https://git.openstack.org/openstack/tripleo-incubator
