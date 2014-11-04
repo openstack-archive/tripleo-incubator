@@ -467,7 +467,7 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
 
     init-keystone -o $OVERCLOUD_IP -t $OVERCLOUD_ADMIN_TOKEN \
         -e admin.example.com -p $OVERCLOUD_ADMIN_PASSWORD -u heat-admin \
-        ${SSLBASE:+-s $PUBLIC_API_URL}
+        ${SSLBASE:+-s $PUBLIC_API_URL} --no-pki-setup
     # Creating these roles to be used by tenants using swift
     keystone role-create --name=swiftoperator
     keystone role-create --name=ResellerAdmin
