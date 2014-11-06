@@ -1,0 +1,13 @@
+Verified+2: Jenkins
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+1: Richard Su <rwsu@redhat.com>
+Code-Review+2: Ladislav Smola <lsmola@redhat.com>
+Workflow+1: Ladislav Smola <lsmola@redhat.com>
+Code-Review+1: Robert Parker <rob.s.parker@gmail.com>
+Code-Review+1: Atul Aggarwal <atula@hp.com>
+Code-Review+1: Srinivas Sakhamuri <srinivas.sakhamuri@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 06 Nov 2014 12:54:39 +0000
+Reviewed-on: https://review.openstack.org/113648
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
