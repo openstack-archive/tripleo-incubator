@@ -11,6 +11,8 @@ DEBUG_LOGGING=
 HEAT_ENV=
 COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
+BLOCKSTORAGE_FLAVOR="baremetal"
+SWIFTSTORAGE_FLAVOR="baremetal"
 USE_MERGEPY=1
 DOWNLOAD_OPT=
 
@@ -32,11 +34,17 @@ function show_options () {
     echo "                           Defaults to 'baremetal'."
     echo "       --control-flavor -- Nova flavor to use for control nodes."
     echo "                           Defaults to 'baremetal'."
+    echo "       --block-storage-flavor -- Nova flavor to use for block "
+    echo "                                 storage nodes."
+    echo "                                 Defaults to 'baremetal'."
+    echo "       --swift-storage-flavor -- Nova flavor to use for swift "
+    echo "                                 storage nodes."
+    echo "                                 Defaults to 'baremetal'."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,download-images:,heat-env:,compute-flavor:,control-flavor:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,download-images:,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -52,6 +60,8 @@ while true ; do
         --heat-env) HEAT_ENV="$2"; shift 2;;
         --compute-flavor) COMPUTE_FLAVOR="$2"; shift 2;;
         --control-flavor) CONTROL_FLAVOR="$2"; shift 2;;
+        --block-storage-flavor) BLOCKSTORAGE_FLAVOR="$2"; shift 2;;
+        --swift-storage-flavor) SWIFTSTORAGE_FLAVOR="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -366,7 +376,9 @@ ENV_JSON=$(jq '.parameters = {
     "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
     "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
     "OvercloudComputeFlavor": "'"${COMPUTE_FLAVOR}"'",
-    "OvercloudControlFlavor": "'"${CONTROL_FLAVOR}"'"
+    "OvercloudControlFlavor": "'"${CONTROL_FLAVOR}"'",
+    "OvercloudBlockStorageFlavor": "'"${BLOCKSTORAGE_FLAVOR}"'",
+    "OvercloudSwiftStorageFlavor": "'"${SWIFTSTORAGE_FLAVOR}"'"
   }' <<< $ENV_JSON)
 
 ### --end
