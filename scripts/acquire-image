@@ -93,7 +93,7 @@ function image_exists() {
     return 0
 }
 
-if [ image_exists -a -n "$USE_CACHE" ]; then
+if image_exists && [ -n "$USE_CACHE" ]; then
     exit 0
 fi
 
