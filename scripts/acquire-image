@@ -47,14 +47,14 @@ while true ; do
     esac
 done
 
+if [ "$#" -lt 2 ]; then
+    show_options 1
+fi
+
 IMAGE_NAME=${1:-''}
 shift
 BUILD_COMMAND=${1:-''}
 shift
-
-if [ -z "$IMAGE_NAME" -o -z "${BUILD_COMMAND}" ]; then
-    show_options 1
-fi
 
 IMAGE_BASENAME=$(basename "${IMAGE_NAME}")
 IMAGE_DIRNAME=$(dirname "${IMAGE_NAME}")
