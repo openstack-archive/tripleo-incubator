@@ -17,9 +17,6 @@ function show_options () {
     echo "cache invalidation for downloaded images, we don't have cache invalidation"
     echo "logic yet for building images - -c allows direct control."
     echo
-    echo "What constitutes an image is determined by the images key of the"
-    echo "\$IMAGE_NAME.meta metadata file."
-    echo
     echo "Options:"
     echo "    -c                     -- re-use existing images rather than rebuilding."
     echo "    --download BASE_URL    -- download images from BASE_URL/\$imagename."
@@ -80,16 +77,23 @@ if [ -n "$DOWNLOAD_BASE" ]; then
 fi
 
 function image_exists() {
-    if [ ! -e "${IMAGE_NAME}.meta" ]; then
-        return 1
-    fi
-    IMG_LIST=$(jq '.images' ${IMAGE_NAME}.meta)
-    for pos in $(seq 0 $(($(jq length <<< $IMG_LIST) -1))); do
-        COMPONENT_NAME=$(jq -r ".[$pos]" <<< $IMG_LIST)
-        if [ ! -e "${IMAGE_DIRNAME}"/${COMPONENT_NAME} ]; then
+    if [ -n "$DOWNLOAD_BASE" ]; then
+        if [ ! -e "${IMAGE_NAME}.meta" ]; then
             return 1
         fi
-    done
+        IMG_LIST=$(jq '.images' ${IMAGE_NAME}.meta)
+        for pos in $(seq 0 $(($(jq length <<< $IMG_LIST) -1))); do
+            COMPONENT_NAME=$(jq -r ".[$pos]" <<< $IMG_LIST)
+            if [ ! -e "${IMAGE_DIRNAME}"/${COMPONENT_NAME} ]; then
+                return 1
+            fi
+        done
+    else
+        # look for the existance of a locally cached .qcow2 file
+        if [ ! -s "${IMAGE_NAME}.qcow2" ]; then
+            return 1
+        fi
+    fi
     return 0
 }
 
