@@ -242,8 +242,7 @@ STACKNAME_UNDERCLOUD=${STACKNAME_UNDERCLOUD:-'undercloud'}
 if heat stack-show $STACKNAME_UNDERCLOUD > /dev/null; then
     HEAT_OP=stack-update
     if (heat stack-show $STACKNAME_UNDERCLOUD | grep -q FAILED); then
-        echo "Cannot update a failed stack" >&2
-        exit 1
+        echo "Updating a failed stack. this is a new ability and may cause problems." >&2
     fi
 else
     HEAT_OP=stack-create
