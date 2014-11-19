@@ -11,15 +11,12 @@ function show_options () {
     echo "Build a baremetal deployment ramdisk."
     echo
     echo "Options:"
-    echo "      -h                    -- this help"
-    echo "      --download-images URL -- attempt to download images from this URL."
+    echo "      -h             -- this help"
     echo
     exit $1
 }
 
-DOWNLOAD_OPT=
-
-TEMP=$(getopt -o h -l download-images:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -27,7 +24,6 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        --download-images) DOWNLOAD_OPT="--download $2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -46,26 +42,19 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 ## -----------------------
 
 
-## #. Create or download deployment ramdisk + kernel. These are used by the
-##    seed cloud and the undercloud for deployment to bare metal. To use a
-##    cache pass -c to acquire-image. To download the files pass --download BASE_URL.
+## #. Create a deployment ramdisk + kernel. These are used by the seed cloud and
+##    the undercloud for deployment to bare metal.
 ##    ::
 
-NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch)
-##         acquire-image $TRIPLEO_ROOT/${DEPLOY_NAME} \
-##             $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -- \
-##             -a $NODE_ARCH $NODE_DIST $DEPLOY_IMAGE_ELEMENT \
-##             $DIB_COMMON_ELEMENTS
-
 ### --end
-
-if [ "$USE_CACHE" = "1" ]; then
-    CACHE_OPT=-c
-else
-    CACHE_OPT=
+NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch)
+if [ ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.kernel -o \
+     ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.initramfs -o \
+     "$USE_CACHE" == "0" ] ; then
+### --include
+    $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
+        $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/$DEPLOY_NAME \
+        $DIB_COMMON_ELEMENTS 2>&1 | \
+        tee $TRIPLEO_ROOT/dib-deploy.log
+### --end
 fi
-acquire-image $CACHE_OPT $DOWNLOAD_OPT $TRIPLEO_ROOT/${DEPLOY_NAME} \
-    $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -- \
-    -a $NODE_ARCH $NODE_DIST $DEPLOY_IMAGE_ELEMENT \
-    $DIB_COMMON_ELEMENTS 2>&1 | \
-    tee $TRIPLEO_ROOT/dib-deploy.log
