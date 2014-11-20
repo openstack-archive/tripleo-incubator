@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+1: xu-haiwei <xu-haiwei@mxw.nes.nec.co.jp>
+Code-Review+2: Clint 'SpamapS' Byrum <clint@fewbar.com>
+Workflow+1: Clint 'SpamapS' Byrum <clint@fewbar.com>
+Code-Review+2: Jan Provaznik <jan.provaznik@gmail.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 20 Nov 2014 21:47:28 +0000
+Reviewed-on: https://review.openstack.org/134836
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
