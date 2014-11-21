@@ -65,7 +65,7 @@ if [ -z "$EMAIL" -o -z "$NAME" -o -z "$TENANT" -o -z "$USERCODE" -o -n "$EXTRA_A
 fi
 
 echo "Checking for user $USERCODE"
-USER_ID=$(keystone user-get $USERCODE | awk '$2=="id" { print $4 }')
+USER_ID=$(keystone user-list | awk '{print tolower($0)}' |grep ${USER_CODE,,} |awk '{print$2}')
 if [ -z "$USER_ID" ]; then
     PASSWORD=''
     if [ -e os-asserted-users ]; then
@@ -79,7 +79,7 @@ if [ -z "$USER_ID" ]; then
       --pass="$PASSWORD" \
       --email="$EMAIL" | awk '$2=="id" {print $4}')
 fi
-TENANT_ID=$(keystone tenant-get $TENANT | awk '$2=="id" { print $4 }')
+TENANT_ID=$(keystone tenant-list | awk '{print tolower($0)}' |grep ${TENANT,,} |awk '{print$2}')
 if [ -z "$TENANT_ID" ]; then
     TENANT_ID=$(keystone tenant-create --name=$TENANT | awk '$2=="id" {print $4}')
 fi
