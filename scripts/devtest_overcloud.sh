@@ -223,6 +223,9 @@ OVERCLOUD_NAME=${OVERCLOUD_NAME:-''}
 ##    required by the template ExtraConfig parameter.
 
 OVERCLOUD_EXTRA_CONFIG=${OVERCLOUD_EXTRA_CONFIG:-''}
+OVERCLOUD_CONTROL_EXTRA_CONFIG=${OVERCLOUD_CONTROL_EXTRA_CONFIG:-''}
+OVERCLOUD_COMPUTE_EXTRA_CONFIG=${OVERCLOUD_COMPUTE_EXTRA_CONFIG:-''}
+OVERCLOUD_BLOCKSTORAGE_EXTRA_CONFIG=${OVERCLOUD_BLOCKSTORAGE_EXTRA_CONFIG:-''}
 
 ## #. Choose whether to deploy or update. Use stack-update to update::
 
@@ -370,6 +373,9 @@ make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
 ##         heat $HEAT_OP -e "$HEAT_ENV" \
 ##             -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
 ##             -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
+##             -P "controllerExtraConfig=${OVERCLOUD_CONTROL_EXTRA_CONFIG}" \
+##             -P "NovaComputeExtraConfig=${OVERCLOUD_COMPUTE_EXTRA_CONFIG}" \
+##             -P "BlockStorageExtraConfig=${OVERCLOUD_BLOCKSTORAGE_EXTRA_CONFIG}" \
 ##             overcloud
 
 ### --end
@@ -381,6 +387,9 @@ heat $HEAT_OP -e "$HEAT_ENV" \
     -t 360 \
     -f $TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
+    -P "controllerExtraConfig=${OVERCLOUD_CONTROL_EXTRA_CONFIG}" \
+    -P "NovaComputeExtraConfig=${OVERCLOUD_COMPUTE_EXTRA_CONFIG}" \
+    -P "BlockStorageExtraConfig=${OVERCLOUD_BLOCKSTORAGE_EXTRA_CONFIG}" \
     $STACKNAME
 
 ### --include
