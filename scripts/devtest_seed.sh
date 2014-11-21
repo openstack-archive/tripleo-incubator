@@ -155,9 +155,15 @@ jq -s '
     "watch_server_url": ("http://" + $bm_seed_ip + ":8003"),
     "waitcondition_server_url": ("http://" + $bm_seed_ip + ":8000/v1/waitcondition"),
     "metadata_server_url": ("http://" + $bm_seed_ip + ":8000")
+  }),
+  "neutron": (.neutron + {
+    "ovs": (.neutron.ovs + { "local-ip": $bm_seed_ip })
   })
 }' tmp_local.json $TE_DATAFILE > local.json
+
 rm tmp_local.json
+
+exit 1
 
 ### --end
 # If running in a CI environment then the user and ip address should be read
