@@ -3,7 +3,7 @@ TripleO Style Guidelines
 
 - Step 1: Read the OpenStack Style Guidelines [1]_
 - Step 2: Read Bashate [2]_
-- Step 3: Read on
+- Step 3: See specific guidelines below
 
 TripleO Specific Guidelines
 ---------------------------
