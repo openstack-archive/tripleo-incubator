@@ -11,7 +11,7 @@ DEBUG_LOGGING=
 HEAT_ENV=
 COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
-BLOCKSTORAGE_FLAVOR="baremetal"
+CINDERSTORAGE_FLAVOR="baremetal"
 SWIFTSTORAGE_FLAVOR="baremetal"
 USE_MERGEPY=1
 
@@ -32,7 +32,7 @@ function show_options () {
     echo "                           Defaults to 'baremetal'."
     echo "       --control-flavor -- Nova flavor to use for control nodes."
     echo "                           Defaults to 'baremetal'."
-    echo "       --block-storage-flavor -- Nova flavor to use for block "
+    echo "       --cinder-storage-flavor -- Nova flavor to use for cinder "
     echo "                                 storage nodes."
     echo "                                 Defaults to 'baremetal'."
     echo "       --swift-storage-flavor -- Nova flavor to use for swift "
@@ -42,7 +42,7 @@ function show_options () {
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,cinder-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -57,7 +57,7 @@ while true ; do
         --heat-env) HEAT_ENV="$2"; shift 2;;
         --compute-flavor) COMPUTE_FLAVOR="$2"; shift 2;;
         --control-flavor) CONTROL_FLAVOR="$2"; shift 2;;
-        --block-storage-flavor) BLOCKSTORAGE_FLAVOR="$2"; shift 2;;
+        --cinder-storage-flavor) CINDERSTORAGE_FLAVOR="$2"; shift 2;;
         --swift-storage-flavor) SWIFTSTORAGE_FLAVOR="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
@@ -96,13 +96,13 @@ USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
 OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
-OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
+OVERCLOUD_CINDERSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_CINDERSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
 
 if [ "${USE_MARIADB:-}" = 1 ] ; then
     OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS mariadb-rpm"
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS mariadb-dev-rpm"
-    OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS mariadb-dev-rpm"
+    OVERCLOUD_CINDERSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_CINDERSTORAGE_DIB_EXTRA_ARGS mariadb-dev-rpm"
 fi
 
 # A client-side timeout in minutes for creating or updating the overcloud
@@ -121,7 +121,7 @@ OVERCLOUD_FIXED_RANGE_CIDR=${OVERCLOUD_FIXED_RANGE_CIDR:-"10.0.0.0/8"}
 ##    This is the image the undercloud
 ##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
 
-##    ``$OVERCLOUD_*_DIB_EXTRA_ARGS`` (CONTROL, COMPUTE, BLOCKSTORAGE) are
+##    ``$OVERCLOUD_*_DIB_EXTRA_ARGS`` (CONTROL, COMPUTE, CINDERSTORAGE) are
 ##    meant to be used to pass additional build-time specific arguments to
 ##    ``disk-image-create``.
 
@@ -137,7 +137,7 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS snmpd"
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
-    OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS snmpd"
+    OVERCLOUD_CINDERSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_CINDERSTORAGE_DIB_EXTRA_ARGS snmpd"
 fi
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
@@ -160,17 +160,17 @@ if [ -z "$BUILD_ONLY" ]; then #nodocs
 OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 fi #nodocs
 
-## #. Create your block storage image if some block storage nodes are to be used. This
+## #. Create your cinder storage image if some cinder storage nodes are to be used. This
 ##    is the image the undercloud deploys for the additional cinder-volume instances.
 ##    ::
 
-if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
+if [ $OVERCLOUD_CINDERSTORAGESCALE -gt 0 ]; then
     if [ ! -e $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume ntp hosts \
             baremetal os-collect-config \
             dhcp-all-interfaces $DIB_COMMON_ELEMENTS \
-            $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
+            $OVERCLOUD_CINDERSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
             tee $TRIPLEO_ROOT/dib-overcloud-cinder-volume.log
     fi #nodocs
 
@@ -179,7 +179,7 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
 ##    ::
 
     if [ -z "$BUILD_ONLY" ]; then #nodocs
-    OVERCLOUD_BLOCKSTORAGE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2)
+    OVERCLOUD_CINDERSTORAGE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2)
     fi #nodocs
 fi
 
@@ -265,7 +265,7 @@ fi
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
-expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_BLOCKSTORAGESCALE ))
+expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_CINDERSTORAGESCALE ))
 wait_for 60 $expected_nodes wait_for_hypervisor_stats $expected_nodes
 
 ## #. Set password for Overcloud SNMPd, same password needs to be set in Undercloud Ceilometer
@@ -346,7 +346,7 @@ ENV_JSON=$(jq '.parameters = {
     "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
     "OvercloudComputeFlavor": "'"${COMPUTE_FLAVOR}"'",
     "OvercloudControlFlavor": "'"${CONTROL_FLAVOR}"'",
-    "OvercloudBlockStorageFlavor": "'"${BLOCKSTORAGE_FLAVOR}"'",
+    "OvercloudCinderStorageFlavor": "'"${CINDERSTORAGE_FLAVOR}"'",
     "OvercloudSwiftStorageFlavor": "'"${SWIFTSTORAGE_FLAVOR}"'"
   }' <<< $ENV_JSON)
 
@@ -358,9 +358,9 @@ if [ "$DEBUG_LOGGING" = "1" ]; then
 fi
 ### --include
 
-if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
+if [ $OVERCLOUD_CINDERSTORAGESCALE -gt 0 ]; then
     ENV_JSON=$(jq '.parameters = {} + .parameters + {
-        "BlockStorageImage": "'"${OVERCLOUD_BLOCKSTORAGE_ID}"'",
+        "CinderStorageImage": "'"${OVERCLOUD_CINDERSTORAGE_ID}"'",
       }' <<< $ENV_JSON)
 fi
 
@@ -386,7 +386,7 @@ if [ "$USE_MERGEPY" -eq 0 ]; then
       }' <<< $ENV_JSON)
     if [ -e "$TRIPLEO_ROOT/tripleo-heat-templates/cinder-storage.yaml" ]; then
         ENV_JSON=$(jq '.parameters = .parameters + {
-            "BlockStorageCount": '${OVERCLOUD_BLOCKSTORAGESCALE}'
+            "CinderStorageCount": '${OVERCLOUD_CINDERSTORAGESCALE}'
           }' <<< $ENV_JSON)
     fi
 fi
@@ -415,7 +415,7 @@ if [ "$USE_MERGEPY" -eq 1 ]; then
     make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
             COMPUTESCALE=$OVERCLOUD_COMPUTESCALE,${OVERCLOUD_COMPUTE_BLACKLIST:-} \
             CONTROLSCALE=$OVERCLOUD_CONTROLSCALE,${OVERCLOUD_CONTROL_BLACKLIST:-} \
-            BLOCKSTORAGESCALE=$OVERCLOUD_BLOCKSTORAGESCALE
+            CINDERSTORAGESCALE=$OVERCLOUD_CINDERSTORAGESCALE
     OVERCLOUD_TEMPLATE=$TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml
 else
     OVERCLOUD_TEMPLATE=$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-without-mergepy.yaml

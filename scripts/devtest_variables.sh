@@ -132,12 +132,12 @@ export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
 
-## #. The block storage nodes are deployed with the cinder-tgt backend by
-##    default too. Alteratives are cinder-lio and cinder-volume-nfs. Make sure
+## #. The cinder storage nodes are deployed with the cinder-tgt backend by
+##    default too. Alteratives are cinder-lio or cinder-volume-nfs. Make sure
 ##    to check the README files of these elements to configure them as needed.
 ##    ::
 
-export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
+export OVERCLOUD_CINDERSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_CINDERSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
 
 ## #. Set distribution used for VMs (fedora, opensuse, ubuntu). If unset, this
 ##    will match TRIPLEO_OS_DISTRO, which is automatically gathered by devtest
@@ -188,13 +188,13 @@ export ROOT_DISK=${ROOT_DISK:-10}
 
 export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 
-## #. Set number of compute, control and block storage nodes for the overcloud.
+## #. Set number of compute, control and cinder storage nodes for the overcloud.
 ##    Only a value of 1 for OVERCLOUD_CONTROLSCALE is currently supported.
 ##    ::
 
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
 export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
-export OVERCLOUD_BLOCKSTORAGESCALE=${OVERCLOUD_BLOCKSTORAGESCALE:-0}
+export OVERCLOUD_CINDERSTORAGESCALE=${OVERCLOUD_CINDERSTORAGESCALE:-0}
 
 ## #. These optional variables can be set to remove dead nodes. See the merge.py
 ##    help for details of use. These example lines would remove Compute1 and
