@@ -124,17 +124,13 @@ fi
 ##    control node. It is not required for overcloud computes. The backend is
 ##    set through the ``*EXTRA_ARGS``.
 ##    rabbitmq-server is enabled by default. Another option is qpidd.
-##    For overclouds we also use ``*EXTRA_ARGS`` to choose a cinder backend, set
-##    to cinder-tgt by default.
-##    ::
 
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
-export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
+export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 
 ## #. The block storage nodes are deployed with the cinder-tgt backend by
-##    default too. Alteratives are cinder-lio and cinder-volume-nfs. Make sure
-##    to check the README files of these elements to configure them as needed.
+##    default too.
 ##    ::
 
 export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
@@ -188,13 +184,26 @@ export ROOT_DISK=${ROOT_DISK:-10}
 
 export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 
-## #. Set number of compute, control and block storage nodes for the overcloud.
+## #. Set number of compute, control and other type of nodes for the overcloud.
 ##    Only a value of 1 for OVERCLOUD_CONTROLSCALE is currently supported.
 ##    ::
 
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
 export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
 export OVERCLOUD_BLOCKSTORAGESCALE=${OVERCLOUD_BLOCKSTORAGESCALE:-0}
+export OVERCLOUD_CEPHSTORAGESCALE=${OVERCLOUD_CEPHSTORAGESCALE:-0}
+
+## #. For overclouds we also use ``*EXTRA_ARGS`` to pick the proper cinder backend, set
+##    to cinder-tgt by default or to ceph-volume-ceph when OVERCLOUD_CEPHSTORAGESCALE > 1.
+##    ::
+
+if [ $OVERCLOUD_CEPHSTORAGESCALE -gt 1 ]; then
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-} ceph-mon cinder-volume-ceph"
+    export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-} nova-compute-volume-ceph"
+    export CONTROLEXTRA="${CONTROLEXTRA:-} ceph-source.yaml"
+else
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-} cinder-tgt"
+fi
 
 ## #. These optional variables can be set to remove dead nodes. See the merge.py
 ##    help for details of use. These example lines would remove Compute1 and
