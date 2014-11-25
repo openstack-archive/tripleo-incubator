@@ -91,6 +91,9 @@ case "$TYPE" in
     orchestration|volume)
         SUFFIX="/v1/%(tenant_id)s"
         ;;
+    volumev2)
+        SUFFIX="/v2/%(tenant_id)s"
+        ;;
     identity)
         SUFFIX="/v2.0"
         ;;
