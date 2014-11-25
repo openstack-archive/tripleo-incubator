@@ -120,9 +120,10 @@ in your environment.
 
     export RESOURCE_REGISTRY_PATH="$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry-puppet.yaml"
 
-5) Explicitly disable the USE_MARIADB flag on Fedora. This is because it injects extra elements into the DIB arguments which we do not want when using Puppet::
+5) Explicitly disable the USE_MARIADB and USE_CEPH flags. This is because they inject extra elements into the DIB arguments which we do not want when using Puppet even though we will use them::
 
     export USE_MARIADB=0
+    export USE_CEPH=0
 
 6) Configure your Delorean repo URL. This is used to fetch more recently built upstream packages for your OpenStack services::
 
