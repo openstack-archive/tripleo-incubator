@@ -124,17 +124,13 @@ fi
 ##    control node. It is not required for overcloud computes. The backend is
 ##    set through the ``*EXTRA_ARGS``.
 ##    rabbitmq-server is enabled by default. Another option is qpidd.
-##    For overclouds we also use ``*EXTRA_ARGS`` to choose a cinder backend, set
-##    to cinder-tgt by default.
-##    ::
 
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
-export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
+export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
 
 ## #. The block storage nodes are deployed with the cinder-tgt backend by
-##    default too. Alteratives are cinder-lio and cinder-volume-nfs. Make sure
-##    to check the README files of these elements to configure them as needed.
+##    default. Another option is cinder-lio.
 ##    ::
 
 export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
@@ -188,13 +184,14 @@ export ROOT_DISK=${ROOT_DISK:-10}
 
 export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 
-## #. Set number of compute, control and block storage nodes for the overcloud.
+## #. Set number of compute, control and other type of nodes for the overcloud.
 ##    Only a value of 1 for OVERCLOUD_CONTROLSCALE is currently supported.
 ##    ::
 
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
 export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
 export OVERCLOUD_BLOCKSTORAGESCALE=${OVERCLOUD_BLOCKSTORAGESCALE:-0}
+export OVERCLOUD_CEPHSTORAGESCALE=${OVERCLOUD_CEPHSTORAGESCALE:-0}
 
 ## #. These optional variables can be set to remove dead nodes. See the merge.py
 ##    help for details of use. These example lines would remove Compute1 and
@@ -227,6 +224,22 @@ if [[ $NODE_DIST =~ .*(fedora|rhel|centos).* ]] ; then
     export USE_MARIADB=${USE_MARIADB:-1}
 else
     export USE_MARIADB=0
+fi
+
+
+## #. Set ``USE_CEPH=1`` if you want Cinder to be configured with Ceph as its
+##    backend. Enabled by default when ``OVERCLOUD_CEPHSTORAGESCALE`` is > 0
+##    ::
+
+
+if [ $OVERCLOUD_CEPHSTORAGESCALE -gt 0 ] ; then
+    export USE_CEPH=${USE_CEPH:-1}
+else
+    export USE_CEPH=0
+fi
+
+if [ $USE_CEPH -eq 1 ]; then
+    export CONTROLEXTRA="${CONTROLEXTRA:-} ceph-source.yaml"
 fi
 
 
