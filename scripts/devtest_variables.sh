@@ -124,17 +124,25 @@ fi
 ##    control node. It is not required for overcloud computes. The backend is
 ##    set through the ``*EXTRA_ARGS``.
 ##    rabbitmq-server is enabled by default. Another option is qpidd.
-##    For overclouds we also use ``*EXTRA_ARGS`` to choose a cinder backend, set
-##    to cinder-tgt by default.
-##    ::
 
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
-export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
+export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+
+## #. For overclouds we also use ``*EXTRA_ARGS`` to choose a cinder backend, set
+##    to cinder-tgt by default or to ceph-volume-ceph when OVERCLOUD_CONTROLSCALE > 1.
+##    ::
+
+if [ $OVERCLOUD_CONTROLSCALE -gt 1 ]; then
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-} ceph-mon cinder-volume-ceph"
+    export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-} nova-compute-volume-ceph"
+    export CONTROLEXTRA="ceph-storage.yaml"
+else
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-} cinder-tgt"
+fi
 
 ## #. The block storage nodes are deployed with the cinder-tgt backend by
-##    default too. Alteratives are cinder-lio and cinder-volume-nfs. Make sure
-##    to check the README files of these elements to configure them as needed.
+##    default too.
 ##    ::
 
 export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
