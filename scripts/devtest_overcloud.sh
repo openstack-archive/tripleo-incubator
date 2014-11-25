@@ -13,6 +13,7 @@ COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
 BLOCKSTORAGE_FLAVOR="baremetal"
 SWIFTSTORAGE_FLAVOR="baremetal"
+CEPHSTORAGE_FLAVOR="baremetal"
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -37,11 +38,14 @@ function show_options () {
     echo "       --swift-storage-flavor -- Nova flavor to use for swift "
     echo "                                 storage nodes."
     echo "                                 Defaults to 'baremetal'."
+    echo "       --ceph-storage-flavor  -- Nova flavor to use for ceph "
+    echo "                                 storage nodes."
+    echo "                                 Defaults to 'baremetal'."
     echo
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,ceph-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -58,6 +62,7 @@ while true ; do
         --control-flavor) CONTROL_FLAVOR="$2"; shift 2;;
         --block-storage-flavor) BLOCKSTORAGE_FLAVOR="$2"; shift 2;;
         --swift-storage-flavor) SWIFTSTORAGE_FLAVOR="$2"; shift 2;;
+        --ceph-storage-flavor) CEPHSTORAGE_FLAVOR="$2"; shift 2;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -100,6 +105,7 @@ OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
 
 OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS=${OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS:-'ntp hosts baremetal os-collect-config dhcp-all-interfaces sysctl'}
 OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
+OVERCLOUD_CEPHSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_CEPHSTORAGE_DIB_EXTRA_ARGS:-''}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
 
 if [ "${USE_MARIADB:-}" = 1 ] ; then
@@ -125,8 +131,8 @@ OVERCLOUD_FIXED_RANGE_GATEWAY=${OVERCLOUD_FIXED_RANGE_GATEWAY:-"10.0.0.1"}
 ##    This is the image the undercloud
 ##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
 
-##    ``$OVERCLOUD_*_DIB_EXTRA_ARGS`` (CONTROL, COMPUTE, BLOCKSTORAGE) are
-##    meant to be used to pass additional build-time specific arguments to
+##    ``$OVERCLOUD_*_DIB_EXTRA_ARGS`` (CONTROL, COMPUTE, BLOCKSTORAGE and CEPHSTORAGE)
+##    are meant to be used to pass additional build-time specific arguments to
 ##    ``disk-image-create``.
 
 ##    ``$SSL_ELEMENT`` is used when building a cloud with SSL endpoints - it should be
@@ -142,6 +148,7 @@ if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS snmpd"
     OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
     OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS snmpd"
+    OVERCLOUD_CEPHSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_CEPHSTORAGE_DIB_EXTRA_ARGS snmpd"
 fi
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
@@ -181,7 +188,30 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     fi #nodocs
 fi
 
-## #. Create your overcloud compute image. This is the image the undercloud
+## #. Create your ceph storage image if some ceph storage nodes are to be used. This
+##    is the image the undercloud deploys for the dedicated instances running ceph-osd.
+##    ::
+
+if [ $OVERCLOUD_CEPHSTORAGESCALE -gt 0 ]; then
+    if [ ! -e $TRIPLEO_ROOT/overcloud-ceph-storage.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
+        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-ceph-storage ntp hosts \
+            baremetal os-collect-config \
+            dhcp-all-interfaces ceph-osd $DIB_COMMON_ELEMENTS \
+            $OVERCLOUD_CEPHSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
+            tee $TRIPLEO_ROOT/dib-overcloud-ceph-storage.log
+    fi #nodocs
+
+## #. Load the image into Glance, unless you are just building the images.
+
+##    ::
+
+    if [ -z "$BUILD_ONLY" ]; then #nodocs
+    OVERCLOUD_CEPHSTORAGE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-ceph-storage.qcow2)
+    fi #nodocs
+fi
+
+## #. Create your compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
@@ -288,7 +318,7 @@ fi
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
-expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_BLOCKSTORAGESCALE ))
+expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_BLOCKSTORAGESCALE + $OVERCLOUD_CEPHSTORAGESCALE ))
 wait_for 60 $expected_nodes wait_for_hypervisor_stats $expected_nodes
 
 ## #. Set password for Overcloud SNMPd, same password needs to be set in Undercloud Ceilometer
@@ -388,6 +418,23 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
       }' <<< $ENV_JSON)
 fi
 
+# NOTE(gfidente): we do not check against CEPHSTORAGESCALE because
+# ceph-osd could have been deployed on controllers (CI) and instead
+# we want to enable the settings relevant to Ceph together with HA
+if [ $OVERCLOUD_CEPHSTORAGESCALE -gt 1 ]; then
+    FSID=$(uuidgen)
+    # CephX keys https://github.com/ceph/ceph-deploy/blob/15b348e502128df435f8c2c7073e8b936086e325/ceph_deploy/new.py#L21
+    MON_KEY=$(python -c 'import base64,os,struct,time;key = os.urandom(16);header = struct.pack("<hiih", 1, int(time.time()), 0, len(key));print(base64.b64encode(header + key))')
+    ADMIN_KEY=$(python -c 'import base64,os,struct,time;key = os.urandom(16);header = struct.pack("<hiih", 1, int(time.time()), 0, len(key));print(base64.b64encode(header + key))')
+    ENV_JSON=$(jq '.parameters = {} + .parameters + {
+        "OvercloudCephStorageFlavor": "'"${CEPHSTORAGE_FLAVOR}"'",
+        "CephStorageImage": "'"${OVERCLOUD_CEPHSTORAGE_ID}"'",
+        "CephClusterFSID": "'"${FSID}"'",
+        "CephMonKey": "'"${MON_KEY}"'",
+        "CephAdminKey": "'"${ADMIN_KEY}"'",
+      }' <<< $ENV_JSON)
+fi
+
 ### --end
 # Options we haven't documented as such
 ENV_JSON=$(jq '.parameters = {
@@ -411,6 +458,11 @@ if [ "$USE_MERGEPY" -eq 0 ]; then
     if [ -e "$TRIPLEO_ROOT/tripleo-heat-templates/cinder-storage.yaml" ]; then
         ENV_JSON=$(jq '.parameters = .parameters + {
             "BlockStorageCount": '${OVERCLOUD_BLOCKSTORAGESCALE}'
+          }' <<< $ENV_JSON)
+    fi
+    if [ -e "$TRIPLEO_ROOT/tripleo-heat-templates/ceph-storage.yaml" ]; then
+        ENV_JSON=$(jq '.parameters = .parameters + {
+            "CephStorageCount": '${OVERCLOUD_CEPHSTORAGESCALE}'
           }' <<< $ENV_JSON)
     fi
 fi
@@ -439,7 +491,8 @@ if [ "$USE_MERGEPY" -eq 1 ]; then
     make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
             COMPUTESCALE=$OVERCLOUD_COMPUTESCALE,${OVERCLOUD_COMPUTE_BLACKLIST:-} \
             CONTROLSCALE=$OVERCLOUD_CONTROLSCALE,${OVERCLOUD_CONTROL_BLACKLIST:-} \
-            BLOCKSTORAGESCALE=$OVERCLOUD_BLOCKSTORAGESCALE
+            BLOCKSTORAGESCALE=$OVERCLOUD_BLOCKSTORAGESCALE \
+            CEPHSTORAGESCALE=$OVERCLOUD_CEPHSTORAGESCALE
     OVERCLOUD_TEMPLATE=$TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml
 else
     OVERCLOUD_TEMPLATE=$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-without-mergepy.yaml
