@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Workflow+1: James Slagle <jslagle@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 25 Nov 2014 20:04:52 +0000
+Reviewed-on: https://review.openstack.org/137150
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
