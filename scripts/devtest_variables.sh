@@ -124,17 +124,25 @@ fi
 ##    control node. It is not required for overcloud computes. The backend is
 ##    set through the ``*EXTRA_ARGS``.
 ##    rabbitmq-server is enabled by default. Another option is qpidd.
-##    For overclouds we also use ``*EXTRA_ARGS`` to choose a cinder backend, set
-##    to cinder-tgt by default.
-##    ::
 
 export SEED_DIB_EXTRA_ARGS=${SEED_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
-export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
+export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server'}
+
+## #. For overclouds we also use ``*EXTRA_ARGS`` to choose a cinder backend, set
+##    to cinder-tgt by default or to ceph-volume-ceph when OVERCLOUD_CONTROLSCALE > 1.
+##    ::
+
+if [ $OVERCLOUD_CONTROLSCALE -gt 1 ]; then
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-} ceph-mon cinder-volume-ceph"
+    export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-} nova-compute-volume-ceph"
+    export CONTROLEXTRA="ceph-source.yaml"
+else
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-} cinder-tgt"
+fi
 
 ## #. The block storage nodes are deployed with the cinder-tgt backend by
-##    default too. Alteratives are cinder-lio and cinder-volume-nfs. Make sure
-##    to check the README files of these elements to configure them as needed.
+##    default too.
 ##    ::
 
 export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
@@ -195,6 +203,7 @@ export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
 export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
 export OVERCLOUD_BLOCKSTORAGESCALE=${OVERCLOUD_BLOCKSTORAGESCALE:-0}
+export OVERCLOUD_CEPHSTORAGESCALE=${OVERCLOUD_CEPHSTORAGESCALE:-0}
 
 ## #. These optional variables can be set to remove dead nodes. See the merge.py
 ##    help for details of use. These example lines would remove Compute1 and
