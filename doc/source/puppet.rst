@@ -115,14 +115,17 @@ in your environment.
     # NOTE: This pre-installs the Nova, Neutron, and Ceilometer packages in
     # the compute image
     export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS='overcloud-compute'
+    export OVERCLOUD_CEPHSTORAGE_DIB_ELEMENTS='sysctl hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
+    export OVERCLOUD_CEPHSTORAGE_DIB_EXTRA_ARGS='overcloud-ceph-storage'
 
 4) Override the tripleo-heat-templates resource registry::
 
     export RESOURCE_REGISTRY_PATH="$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry-puppet.yaml"
 
-5) Explicitly disable the USE_MARIADB flag on Fedora. This is because it injects extra elements into the DIB arguments which we do not want when using Puppet::
+5) Explicitly disable the USE_MARIADB and USE_CEPH flags. This is because they inject extra elements into the DIB arguments which we do not want when using Puppet::
 
     export USE_MARIADB=0
+    export USE_CEPH=0
 
 6) Configure your Delorean repo URL. This is used to fetch more recently built upstream packages for your OpenStack services::
 
