@@ -150,6 +150,7 @@ if [ -n "$CINDER_PASSWORD" ]; then
   SSL_PORT=${SSL:+13776}
   SSL_PORT=${SSL_PORT:-$NORMAL_PORT}
   PASSWORD=$CINDER_PASSWORD register-endpoint $DEBUG -r $REGION -d "Cinder Volume Service" cinder volume -i ${INTERNAL_HOST}${NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
+  PASSWORD=$CINDER_PASSWORD register-endpoint $DEBUG -r $REGION -d "Cinder Volume Service V2" cinderv2 volumev2 -i ${INTERNAL_HOST}${NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
 fi
 if [ -n "$SWIFT_PASSWORD" ]; then
   NORMAL_PORT=8080
