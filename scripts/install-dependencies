@@ -28,7 +28,7 @@ chmod 0600 ~/.ssh/authorized_keys
 
 # packages
 if [ "$TRIPLEO_OS_DISTRO" = "unsupported" ]; then
-  echo This script has not been tested outside of Fedora, RHEL, and Ubuntu variants.
+  echo This script has not been tested outside of Fedora, RHEL/CentOS, and Ubuntu variants.
   echo Make sure you have installed all the needed dependencies or subsequent steps will fail.
 fi
 
@@ -58,9 +58,9 @@ if [ "$TRIPLEO_OS_FAMILY" = "debian" ]; then
 fi
 
 if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
-  # For RHEL/CentOS, python-pip is in EPEL
-  if [ "$TRIPLEO_OS_DISTRO" = "redhat" -o "$TRIPLEO_OS_DISTRO" = "centos" ] && [ ! -f /etc/yum.repos.d/epel.repo ]; then
-    echo EPEL repository is required to install python-pip for RHEL/CentOS.
+  # For CentOS, python-pip and jq are in EPEL
+  if [ "$TRIPLEO_OS_DISTRO" = "centos" ] && [ ! -f /etc/yum.repos.d/epel.repo ]; then
+    echo EPEL repository is required to install python-pip for CentOS.
     echo See http://fedoraproject.org/wiki/EPEL
     exit 1
   fi
