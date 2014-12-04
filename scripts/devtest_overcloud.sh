@@ -13,7 +13,6 @@ COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
 BLOCKSTORAGE_FLAVOR="baremetal"
 SWIFTSTORAGE_FLAVOR="baremetal"
-USE_MERGEPY=1
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
