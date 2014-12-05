@@ -25,6 +25,7 @@ pip install -U 'pbr>=0.5.21,<1.0'
 pip install -U \
     os-apply-config \
     os-cloud-config \
+    python-barbicanclient \
     python-ceilometerclient \
     python-cinderclient \
     python-glanceclient \
