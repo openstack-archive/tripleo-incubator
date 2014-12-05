@@ -202,18 +202,47 @@ else
     ENV_JSON='{"parameters":{}}'
 fi
 
+## #. Detect if we are deploying with a VLAN for API endpoints / floating IPs.
+##    This is done by looking for a 'public' network in Neutron, and if found
+##    we pull out the VLAN id and pass that into Heat, as well as using a VLAN
+##    enabled Heat template.
+##    ::
+
+if (neutron net-list | grep -q public); then
+    VLAN_ID=$(neutron net-show public | awk '/provider:segmentation_id/ { print $4 }')
+else
+    VLAN_ID=
+fi
+
 ## #. Nova-baremetal and Ironic require different Heat templates
 ##    and different options.
 ##    ::
 
 if [ "$USE_IRONIC" -eq 0 ] ; then
+    if [ -n "$VLAN_ID" ]; then
+        echo "VLANs not supported with Nova-BM" >&2
+        exit 1
+    fi
     HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm.yaml"
     ENV_JSON=$(jq .parameters.PowerSSHHost=\"${POWER_HOST}\" <<< $ENV_JSON)
     ENV_JSON=$(jq .parameters.PowerManager=\"${POWER_MANAGER}\" <<< $ENV_JSON)
     ENV_JSON=$(jq .parameters.PowerUserName=\"${POWER_USER}\" <<< $ENV_JSON)
     REGISTER_SERVICE_OPTS=""
 else
-    HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
+    if [ -n "$VLAN_ID" ]; then
+        HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic-vlan.yaml"
+        ENV_JSON=$(jq .parameters.NeutronPublicInterfaceTag=\"${VLAN_ID}\" <<< $ENV_JSON)
+	# This should be in the heat template, but see
+	# https://bugs.launchpad.net/heat/+bug/1336656
+	# note that this will break if there are more than one subnet, as if
+	# more reason to fix the bug is needed :).
+	PUBLIC_SUBNET_ID=$(neutron net-show public | awk '/subnets/ { print $4 }')
+	VLAN_GW=$(neutron subnet-show $PUBLIC_SUBNET_ID | awk '/gateway_ip/ { print $4}')
+	BM_VLAN_CIDR=$(neutron subnet-show $PUBLIC_SUBNET_ID | awk '/cidr/ { print $4}')
+        ENV_JSON=$(jq .parameters.NeutronPublicInterfaceDefaultRoute=\"${VLAN_GW}\" <<< $ENV_JSON)
+    else
+        HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
+    fi
     ENV_JSON=$(jq .parameters.IronicPassword=\"${UNDERCLOUD_IRONIC_PASSWORD}\" <<< $ENV_JSON)
     REGISTER_SERVICE_OPTS="--ironic-password $UNDERCLOUD_IRONIC_PASSWORD"
 fi
@@ -299,12 +328,23 @@ heat $HEAT_OP -e $HEAT_ENV \
 echo "Waiting for the undercloud stack to be ready" #nodocs
 # Make time out 60 mins as like the Heat stack-create default timeout.
 wait_for_stack_ready $(($UNDERCLOUD_STACK_TIMEOUT * 60 / 10)) 10 undercloud
-UNDERCLOUD_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+UNDERCLOUD_CTL_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
+
+## #. If we're deploying with a public VLAN we must use it, not the control plane
+##    network (which we may not even have access to) to ping and configure thing.
+##    ::
+
+if [ -n "$VLAN_ID" ]; then
+    UNDERCLOUD_IP=$(heat output-show undercloud PublicIP|sed 's/^"\(.*\)"$/\1/')
+else
+    UNDERCLOUD_IP=$UNDERCLOUD_CTL_IP
+fi
 
 ## #. We don't (yet) preserve ssh keys on rebuilds.
 ##    ::
 
 ssh-keygen -R $UNDERCLOUD_IP
+ssh-keygen -R $UNDERCLOUD_CTL_IP
 
 ## #. Exclude the undercloud from proxies:
 ##    ::
@@ -328,9 +368,9 @@ source $TRIPLEO_ROOT/tripleo-incubator/undercloudrc
 ## #. Perform setup of your undercloud.
 ##    ::
 
-init-keystone -o $UNDERCLOUD_IP -t $UNDERCLOUD_ADMIN_TOKEN \
+init-keystone -o $UNDERCLOUD_CTL_IP -t $UNDERCLOUD_ADMIN_TOKEN \
     -e admin@example.com -p $UNDERCLOUD_ADMIN_PASSWORD -u heat-admin \
-    --no-pki-setup
+    --public $UNDERCLOUD_IP --no-pki-setup
 
 # Creating these roles to be used by tenants using swift
 keystone role-create --name=swiftoperator
@@ -348,22 +388,32 @@ if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     ENDPOINT_LIST="$ENDPOINT_LIST --ceilometer-password $UNDERCLOUD_CEILOMETER_PASSWORD"
 fi
 
-setup-endpoints $UNDERCLOUD_IP $ENDPOINT_LIST $REGISTER_SERVICE_OPTS
+setup-endpoints $UNDERCLOUD_CTL_IP $ENDPOINT_LIST $REGISTER_SERVICE_OPTS \
+    --public $UNDERCLOUD_IP
 keystone role-create --name heat_stack_user
 
 user-config
 
 BM_NETWORK_CIDR=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
-BM_NETWORK_GATEWAY=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
+if [ -n "$VLAN_ID" ]; then
+    # No ctl plane gateway - public net gateway is needed.
+    # XXX (lifeless) - Neutron still configures one, first position in the subnet.
+    BM_NETWORK_GATEWAY=
+else
+    # Use a control plane gateway.
+    BM_NETWORK_GATEWAY=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
+fi
 BM_NETWORK_UNDERCLOUD_RANGE_START=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.undercloud.range-start --type raw --key-default '192.0.2.21')
 BM_NETWORK_UNDERCLOUD_RANGE_END=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.undercloud.range-end --type raw --key-default '192.0.2.40')
+
 UNDERCLOUD_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key undercloud.nameserver --type netaddress --key-default '')
+
 NETWORK_JSON=$(mktemp)
 jq "." <<EOF > $NETWORK_JSON
 {
     "physical": {
         "gateway": "$BM_NETWORK_GATEWAY",
-        "metadata_server": "$UNDERCLOUD_IP",
+        "metadata_server": "$UNDERCLOUD_CTL_IP",
         "cidr": "$BM_NETWORK_CIDR",
         "allocation_start": "$BM_NETWORK_UNDERCLOUD_RANGE_START",
         "allocation_end": "$BM_NETWORK_UNDERCLOUD_RANGE_END",
@@ -374,6 +424,28 @@ jq "." <<EOF > $NETWORK_JSON
 EOF
 setup-neutron -n $NETWORK_JSON
 rm $NETWORK_JSON
+
+if [ -n "$VLAN_ID" ]; then
+    BM_VLAN_START=$(jq -r '.["baremetal-network"].undercloud.public_vlan.start' $TE_DATAFILE)
+    BM_VLAN_END=$(jq -r '.["baremetal-network"].undercloud.public_vlan.finish' $TE_DATAFILE)
+    PUBLIC_NETWORK_JSON=$(mktemp)
+    jq "." <<EOF > $PUBLIC_NETWORK_JSON
+{
+    "physical": {
+        "gateway": "$VLAN_GW",
+        "metadata_server": "$UNDERCLOUD_CTL_IP",
+        "cidr": "$BM_VLAN_CIDR",
+        "allocation_start": "$BM_VLAN_START",
+        "allocation_end": "$BM_VLAN_END",
+        "name": "public",
+        "nameserver": "$UNDERCLOUD_NAMESERVER",
+        "segmentation_id": "$VLAN_ID",
+        "enable_dhcp": false
+    }
+}
+EOF
+    setup-neutron -n $PUBLIC_NETWORK_JSON
+fi
 
 ## #. Nova quota runs up with the defaults quota so overide the default to
 ##    allow unlimited cores, instances and ram.
