@@ -105,13 +105,35 @@ fi
 ##    larger overcloud than this without using Ironic you may need to increase
 ##    NODE_DISK.
 
+##    NODE_CNT specifies how many VMs to define using virsh. NODE_CNT
+##    defaults to 15, or 0 if NODES_PATH is provided.
+
+### --end
+##    This number is intentionally higher than required as the
+##    definitions are cheap (until the VM is activated the only cost
+##    is a small amount of disk space) but growing this number in our
+##    CI environment is expensive.
+### --include
+
 ##    32bit VMs
 ##    ::
 
 ##         NODE_CPU=1 NODE_MEM=3072 NODE_DISK=40 NODE_ARCH=i386
 
-NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-3072} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386} NODE_CNT=${NODE_CNT:-15} #nodocs
 
+### --end
+
+if [ -n "$NODES_PATH" ]; then
+  NODE_CNT=${NODE_CNT:-0}
+else
+  NODE_CNT=${NODE_CNT:-15}
+fi
+
+NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-3072} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386}
+
+
+
+### --include
 ##    For 64bit it is better to create VMs with more memory and storage because of
 ##    increased memory footprint (we suggest 4GB)::
 
