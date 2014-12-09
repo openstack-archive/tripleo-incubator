@@ -54,7 +54,6 @@ function show_options () {
 }
 
 BUILD_ONLY=
-NO_MERGEPY=
 DEBUG_LOGGING=
 NODES_ARG=
 NO_UNDERCLOUD=
@@ -75,7 +74,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY=--build-only; shift 1;;
-        --no-mergepy) NO_MERGEPY=--no-mergepy; shift 1;;
+        --no-mergepy) USE_MERGEPY=0; shift 1;;
         --debug-logging) DEBUG_LOGGING=--debug-logging; shift 1;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
@@ -97,6 +96,7 @@ if [ -z "$CONTINUE" ]; then
 fi
 
 export USE_CACHE
+export USE_MERGEPY
 
 # Source environment variables from .devtestrc, allowing defaults to be setup
 # specific to users environments
@@ -346,7 +346,7 @@ DEVTEST_UC_END=$(date +%s)
 ##         devtest_overcloud.sh
 ### --end
 DEVTEST_OC_START=$(date +%s)
-devtest_overcloud.sh $BUILD_ONLY $NO_MERGEPY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD
+devtest_overcloud.sh $BUILD_ONLY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD
 DEVTEST_OC_END=$(date +%s)
 if [ -z "$BUILD_ONLY" ]; then
 ### --include

@@ -229,4 +229,11 @@ else
     export USE_MARIADB=0
 fi
 
+
+## #. You can choose between using the old-style merge.py script for putting
+##    together or the newer way of doing it directly via Heat.
+##    ::
+
+export USE_MERGEPY=${USE_MERGEPY:-1}
+
 ### --end
