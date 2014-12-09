@@ -93,8 +93,12 @@ PUBLIC_API_URL=${12:-''}
 SSL_ELEMENT=${SSLBASE:+openstack-ssl}
 USE_CACHE=${USE_CACHE:-0}
 DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
+OVERCLOUD_CONTROL_DIB_ELEMENTS=${OVERCLOUD_CONTROL_DIB_ELEMENTS:-'ntp hosts baremetal boot-stack cinder-api ceilometer-collector ceilometer-api ceilometer-agent-central ceilometer-agent-notification ceilometer-alarm-notifier ceilometer-alarm-evaluator os-collect-config horizon neutron-network-node dhcp-all-interfaces swift-proxy swift-storage keepalived haproxy sysctl'}
 OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
+OVERCLOUD_COMPUTE_DIB_ELEMENTS=${OVERCLOUD_COMPUTE_DIB_ELEMENTS:-'ntp hosts baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config dhcp-all-interfaces sysctl'}
 OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
+
+OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS=${OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS:-'ntp hosts baremetal os-collect-config dhcp-all-interfaces sysctl'}
 OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
 
@@ -142,12 +146,8 @@ fi
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control ntp hosts \
-        baremetal boot-stack cinder-api ceilometer-collector \
-        ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
-        ceilometer-alarm-notifier ceilometer-alarm-evaluator \
-        os-collect-config horizon neutron-network-node dhcp-all-interfaces \
-        swift-proxy swift-storage keepalived haproxy sysctl \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
+        $OVERCLOUD_CONTROL_DIB_ELEMENTS \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
@@ -166,9 +166,9 @@ fi #nodocs
 if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     if [ ! -e $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume ntp hosts \
-            baremetal os-collect-config dhcp-all-interfaces sysctl \
-            $DIB_COMMON_ELEMENTS $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
+            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume \
+            $OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS $DIB_COMMON_ELEMENTS \
+            $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
             tee $TRIPLEO_ROOT/dib-overcloud-cinder-volume.log
     fi #nodocs
 
@@ -187,10 +187,9 @@ fi
 
 if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute ntp hosts \
-        baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-        dhcp-all-interfaces sysctl \
-        $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
+           $OVERCLOUD_COMPUTE_DIB_ELEMENTS $DIB_COMMON_ELEMENTS \
+           $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
