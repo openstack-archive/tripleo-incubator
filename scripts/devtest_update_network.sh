@@ -33,7 +33,7 @@ while true ; do
         --bm-networks) NETS_PATH="$2"; shift 2;;
         -h) show_options 0;;
         --) shift ; break ;;
-        *) echo "Error: unsupported option $1." ; exit 1 ;;
+        *) echo "Error: unsupported option $1." ; show_options 1 ;;
     esac
 done
 
