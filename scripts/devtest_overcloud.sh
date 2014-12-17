@@ -147,7 +147,7 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then 
         ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
         ceilometer-alarm-notifier ceilometer-alarm-evaluator \
         os-collect-config horizon neutron-network-node dhcp-all-interfaces \
-        swift-proxy swift-storage keepalived haproxy \
+        swift-proxy swift-storage keepalived haproxy sysctl \
         $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-control.log
 fi #nodocs
@@ -167,9 +167,8 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     if [ ! -e $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
         $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
             -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume ntp hosts \
-            baremetal os-collect-config \
-            dhcp-all-interfaces $DIB_COMMON_ELEMENTS \
-            $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
+            baremetal os-collect-config dhcp-all-interfaces sysctl \
+            $DIB_COMMON_ELEMENTS $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
             tee $TRIPLEO_ROOT/dib-overcloud-cinder-volume.log
     fi #nodocs
 
@@ -190,7 +189,8 @@ if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then 
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute ntp hosts \
         baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
-        dhcp-all-interfaces $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
+        dhcp-all-interfaces sysctl \
+        $DIB_COMMON_ELEMENTS $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
