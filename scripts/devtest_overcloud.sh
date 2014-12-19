@@ -623,7 +623,7 @@ if [ "stack-create" = "$HEAT_OP" ] ; then #nodocs
 ##    ::
 
     IMAGE_ID=$(glance image-show user | awk '/ id / {print $4}')
-    nova boot --key-name default --flavor m1.tiny --block-device source=image,id=$IMAGE_ID,dest=volume,size=2,shutdown=preserve,bootindex=0 demo
+    nova boot --key-name default --flavor m1.tiny --block-device source=image,id=$IMAGE_ID,dest=volume,size=3,shutdown=preserve,bootindex=0 demo
 
 ## #. Add an external IP for it.
 ##    ::
