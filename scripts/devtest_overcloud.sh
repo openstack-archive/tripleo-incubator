@@ -400,7 +400,7 @@ ENV_JSON=$(jq '.parameters = {
   }' <<< $ENV_JSON)
 
 RESOURCE_REGISTRY=
-RESOURCE_REGISTRY_PATH="$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml"
+RESOURCE_REGISTRY_PATH=${RESOURCE_REGISTRY_PATH:-"$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml"}
 
 if [ "$USE_MERGEPY" -eq 0 ]; then
     RESOURCE_REGISTRY="-e $RESOURCE_REGISTRY_PATH"
