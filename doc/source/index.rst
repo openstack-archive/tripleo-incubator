@@ -37,6 +37,7 @@ Further Information
    :maxdepth: 1
 
    deploying
+   puppet
    resources
    troubleshooting
    CONTRIBUTING
