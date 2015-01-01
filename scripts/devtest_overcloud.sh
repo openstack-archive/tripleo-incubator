@@ -13,6 +13,7 @@ COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
 BLOCKSTORAGE_FLAVOR="baremetal"
 SWIFTSTORAGE_FLAVOR="baremetal"
+HA_DEPLOYMENT=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -37,6 +38,11 @@ function show_options () {
     echo "       --swift-storage-flavor -- Nova flavor to use for swift "
     echo "                                 storage nodes."
     echo "                                 Defaults to 'baremetal'."
+    echo "       --ha                   -- Create an HA deployment. This will create"
+    echo "                                 a 3 node control plane and a 2 compute "
+    echo "                                 nodes if OVERCLOUD_COMPUTESCALE is not set."
+    echo "                                 This option cannot be used if the"
+    echo "                                 OVERCLOUD_CONTROLSCALE is defined."
     echo
     exit $1
 }
@@ -58,11 +64,24 @@ while true ; do
         --control-flavor) CONTROL_FLAVOR="$2"; shift 2;;
         --block-storage-flavor) BLOCKSTORAGE_FLAVOR="$2"; shift 2;;
         --swift-storage-flavor) SWIFTSTORAGE_FLAVOR="$2"; shift 2;;
+        --ha) HA_DEPLOYMENT=1; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
     esac
 done
+
+if [ -n "$HA_DEPLOYMENT" ]; then
+    if [ -n "$OVERCLOUD_CONTROLSCALE" ]; then
+        echo "Error: Cannot use both --ha and OVERCLOUD_CONTROLSCALE."
+        show_options 1
+    fi
+    CONTROLSCALE=3
+    COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
+else
+    CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
+    COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-1}
+fi
 
 set -x
 if [ -z "$BUILD_ONLY" ]; then
@@ -288,7 +307,7 @@ fi
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
-expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_BLOCKSTORAGESCALE ))
+expected_nodes=$(( $COMPUTESCALE + $CONTROLSCALE + $OVERCLOUD_BLOCKSTORAGESCALE ))
 wait_for 60 $expected_nodes wait_for_hypervisor_stats $expected_nodes
 
 ## #. Set password for Overcloud SNMPd, same password needs to be set in Undercloud Ceilometer
@@ -405,8 +424,8 @@ RESOURCE_REGISTRY_PATH=${RESOURCE_REGISTRY_PATH:-"$TRIPLEO_ROOT/tripleo-heat-tem
 if [ "$USE_MERGEPY" -eq 0 ]; then
     RESOURCE_REGISTRY="-e $RESOURCE_REGISTRY_PATH"
     ENV_JSON=$(jq '.parameters = .parameters + {
-        "ControllerCount": '${OVERCLOUD_CONTROLSCALE}',
-        "ComputeCount": '${OVERCLOUD_COMPUTESCALE}'
+        "ControllerCount": '${CONTROLSCALE}',
+        "ComputeCount": '${COMPUTESCALE}'
       }' <<< $ENV_JSON)
     if [ -e "$TRIPLEO_ROOT/tripleo-heat-templates/cinder-storage.yaml" ]; then
         ENV_JSON=$(jq '.parameters = .parameters + {
@@ -437,8 +456,8 @@ generate-keystone-pki --heatenv $HEAT_ENV
 
 if [ "$USE_MERGEPY" -eq 1 ]; then
     make -C $TRIPLEO_ROOT/tripleo-heat-templates overcloud.yaml \
-            COMPUTESCALE=$OVERCLOUD_COMPUTESCALE,${OVERCLOUD_COMPUTE_BLACKLIST:-} \
-            CONTROLSCALE=$OVERCLOUD_CONTROLSCALE,${OVERCLOUD_CONTROL_BLACKLIST:-} \
+            COMPUTESCALE=$COMPUTESCALE,${OVERCLOUD_COMPUTE_BLACKLIST:-} \
+            CONTROLSCALE=$CONTROLSCALE,${OVERCLOUD_CONTROL_BLACKLIST:-} \
             BLOCKSTORAGESCALE=$OVERCLOUD_BLOCKSTORAGESCALE
     OVERCLOUD_TEMPLATE=$TRIPLEO_ROOT/tripleo-heat-templates/overcloud.yaml
 else

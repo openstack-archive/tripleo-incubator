@@ -192,8 +192,8 @@ export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 ##    Only a value of 1 for OVERCLOUD_CONTROLSCALE is currently supported.
 ##    ::
 
-export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
-export OVERCLOUD_CONTROLSCALE=${OVERCLOUD_CONTROLSCALE:-1}
+##        export OVERCLOUD_COMPUTESCALE=2
+##        export OVERCLOUD_CONTROLSCALE=1
 export OVERCLOUD_BLOCKSTORAGESCALE=${OVERCLOUD_BLOCKSTORAGESCALE:-0}
 
 ## #. These optional variables can be set to remove dead nodes. See the merge.py
