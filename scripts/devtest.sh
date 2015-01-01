@@ -43,6 +43,8 @@ function show_options () {
     echo "                           -- heat environment file for the undercloud."
     echo "    --heat-env-overcloud  ENVFILE"
     echo "                           -- heat environment file for the overcloud."
+    echo "    --ha                   -- Create a HA deployment. Currently this only makes "
+    echo "                              the overcloud control plane highly-available."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
     echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
@@ -62,6 +64,7 @@ CONTINUE=
 HEAT_ENV_UNDERCLOUD=
 HEAT_ENV_OVERCLOUD=
 USE_CACHE=0
+HA_ARGS=
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
@@ -83,6 +86,7 @@ while true ; do
         --no-undercloud) NO_UNDERCLOUD="true"; shift 1;;
         --heat-env-undercloud) HEAT_ENV_UNDERCLOUD="--heat-env $2"; shift 2;;
         --heat-env-overcloud) HEAT_ENV_OVERCLOUD="--heat-env $2"; shift 2;;
+        --ha) HA_ARGS="--ha"; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         -h|--help) show_options 0;;
         --) shift ; break ;;
@@ -346,7 +350,7 @@ DEVTEST_UC_END=$(date +%s)
 ##         devtest_overcloud.sh
 ### --end
 DEVTEST_OC_START=$(date +%s)
-devtest_overcloud.sh $BUILD_ONLY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD
+devtest_overcloud.sh $BUILD_ONLY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD $HA_ARGS
 DEVTEST_OC_END=$(date +%s)
 if [ -z "$BUILD_ONLY" ]; then
 ### --include
