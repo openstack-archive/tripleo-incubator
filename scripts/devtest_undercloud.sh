@@ -178,7 +178,7 @@ POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
-wait_for 60 1 wait_for_hypervisor_stats
+wait_for_walltime 60 1 wait_for_hypervisor_stats
 
 
 ## #. We need an environment file to store the parameters we're going to give
