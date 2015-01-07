@@ -21,6 +21,9 @@ set -u  # exit on unset variables
 SCRIPT_NAME=$(basename $0)
 
 
+echo "DEPRECATION WARNING: wait_for commands are deprecated and are to be replaced by wait_for_walltime."
+
+
 function show_options() {
     echo "Usage: $SCRIPT_NAME LOOPS_NUMBER SLEEP_TIME ARGS"
     echo
