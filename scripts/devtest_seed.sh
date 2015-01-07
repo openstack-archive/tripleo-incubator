@@ -289,7 +289,7 @@ echo "Waiting for seed node to configure br-ctlplane..." #nodocs
 timeout 480 sh -c 'printf "HTTP/1.0 200 OK\r\n\r\n\r\n" | nc -l '"$COMP_IP"' '"$SEED_COMP_PORT"' | grep '"$SEED_IMAGE_ID"
 
 # Wait for network
-wait_for 10 1 ping -c 1 $BM_NETWORK_SEED_IP
+wait_for -w 10 --delay 1 -- ping -c 1 $BM_NETWORK_SEED_IP
 
 # If ssh-keyscan fails to connect, it returns 0. So grep to see if it succeeded
 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP | tee -a ~/.ssh/known_hosts | grep -q "^$BM_NETWORK_SEED_IP ssh-rsa "
@@ -302,13 +302,13 @@ keystone role-create --name=swiftoperator
 keystone role-create --name=ResellerAdmin
 
 echo "Waiting for nova to initialise..."
-wait_for 50 10 nova list
+wait_for -w 500 --delay 10 -- nova list
 user-config
 
 echo "Waiting for Nova Compute to be available"
-wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'enabled.*\ up\ '
+wait_for -w 300 --delay 10 -- nova service-list --binary nova-compute 2\>/dev/null \| grep 'enabled.*\ up\ '
 echo "Waiting for neutron API and L2 agent to be available"
-wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*\"" #nodocs
+wait_for -w 300 --delay 10 -- neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*\"" #nodocs
 
 BM_NETWORK_SEED_RANGE_START=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.range-start --type raw --key-default '192.0.2.2')
 BM_NETWORK_SEED_RANGE_END=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.range-end --type raw --key-default '192.0.2.20')
