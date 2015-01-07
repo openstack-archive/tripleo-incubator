@@ -17,47 +17,113 @@
 
 set -e  # exit on the first non-zero status
 set -u  # exit on unset variables
+set -o pipefail
 
 SCRIPT_NAME=$(basename $0)
 
 
 function show_options() {
-    echo "Usage: $SCRIPT_NAME LOOPS_NUMBER SLEEP_TIME ARGS"
+    EXITVAL=${1:-1}
+    echo "Usage: $SCRIPT_NAME [-wlh] [-f FAIL_MATCH] [-s SUCCESS_MATCH]  --timeout TIMEOUT --delay SLEEP_TIME -- COMMAND"
     echo
-    echo "ARGS are read and concatenated together into a single command."
+    echo "Waits for a command to fail, succeed, or timeout."
+    echo
+    echo "Options:"
+    echo "      -h,--help              -- this help"
+    echo "      -w,--walltime          -- timeout is measured in walltime seconds rather"
+    echo "                                than number of loops."
+    echo "      -l,--looptimeout       -- timeout is measured in number of loops."
+    echo "                                This is the current default but that behavior will change"
+    echo "                                in the future so this should always be specified if it is expected."
+    echo "      -t,--timeout           -- Timeout. See -w and -l options."
+    echo "      -d,--delay             -- Seconds to sleep between checks of COMMAND."
+    echo "      -s,--success-match     -- Output that indicates a success."
+    echo "      -f,--fail-match        -- Output that indicates a short-circuit failure."
+    echo
     echo "Execute the command in a loop until it succeeds or the number"
-    echo "of attempts exceeds LOOPS_NUMBER value. After each failure"
+    echo "of attempts exceeds TIMEOUT value. If walltime is set then"
+    echo "timeout occurs once TIMEOUT seconds have elapsed. After each failure"
     echo "pause for SLEEP_TIME seconds."
     echo
-    echo "An optional FAIL_MATCH_OUTPUT variable may also be set to control "
-    echo "if the loop exits early if the commands stdout/stderr matches the "
-    echo "supplied regex string."
-    echo
     echo "Examples:"
-    echo "    wait_for 30 10 ping -c 1 192.0.2.2"
-    echo "    wait_for 10 1 ls file_we_are_waiting_for"
-    echo "    wait_for 10 3 date \| grep 8"
-    echo "    FAIL_MATCH_OUTPUT=CREATE_FAILED wait_for 30 10 heat stack-show undercloud"
-    echo "    SUCCESSFUL_MATCH_OUTPUT=CREATE_COMPLETE wait_for 30 10 heat stack-show undercloud"
-    exit 1
+    echo "    wait_for -w --timeout 300 --delay 10 -- ping -c 1 192.0.2.2"
+    echo "    wait_for -w --timeout 10 --delay 1 -- ls file_we_are_waiting_for"
+    echo "    wait_for -w --timeout 30 --delay 3 -- date \| grep 8"
+    echo "    wait_for -w --timeout 300 --delay 10 --fail-match CREATE_FAILED -- heat stack-show undercloud"
+    echo "    wait_for -w --timeout 300 --delay 10 --success-match CREATE_COMPLETE -- heat stack-show undercloud"
+    exit $EXITVAL
 }
 
+USE_WALLTIME=0
+TIMEOUT=
+DELAY=
 
-LOOPS=${1:-""}
-SLEEPTIME=${2:-""}
-FAIL_MATCH_OUTPUT=${FAIL_MATCH_OUTPUT:-""}
+if [ -n "${SUCCESSFUL_MATCH_OUTPUT:-}" ]; then
+    echo "DEPRECATION WARNING: Using env vars for specifying SUCCESSFUL_MATCH_OUTPUT is deprecated."
+fi
 SUCCESSFUL_MATCH_OUTPUT=${SUCCESSFUL_MATCH_OUTPUT:-""}
-shift 2 || true
+if [ -n "${FAIL_MATCH_OUTPUT:-}" ]; then
+    echo "DEPRECATION WARNING: Using env vars for specifying FAIL_MATCH_OUTPUT is deprecated."
+fi
+FAIL_MATCH_OUTPUT=${FAIL_MATCH_OUTPUT:-""}
+
+USE_ARGPARSE=0
+# We have to support no positional arguments for backwards compat
+if [ -n "$1" -a "${1:0:1}" == "-" ]; then
+    USE_ARGPARSE=1
+else
+    echo "DEPRECATION WARNING: Using positional arguments for wait_for is deprecated."
+fi
+
+if [ $USE_ARGPARSE -eq 1 ]; then
+    TEMP=$(getopt -o h,w,l,t:,d:,s:,f: -l help,wall-time,looptimeout,timeout:,delay:,success-match:,fail-match: -n $SCRIPT_NAME -- "$@")
+    if [ $? != 0 ] ; then show_options ; fi
+
+    # Note the quotes around `$TEMP': they are essential!
+    eval set -- "$TEMP"
+
+    while true ; do
+        case "$1" in
+            -h) show_options 0 ;;
+            --help) show_options 0 ;;
+            -w) USE_WALLTIME=1; shift 1;;
+            --walltime) USE_WALLTIME=1; shift 1;;
+            -l) USE_WALLTIME=0; shift 1;;
+            --looptimeout) USE_WALLTIME=0; shift 1;;
+            -t) TIMEOUT="$2"; shift 2;;
+            --timeout) TIMEOUT="$2"; shift 2;;
+            -d) DELAY="$2"; shift 2;;
+            --delay) DELAY="$2"; shift 2;;
+            -s) SUCCESSFUL_MATCH_OUTPUT="$2"; shift 2;;
+            --success-match) SUCCESSFUL_MATCH_OUTPUT="$2"; shift 2;;
+            -f) FAIL_MATCH_OUTPUT="$2"; shift 2;;
+            --fail-match) FAIL_MATCH_OUTPUT="$2"; shift 2;;
+            --) shift ; break ;;
+            *) echo "Error: unsupported option $1." ; show_options ;;
+        esac
+    done
+else
+    TIMEOUT=${1:-""}
+    DELAY=${2:-""}
+    shift 2 || true
+fi
+
 COMMAND="$@"
 
-if [ -z "$LOOPS" -o -z "$SLEEPTIME" -o -z "$COMMAND" ]; then
+if [ -z "$TIMEOUT" -o -z "$DELAY" -o -z "$COMMAND" ]; then
     show_options
 fi
 
 
-i=0
-while [ $i -lt $LOOPS ]; do
-    i=$((i + 1))
+ENDTIME=$(($(date +%s) + $TIMEOUT))
+TIME_REMAINING=0
+function update_time_remaining() {
+    CUR_TIME="$(date +%s)"
+    TIME_REMAINING=$(($ENDTIME - $CUR_TIME))
+}
+
+
+function check_cmd() {
     STATUS=0
     OUTPUT=$(eval $COMMAND 2>&1) || STATUS=$?
     if [[ -n "$SUCCESSFUL_MATCH_OUTPUT" ]] \
@@ -72,10 +138,38 @@ while [ $i -lt $LOOPS ]; do
         # it's output so we have finished waiting.
         exit 0
     fi
+}
 
-    sleep $SLEEPTIME
+i=0
+while [ $USE_WALLTIME -eq 1 -o $i -lt $TIMEOUT ]; do
+    if [ $USE_WALLTIME -eq 1 ]; then
+        update_time_remaining
+        if [ $TIME_REMAINING -le 0 ]; then
+            break
+        fi
+    else
+        i=$((i + 1))
+    fi
+
+    check_cmd
+
+    if [ $USE_WALLTIME -eq 1 ]; then
+        update_time_remaining
+        if [ $TIME_REMAINING -lt $DELAY ]; then
+            sleep $TIME_REMAINING
+            check_cmd
+        else
+            sleep $DELAY
+        fi
+    else
+        sleep $DELAY
+    fi
 done
-SECONDS=$((LOOPS * SLEEPTIME))
+if [ $USE_WALLTIME -eq 1 ]; then
+    SECONDS=$((TIMEOUT * DELAY))
+else
+    SECONDS=$TIMEOUT
+fi
 printf 'Timing out after %d seconds:\nCOMMAND=%s\nOUTPUT=%s\n' \
     "$SECONDS" "$COMMAND" "$OUTPUT"
 exit 1
