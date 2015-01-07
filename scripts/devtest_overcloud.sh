@@ -289,7 +289,7 @@ fi
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
 expected_nodes=$(( $OVERCLOUD_COMPUTESCALE + $OVERCLOUD_CONTROLSCALE + $OVERCLOUD_BLOCKSTORAGESCALE ))
-wait_for 60 $expected_nodes wait_for_hypervisor_stats $expected_nodes
+wait_for_walltime $((60 * $expected_nodes)) 10 wait_for_hypervisor_stats $expected_nodes
 
 ## #. Set password for Overcloud SNMPd, same password needs to be set in Undercloud Ceilometer
 
@@ -599,12 +599,12 @@ fi #nodocs
 ## #. _`Wait for Nova Compute`
 ##    ::
 
-wait_for 30 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'enabled.*\ up\ '
+wait_for_walltime 300 10 nova service-list --binary nova-compute 2\>/dev/null \| grep 'enabled.*\ up\ '
 
 ## #. Wait for L2 Agent On Nova Compute
 ##    ::
 
-wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*-novacompute\"" #nodocs
+wait_for_walltime 300 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*-novacompute\"" #nodocs
 ##         wait_for 30 10 neutron agent-list -f csv -c alive -c agent_type -c host \| grep "\":-).*Open vSwitch agent.*-novacompute\""
 
 ## #. Log in as a user.
@@ -627,7 +627,7 @@ if [ "stack-create" = "$HEAT_OP" ] ; then #nodocs
 ## #. Add an external IP for it.
 ##    ::
 
-    wait_for 10 5 neutron port-list -f csv -c id --quote none \| grep id
+    wait_for_walltime 50 5 neutron port-list -f csv -c id --quote none \| grep id
     PORT=$(neutron port-list -f csv -c id --quote none | tail -n1)
     FLOATINGIP=$(neutron floatingip-create ext-net \
         --port-id "${PORT//[[:space:]]/}" \
@@ -654,7 +654,7 @@ fi
 ## #. After which, you should be able to ping it
 ##    ::
 
-wait_for 30 10 ping -c 1 $FLOATINGIP
+wait_for_walltime 300 10 ping -c 1 $FLOATINGIP
 
 ### --end
 
