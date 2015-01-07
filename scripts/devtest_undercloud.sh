@@ -178,7 +178,7 @@ POWER_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw)
 
 ## #. Wait for the BM cloud to register BM nodes with the scheduler::
 
-wait_for 60 1 wait_for_hypervisor_stats
+wait_for -w --timeout 60 --delay 1 wait_for_hypervisor_stats
 
 
 ## #. We need an environment file to store the parameters we're going to give
@@ -327,7 +327,7 @@ heat $HEAT_OP -e $HEAT_ENV \
 
 echo "Waiting for the undercloud stack to be ready" #nodocs
 # Make time out 60 mins as like the Heat stack-create default timeout.
-wait_for_stack_ready $(($UNDERCLOUD_STACK_TIMEOUT * 60 / 10)) 10 undercloud
+wait_for_stack_ready -w $(($UNDERCLOUD_STACK_TIMEOUT * 60 )) 10 undercloud
 UNDERCLOUD_CTL_IP=$(nova list | grep ctlplane | sed  -e "s/.*=\\([0-9.]*\\).*/\1/")
 
 ## #. If we're deploying with a public VLAN we must use it, not the control plane
