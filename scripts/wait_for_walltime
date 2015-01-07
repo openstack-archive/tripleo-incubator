@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+# Copyright 2015 Hewlett-Packard Development Company, L.P.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+set -eu
+set -o pipefail
+
+SCRIPT_NAME=$(basename $0)
+
+
+function show_help() {
+    echo "Usage: $SCRIPT_NAME TIMEOUT DELAY COMMAND"
+    echo
+    echo "Run command and timeout with error after TIMEOUT seconds if COMMAND"
+    echo "does not exit with success before then."
+    echo "Between each execution of COMMAND wait DELAY seconds."
+    echo "COMMAND is a command and the arguments to pass to that command."
+    echo
+    echo "An optional FAIL_MATCH_OUTPUT variable may also be set to control "
+    echo "if the loop exits early if the commands stdout/stderr matches the "
+    echo "supplied regex string."
+    echo
+    echo "Examples:"
+    echo "    $SCRIPT_NAME 300 10 ping -c 1 192.0.2.2"
+    echo "    $SCRIPT_NAME 10 1 ls file_we_are_waiting_for"
+    echo "    $SCRIPT_NAME 30 3 date \| grep 8"
+    echo "    FAIL_MATCH_OUTPUT=CREATE_FAILED $SCRIPT_NAME 300 10 heat stack-show undercloud"
+    echo "    SUCCESSFUL_MATCH_OUTPUT=CREATE_COMPLETE $SCRIPT_NAME 300 10 heat stack-show undercloud"
+    exit 1
+}
+
+
+timeout=${1:-""}
+delay=${2:-""}
+FAIL_MATCH_OUTPUT=${FAIL_MATCH_OUTPUT:-""}
+SUCCESSFUL_MATCH_OUTPUT=${SUCCESSFUL_MATCH_OUTPUT:-""}
+shift 2 || true
+command="$@"
+
+if [ -z "$timeout" -o -z "$delay" -o -z "$command" ]; then
+    show_help
+fi
+
+
+starttime="$(date +%s)"
+endtime=$(($starttime + $timeout))
+while true; do
+    time_rem=$(($endtime - $cur_time))
+    if [ $time_rem -le 0 ]; then
+        break
+    fi
+
+    exit_status=0
+    output=$(eval $command 2>&1) || exit_status=$?
+    if [[ -n "$SUCCESSFUL_MATCH_OUTPUT" ]] \
+        && [[ $output =~ $SUCCESSFUL_MATCH_OUTPUT ]]; then
+        exit 0
+    elif [[ -n "$FAIL_MATCH_OUTPUT" ]] \
+        && [[ $output =~ $FAIL_MATCH_OUTPUT ]]; then
+        echo "Command output matched '$FAIL_MATCH_OUTPUT'. Exiting..."
+        exit 1
+    elif [[ -z "$SUCCESSFUL_MATCH_OUTPUT" ]] && [[ $exit_status -eq 0 ]]; then
+        # The command successfully completed and we aren't testing against
+        # it's output so we have finished waiting.
+        exit 0
+    fi
+
+    cur_time="$(date +%s)"
+    time_rem=$(($endtime - $cur_time))
+    if [ $time_rem -lt $delay ]; then
+        sleep $time_rem
+    else
+        sleep $delay
+    fi
+done
+printf 'Timing out after %d seconds:\nCOMMAND=%s\nOUTPUT=%s\n' \
+    "$timeout" "$command" "$output"
+exit 1

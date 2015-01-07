@@ -289,7 +289,7 @@ echo "Waiting for seed node to configure br-ctlplane..." #nodocs
 timeout 480 sh -c 'printf "HTTP/1.0 200 OK\r\n\r\n\r\n" | nc -l '"$COMP_IP"' '"$SEED_COMP_PORT"' | grep '"$SEED_IMAGE_ID"
 
 # Wait for network
-wait_for 10 1 ping -c 1 $BM_NETWORK_SEED_IP
+wait_for_walltime 10 1 ping -c 1 $BM_NETWORK_SEED_IP
 
 # If ssh-keyscan fails to connect, it returns 0. So grep to see if it succeeded
 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP | tee -a ~/.ssh/known_hosts | grep -q "^$BM_NETWORK_SEED_IP ssh-rsa "
