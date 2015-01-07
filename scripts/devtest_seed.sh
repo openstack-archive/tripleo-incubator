@@ -365,8 +365,8 @@ if [ -n "$BM_VLAN_SEED_TAG" ]; then
     }
 }
 EOF
-    rm $PUBLIC_NETWORK_JSON
     setup-neutron -n $PUBLIC_NETWORK_JSON
+    rm $PUBLIC_NETWORK_JSON
 fi
 
 ## #. Nova quota runs up with the defaults quota so overide the default to
