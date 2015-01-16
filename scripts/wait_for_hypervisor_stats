@@ -43,17 +43,19 @@ EXPECTED_NODES=${1:-1}
 EXPECTED_MEM=${2:-""}
 EXPECTED_VCPUS=${3:-""}
 
-# NOTE(bnemec): If/when we have more flavors, this will need
-# to be expanded.
+FLAVOR_LIST=$(nova flavor-list | grep '^|' | grep -v '^| ID' | cut -d\  -f2)
+FLAVORS=
+for flavor in $FLAVOR_LIST; do
+    FLAVORS="$FLAVORS $(nova flavor-show $flavor)"
+done
+
 if [ -z "$EXPECTED_VCPUS" ]; then
-    FLAVOR=$(nova flavor-show baremetal)
-    VCPUS=$(echo "$FLAVOR" | awk '$2=="vcpus" { print $4 }')
+    VCPUS=$(echo "$FLAVORS" | awk '$2=="vcpus" { print $4 }' | tr '\n' '+' | sed -e 's/\+$//')
     EXPECTED_VCPUS=$(($VCPUS*$EXPECTED_NODES))
 fi
 
 if [ -z "$EXPECTED_MEM" ]; then
-    FLAVOR=$(nova flavor-show baremetal)
-    MEM=$(echo "$FLAVOR" | awk '$2=="ram" { print $4 }')
+    MEM=$(echo "$FLAVORS" | awk '$2=="ram" { print $4 }' | tr '\n' '+' | sed -e 's/\+$//')
     EXPECTED_MEM=$(($MEM*$EXPECTED_NODES))
 fi
 

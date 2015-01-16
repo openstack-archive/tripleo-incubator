@@ -9,10 +9,10 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 DEBUG_LOGGING=
 HEAT_ENV=
-COMPUTE_FLAVOR="baremetal"
-CONTROL_FLAVOR="baremetal"
-BLOCKSTORAGE_FLAVOR="baremetal"
-SWIFTSTORAGE_FLAVOR="baremetal"
+COMPUTE_FLAVOR=
+CONTROL_FLAVOR=
+BLOCKSTORAGE_FLAVOR=
+SWIFTSTORAGE_FLAVOR=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -28,15 +28,11 @@ function show_options () {
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
     echo "       --compute-flavor -- Nova flavor to use for compute nodes."
-    echo "                           Defaults to 'baremetal'."
     echo "       --control-flavor -- Nova flavor to use for control nodes."
-    echo "                           Defaults to 'baremetal'."
     echo "       --block-storage-flavor -- Nova flavor to use for block "
     echo "                                 storage nodes."
-    echo "                                 Defaults to 'baremetal'."
     echo "       --swift-storage-flavor -- Nova flavor to use for swift "
     echo "                                 storage nodes."
-    echo "                                 Defaults to 'baremetal'."
     echo
     exit $1
 }
@@ -336,6 +332,35 @@ if [ -e "${HEAT_ENV}" ]; then
 else
     ENV_JSON='{"parameters":{}}'
 fi
+
+# Grab the ID of all flavors. Loop over all flavors options, check if the user
+# has specified any of them, and drop them out of the list if they have.
+FLAVOR_LIST=$(nova flavor-list | awk '/^\| [^ID]/ { printf "%s ",$4 }' | sed -e 's/ $//')
+for flavor in $COMPUTE_FLAVOR $CONTROL_FLAVOR $BLOCKSTORAGE_FLAVOR \
+    $SWIFTSTORAGE_FLAVOR; do
+    if [ -n "$flavor" ]; then
+        FLAVOR_LIST=$(echo $FLAVOR_LIST | sed -e "s/$flavor//" | tr -s ' ' | \
+            sed -e 's/^ //' | sed -e 's/ $//')
+    fi
+done
+# If any of the flavor options are not specified, and we have more than one,
+# we can't work out what flavor to use where, so exit.
+if [ -z "$COMPUTE_FLAVOR" -o -z "$CONTROL_FLAVOR" -o \
+     -z "$BLOCKSTORAGE_FLAVOR" -o -z "$SWIFTSTORAGE_FLAVOR" ]; then
+    if echo "$FLAVOR_LIST" | grep -q ' '; then
+        echo "Can not automatically determine which flavor to use." >&2
+        echo "Please specify the flavor to use with --control-flavor," >&2
+        echo "--compute-flavor, --block-storage-flavor or" >&2
+        echo "--swift-storage-flavor" >&2
+        exit 1
+    fi
+fi
+# At this point, $FLAVOR_LIST should be either empty if all flavor options
+# are specified, or contain only one flavor.
+COMPUTE_FLAVOR=${COMPUTE_FLAVOR:-$FLAVOR_LIST}
+CONTROL_FLAVOR=${CONTROL_FLAVOR:-$FLAVOR_LIST}
+BLOCKSTORAGE_FLAVOR=${BLOCKSTORAGE_FLAVOR:-$FLAVOR_LIST}
+SWIFTSTORAGE_FLAVOR=${SWIFTSTORAGE_FLAVOR:-$FLAVOR_LIST}
 
 ## #. Set parameters we need to deploy a KVM cloud.::
 
