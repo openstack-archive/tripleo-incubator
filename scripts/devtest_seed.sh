@@ -336,8 +336,8 @@ jq "." <<EOF > $NETWORK_JSON
 }
 EOF
 if [ -n "$BM_CTL_ROUTE_PREFIX" -a -n "$BM_CTL_ROUTE_VIA" ]; then
-    $EXTRA_ROUTE = "{\"destination\": \"$BM_CTL_ROUTE_PREFIX\", \"nexthop\": \"$BM_CTL_ROUTE_VIA\"\}"
-    $TMP_NETWORK=$(mktemp)
+    EXTRA_ROUTE="{\"destination\": \"$BM_CTL_ROUTE_PREFIX\", \"nexthop\": \"$BM_CTL_ROUTE_VIA\"}"
+    TMP_NETWORK=$(mktemp)
     jq ".[\"physical\"][\"extra_routes\"]=[$EXTRA_ROUTE]" < $NETWORK_JSON > $TMP_NETWORK
     mv $TMP_NETWORK $NETWORK_JSON
 fi
