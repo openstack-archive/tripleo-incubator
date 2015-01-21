@@ -115,6 +115,7 @@ OVERCLOUD_STACK_TIMEOUT=${OVERCLOUD_STACK_TIMEOUT:-60}
 # The private instance fixed IP network range
 OVERCLOUD_FIXED_RANGE_CIDR=${OVERCLOUD_FIXED_RANGE_CIDR:-"10.0.0.0/8"}
 OVERCLOUD_FIXED_RANGE_GATEWAY=${OVERCLOUD_FIXED_RANGE_GATEWAY:-"10.0.0.1"}
+OVERCLOUD_FIXED_RANGE_NAMESERVER=${OVERCLOUD_FIXED_RANGE_NAMESERVER:-"8.8.8.8"}
 
 ### --include
 ## devtest_overcloud
@@ -555,15 +556,16 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
     keystone role-create --name heat_stack_user
     user-config
     BM_NETWORK_GATEWAY=$(OS_CONFIG_FILES=$TE_DATAFILE os-apply-config --key baremetal-network.gateway-ip --type raw --key-default '192.0.2.1')
-    OVERCLOUD_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key overcloud.nameserver --type netaddress --key-default '8.8.8.8')
+    OVERCLOUD_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key overcloud.nameserver --type netaddress --key-default "$OVERCLOUD_FIXED_RANGE_NAMESERVER")
     NETWORK_JSON=$(mktemp)
     jq "." <<EOF > $NETWORK_JSON
 {
     "float": {
-        "cidr": "10.0.0.0/8",
+        "cidr": "$OVERCLOUD_FIXED_RANGE_CIDR",
         "name": "default-net",
         "nameserver": "$OVERCLOUD_NAMESERVER",
-        "segmentation_id": "$NeutronPublicInterfaceTag"
+        "segmentation_id": "$NeutronPublicInterfaceTag",
+        "gateway": "$OVERCLOUD_FIXED_RANGE_GATEWAY"
     },
     "external": {
         "name": "ext-net",
