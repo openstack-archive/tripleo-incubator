@@ -440,6 +440,7 @@ if [ -n "$VLAN_ID" ]; then
         "name": "public",
         "nameserver": "$UNDERCLOUD_NAMESERVER",
         "segmentation_id": "$VLAN_ID",
+        "physical_network": "ctlplane",
         "enable_dhcp": false
     }
 }
