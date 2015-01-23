@@ -35,7 +35,11 @@ while true ; do
         --all-nodes) ALL_NODES="true"; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="--build-only"; shift 1;;
-        --debug-logging) DEBUG_LOGGING="seed-debug-logging"; shift 1;;
+        --debug-logging)
+            DEBUG_LOGGING="seed-debug-logging"
+            export OS_DEBUG_LOGGING="1"
+            shift 1
+            ;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;

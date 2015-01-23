@@ -52,7 +52,11 @@ while true ; do
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="1"; shift 1;;
         --no-mergepy) USE_MERGEPY=0; shift 1;;
-        --debug-logging) DEBUG_LOGGING="1"; shift 1;;
+        --debug-logging)
+            DEBUG_LOGGING="1"
+            export OS_DEBUG_LOGGING="1"
+            shift 1
+            ;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         --compute-flavor) COMPUTE_FLAVOR="$2"; shift 2;;
         --control-flavor) CONTROL_FLAVOR="$2"; shift 2;;
