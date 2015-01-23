@@ -75,7 +75,11 @@ while true ; do
     case "$1" in
         --build-only) BUILD_ONLY=--build-only; shift 1;;
         --no-mergepy) USE_MERGEPY=0; shift 1;;
-        --debug-logging) DEBUG_LOGGING=--debug-logging; shift 1;;
+        --debug-logging)
+            DEBUG_LOGGING=--debug-logging
+            export OS_DEBUG_LOGGING="1"
+            shift 1
+            ;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
