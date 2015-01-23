@@ -39,6 +39,9 @@ function show_options () {
     echo "    --build-only           -- Builds images but doesn't attempt to run them."
     echo "    --no-mergepy           -- Use the standalone Heat templates."
     echo "    --debug-logging        -- Enable debug logging in the undercloud and overcloud."
+    echo "                              This enables build time debug logs by setting the"
+    echo "                              OS_DEBUG_LOGGING env var as well as sets the Debug"
+    echo "                              heat parameter."
     echo "    --heat-env-undercloud ENVFILE"
     echo "                           -- heat environment file for the undercloud."
     echo "    --heat-env-overcloud  ENVFILE"
@@ -75,7 +78,11 @@ while true ; do
     case "$1" in
         --build-only) BUILD_ONLY=--build-only; shift 1;;
         --no-mergepy) USE_MERGEPY=0; shift 1;;
-        --debug-logging) DEBUG_LOGGING=--debug-logging; shift 1;;
+        --debug-logging)
+            DEBUG_LOGGING=--debug-logging
+            export OS_DEBUG_LOGGING="1"
+            shift 1
+            ;;
         --trash-my-machine) CONTINUE=--trash-my-machine; shift 1;;
         --existing-environment) TRIPLEO_CLEANUP=0; shift 1;;
         --nodes) NODES_ARG="--nodes $2"; shift 2;;
