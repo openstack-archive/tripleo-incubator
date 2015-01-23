@@ -20,7 +20,8 @@ function show_options () {
     echo "      -h             -- this help"
     echo "      -c             -- re-use existing source/images if they exist."
     echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --debug-logging -- Turn on debug logging in the undercloud."
+    echo "      --debug-logging -- Turn on debug logging in the undercloud. Sets"
+    echo "                         both OS_DEBUG_LOGGING and the heat Debug parameter."
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/undercloud-env.json."
     echo "      --flavor       -- flavor to use for the undercloud. Defaults"
@@ -39,7 +40,11 @@ while true ; do
     case "$1" in
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="1"; shift 1;;
-        --debug-logging) DEBUG_LOGGING="1"; shift 1;;
+        --debug-logging)
+            DEBUG_LOGGING="1"
+            export OS_DEBUG_LOGGING="1"
+            shift 1
+            ;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         --flavor) FLAVOR="$2"; shift 2;;
         -h | --help) show_options 0;;

@@ -25,6 +25,7 @@ function show_options () {
     echo "      --build-only   -- build the needed images but don't deploy them."
     echo "      --no-mergepy   -- use the standalone Heat templates."
     echo "      --debug-logging -- Turn on debug logging in the built overcloud."
+    echo "                         Sets both OS_DEBUG_LOGGING and the heat Debug parameter."
     echo "      --heat-env     -- path to a JSON heat environment file."
     echo "                        Defaults to \$TRIPLEO_ROOT/overcloud-env.json."
     echo "       --compute-flavor -- Nova flavor to use for compute nodes."
@@ -52,7 +53,11 @@ while true ; do
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="1"; shift 1;;
         --no-mergepy) USE_MERGEPY=0; shift 1;;
-        --debug-logging) DEBUG_LOGGING="1"; shift 1;;
+        --debug-logging)
+            DEBUG_LOGGING="1"
+            export OS_DEBUG_LOGGING="1"
+            shift 1
+            ;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
         --compute-flavor) COMPUTE_FLAVOR="$2"; shift 2;;
         --control-flavor) CONTROL_FLAVOR="$2"; shift 2;;
