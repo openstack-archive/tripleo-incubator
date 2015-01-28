@@ -114,10 +114,12 @@ else
         }' config.json $TE_DATAFILE > tmp_local.json
 fi
 
-# Add Keystone certs/key into the environment file
+## #.  Add Keystone certs/key into the environment file
+##     ::
 generate-keystone-pki --heatenv tmp_local.json -s
 
-# Get details required to set-up a callback heat call back from the seed from os-collect-config.
+## #. Get details required to set-up a callback heat call back from the seed from os-collect-config.
+##    ::
 HOST_IP=$(os-apply-config -m $TE_DATAFILE --key host-ip --type netaddress --key-default '192.168.122.1')
 COMP_IP=$(ip route get "$HOST_IP" | awk '/'"$HOST_IP"'/ {print $NF}')
 
@@ -134,12 +136,13 @@ if systemctl status firewalld; then
     fi
 fi
 
-# Apply custom BM network settings to the seeds local.json config
-# Because the seed runs under libvirt and usually isn't in routing tables for
-# access to the networks behind it, we setup masquerading for the bm networks,
-# which permits outbound access from the machines we've deployed.
-# If the seed is not the router (e.g. real machines are being used) then these
-# rules are harmless.
+## #. Apply custom BM network settings to the seeds local.json config
+##    Because the seed runs under libvirt and usually isn't in routing tables for
+##    access to the networks behind it, we setup masquerading for the bm networks,
+##    which permits outbound access from the machines we've deployed.
+##    If the seed is not the router (e.g. real machines are being used) then these
+##    rules are harmless.
+##    ::
 BM_NETWORK_CIDR=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.cidr --type raw --key-default '192.0.2.0/24')
 BM_VLAN_SEED_TAG=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.public_vlan.tag --type netaddress --key-default '')
 BM_VLAN_SEED_IP=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.seed.public_vlan.ip --type netaddress --key-default '')
