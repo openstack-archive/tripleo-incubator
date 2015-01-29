@@ -593,6 +593,7 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
     # Creating these roles to be used by tenants using swift
     keystone role-create --name=swiftoperator
     keystone role-create --name=ResellerAdmin
+    init-keystone-heat-domain -d $OVERCLOUD_HEAT_DOMAIN_PASSWORD
     setup-endpoints $OVERCLOUD_IP \
         --cinder-password $OVERCLOUD_CINDER_PASSWORD \
         --glance-password $OVERCLOUD_GLANCE_PASSWORD \
