@@ -375,6 +375,7 @@ init-keystone -o $UNDERCLOUD_CTL_IP -t $UNDERCLOUD_ADMIN_TOKEN \
 # Creating these roles to be used by tenants using swift
 keystone role-create --name=swiftoperator
 keystone role-create --name=ResellerAdmin
+init-keystone-heat-domain -d $UNDERCLOUD_HEAT_DOMAIN_PASSWORD
 
 
 # Create service endpoints and optionally include Ceilometer for UI support

@@ -300,6 +300,7 @@ keystone role-create --name heat_stack_user
 # Creating these roles to be used by tenants using swift
 keystone role-create --name=swiftoperator
 keystone role-create --name=ResellerAdmin
+init-keystone-heat-domain -d unset
 
 echo "Waiting for nova to initialise..."
 wait_for -w 500 --delay 10 -- nova list
