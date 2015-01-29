@@ -614,6 +614,7 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
         "name": "default-net",
         "nameserver": "$OVERCLOUD_NAMESERVER",
         "segmentation_id": "$NeutronPublicInterfaceTag",
+        "physical_network": "datacentre",
         "gateway": "$OVERCLOUD_FIXED_RANGE_GATEWAY"
     },
     "external": {

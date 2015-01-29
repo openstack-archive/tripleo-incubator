@@ -361,6 +361,7 @@ if [ -n "$BM_VLAN_SEED_TAG" ]; then
         "name": "public",
         "nameserver": "$SEED_NAMESERVER",
         "segmentation_id": "$BM_VLAN_SEED_TAG",
+        "physical_network": "ctlplane",
         "enabled_dhcp": false
     }
 }
