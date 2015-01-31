@@ -294,7 +294,7 @@ wait_for -w 10 --delay 1 -- ping -c 1 $BM_NETWORK_SEED_IP
 # If ssh-keyscan fails to connect, it returns 0. So grep to see if it succeeded
 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP | tee -a ~/.ssh/known_hosts | grep -q "^$BM_NETWORK_SEED_IP ssh-rsa "
 
-init-keystone -o $BM_NETWORK_SEED_IP -t unset -e admin@example.com -p unset -u root --no-pki-setup
+init-keystone -o $BM_NETWORK_SEED_IP -t unset -e admin@example.com -p unset --no-pki-setup
 setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
 keystone role-create --name heat_stack_user
 # Creating these roles to be used by tenants using swift
