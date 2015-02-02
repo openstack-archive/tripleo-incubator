@@ -173,7 +173,7 @@ fi
 # Node definitions are cheap but redeploying testenv's is not.
 # Set NODE_CNT high enough for typical CI and Dev deployments for the
 # forseeable future
-export NODE_CNT=${NODE_CNT:-15}
+export NODE_CNT=${NODE_CNT:-10}
 
 ## #. Set size of root partition on our disk (GB). The remaining disk space
 ##    will be used for the persistent ephemeral disk to store node state.
