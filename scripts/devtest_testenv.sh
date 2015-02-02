@@ -106,7 +106,7 @@ fi
 ##    NODE_DISK.
 
 ##    NODE_CNT specifies how many VMs to define using virsh. NODE_CNT
-##    defaults to 15, or 0 if NODES_PATH is provided.
+##    defaults to 10, or 0 if NODES_PATH is provided.
 
 ### --end
 ##    This number is intentionally higher than required as the
@@ -126,7 +126,7 @@ fi
 if [ -n "$NODES_PATH" ]; then
   NODE_CNT=${NODE_CNT:-0}
 else
-  NODE_CNT=${NODE_CNT:-15}
+  NODE_CNT=${NODE_CNT:-10}
 fi
 
 NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-3072} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386}
