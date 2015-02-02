@@ -189,7 +189,6 @@ export ROOT_DISK=${ROOT_DISK:-10}
 export LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 
 ## #. Set number of compute, control and block storage nodes for the overcloud.
-##    Only a value of 1 for OVERCLOUD_CONTROLSCALE is currently supported.
 ##    ::
 
 export OVERCLOUD_COMPUTESCALE=${OVERCLOUD_COMPUTESCALE:-2}
