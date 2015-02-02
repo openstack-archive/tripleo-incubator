@@ -134,5 +134,5 @@ in your environment.
 
 References
 ----------
-.. [1]  http://git.openstack.org/cgit/openstack/tripleo-puppet-elements/
+.. [1]  http://git.openstack.org/openstack/tripleo-puppet-elements/
 .. [2]  https://github.com/openstack-packages/delorean
