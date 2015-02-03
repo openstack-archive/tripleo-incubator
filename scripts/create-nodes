@@ -45,7 +45,7 @@ fi
 
 for idx in $(seq 0 $TOTAL) ; do
   vm_name="baremetal${BRIDGE}_$idx"
-  (virsh list --all | grep -q $vm_name) && continue
+  (virsh list --all | grep -q "^$vm_name\$") && continue
   virsh vol-create-as $LIBVIRT_VOL_POOL $vm_name.qcow2 ${NODE_DISK}G --format qcow2 $PREALLOC >&2
   volume_path=$(virsh vol-path --pool $LIBVIRT_VOL_POOL $vm_name.qcow2)
   # Pre-touch the VM to set +C, as it can only be set on empty files.
