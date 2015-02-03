@@ -320,7 +320,7 @@ else
     CTL_GATEWAY=$BM_NETWORK_GATEWAY
 fi
 
-SEED_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key seed.nameserver --type netaddress --key-default '')
+SEED_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key seed.nameserver --type netaddress --key-default "${SEED_NAMESERVER:-}")
 NETWORK_JSON=$(mktemp)
 jq "." <<EOF > $NETWORK_JSON
 {

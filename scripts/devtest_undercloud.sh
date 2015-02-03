@@ -406,7 +406,7 @@ fi
 BM_NETWORK_UNDERCLOUD_RANGE_START=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.undercloud.range-start --type raw --key-default '192.0.2.21')
 BM_NETWORK_UNDERCLOUD_RANGE_END=$(os-apply-config -m $TE_DATAFILE --key baremetal-network.undercloud.range-end --type raw --key-default '192.0.2.40')
 
-UNDERCLOUD_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key undercloud.nameserver --type netaddress --key-default '')
+UNDERCLOUD_NAMESERVER=$(os-apply-config -m $TE_DATAFILE --key undercloud.nameserver --type netaddress --key-default "${UNDERCLOUD_NAMESERVER:-}")
 
 NETWORK_JSON=$(mktemp)
 jq "." <<EOF > $NETWORK_JSON
