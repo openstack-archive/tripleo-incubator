@@ -28,7 +28,21 @@
     </controller>
     %(network)s
     %(bm_network)s
-    %(enable_serial_console)s
+    <serial type='file'>
+      <source path='/opt/stack/new/console_%(name)s.log'/>
+      <target port='0'/>
+      <alias name='serial0'/>
+    </serial>
+    <serial type='pty'>
+      <source path='/dev/pts/49'/>
+      <target port='1'/>
+      <alias name='serial1'/>
+    </serial>
+    <console type='file'>
+      <source path='/opt/stack/new/console_%(name)s.log'/>
+      <target type='serial' port='0'/>
+      <alias name='serial0'/>
+    </console>
     <input type='mouse' bus='ps2'/>
     <graphics type='vnc' port='-1' autoport='yes'/>
     <video>
