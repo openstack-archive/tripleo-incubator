@@ -83,12 +83,18 @@ in your environment.
        export SEED_DIB_EXTRA_ARGS='rabbitmq-server mariadb-rpm'
        export UNDERCLOUD_DIB_EXTRA_ARGS='rabbitmq-server mariadb-rpm'
 
+   By default TripleO uses puppet for configuration only. Packages (RPMs, etc)
+   are typically installed at image build time.
+
    If you wish to have packages installed at deploy time via Puppet it
    is important to have a working undercloud nameserver. You can configure
    this by adding the appropriate undercloud.nameserver setting
    settings to your undercoud-env.json file. Alternately, If going directly
    from the seed to the overcloud then you'll need to set seed.nameserver
-   in your testenv.json.
+   in your testenv.json. If you wish to install packages at deploy
+   time you will also need to set EnablePackageInstall to true in your
+   overcloud-resource-registry-puppet.yaml (see below for instructions
+   on how to override your Heat resource registry).
 
 1) Git clone the tripleo-puppet-elements [1]_ project into your $TRIPLEO_ROOT.  This is currently a non-standard image elements repository and needs to be manually cloned in order to build Puppet images.
 
@@ -104,11 +110,11 @@ in your environment.
     # now as this triggers an initial db_sync. We can re-work the db_sync
     # Puppet modules a bit and allow pre-installed OS packages in the
     # controller image.
-    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS='-p rabbitmq-server,mariadb'
+    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS='overcloud-control'
     export OVERCLOUD_COMPUTE_DIB_ELEMENTS='sysctl ntp hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
     # NOTE: This pre-installs the Nova, Neutron, and Ceilometer packages in
     # the compute image
-    export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS='-p openstack-nova,openstack-neutron,openstack-ceilometer-compute'
+    export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS='overcloud-compute'
 
 4) Override the tripleo-heat-templates resource registry::
 
