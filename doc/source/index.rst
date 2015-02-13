@@ -41,6 +41,7 @@ Further Information
    resources
    troubleshooting
    CONTRIBUTING
+   selinux-guide
 
 
 Indices and tables
