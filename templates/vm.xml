@@ -17,15 +17,12 @@
   <on_reboot>restart</on_reboot>
   <on_crash>restart</on_crash>
   <devices>
+    <controller type='scsi' model='virtio-scsi' index='0'/>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2' cache='unsafe'/>
       <source file='%(imagefile)s'/>
       <target dev='sda' bus='%(diskbus)s'/>
-      <address type='drive' controller='0' bus='0' unit='0'/>
     </disk>
-    <controller type='ide' index='0'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
-    </controller>
     %(network)s
     %(bm_network)s
     %(enable_serial_console)s
