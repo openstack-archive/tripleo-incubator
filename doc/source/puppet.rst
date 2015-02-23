@@ -104,14 +104,14 @@ in your environment.
 
 3) Setup variables to override the normal DIB image elements::
 
-    export OVERCLOUD_CONTROL_DIB_ELEMENTS='hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
+    export OVERCLOUD_CONTROL_DIB_ELEMENTS='sysctl hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
     # NOTE: This pre-installs Rabbit and Maria in the Controller.
     # We let Puppet install the OpenStack services on the controller for
     # now as this triggers an initial db_sync. We can re-work the db_sync
     # Puppet modules a bit and allow pre-installed OS packages in the
     # controller image.
     export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS='overcloud-controller'
-    export OVERCLOUD_COMPUTE_DIB_ELEMENTS='sysctl ntp hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
+    export OVERCLOUD_COMPUTE_DIB_ELEMENTS='sysctl hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
     # NOTE: This pre-installs the Nova, Neutron, and Ceilometer packages in
     # the compute image
     export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS='overcloud-compute'
