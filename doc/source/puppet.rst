@@ -104,7 +104,7 @@ in your environment.
 
 3) Setup variables to override the normal DIB image elements::
 
-    export OVERCLOUD_CONTROL_DIB_ELEMENTS='hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
+    export OVERCLOUD_CONTROL_DIB_ELEMENTS='sysctl ntp hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
     # NOTE: This pre-installs Rabbit and Maria in the Controller.
     # We let Puppet install the OpenStack services on the controller for
     # now as this triggers an initial db_sync. We can re-work the db_sync
