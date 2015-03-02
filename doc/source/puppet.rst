@@ -126,7 +126,7 @@ in your environment.
 
 6) Configure your Delorean repo URL. This is used to fetch more recently built upstream packages for your OpenStack services::
 
-    export DELOREAN_REPO_URL="http://209.132.178.33/repos/current"
+    export DELOREAN_REPO_URL="http://104.130.230.24/repos/current"
 
  For more information on Delorean see [2]_
 
