@@ -395,6 +395,7 @@ ENV_JSON=$(jq '.parameters = {
     "controllerImage": "'"${OVERCLOUD_CONTROL_ID}"'",
     "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
     "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
+    "HeatStackDomainAdminPassword":  "'"${OVERCLOUD_HEAT_STACK_DOMAIN_PASSWORD}"'",
     "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
     "HypervisorNeutronPublicInterface": "'"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}"'",
     "NeutronBridgeMappings": "'"${OVERCLOUD_BRIDGE_MAPPINGS}"'",
