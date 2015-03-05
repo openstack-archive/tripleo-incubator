@@ -337,6 +337,9 @@ wait_for -w $((60 * $expected_nodes)) --delay 10 -- wait_for_hypervisor_stats $e
 ## #. Set password for Overcloud SNMPd, same password needs to be set in Undercloud Ceilometer
 
 UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD=$(os-apply-config -m $TE_DATAFILE --key undercloud.ceilometer_snmpd_password --type raw --key-default '')
+if [ -z "$UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD" ]; then #nodocs
+UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD=$(os-make-password)
+fi #nodocs
 
 ## #. Create unique credentials::
 

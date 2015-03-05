@@ -49,7 +49,8 @@ while true ; do
 done
 
 set -x
-USE_CACHE=${USE_CACHE:-0}
+#USE_CACHE=${USE_CACHE:-0}
+USE_CACHE=0
 
 ### --include
 ## devtest_seed
