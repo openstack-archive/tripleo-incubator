@@ -338,6 +338,11 @@ wait_for -w $((60 * $expected_nodes)) --delay 10 -- wait_for_hypervisor_stats $e
 
 UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD=$(os-apply-config -m $TE_DATAFILE --key undercloud.ceilometer_snmpd_password --type raw --key-default '')
 
+# If not found in TE_DATAFILE, we must be running with --no-undercloud
+if [ -z "$UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD" ]; then
+    UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD=$(os-make-password)
+fi
+
 ## #. Create unique credentials::
 
 ### --end
