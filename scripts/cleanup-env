@@ -19,7 +19,7 @@ SCRIPT_NAME=$(basename $0)
 
 LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
-function show_options() {
+function show_options {
     echo "Usage: $SCRIPT_NAME [-n NUM]"
     echo
     echo "Cleanup vm state left behind by previous runs"
@@ -34,26 +34,28 @@ function show_options() {
 NUM=
 
 TEMP=$(getopt -o h,n: -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then show_options; fi
+if [ $? != 0 ]; then
+    show_options;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
 
 while true ; do
-  case "$1" in
-    -h) show_options ;;
-    -n) NUM="$2" ; shift 2 ;;
-    --) shift ; break ;;
-    *) echo "Error: unsupported option $1." ; show_options ;;
-  esac
+    case "$1" in
+        -h) show_options ;;
+        -n) NUM="$2" ; shift 2 ;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; show_options ;;
+    esac
 done
 
 SEED_NAME=seed
 BRIDGE_NAME=
 
 if [ -n "$NUM" ]; then
-  SEED_NAME="seed_${NUM}"
-  BRIDGE_NAME="brbm${NUM}"
+    SEED_NAME="seed_${NUM}"
+    BRIDGE_NAME="brbm${NUM}"
 fi
 
 BAREMETAL_REGEX="baremetal${BRIDGE_NAME}"
@@ -73,5 +75,5 @@ for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_RE
 done
 
 for NAME in $(sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\($SEED_NAME\|$BAREMETAL_REGEX\)" ); do
-  sudo virsh vol-delete --pool $LIBVIRT_VOL_POOL $NAME
+    sudo virsh vol-delete --pool $LIBVIRT_VOL_POOL $NAME
 done

@@ -31,7 +31,7 @@ LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
 
 PREALLOC=
 if [ "${TRIPLEO_OS_FAMILY:-}" = "debian" ]; then
-  PREALLOC="--prealloc-metadata"
+    PREALLOC="--prealloc-metadata"
 fi
 
 # Create empty json file if it doesn't exist
@@ -44,28 +44,28 @@ if [[ ${DIB_COMMON_ELEMENTS:-} == *enable-serial-console* ]]; then
 fi
 
 for idx in $(seq 0 $TOTAL) ; do
-  vm_name="baremetal${BRIDGE}_$idx"
-  (virsh list --all --name | grep -q "^$vm_name\$") && continue
-  virsh vol-create-as $LIBVIRT_VOL_POOL $vm_name.qcow2 ${NODE_DISK}G --format qcow2 $PREALLOC >&2
-  volume_path=$(virsh vol-path --pool $LIBVIRT_VOL_POOL $vm_name.qcow2)
-  # Pre-touch the VM to set +C, as it can only be set on empty files.
-  sudo touch "$volume_path"
-  sudo chattr +C "$volume_path" || true
-  BAREMETAL_INTERFACE=
-  if [ -n "$BRIDGE" ]; then
-    BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE"
-  fi
-  configure-vm $EXTRAOPTS \
-         --bootdev network \
-         --name $vm_name \
-         --image "$volume_path" \
-         --diskbus $LIBVIRT_DISK_BUS_TYPE \
-         --arch $ARCH \
-         --cpus $CPU \
-         --memory $MEM \
-         --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
-  mac=$(get-vm-mac $vm_name)
-  JSON=$(jq ".nodes=(.nodes + [{mac:[\"$mac\"], cpu:\"$CPU\", memory:\"$2\", disk:\"$DISK\", arch:\"$4\", pm_user:\"$SSH_USER\", pm_addr:\"$HOSTIP\", pm_password:.[\"ssh-key\"], pm_type:\"pxe_ssh\"}])" <<< $JSON)
+    vm_name="baremetal${BRIDGE}_$idx"
+    (virsh list --all --name | grep -q "^$vm_name\$") && continue
+    virsh vol-create-as $LIBVIRT_VOL_POOL $vm_name.qcow2 ${NODE_DISK}G --format qcow2 $PREALLOC >&2
+    volume_path=$(virsh vol-path --pool $LIBVIRT_VOL_POOL $vm_name.qcow2)
+    # Pre-touch the VM to set +C, as it can only be set on empty files.
+    sudo touch "$volume_path"
+    sudo chattr +C "$volume_path" || true
+    BAREMETAL_INTERFACE=
+    if [ -n "$BRIDGE" ]; then
+        BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE"
+    fi
+    configure-vm $EXTRAOPTS \
+        --bootdev network \
+        --name $vm_name \
+        --image "$volume_path" \
+        --diskbus $LIBVIRT_DISK_BUS_TYPE \
+        --arch $ARCH \
+        --cpus $CPU \
+        --memory $MEM \
+        --libvirt-nic-driver $LIBVIRT_NIC_DRIVER $BAREMETAL_INTERFACE >&2
+    mac=$(get-vm-mac $vm_name)
+    JSON=$(jq ".nodes=(.nodes + [{mac:[\"$mac\"], cpu:\"$CPU\", memory:\"$2\", disk:\"$DISK\", arch:\"$4\", pm_user:\"$SSH_USER\", pm_addr:\"$HOSTIP\", pm_password:.[\"ssh-key\"], pm_type:\"pxe_ssh\"}])" <<< $JSON)
 
 done
 jq . <<< $JSON > $TE_DATAFILE

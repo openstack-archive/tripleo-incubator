@@ -31,14 +31,14 @@ __tripleo_refresh_env() {
 # Setup/update your undercloud environment to run devtest_overcloud.sh
 #
 if [ -z "${1:-}" ] ; then
-  echo "Usage:"
-  echo "source refresh-env TRIPLEO_ROOT"
-  echo "Ex:"
-  echo "source refresh-env ~/tripleo"
+    echo "Usage:"
+    echo "source refresh-env TRIPLEO_ROOT"
+    echo "Ex:"
+    echo "source refresh-env ~/tripleo"
 else
-  if [ -d "$1/tripleo-incubator/scripts" ] ; then
-    __tripleo_refresh_env $1
-  else
-    echo "TRIPLEO_ROOT must contain tripleo-incubator/scripts"
-  fi
+    if [ -d "$1/tripleo-incubator/scripts" ] ; then
+        __tripleo_refresh_env $1
+    else
+        echo "TRIPLEO_ROOT must contain tripleo-incubator/scripts"
+    fi
 fi

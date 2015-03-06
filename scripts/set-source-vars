@@ -21,7 +21,7 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(cd $(dirname $0); pwd)
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options] local_repo [...]"
     echo "    e.g. use locally cloned repositories as input:"
     echo "            $SCRIPT_NAME -l /my/local/neutron /a/local/nova"
@@ -62,7 +62,10 @@ function show_options () {
 }
 
 TEMP=`getopt -o h,l,n,r:,m: -l help,local,no-echo,no_echo,remote:,manifest: -n $SCRIPT_NAME -- "$@"`
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2
+    exit 1
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -92,34 +95,30 @@ if [[ "$((USE_LOCAL + USE_REMOTE + USE_MANIFEST))" != "1" ]]; then
     show_options 1 >&2
 fi
 
-transform_manifest() {
-    while read name _type _dest loc ref
-    do
+function transform_manifest {
+    while read name _type _dest loc ref; do
         name_transformed=$(echo "$name" | tr '[:upper:]-' '[:lower:]_')
         echo "export DIB_REPOLOCATION_${name_transformed}=$loc"
         echo "export DIB_REPOREF_${name_transformed}=$ref"
     done
 }
 
-use_manifest() {
-    for manifest in "${MANIFEST}"
-    do
+function use_manifest {
+    for manifest in "${MANIFEST}"; do
         transform_manifest < ${manifest}
     done | sort -ut _ -k3
 }
 
 
-get_location() {
+function get_location {
     local remote_name=${1:-""}
     if [[ -n "${remote_name}" ]] ; then
         git config --get remote.${remote_name}.url
     elif [[ "${USE_LOCAL}" == "1" ]]; then
         # Find the .git directory
         local dir="$(pwd)"
-        while [[ "${dir}" != "/" ]]
-        do
-            if [[ -d "${dir}/.git" ]]
-            then
+        while [[ "${dir}" != "/" ]]; do
+            if [[ -d "${dir}/.git" ]]; then
                 echo ${dir}
                 break
             fi
@@ -132,20 +131,19 @@ get_location() {
     fi
 }
 
-get_ref() {
+function get_ref {
     git rev-parse HEAD
 }
 
-get_name() {
+function get_nam {
     local remote_name=${1:-""}
     name=$(get_location ${remote_name})
     echo $(basename ${name##*:} .git)
 }
 
-use_repos() {
+function use_repos {
     declare -A a
-    for dir in "${REPOS[@]}"
-    do
+    for dir in "${REPOS[@]}"; do
         if [[ ! -d ${dir} ]] ; then
             echo "Not a directory: ${dir}" >&2
             exit 1

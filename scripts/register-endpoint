@@ -26,7 +26,7 @@ INTERNAL_URL=""
 REGION="regionOne" # NB: This is the default keystone uses.
 DEBUG=""
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options] <name> <type> <public_url>"
     echo
     echo "Register a service and create an endpoint for it."
@@ -52,7 +52,10 @@ function show_options () {
 }
 
 TEMP=`getopt -o d:a:i:r: -l debug,description:,admin:,internal:,region: -n $SCRIPT_NAME -- "$@"`
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2;
+    exit 1;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -60,7 +63,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         -d | --description) export DESCRIPTION="$2"; shift 2 ;;
-	--debug) export DEBUG="--debug"; shift 1 ;;
+        --debug) export DEBUG="--debug"; shift 1 ;;
         -a | --admin) export ADMIN_URL="$2"; shift 2 ;;
         -i | --internal) export INTERNAL_URL="$2"; shift 2 ;;
         -r | --region) export REGION="$2"; shift 2 ;;
@@ -153,23 +156,26 @@ if [ "dashboard" != "$TYPE" ]; then
     fi
     if ! keystone user-role-list --tenant-id $SERVICE_TENANT --user-id $USER_ID | grep -q " $ADMIN_ROLE "; then
         echo "Creating user-role assignment for user $NAME, role admin, tenant service"
-        keystone user-role-add $DEBUG --tenant-id $SERVICE_TENANT \
-                               --user-id $USER_ID \
-                               --role-id $ADMIN_ROLE
+        keystone user-role-add $DEBUG \
+            --tenant-id $SERVICE_TENANT \
+            --user-id $USER_ID \
+            --role-id $ADMIN_ROLE
     fi
     #Add the admin tenant role for ceilometer user to enable polling services
     if  [ "metering" == "$TYPE" ]; then
         ADMIN_TENANT=$(keystone $DEBUG tenant-list | awk '/ admin / {print $2}')
         if ! keystone user-role-list --tenant-id $ADMIN_TENANT --user-id $USER_ID | grep -q " $ADMIN_ROLE "; then
             echo "Creating user-role assignment for user $NAME, role admin, tenant admin"
-            keystone user-role-add $DEBUG --tenant-id $ADMIN_TENANT \
-                                 --user-id $USER_ID \
-                                 --role-id $ADMIN_ROLE
+            keystone user-role-add $DEBUG \
+                --tenant-id $ADMIN_TENANT \
+                --user-id $USER_ID \
+                --role-id $ADMIN_ROLE
             #swift polling requires ResellerAdmin role to be added to the Ceilometer user
             RESELLER_ADMIN_ROLE=$(keystone $DEBUG role-list | awk '/ ResellerAdmin / {print $2}')
-            keystone user-role-add $DEBUG --tenant-id $ADMIN_TENANT \
-                                 --user-id $USER_ID \
-                                 --role-id $RESELLER_ADMIN_ROLE
+            keystone user-role-add $DEBUG \
+                --tenant-id $ADMIN_TENANT \
+                --user-id $USER_ID \
+                --role-id $RESELLER_ADMIN_ROLE
         fi
     fi
 
