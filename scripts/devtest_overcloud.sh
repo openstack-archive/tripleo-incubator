@@ -13,6 +13,7 @@ COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
 BLOCKSTORAGE_FLAVOR="baremetal"
 SWIFTSTORAGE_FLAVOR="baremetal"
+WITH_STEPS=
 
 function show_options () {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -24,6 +25,8 @@ function show_options () {
     echo "      -c             -- re-use existing source/images if they exist."
     echo "      --build-only   -- build the needed images but don't deploy them."
     echo "      --no-mergepy   -- use the standalone Heat templates."
+    echo "      --with-steps   -- Deploy in steps, asking for confirmation between each."
+    echo "                         Note: Only works with --no-mergepy"
     echo "      --debug-logging -- Turn on debug logging in the built overcloud."
     echo "                         Sets both OS_DEBUG_LOGGING and the heat Debug parameter."
     echo "      --heat-env     -- path to a JSON heat environment file."
@@ -42,7 +45,7 @@ function show_options () {
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o c,h -l build-only,no-mergepy,with-steps,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
@@ -53,6 +56,7 @@ while true ; do
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="1"; shift 1;;
         --no-mergepy) USE_MERGEPY=0; shift 1;;
+        --with-steps) WITH_STEPS="1"; shift 1;;
         --debug-logging)
             DEBUG_LOGGING="1"
             export OS_DEBUG_LOGGING="1"
@@ -460,6 +464,7 @@ ENV_JSON=$(jq '.parameters = {
 
 RESOURCE_REGISTRY=
 RESOURCE_REGISTRY_PATH=${RESOURCE_REGISTRY_PATH:-"$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml"}
+STEPFILE_PATH=${STEPFILE_PATH:-"$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-steps.yaml"}
 
 if [ "$USE_MERGEPY" -eq 0 ]; then
     RESOURCE_REGISTRY="-e $RESOURCE_REGISTRY_PATH"
@@ -471,6 +476,9 @@ if [ "$USE_MERGEPY" -eq 0 ]; then
         ENV_JSON=$(jq '.parameters = .parameters + {
             "BlockStorageCount": '${OVERCLOUD_BLOCKSTORAGESCALE}'
           }' <<< $ENV_JSON)
+    fi
+    if [ "$WITH_STEPS" = "1" ]; then
+        RESOURCE_REGISTRY="$RESOURCE_REGISTRY -e $STEPFILE_PATH"
     fi
 fi
 
@@ -552,6 +560,42 @@ fi
 ### --include
 ## #. Get the overcloud IP from the heat stack
 ##    ::
+
+# FIXME(shardy) this only supports ControllerNodesPostDeployment, need to rework this to make more
+# generic and less coupled to the templates, also polling needs timeouts
+if [ "$WITH_STEPS" = "1" ]; then
+    # TODO replace with a wait_for wrapper which waits on resource status
+    set +x
+    until $(heat resource-show overcloud ControllerNodesPostDeployment | grep "resource_status\s" | grep -q  "CREATE_IN_PROGRESS")
+    do
+      echo "Waiting for Post Deployment configuration steps to start"
+      sleep 10
+    done
+    
+    echo "ControllerNodesPostDeployment started"
+    
+    nested_id=$(heat resource-show overcloud ControllerNodesPostDeployment | grep physical_resource_id | awk '{print $4}')
+    
+    for rsrc in ControllerLoadbalancerDeployment_Step1 ControllerDeploymentServicesBase_Step2 ControllerRingbuilderDeployment_Step3 ControllerDeploymentOvercloudServices_Step4
+    do
+      echo "Processing step $rsrc for stack $nested_id"
+      # Wait for the stack to hit each resource breakpoint
+      until $(heat event-list $nested_id | grep $rsrc  | grep -q "Reached breakpoint")
+      do
+        echo "Waiting for $rsrc step"
+        sleep 5
+      done
+    
+      # Prompt for confirmation before continuing
+      read -p "Step $rsrc reached, press \"y\" to continue" -n 1 -r
+      echo
+      if [[ $REPLY =~ ^[Yy]$ ]]
+      then
+        heat breakpoint-clear $nested_id $rsrc
+      fi
+    done
+    set -x
+fi
 
 echo "Waiting for the overcloud stack to be ready" #nodocs
 wait_for_stack_ready -w $(($OVERCLOUD_STACK_TIMEOUT * 60)) 10 $STACKNAME
