@@ -7,9 +7,10 @@ import random
 import libvirt
 
 templatedir = os.path.join(
-                os.path.dirname(
-                  os.path.dirname(
-                    os.path.abspath(__file__))), 'templates')
+    os.path.dirname(
+        os.path.dirname(
+            os.path.abspath(__file__))), 'templates')
+
 
 def generate_bm_mac_address():
     """Generate an Ethernet MAC address suitable for baremetal testing."""
@@ -29,37 +30,40 @@ def generate_bm_mac_address():
            random.randint(0x00, 0xff)]
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Configure a kvm virtual machine for the seed image.")
     parser.add_argument('--name', default='seed',
-        help='the name to give the machine in libvirt.')
+                        help='the name to give the machine in libvirt.')
     parser.add_argument('--image',
-        help='Use a custom image file (must be qcow2).')
+                        help='Use a custom image file (must be qcow2).')
     parser.add_argument('--diskbus', default='sata',
-        help='Choose an alternate bus type for the disk')
+                        help='Choose an alternate bus type for the disk')
     parser.add_argument('--baremetal-interface', default='brbm',
-        help='The interface which bare metal nodes will be connected to.')
+                        help='The interface which bare metal nodes will be '
+                        'connected to.')
     parser.add_argument('--engine', default='kvm',
-        help='The virtualization engine to use')
+                        help='The virtualization engine to use')
     parser.add_argument('--arch', default='i686',
-        help='The architecture to use')
+                        help='The architecture to use')
     parser.add_argument('--memory', default='2097152',
-        help="Maximum memory for the VM in KB.")
+                        help="Maximum memory for the VM in KB.")
     parser.add_argument('--cpus', default='1',
-        help="CPU count for the VM.")
+                        help="CPU count for the VM.")
     parser.add_argument('--bootdev', default='hd',
-        help="What boot device to use (hd/network).")
+                        help="What boot device to use (hd/network).")
     parser.add_argument('--seed', default=False, action='store_true',
-        help='Create a seed vm with two interfaces.')
+                        help='Create a seed vm with two interfaces.')
     parser.add_argument('--ovsbridge', default="",
-        help='Place the seed public interface on this ovs bridge.')
+                        help='Place the seed public interface on this ovs '
+                        'bridge.')
     parser.add_argument('--libvirt-nic-driver', default='virtio',
-        help='The libvirt network driver to use')
+                        help='The libvirt network driver to use')
     parser.add_argument('--enable-serial-console', action="store_true",
-            help='Enable a serial console')
+                        help='Enable a serial console')
     parser.add_argument('--uri', default='qemu:///system',
-        help='The server uri with which to connect.')
+                        help='The server uri with which to connect.')
     args = parser.parse_args()
     with file(templatedir + '/vm.xml', 'rb') as f:
         source_template = f.read()
@@ -78,7 +82,7 @@ def main():
         'bootdev': args.bootdev,
         'network': '',
         'enable_serial_console': '',
-        }
+    }
     if args.image is not None:
         params['imagefile'] = args.image
 
@@ -89,7 +93,7 @@ def main():
         'bminterface': args.baremetal_interface,
         'bmmacaddress': generate_bm_mac_address(),
         'ovsbridge': args.ovsbridge,
-        }
+    }
     if args.seed:
         if args.ovsbridge:
             params['network'] = """
@@ -128,7 +132,7 @@ def main():
         """
 
     libvirt_template = source_template % params
-    conn=libvirt.open(args.uri)
+    conn = libvirt.open(args.uri)
     a = conn.defineXML(libvirt_template)
     print ("Created machine %s with UUID %s" % (args.name, a.UUIDString()))
 

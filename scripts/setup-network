@@ -22,10 +22,10 @@ state=${default_net%%:*}
 autostart=${default_net##*:}
 
 if [ "$state" != "active" ]; then
-  virsh net-start default
+    virsh net-start default
 fi
 
 if [ "$autostart" != "yes" ]; then
-  virsh net-autostart default
+    virsh net-autostart default
 fi
 

@@ -5,7 +5,7 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
     echo "Build a baremetal deployment ramdisk."
@@ -17,7 +17,10 @@ function show_options () {
 }
 
 TEMP=$(getopt -o h -l help -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2;
+    exit 1;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -49,8 +52,8 @@ DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
 ### --end
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch)
 if [ ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.kernel -o \
-     ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.initramfs -o \
-     "$USE_CACHE" == "0" ] ; then
+    ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.initramfs -o \
+    "$USE_CACHE" == "0" ] ; then
 ### --include
     $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
         $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/$DEPLOY_NAME \

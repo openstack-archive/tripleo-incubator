@@ -34,7 +34,7 @@ CHANNEL=$1
 
 touch $LAST
 
-function sendmessage(){
+function sendmessage {
     PEOPLE=$(cut -d , -f 1 $SCRIPTDIR/../tripleo-cloud/tripleo-cd-admins | xargs echo)
     $SCRIPTDIR/send-irc $CHANNEL CLOUDOUTAGE "$PEOPLE $(sed -e 's/^ircmessage: \?//g' $CURRENT | xargs -0 -I LINE echo -n " --" LINE)"
     NEXTMESSAGE=$(( $(date +%s) + 1800 ))

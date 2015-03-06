@@ -20,7 +20,7 @@ set -eu
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options] LISTFILE"
     echo
     echo "Ensure that every user listed in LISTFILE has an admin account."
@@ -34,7 +34,10 @@ function show_options () {
 }
 
 TEMP=`getopt -o h -n $SCRIPT_NAME -- "$@"`
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2
+    exit 1
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
