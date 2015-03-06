@@ -47,7 +47,7 @@ if [[ "$DIB_COMMON_ELEMENTS $SEED_DIB_EXTRA_ARGS" != *enable-serial-console* ]];
 fi
 export VM_IP=""
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options] <element> [<element> ...]"
     echo
     echo "Create and start a VM by combining the specified elements"
@@ -82,7 +82,10 @@ function show_options () {
 }
 
 TEMP=$(getopt -o hcia:o:s: -l build-only -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2;
+    exit 1;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -101,7 +104,9 @@ while true ; do
     esac
 done
 
-for arg do SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS $arg" ; done
+for arg; do
+    SEED_DIB_EXTRA_ARGS="$SEED_DIB_EXTRA_ARGS $arg";
+done
 
 SEED_ARCH=
 
@@ -119,12 +124,12 @@ fi
 HOST_IP=$(os-apply-config -m $TE_DATAFILE --key host-ip --type netaddress --key-default '')
 REMOTE_OPERATIONS=$(os-apply-config -m $TE_DATAFILE --key remote-operations --type raw --key-default '')
 if [ -n "$HOST_IP" ]; then
-  SSH_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw --key-default '')
-  if [ -n "$SSH_USER" ]; then
-    SSH_USER="${SSH_USER}@"
-  fi
-  VM_HOST=${SSH_USER}${HOST_IP}
-  echo $VM_HOST
+    SSH_USER=$(os-apply-config -m $TE_DATAFILE --key ssh-user --type raw --key-default '')
+    if [ -n "$SSH_USER" ]; then
+        SSH_USER="${SSH_USER}@"
+    fi
+    VM_HOST=${SSH_USER}${HOST_IP}
+    echo $VM_HOST
 fi
 
 ENV_NUM=$(os-apply-config -m $TE_DATAFILE --key env-num --type int --key-default 0)
@@ -147,18 +152,18 @@ fi
 # Shutdown any running VM - writing to the image file of a running VM is a
 # great way to get a corrupt image file.
 if [ -z "$BUILD_ONLY" ]; then
-  if [ -n "$REMOTE_OPERATIONS" ]; then
-      ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
-      # Ensure any existing VM's in the test environment are shutdown, so devtest always starts at a consistent point.
-      for NUM in $(seq 0 14) ; do
-          ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy baremetalbrbm${ENV_NUM}_${NUM} || true
-      done
-  else
-      virsh destroy $IMAGE_NAME || true
-      for NUM in $(seq 0 14) ; do
-          virsh destroy baremetal_${NUM} || true
-      done
-  fi
+    if [ -n "$REMOTE_OPERATIONS" ]; then
+        ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy ${IMAGE_NAME}_$ENV_NUM || true
+        # Ensure any existing VM's in the test environment are shutdown, so devtest always starts at a consistent point.
+        for NUM in $(seq 0 14) ; do
+            ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh destroy baremetalbrbm${ENV_NUM}_${NUM} || true
+        done
+    else
+        virsh destroy $IMAGE_NAME || true
+        for NUM in $(seq 0 14) ; do
+            virsh destroy baremetal_${NUM} || true
+        done
+    fi
 fi
 
 if [ $CREATE_IMAGE  ]; then
@@ -172,37 +177,37 @@ if [ $CREATE_IMAGE  ]; then
         echo "Using cached seed image : $IMAGE_CACHE_FILE.qcow2"
     fi
     if [ -n "$BUILD_ONLY" ]; then
-      exit 0
+        exit 0
     fi
 
     if [ -n "$REMOTE_OPERATIONS" ]; then
-      # rsync could be used here which may have been more efficient but using a
-      # custom command "copyseed" should be easier to restrict. Also we can
-      # take multiple steps on the server in this single command meaning we
-      # don't have to open up the ssh access even further.
-      dd if=$IMAGE_CACHE_FILE.qcow2 | ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} copyseed $ENV_NUM
+        # rsync could be used here which may have been more efficient but using a
+        # custom command "copyseed" should be easier to restrict. Also we can
+        # take multiple steps on the server in this single command meaning we
+        # don't have to open up the ssh access even further.
+        dd if=$IMAGE_CACHE_FILE.qcow2 | ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} copyseed $ENV_NUM
     else
-      sudo cp $IMAGE_CACHE_FILE.qcow2 /var/lib/libvirt/images/$IMAGE_NAME.qcow2
-      sudo chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
+        sudo cp $IMAGE_CACHE_FILE.qcow2 /var/lib/libvirt/images/$IMAGE_NAME.qcow2
+        sudo chattr +C /var/lib/libvirt/images/$IMAGE_NAME.qcow2 || true
     fi
 fi
 
 function poll_vm {
-  if [ -z "$VM_IP" ]; then
-    MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
-    VM_IP=$(arp -n | grep $MAC | awk '{print $1}')
-  fi
-  [ -z $VM_IP ] && return 1
-  ping -c 1 $VM_IP || return 1
-  return 0
+    if [ -z "$VM_IP" ]; then
+        MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
+        VM_IP=$(arp -n | grep $MAC | awk '{print $1}')
+    fi
+    [ -z $VM_IP ] && return 1
+    ping -c 1 $VM_IP || return 1
+    return 0
 }
 export -f poll_vm
 
 if [ -n "$REMOTE_OPERATIONS" ]; then
-  ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh start ${IMAGE_NAME}_$ENV_NUM
-  VM_IP=$(os-apply-config -m $TE_DATAFILE --key seed-ip --type netaddress --key-default '')
+    ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${VM_HOST} virsh start ${IMAGE_NAME}_$ENV_NUM
+    VM_IP=$(os-apply-config -m $TE_DATAFILE --key seed-ip --type netaddress --key-default '')
 else
-  sudo virsh start $IMAGE_NAME
+    sudo virsh start $IMAGE_NAME
 fi
 
 echo "Waiting for $IMAGE_NAME VM to boot."

@@ -8,7 +8,7 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
     echo "Setup the TripleO devtest environment."
@@ -25,7 +25,10 @@ CONTINUE=0
 USE_CACHE=${USE_CACHE:-0}
 
 TEMP=`getopt -o h,c -l trash-my-machine -n $SCRIPT_NAME -- "$@"`
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2;
+    exit 1;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -248,9 +251,9 @@ fi
 
 ### --end
 if [ "$USE_CACHE" == "0" ] ; then
-  if [ -z "${ZUUL_REF:-''}" ]; then
-    cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
-  fi
+    if [ -z "${ZUUL_REF:-''}" ]; then
+        cd $TRIPLEO_ROOT/tripleo-incubator ; git pull
+    fi
 fi
 
 if [ "$NODE_DIST" == 'unsupported' ]; then

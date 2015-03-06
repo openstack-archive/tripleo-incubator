@@ -15,7 +15,7 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
     echo "Test the core TripleO story."
@@ -69,7 +69,10 @@ export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
 TEMP=$(getopt -o h,c -l build-only,no-mergepy,debug-logging,existing-environment,help,trash-my-machine,nodes:,bm-networks:,no-undercloud,heat-env-overcloud:,heat-env-undercloud: -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2
+    exit 1
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -307,9 +310,9 @@ DEVTEST_RD_END=$(date +%s) #nodocs
 ### --end
 DEVTEST_SD_START=$(date +%s)
 if [ -z "$NO_UNDERCLOUD" ]; then
-  ALLNODES=""
+    ALLNODES=""
 else
-  ALLNODES="--all-nodes"
+    ALLNODES="--all-nodes"
 fi
 devtest_seed.sh $BUILD_ONLY $ALLNODES $DEBUG_LOGGING
 DEVTEST_SD_END=$(date +%s)
@@ -377,3 +380,4 @@ echo "${TIMESTAMP}   seed       : $((DEVTEST_SD_END - DEVTEST_SD_START)) s" | te
 echo "${TIMESTAMP}   undercloud : $((DEVTEST_UC_END - DEVTEST_UC_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
 echo "${TIMESTAMP}   overcloud  : $((DEVTEST_OC_END - DEVTEST_OC_START)) s" | tee -a ${DEVTEST_PERF_LOG} #nodocs
 echo "${TIMESTAMP} DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS}" >> ${DEVTEST_PERF_LOG} #nodocs
+

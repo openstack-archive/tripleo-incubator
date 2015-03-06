@@ -32,7 +32,7 @@ export IMAGE_NAME=seed
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 LIBVIRT_DISK_BUS_TYPE=${LIBVIRT_DISK_BUS_TYPE:-"sata"}
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options] <element> [<element> ...]"
     echo
     echo "Create a VM definition for the seed VM."
@@ -54,7 +54,10 @@ function show_options () {
 }
 
 TEMP=`getopt -o ha:o:m:c:b:p:e: -n $SCRIPT_NAME -- "$@"`
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2
+    exit 1
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -115,16 +118,16 @@ if [[ $DIB_COMMON_ELEMENTS == *enable-serial-console* ]]; then
 fi
 
 configure-vm $EXTRAOPTS \
-       --name $IMAGE_NAME \
-       --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
-       --diskbus $LIBVIRT_DISK_BUS_TYPE \
-       --baremetal-interface $BRIDGE \
-       --engine $ENGINE \
-       --arch $SEED_ARCH \
-       --memory $MEMORY \
-       --cpus $CPUS \
-       --libvirt-nic-driver $LIBVIRT_NIC_DRIVER \
-       --seed
+    --name $IMAGE_NAME \
+    --image /var/lib/libvirt/images/$IMAGE_NAME.qcow2 \
+    --diskbus $LIBVIRT_DISK_BUS_TYPE \
+    --baremetal-interface $BRIDGE \
+    --engine $ENGINE \
+    --arch $SEED_ARCH \
+    --memory $MEMORY \
+    --cpus $CPUS \
+    --libvirt-nic-driver $LIBVIRT_NIC_DRIVER \
+    --seed
 
 MAC=$(sudo virsh dumpxml $IMAGE_NAME | grep "mac address" | head -1 | awk -F "'" '{print $2}')
 echo "Seed VM created with MAC ${MAC}"

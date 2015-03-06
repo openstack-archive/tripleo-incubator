@@ -13,10 +13,10 @@ set -o pipefail
 
 ### --end
 if [ -e tripleorc ]; then
-  echo "Resetting existing $PWD/tripleorc with new values"
-  tripleorc_path=$PWD/tripleorc
+    echo "Resetting existing $PWD/tripleorc with new values"
+    tripleorc_path=$PWD/tripleorc
 else
-  tripleorc_path=$TRIPLEO_ROOT/tripleorc
+    tripleorc_path=$TRIPLEO_ROOT/tripleorc
 fi
 write-tripleorc --overwrite $tripleorc_path
 
