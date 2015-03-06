@@ -43,7 +43,7 @@
 }
 
 
-function unexpected_eof() {
+function unexpected_eof {
     printf("%s:%d: unexpected EOF or error\n", FILENAME, FNR) > "/dev/stderr"
     exit 1
 }
