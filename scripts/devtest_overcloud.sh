@@ -43,7 +43,10 @@ function show_options () {
 }
 
 TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ] ; then
+    echo "Terminating..." >&2;
+    exit 1;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -197,19 +200,19 @@ fi
 
 OVERCLOUD_DISTRIBUTED_ROUTERS=${OVERCLOUD_DISTRIBUTED_ROUTERS:-'False'}
 if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
-   ComputeNeutronRole=' neutron-router'
-   OVERCLOUD_COMPUTE_DIB_ELEMENTS=$OVERCLOUD_COMPUTE_DIB_ELEMENTS$ComputeNeutronRole
+    ComputeNeutronRole=' neutron-router'
+    OVERCLOUD_COMPUTE_DIB_ELEMENTS=$OVERCLOUD_COMPUTE_DIB_ELEMENTS$ComputeNeutronRole
 fi
 
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
-           $OVERCLOUD_COMPUTE_DIB_ELEMENTS $DIB_COMMON_ELEMENTS \
-           $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
+        $OVERCLOUD_COMPUTE_DIB_ELEMENTS $DIB_COMMON_ELEMENTS \
+        $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
@@ -219,7 +222,7 @@ fi #nodocs
 ### --end
 
 if [ -n "$BUILD_ONLY" ]; then
-  exit 0
+    exit 0
 fi
 
 ### --include
@@ -260,19 +263,19 @@ NeutronAgentMode='dvr_snat'
 NeutronComputeAgentMode='dvr'
 NeutronAllowl3AgentFailover=${NeutronAllowl3AgentFailover:-'True'}
 if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
-   NeutronMechanismDrivers='openvswitch,l2population'
-   NeutronTunnelTypes='vxlan'
-   NeutronNetworkType='vxlan'
-   NeutronDVR='True'
-   OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${NeutronPhysicalBridge:-'br-ex'}
-   OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${NeutronPublicInterface:-''}
-   NeutronAllowL3AgentFailover='False'
+    NeutronMechanismDrivers='openvswitch,l2population'
+    NeutronTunnelTypes='vxlan'
+    NeutronNetworkType='vxlan'
+    NeutronDVR='True'
+    OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${NeutronPhysicalBridge:-'br-ex'}
+    OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${NeutronPublicInterface:-''}
+    NeutronAllowL3AgentFailover='False'
 else
-   NeutronMechanismDrivers=${NeutronMechanismDrivers:-'openvswitch'}
-   NeutronTunnelTypes=${NeutronTunnelTypes:-'gre'}
-   NeutronNetworkType=${NeutronNetworkTypes:-'gre'}
-   NeutronDVR='False'
-   NeutronAllowL3AgentFailover='True'
+    NeutronMechanismDrivers=${NeutronMechanismDrivers:-'openvswitch'}
+    NeutronTunnelTypes=${NeutronTunnelTypes:-'gre'}
+    NeutronNetworkType=${NeutronNetworkTypes:-'gre'}
+    NeutronDVR='False'
+    NeutronAllowL3AgentFailover='True'
 fi
 
 ## #. If you are using SSL, your compute nodes will need static mappings to your
@@ -349,14 +352,14 @@ UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD=$(os-apply-config -m $TE_DATAFILE --key und
 #
 # If we can't find the file in $CWD we look in the new default location.
 if [ -e tripleo-overcloud-passwords ]; then
-  echo "Re-using existing passwords in $PWD/tripleo-overcloud-passwords"
-  # Add any new passwords since the file was generated
-  setup-overcloud-passwords tripleo-overcloud-passwords
-  source tripleo-overcloud-passwords
+    echo "Re-using existing passwords in $PWD/tripleo-overcloud-passwords"
+    # Add any new passwords since the file was generated
+    setup-overcloud-passwords tripleo-overcloud-passwords
+    source tripleo-overcloud-passwords
 else
 ### --include
-  setup-overcloud-passwords $TRIPLEO_ROOT/tripleo-overcloud-passwords
-  source $TRIPLEO_ROOT/tripleo-overcloud-passwords
+    setup-overcloud-passwords $TRIPLEO_ROOT/tripleo-overcloud-passwords
+    source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 fi #nodocs
 
 ## #. We need an environment file to store the parameters we're gonig to give

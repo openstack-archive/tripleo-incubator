@@ -93,16 +93,18 @@ function load_image() {
         remove_image "${GLANCE_IMAGE_NAME}"
     fi
 
-    kernel_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-vmlinuz" \
-                                    --is-public True \
-                                    --disk-format aki \
-                                    --file "$KERNEL" \
-                                    | grep ' id ' | awk '{print $4}')
-    ramdisk_id=$(glance image-create --name "${GLANCE_IMAGE_NAME}-initrd" \
-                                     --is-public True \
-                                     --disk-format ari \
-                                     --file "$RAMDISK" \
-                                     | grep ' id ' | awk '{print $4}')
+    kernel_id=$(glance image-create \
+        --name "${GLANCE_IMAGE_NAME}-vmlinuz" \
+        --is-public True \
+        --disk-format aki \
+        --file "$KERNEL" \
+        | grep ' id ' | awk '{print $4}')
+    ramdisk_id=$(glance image-create \
+        --name "${GLANCE_IMAGE_NAME}-initrd" \
+        --is-public True \
+        --disk-format ari \
+        --file "$RAMDISK" \
+        | grep ' id ' | awk '{print $4}')
 
     # >&3 sends to the original stdout as this is what we are after
     glance image-create --name $GLANCE_IMAGE_NAME \
@@ -119,7 +121,10 @@ function load_image() {
 
 
 TEMP=`getopt -o hd -n $SCRIPT_NAME -- "$@"`
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2;
+    exit 1;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -133,7 +138,9 @@ while true ; do
     esac
 done
 
-for arg do FILES="$FILES $arg" ; done
+for arg; do
+    FILES="$FILES $arg";
+done
 
 if [ ! "$FILES" ]; then
     show_options
