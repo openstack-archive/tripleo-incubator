@@ -5,7 +5,7 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
     echo "Deploys a baremetal cloud via virsh."
@@ -27,7 +27,10 @@ BUILD_ONLY=
 DEBUG_LOGGING=
 
 TEMP=$(getopt -o c,h -l all-nodes,build-only,debug-logging,help -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2
+    exit 1
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -160,29 +163,29 @@ BM_BRIDGE_ROUTE=$(jq -r '.["baremetal-network"].seed.physical_bridge_route // {}
 BM_CTL_ROUTE_PREFIX=$(jq -r '.["baremetal-network"].seed.physical_bridge_route.prefix // ""' $TE_DATAFILE)
 BM_CTL_ROUTE_VIA=$(jq -r '.["baremetal-network"].seed.physical_bridge_route.via // ""' $TE_DATAFILE)
 jq -s '
-  .[1]["baremetal-network"] as $bm
-| ($bm.seed.ip // "192.0.2.1") as $bm_seed_ip
-| .[2] as $bm_vlan
-| .[3] as $bm_bridge_route
-| .[0]
-| . + {
-  "local-ipv4": $bm_seed_ip,
-  "completion-signal": ("http://'"${COMP_IP}"':'"${SEED_COMP_PORT}"'"),
-  "instance-id": "'"${SEED_IMAGE_ID}"'",
-  "bootstack": (.bootstack + {
-    "public_interface_ip": ($bm_seed_ip + "/'"${BM_NETWORK_CIDR##*/}"'"),
-    "masquerade_networks": ([$bm.cidr // "192.0.2.0/24"] + $bm_vlan.masquerade)
-  }),
-  "heat": (.heat + {
-    "watch_server_url": ("http://" + $bm_seed_ip + ":8003"),
-    "waitcondition_server_url": ("http://" + $bm_seed_ip + ":8000/v1/waitcondition"),
-    "metadata_server_url": ("http://" + $bm_seed_ip + ":8000")
-  }),
-  "neutron": (.neutron + {
-    "ovs": (.neutron.ovs + $bm_vlan.ovs + {"local_ip": $bm_seed_ip } + {
-      "physical_bridge_route": $bm_bridge_route
+    .[1]["baremetal-network"] as $bm
+    | ($bm.seed.ip // "192.0.2.1") as $bm_seed_ip
+    | .[2] as $bm_vlan
+    | .[3] as $bm_bridge_route
+    | .[0]
+    | . + {
+    "local-ipv4": $bm_seed_ip,
+    "completion-signal": ("http://'"${COMP_IP}"':'"${SEED_COMP_PORT}"'"),
+    "instance-id": "'"${SEED_IMAGE_ID}"'",
+    "bootstack": (.bootstack + {
+        "public_interface_ip": ($bm_seed_ip + "/'"${BM_NETWORK_CIDR##*/}"'"),
+        "masquerade_networks": ([$bm.cidr // "192.0.2.0/24"] + $bm_vlan.masquerade)
+    }),
+    "heat": (.heat + {
+        "watch_server_url": ("http://" + $bm_seed_ip + ":8003"),
+        "waitcondition_server_url": ("http://" + $bm_seed_ip + ":8000/v1/waitcondition"),
+        "metadata_server_url": ("http://" + $bm_seed_ip + ":8000")
+    }),
+    "neutron": (.neutron + {
+        "ovs": (.neutron.ovs + $bm_vlan.ovs + {"local_ip": $bm_seed_ip } + {
+        "physical_bridge_route": $bm_bridge_route
+        })
     })
-  })
 }' tmp_local.json $TE_DATAFILE bm-vlan.json <(echo "$BM_BRIDGE_ROUTE") > local.json
 rm tmp_local.json
 rm bm-vlan.json
@@ -230,7 +233,7 @@ fi
 ##    to :doc:`devtest_undercloud`
 
 ##    ``boot-seed-vm`` will start a VM containing your SSH key for the root user.
-## 
+##
 ##    The IP address of the VM's eth0 is printed out at the end of boot-seed-vm, or
 ##    you can query the testenv json which is updated by boot-seed-vm::
 
@@ -264,11 +267,11 @@ set -u #nodocs
 
 ## #. If you downloaded a pre-built seed image you will need to log into it
 ##    and customise the configuration within it. See footnote [#f1]_.)
-## 
+##
 ## #. Setup a prompt clue so you can tell what cloud you have configured.
 ##    (Do this once).
 ##    ::
-## 
+##
 ##      source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
 
 ## #. Source the client configuration for the seed cloud.
@@ -280,9 +283,9 @@ source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 ##    ::
 
 if [ $USE_IRONIC -eq 0 ]; then
-  IRONIC_OPT=
+    IRONIC_OPT=
 else
-  IRONIC_OPT="--ironic-password unset"
+    IRONIC_OPT="--ironic-password unset"
 fi
 
 ## #. Perform setup of your seed cloud.
@@ -393,44 +396,44 @@ nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin
 ##    ::
 
 if [ -z "${ALL_NODES:-}" ]; then #nodocs
-  setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
+    setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
 else #nodocs
 
 ##    Otherwise, if you are skipping the undercloud, you should register all
 ##    the nodes.::
 
-  setup-baremetal --service-host seed --nodes <(jq '.nodes' $TE_DATAFILE)
+    setup-baremetal --service-host seed --nodes <(jq '.nodes' $TE_DATAFILE)
 fi #nodocs
 
 ##    If you need to collect the MAC address separately, see ``scripts/get-vm-mac``.
 
 ## .. rubric:: Footnotes
-## 
+##
 ## .. [#f1] Customize a downloaded seed image.
-## 
+##
 ##    If you downloaded your seed VM image, you may need to configure it.
 ##    Setup a network proxy, if you have one (e.g. 192.168.2.1 port 8080)
 ##    ::
-## 
+##
 ##         # Run within the image!
 ##         echo << EOF >> ~/.profile
 ##         export no_proxy=192.0.2.1
 ##         export http_proxy=http://192.168.2.1:8080/
 ##         EOF
-## 
+##
 ##    Add an ~/.ssh/authorized_keys file. The image rejects password authentication
 ##    for security, so you will need to ssh out from the VM console. Even if you
 ##    don't copy your authorized_keys in, you will still need to ensure that
 ##    /home/stack/.ssh/authorized_keys on your seed node has some kind of
 ##    public SSH key in it, or the openstack configuration scripts will error.
-## 
+##
 ##    You can log into the console using the username 'stack' password 'stack'.
-## 
+##
 ## .. [#f2] Requirements for the "baremetal node" VMs
-## 
+##
 ##    If you don't use create-nodes, but want to create your own VMs, here are some
 ##    suggestions for what they should look like.
-## 
+##
 ##    * each VM should have 1 NIC
 ##    * eth0 should be on brbm
 ##    * record the MAC addresses for the NIC of each VM.
@@ -440,24 +443,24 @@ fi #nodocs
 ##      OpenStack), and 768M isn't enough to do repeated deploys with.
 ##    * if using KVM, specify that you will install the virtual machine via PXE.
 ##      This will avoid KVM prompting for a disk image or installation media.
-## 
+##
 ## .. [#f3] Notes when using real bare metal
-## 
+##
 ##    If you want to use real bare metal see the following.
-## 
+##
 ##    * When calling setup-baremetal you can set the MAC, IP address, user,
 ##      and password parameters which should all be space delemited lists
 ##      that correspond to the MAC addresses and power management commands
 ##      your real baremetal machines require. See scripts/setup-baremetal
 ##      for details.
-## 
+##
 ##    * If you see over-mtu packets getting dropped when iscsi data is copied
 ##      over the control plane you may need to increase the MTU on your brbm
 ##      interfaces. Symptoms that this might be the cause include:
 ##      ::
-## 
+##
 ##        iscsid: log shows repeated connection failed errors (and reconnects)
 ##        dmesg shows:
 ##            openvswitch: vnet1: dropped over-mtu packet: 1502 > 1500
-## 
+##
 ### --end

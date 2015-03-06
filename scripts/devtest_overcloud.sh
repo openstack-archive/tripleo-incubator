@@ -14,7 +14,7 @@ CONTROL_FLAVOR="baremetal"
 BLOCKSTORAGE_FLAVOR="baremetal"
 SWIFTSTORAGE_FLAVOR="baremetal"
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
     echo "Deploys a KVM cloud via heat."
@@ -43,7 +43,10 @@ function show_options () {
 }
 
 TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ] ; then
+    echo "Terminating..." >&2;
+    exit 1;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -197,19 +200,19 @@ fi
 
 OVERCLOUD_DISTRIBUTED_ROUTERS=${OVERCLOUD_DISTRIBUTED_ROUTERS:-'False'}
 if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
-   ComputeNeutronRole=' neutron-router'
-   OVERCLOUD_COMPUTE_DIB_ELEMENTS=$OVERCLOUD_COMPUTE_DIB_ELEMENTS$ComputeNeutronRole
+    ComputeNeutronRole=' neutron-router'
+    OVERCLOUD_COMPUTE_DIB_ELEMENTS=$OVERCLOUD_COMPUTE_DIB_ELEMENTS$ComputeNeutronRole
 fi
 
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
 
-if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
+if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
     $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
         -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
-           $OVERCLOUD_COMPUTE_DIB_ELEMENTS $DIB_COMMON_ELEMENTS \
-           $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
+        $OVERCLOUD_COMPUTE_DIB_ELEMENTS $DIB_COMMON_ELEMENTS \
+        $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-overcloud-compute.log
 fi #nodocs
 
@@ -219,7 +222,7 @@ fi #nodocs
 ### --end
 
 if [ -n "$BUILD_ONLY" ]; then
-  exit 0
+    exit 0
 fi
 
 ### --include
@@ -260,19 +263,19 @@ NeutronAgentMode='dvr_snat'
 NeutronComputeAgentMode='dvr'
 NeutronAllowl3AgentFailover=${NeutronAllowl3AgentFailover:-'True'}
 if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
-   NeutronMechanismDrivers='openvswitch,l2population'
-   NeutronTunnelTypes='vxlan'
-   NeutronNetworkType='vxlan'
-   NeutronDVR='True'
-   OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${NeutronPhysicalBridge:-'br-ex'}
-   OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${NeutronPublicInterface:-''}
-   NeutronAllowL3AgentFailover='False'
+    NeutronMechanismDrivers='openvswitch,l2population'
+    NeutronTunnelTypes='vxlan'
+    NeutronNetworkType='vxlan'
+    NeutronDVR='True'
+    OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${NeutronPhysicalBridge:-'br-ex'}
+    OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${NeutronPublicInterface:-''}
+    NeutronAllowL3AgentFailover='False'
 else
-   NeutronMechanismDrivers=${NeutronMechanismDrivers:-'openvswitch'}
-   NeutronTunnelTypes=${NeutronTunnelTypes:-'gre'}
-   NeutronNetworkType=${NeutronNetworkTypes:-'gre'}
-   NeutronDVR='False'
-   NeutronAllowL3AgentFailover='True'
+    NeutronMechanismDrivers=${NeutronMechanismDrivers:-'openvswitch'}
+    NeutronTunnelTypes=${NeutronTunnelTypes:-'gre'}
+    NeutronNetworkType=${NeutronNetworkTypes:-'gre'}
+    NeutronDVR='False'
+    NeutronAllowL3AgentFailover='True'
 fi
 
 ## #. If you are using SSL, your compute nodes will need static mappings to your
@@ -349,14 +352,14 @@ UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD=$(os-apply-config -m $TE_DATAFILE --key und
 #
 # If we can't find the file in $CWD we look in the new default location.
 if [ -e tripleo-overcloud-passwords ]; then
-  echo "Re-using existing passwords in $PWD/tripleo-overcloud-passwords"
-  # Add any new passwords since the file was generated
-  setup-overcloud-passwords tripleo-overcloud-passwords
-  source tripleo-overcloud-passwords
+    echo "Re-using existing passwords in $PWD/tripleo-overcloud-passwords"
+    # Add any new passwords since the file was generated
+    setup-overcloud-passwords tripleo-overcloud-passwords
+    source tripleo-overcloud-passwords
 else
 ### --include
-  setup-overcloud-passwords $TRIPLEO_ROOT/tripleo-overcloud-passwords
-  source $TRIPLEO_ROOT/tripleo-overcloud-passwords
+    setup-overcloud-passwords $TRIPLEO_ROOT/tripleo-overcloud-passwords
+    source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 fi #nodocs
 
 ## #. We need an environment file to store the parameters we're gonig to give
@@ -384,51 +387,51 @@ fi
 
 NeutronControlPlaneID=$(neutron net-show ctlplane | grep ' id ' | awk '{print $4}')
 ENV_JSON=$(jq '.parameters = {
-    "MysqlInnodbBufferPoolSize": 100
-  } + .parameters + {
-    "AdminPassword": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
-    "AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
-    "CeilometerPassword": "'"${OVERCLOUD_CEILOMETER_PASSWORD}"'",
-    "CeilometerMeteringSecret": "'"${OVERCLOUD_CEILOMETER_SECRET}"'",
-    "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
-    "CloudName": "'"${OVERCLOUD_NAME}"'",
-    "controllerImage": "'"${OVERCLOUD_CONTROL_ID}"'",
-    "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
-    "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
-    "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
-    "HypervisorNeutronPublicInterface": "'"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}"'",
-    "NeutronBridgeMappings": "'"${OVERCLOUD_BRIDGE_MAPPINGS}"'",
-    "NeutronControlPlaneID": "'${NeutronControlPlaneID}'",
-    "NeutronFlatNetworks": "'"${OVERCLOUD_FLAT_NETWORKS}"'",
-    "NeutronPassword": "'"${OVERCLOUD_NEUTRON_PASSWORD}"'",
-    "NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
-    "NeutronPublicInterfaceTag": "'"${NeutronPublicInterfaceTag}"'",
-    "NovaComputeLibvirtType": "'"${OVERCLOUD_LIBVIRT_TYPE}"'",
-    "NovaPassword": "'"${OVERCLOUD_NOVA_PASSWORD}"'",
-    "NtpServer": "'"${OVERCLOUD_NTP_SERVER}"'",
-    "SwiftHashSuffix": "'"${OVERCLOUD_SWIFT_HASH}"'",
-    "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
-    "NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
-    "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
-    "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
-    "OvercloudComputeFlavor": "'"${COMPUTE_FLAVOR}"'",
-    "OvercloudControlFlavor": "'"${CONTROL_FLAVOR}"'",
-    "OvercloudBlockStorageFlavor": "'"${BLOCKSTORAGE_FLAVOR}"'",
-    "OvercloudSwiftStorageFlavor": "'"${SWIFTSTORAGE_FLAVOR}"'"
-  }' <<< $ENV_JSON)
+"MysqlInnodbBufferPoolSize": 100
+} + .parameters + {
+"AdminPassword": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
+"AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
+"CeilometerPassword": "'"${OVERCLOUD_CEILOMETER_PASSWORD}"'",
+"CeilometerMeteringSecret": "'"${OVERCLOUD_CEILOMETER_SECRET}"'",
+"CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
+"CloudName": "'"${OVERCLOUD_NAME}"'",
+"controllerImage": "'"${OVERCLOUD_CONTROL_ID}"'",
+"GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
+"HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
+"HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
+"HypervisorNeutronPublicInterface": "'"${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE}"'",
+"NeutronBridgeMappings": "'"${OVERCLOUD_BRIDGE_MAPPINGS}"'",
+"NeutronControlPlaneID": "'${NeutronControlPlaneID}'",
+"NeutronFlatNetworks": "'"${OVERCLOUD_FLAT_NETWORKS}"'",
+"NeutronPassword": "'"${OVERCLOUD_NEUTRON_PASSWORD}"'",
+"NeutronPublicInterface": "'"${NeutronPublicInterface}"'",
+"NeutronPublicInterfaceTag": "'"${NeutronPublicInterfaceTag}"'",
+"NovaComputeLibvirtType": "'"${OVERCLOUD_LIBVIRT_TYPE}"'",
+"NovaPassword": "'"${OVERCLOUD_NOVA_PASSWORD}"'",
+"NtpServer": "'"${OVERCLOUD_NTP_SERVER}"'",
+"SwiftHashSuffix": "'"${OVERCLOUD_SWIFT_HASH}"'",
+"SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
+"NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
+"SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
+"SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
+"OvercloudComputeFlavor": "'"${COMPUTE_FLAVOR}"'",
+"OvercloudControlFlavor": "'"${CONTROL_FLAVOR}"'",
+"OvercloudBlockStorageFlavor": "'"${BLOCKSTORAGE_FLAVOR}"'",
+"OvercloudSwiftStorageFlavor": "'"${SWIFTSTORAGE_FLAVOR}"'"
+}' <<< $ENV_JSON)
 
 ### --end
 if [ "$DEBUG_LOGGING" = "1" ]; then
     ENV_JSON=$(jq '.parameters = .parameters + {
-        "Debug": "True",
-      }' <<< $ENV_JSON)
+    "Debug": "True",
+    }' <<< $ENV_JSON)
 fi
 ### --include
 
 if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     ENV_JSON=$(jq '.parameters = {} + .parameters + {
-        "BlockStorageImage": "'"${OVERCLOUD_BLOCKSTORAGE_ID}"'",
-      }' <<< $ENV_JSON)
+    "BlockStorageImage": "'"${OVERCLOUD_BLOCKSTORAGE_ID}"'",
+    }' <<< $ENV_JSON)
 fi
 
 if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
@@ -446,13 +449,13 @@ fi
 ### --end
 # Options we haven't documented as such
 ENV_JSON=$(jq '.parameters = {
-    "ControlVirtualInterface": "'${OVERCLOUD_VIRTUAL_INTERFACE}'"
-  } + .parameters + {
-    "NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
-    "NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
-    "NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
-    "SnmpdReadonlyUserPassword": "'${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}'",
-  }' <<< $ENV_JSON)
+"ControlVirtualInterface": "'${OVERCLOUD_VIRTUAL_INTERFACE}'"
+} + .parameters + {
+"NeutronPublicInterfaceDefaultRoute": "'${NeutronPublicInterfaceDefaultRoute}'",
+"NeutronPublicInterfaceIP": "'${NeutronPublicInterfaceIP}'",
+"NeutronPublicInterfaceRawDevice": "'${NeutronPublicInterfaceRawDevice}'",
+"SnmpdReadonlyUserPassword": "'${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}'",
+}' <<< $ENV_JSON)
 
 RESOURCE_REGISTRY=
 RESOURCE_REGISTRY_PATH=${RESOURCE_REGISTRY_PATH:-"$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml"}
@@ -460,13 +463,13 @@ RESOURCE_REGISTRY_PATH=${RESOURCE_REGISTRY_PATH:-"$TRIPLEO_ROOT/tripleo-heat-tem
 if [ "$USE_MERGEPY" -eq 0 ]; then
     RESOURCE_REGISTRY="-e $RESOURCE_REGISTRY_PATH"
     ENV_JSON=$(jq '.parameters = .parameters + {
-        "ControllerCount": '${OVERCLOUD_CONTROLSCALE}',
-        "ComputeCount": '${OVERCLOUD_COMPUTESCALE}'
-      }' <<< $ENV_JSON)
+    "ControllerCount": '${OVERCLOUD_CONTROLSCALE}',
+    "ComputeCount": '${OVERCLOUD_COMPUTESCALE}'
+    }' <<< $ENV_JSON)
     if [ -e "$TRIPLEO_ROOT/tripleo-heat-templates/cinder-storage.yaml" ]; then
         ENV_JSON=$(jq '.parameters = .parameters + {
-            "BlockStorageCount": '${OVERCLOUD_BLOCKSTORAGESCALE}'
-          }' <<< $ENV_JSON)
+        "BlockStorageCount": '${OVERCLOUD_BLOCKSTORAGESCALE}'
+        }' <<< $ENV_JSON)
     fi
 fi
 
