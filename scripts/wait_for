@@ -22,7 +22,7 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 
 
-function show_options() {
+function show_options {
     EXITVAL=${1:-1}
     echo "Usage: $SCRIPT_NAME [-h] [-w TIMEOUT] [-l LOOP_COUNT] [-f FAIL_MATCH] [-s SUCCESS_MATCH] --delay SLEEP_TIME -- COMMAND"
     echo
@@ -73,7 +73,9 @@ fi
 if [ $USE_ARGPARSE -eq 1 ]; then
     set +e
     TEMP=$(getopt -o h,w:,l:,d:,s:,f: -l help,walltime:,looptimeout:,delay:,success-match:,fail-match: -n $SCRIPT_NAME -- "$@")
-    if [ $? != 0 ] ; then show_options ; fi
+    if [ $? != 0 ]; then
+        show_options;
+    fi
     set -e
 
     # Note the quotes around `$TEMP': they are essential!
@@ -115,7 +117,7 @@ fi
 
 ENDTIME=$(($(date +%s) + $TIMEOUT))
 TIME_REMAINING=0
-function update_time_remaining() {
+function update_time_remaining {
     CUR_TIME="$(date +%s)"
     TIME_REMAINING=$(($ENDTIME - $CUR_TIME))
 }
@@ -123,7 +125,7 @@ function update_time_remaining() {
 
 OUTPUT=
 
-function check_cmd() {
+function check_cmd {
     STATUS=0
     OUTPUT=$(eval $COMMAND 2>&1) || STATUS=$?
     if [[ -n "$SUCCESSFUL_MATCH_OUTPUT" ]] \
