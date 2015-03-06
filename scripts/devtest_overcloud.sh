@@ -14,6 +14,7 @@ COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
 BLOCKSTORAGE_FLAVOR="baremetal"
 SWIFTSTORAGE_FLAVOR="baremetal"
+WITH_STEPS=
 
 function show_options {
     echo "Usage: $SCRIPT_NAME [options]"
@@ -25,6 +26,8 @@ function show_options {
     echo "      -c             -- re-use existing source/images if they exist."
     echo "      --build-only   -- build the needed images but don't deploy them."
     echo "      --no-mergepy   -- use the standalone Heat templates (default)."
+    echo "      --with-steps   -- Deploy in steps, asking for confirmation between each."
+    echo "                        Note: Only works with --no-mergepy"
     echo "      --debug-logging -- Turn on debug logging in the built overcloud."
     echo "                         Sets both OS_DEBUG_LOGGING and the heat Debug parameter."
     echo "      --heat-env     -- path to a JSON heat environment file."
@@ -43,11 +46,8 @@ function show_options {
     exit $1
 }
 
-TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then
-    echo "Terminating..." >&2;
-    exit 1;
-fi
+TEMP=$(getopt -o c,h -l build-only,no-mergepy,with-steps,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -61,6 +61,7 @@ while true ; do
             echo "Warning: --no-mergepy is the default now, option is DEPRECATED" >&2
             shift 1
             ;;
+        --with-steps) WITH_STEPS="1"; shift 1;;
         --debug-logging)
             DEBUG_LOGGING="1"
             export OS_DEBUG_LOGGING="1"
@@ -407,6 +408,7 @@ ENV_JSON=$(jq '.parameters = {
 
 RESOURCE_REGISTRY=
 RESOURCE_REGISTRY_PATH=${RESOURCE_REGISTRY_PATH:-"$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml"}
+STEPFILE_PATH=${STEPFILE_PATH:-"$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-steps.yaml"}
 
 if [ "$USE_MERGEPY" -eq 0 ]; then
     RESOURCE_REGISTRY="-e $RESOURCE_REGISTRY_PATH"
@@ -418,6 +420,9 @@ if [ "$USE_MERGEPY" -eq 0 ]; then
         ENV_JSON=$(jq '.parameters = .parameters + {
         "BlockStorageCount": '${OVERCLOUD_BLOCKSTORAGESCALE}'
         }' <<< $ENV_JSON)
+    fi
+    if [ "$WITH_STEPS" = "1" ]; then
+        RESOURCE_REGISTRY="$RESOURCE_REGISTRY -e $STEPFILE_PATH"
     fi
 fi
 
@@ -503,6 +508,42 @@ if [ ! -e $TRIPLEO_ROOT/$USER_IMG_NAME -o "$USE_CACHE" == "0" ] ; then
         popd
     fi
 fi
+
+# If --with-steps is specified, we step through the deployment, waiting
+# for user confirmation before proceeding, based on the heat hooks defined
+# in tripleo-heat-templates/overcloud-steps.yaml
+STEP_SLEEPTIME=${STEP_SLEEPTIME:-30}
+STEP_NESTED_DEPTH=${STEP_NESTED_DEPTH:-5}
+if [ "$WITH_STEPS" = "1" ]; then
+    set +x
+    while $(heat stack-show overcloud | grep stack_status | grep -q IN_PROGRESS)
+    do
+        HEADER_DONE=0
+        HEADER_STR="| resource_name"
+        while read -r -u 3 line
+        do
+            if [[ $line =~ ^"$HEADER_STR" && $HEADER_DONE -eq 0 ]]; then
+                echo $line
+                HEADER_DONE=1
+            fi
+            if [[ $line == *"paused until Hook"* ]]; then
+                echo -e "Hit hook, event:\n$line"
+                # Prompt for confirmation before continuing
+                read -p "To clear hook and continue, press \"y\"" -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    HOOK_RSRC=$(echo $line | cut -d "|" -f2)
+                    HOOK_STACK=$(echo $line | cut -d "|" -f7)
+                    heat hook-clear $HOOK_STACK $HOOK_RSRC
+                fi
+            fi
+        done 3< <(heat hook-poll overcloud --nested-depth $STEP_NESTED_DEPTH)
+        echo "Waiting for hook to be reached"
+        sleep $STEP_SLEEPTIME
+    done
+    set -x
+fi
+
 ### --include
 ## #. Get the overcloud IP from the heat stack
 ##    ::
