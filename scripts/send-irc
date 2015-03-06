@@ -19,7 +19,7 @@ set -eu
 
 SCRIPT_NAME=$(basename $0)
 
-function show_options() {
+function show_options {
     echo "Usage: $SCRIPT_NAME IRC_CHANNEL IRC_USERNAME MESSAGE..."
     echo
     echo "Send a MESSAGE to a freenode channel IRC_CHANNEL from"

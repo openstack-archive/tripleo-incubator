@@ -28,63 +28,63 @@ chmod 0600 ~/.ssh/authorized_keys
 
 # packages
 if [ "$TRIPLEO_OS_DISTRO" = "unsupported" ]; then
-  echo This script has not been tested outside of Fedora, RHEL/CentOS, and Ubuntu variants.
-  echo Make sure you have installed all the needed dependencies or subsequent steps will fail.
+    echo This script has not been tested outside of Fedora, RHEL/CentOS, and Ubuntu variants.
+    echo Make sure you have installed all the needed dependencies or subsequent steps will fail.
 fi
 
 if [ "$TRIPLEO_OS_FAMILY" = "debian" ]; then
-  if $(grep -Eqs 'Ubuntu 12.04' /etc/lsb-release); then
-    #adding Ubuntu Cloud Archive Repository only if not present : bug https://bugs.launchpad.net/tripleo/+bug/1212237
-    #Ubuntu 12.04 has a too-old libvirt-bin but a newer one is present in the Ubuntu cloud archive.
-    sudo -E apt-get update
-    DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes ubuntu-cloud-keyring
-    (grep -Eqs "precise-updates/grizzly" /etc/apt/sources.list.d/cloud-archive.list) || echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
-' | sudo tee -a /etc/apt/sources.list.d/cloud-archive.list
-    #adding precise-backports universe repository for jq package
-    if ! command -v add-apt-repository; then
-      DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes python-software-properties
+    if $(grep -Eqs 'Ubuntu 12.04' /etc/lsb-release); then
+        #adding Ubuntu Cloud Archive Repository only if not present : bug https://bugs.launchpad.net/tripleo/+bug/1212237
+        #Ubuntu 12.04 has a too-old libvirt-bin but a newer one is present in the Ubuntu cloud archive.
+        sudo -E apt-get update
+        DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes ubuntu-cloud-keyring
+        (grep -Eqs "precise-updates/grizzly" /etc/apt/sources.list.d/cloud-archive.list) || echo 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
+        ' | sudo tee -a /etc/apt/sources.list.d/cloud-archive.list
+        #adding precise-backports universe repository for jq package
+        if ! command -v add-apt-repository; then
+        DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes python-software-properties
+        fi
+        sudo add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports universe"
     fi
-    sudo add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ precise-backports universe"
-  fi
-  # packages
-  sudo -E apt-get update
-  DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc python-virtualenv openvswitch-switch libssl-dev curl python-yaml parted lsb-release libxml2-dev libxslt1-dev jq openssh-server libffi-dev kpartx python-netaddr
+    # packages
+    sudo -E apt-get update
+    DEBIAN_FRONTEND=noninteractive sudo -E apt-get install --yes python-lxml python-libvirt libvirt-bin qemu-utils qemu-system qemu-kvm git python-pip python-dev gcc python-virtualenv openvswitch-switch libssl-dev curl python-yaml parted lsb-release libxml2-dev libxslt1-dev jq openssh-server libffi-dev kpartx python-netaddr
 
-  if [ -f /lib/systemd/system/libvirtd.service ]; then
-      sudo service libvirtd restart
-  else
-      sudo service libvirt-bin restart
-  fi
+    if [ -f /lib/systemd/system/libvirtd.service ]; then
+        sudo service libvirtd restart
+    else
+        sudo service libvirt-bin restart
+    fi
 fi
 
 if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
-  # For CentOS, python-pip and jq are in EPEL
-  if [ "$TRIPLEO_OS_DISTRO" = "centos" ] && [ ! -f /etc/yum.repos.d/epel.repo ]; then
-    echo EPEL repository is required to install python-pip for CentOS.
-    echo See http://fedoraproject.org/wiki/EPEL
-    exit 1
-  fi
-  sudo -E yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv openvswitch python-yaml net-tools redhat-lsb-core libxslt-devel jq openssh-server libffi-devel which glusterfs-api python-netaddr
+    # For CentOS, python-pip and jq are in EPEL
+    if [ "$TRIPLEO_OS_DISTRO" = "centos" ] && [ ! -f /etc/yum.repos.d/epel.repo ]; then
+        echo EPEL repository is required to install python-pip for CentOS.
+        echo See http://fedoraproject.org/wiki/EPEL
+        exit 1
+    fi
+    sudo -E yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv openvswitch python-yaml net-tools redhat-lsb-core libxslt-devel jq openssh-server libffi-devel which glusterfs-api python-netaddr
 
-  sudo service libvirtd restart
-  sudo service openvswitch restart
-  sudo chkconfig openvswitch on
+    sudo service libvirtd restart
+    sudo service openvswitch restart
+    sudo chkconfig openvswitch on
 fi
 
 if [ "$TRIPLEO_OS_FAMILY" = "suse" ]; then
-  # Need these in path for sudo service & usermod to work
-  PATH=/sbin:/usr/sbin:$PATH
-  # TODO: this is a bit fragile, and assumes openSUSE, not SLES
-  suse_version=$(awk '/VERSION/ { print $3 }' /etc/SuSE-release)
-  if [ ! -f /etc/zypp/repos.d/Cloud_OpenStack_Master.repo ]; then
-      # Add Cloud:OpenStack:Master (Project that follows master branch with daily updates)
-      sudo -E zypper -n ar -f http://download.opensuse.org/repositories/Cloud:/OpenStack:/Master/openSUSE_$suse_version/Cloud:OpenStack:Master.repo
-      sudo -E zypper -n --gpg-auto-import-keys ref
-  fi
-  sudo -E zypper --non-interactive install \
-    python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
-    python-devel gcc audit python-virtualenv openvswitch-switch python-PyYAML net-tools \
-    lsb-release libxslt-devel jq libffi-devel python-netaddr
-  sudo service libvirtd restart
-  sudo service openvswitch-switch restart
+    # Need these in path for sudo service & usermod to work
+    PATH=/sbin:/usr/sbin:$PATH
+    # TODO: this is a bit fragile, and assumes openSUSE, not SLES
+    suse_version=$(awk '/VERSION/ { print $3 }' /etc/SuSE-release)
+    if [ ! -f /etc/zypp/repos.d/Cloud_OpenStack_Master.repo ]; then
+        # Add Cloud:OpenStack:Master (Project that follows master branch with daily updates)
+        sudo -E zypper -n ar -f http://download.opensuse.org/repositories/Cloud:/OpenStack:/Master/openSUSE_$suse_version/Cloud:OpenStack:Master.repo
+        sudo -E zypper -n --gpg-auto-import-keys ref
+    fi
+    sudo -E zypper --non-interactive install \
+        python-lxml libvirt-python libvirt qemu-tools kvm git python-pip libopenssl-devel \
+        python-devel gcc audit python-virtualenv openvswitch-switch python-PyYAML net-tools \
+        lsb-release libxslt-devel jq libffi-devel python-netaddr
+    sudo service libvirtd restart
+    sudo service openvswitch-switch restart
 fi
