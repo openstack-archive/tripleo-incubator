@@ -264,7 +264,7 @@ OpenStack on OpenStack with three distinct clouds:
    a tenant on the undercloud, and delivers virtualised compute machines rather
    than bare metal machines.
 
-The overcloud runs a GRE overlay network; the undercloud runs on flat networking, 
+The overcloud runs a GRE overlay network; the undercloud runs on flat networking,
 as does the seed cloud. The seed cloud and the undercloud can use the same
 network as long as non-overlapping ranges are setup.
 

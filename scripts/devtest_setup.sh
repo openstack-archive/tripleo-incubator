@@ -292,15 +292,15 @@ set-usergroup-membership
 
 ## .. rubric:: Footnotes
 ## .. [#f3] Setting Up Squid Proxy
-## 
+##
 ##    * Install squid proxy
 ##      ::
-## 
+##
 ##          apt-get install squid
-## 
+##
 ##    * Set `/etc/squid3/squid.conf` to the following
 ##      ::
-## 
+##
 ##          acl localhost src 127.0.0.1/32 ::1
 ##          acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
 ##          acl localnet src 10.0.0.0/8 # RFC1918 possible internal network
@@ -335,16 +335,16 @@ set-usergroup-membership
 ##          refresh_pattern (Release|Packages(.gz)*)$      0       20%     2880
 ##          refresh_pattern .       0   20% 4320
 ##          refresh_all_ims on
-## 
+##
 ##    * Restart squid
 ##      ::
-## 
+##
 ##          sudo service squid3 restart
-## 
+##
 ##    * Set http_proxy environment variable
 ##      ::
-## 
+##
 ##          http_proxy=http://your_ip_or_localhost:3128/
-## 
-## 
+##
+##
 ### --end
