@@ -8,7 +8,7 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options] {JSON-filename}"
     echo
     echo "Setup a TripleO devtest environment."
@@ -46,7 +46,10 @@ SSH_KEY=~/.ssh/id_rsa_virt_power
 KEEP_VMS=
 
 TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,keep-vms -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2
+    exit 1
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -124,9 +127,9 @@ fi
 ### --end
 
 if [ -n "$NODES_PATH" ]; then
-  NODE_CNT=${NODE_CNT:-0}
+    NODE_CNT=${NODE_CNT:-0}
 else
-  NODE_CNT=${NODE_CNT:-15}
+    NODE_CNT=${NODE_CNT:-15}
 fi
 
 NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-3072} NODE_DISK=${NODE_DISK:-40} NODE_ARCH=${NODE_ARCH:-i386}
@@ -198,10 +201,10 @@ HOSTIP=${HOSTIP:-192.168.122.1}
 ##    ::
 
 if [ -n "$NETS_PATH" ]; then
-  # if the value is not set try the default 192.0.2.1.
-  SEEDIP=$(jq '.["seed"]["ip"] // "192.0.2.1"' -r $NETS_PATH)
+    # if the value is not set try the default 192.0.2.1.
+    SEEDIP=$(jq '.["seed"]["ip"] // "192.0.2.1"' -r $NETS_PATH)
 else
-  SEEDIP=${SEEDIP:-''}
+    SEEDIP=${SEEDIP:-''}
 fi
 
 
@@ -257,8 +260,8 @@ devtest_update_network.sh ${NETS_PATH:+--bm-networks $NETS_PATH} $JSONFILE
 ##    ::
 
 if [ -n "$NODES_PATH" ]; then
-  JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
-  echo "${JSON}" > $JSONFILE
+    JSON=$(jq -s '.[0].nodes=.[1] | .[0]' $JSONFILE $NODES_PATH)
+    echo "${JSON}" > $JSONFILE
 else
 
 ## #. Create baremetal nodes for the test cluster. If the required number of

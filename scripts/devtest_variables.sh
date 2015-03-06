@@ -46,19 +46,19 @@ export TRIPLEO_ROOT=${TRIPLEO_ROOT:-} #nodocs
 ## NOTE(gfidente): Keep backwards compatibility by setting TRIPLEO_ROOT
 ## to ~/.cache/tripleo if the var is found empty and the dir exists.
 if [ -z "$TRIPLEO_ROOT" -a -d ~/.cache/tripleo ]; then
-  echo "WARNING: Defaulting TRIPLEO_ROOT to ~/.cache/tripleo"
-  echo "         Other environment variables are based on \$TRIPLEO_ROOT so"
-  echo "         if you intend changing it, please source devtest_variables.sh"
-  echo "         again afterwards."
-  TRIPLEO_ROOT=~/.cache/tripleo
+    echo "WARNING: Defaulting TRIPLEO_ROOT to ~/.cache/tripleo"
+    echo "         Other environment variables are based on \$TRIPLEO_ROOT so"
+    echo "         if you intend changing it, please source devtest_variables.sh"
+    echo "         again afterwards."
+    TRIPLEO_ROOT=~/.cache/tripleo
 fi
 
 ## NOTE(gfidente): Exit if TRIPLEO_ROOT is still empty or misconfigured
 if [ -z "$TRIPLEO_ROOT" -o ! -d $TRIPLEO_ROOT/tripleo-incubator/scripts ]; then
-  echo 'ERROR: Cannot find $TRIPLEO_ROOT/tripleo-incubator/scripts'
-  echo '       To use devtest you must export the TRIPLEO_ROOT variable and have cloned tripleo-incubator within that directory.'
-  echo '       Check http://docs.openstack.org/developer/tripleo-incubator/devtest.html#initial-checkout for instructions.'
-  return 1
+    echo 'ERROR: Cannot find $TRIPLEO_ROOT/tripleo-incubator/scripts'
+    echo '       To use devtest you must export the TRIPLEO_ROOT variable and have cloned tripleo-incubator within that directory.'
+    echo '       Check http://docs.openstack.org/developer/tripleo-incubator/devtest.html#initial-checkout for instructions.'
+    return 1
 fi
 ### --include
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$TRIPLEO_ROOT/dib-utils/bin:$PATH
