@@ -4,7 +4,7 @@ set -eu
 set -o pipefail
 SCRIPT_NAME=$(basename $0)
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME --bm-networks NETFILE {JSON-filename}"
     echo
     echo "Reads the baremetal-network description in NETFILE and writes it into JSON-filename"
@@ -28,7 +28,10 @@ function show_options () {
 NETS_PATH=
 
 TEMP=$(getopt -o h -l help,bm-networks: -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2
+    exit 1
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -58,6 +61,6 @@ if [ -z "$JSONFILE" -o -n "$EXTRA_ARGS" ]; then
 fi
 
 if [ -n "$NETS_PATH" ]; then
-  JSON=$(jq -s '.[0]["baremetal-network"]=.[1] | .[0]' $JSONFILE $NETS_PATH)
-  echo "${JSON}" > $JSONFILE
+    JSON=$(jq -s '.[0]["baremetal-network"]=.[1] | .[0]' $JSONFILE $NETS_PATH)
+    echo "${JSON}" > $JSONFILE
 fi
