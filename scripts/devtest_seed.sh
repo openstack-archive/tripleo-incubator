@@ -5,7 +5,7 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
     echo "Deploys a baremetal cloud via virsh."
@@ -27,7 +27,10 @@ BUILD_ONLY=
 DEBUG_LOGGING=
 
 TEMP=$(getopt -o c,h -l all-nodes,build-only,debug-logging,help -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2;
+    exit 1;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -160,29 +163,29 @@ BM_BRIDGE_ROUTE=$(jq -r '.["baremetal-network"].seed.physical_bridge_route // {}
 BM_CTL_ROUTE_PREFIX=$(jq -r '.["baremetal-network"].seed.physical_bridge_route.prefix // ""' $TE_DATAFILE)
 BM_CTL_ROUTE_VIA=$(jq -r '.["baremetal-network"].seed.physical_bridge_route.via // ""' $TE_DATAFILE)
 jq -s '
-  .[1]["baremetal-network"] as $bm
-| ($bm.seed.ip // "192.0.2.1") as $bm_seed_ip
-| .[2] as $bm_vlan
-| .[3] as $bm_bridge_route
-| .[0]
-| . + {
-  "local-ipv4": $bm_seed_ip,
-  "completion-signal": ("http://'"${COMP_IP}"':'"${SEED_COMP_PORT}"'"),
-  "instance-id": "'"${SEED_IMAGE_ID}"'",
-  "bootstack": (.bootstack + {
-    "public_interface_ip": ($bm_seed_ip + "/'"${BM_NETWORK_CIDR##*/}"'"),
-    "masquerade_networks": ([$bm.cidr // "192.0.2.0/24"] + $bm_vlan.masquerade)
-  }),
-  "heat": (.heat + {
-    "watch_server_url": ("http://" + $bm_seed_ip + ":8003"),
-    "waitcondition_server_url": ("http://" + $bm_seed_ip + ":8000/v1/waitcondition"),
-    "metadata_server_url": ("http://" + $bm_seed_ip + ":8000")
-  }),
-  "neutron": (.neutron + {
-    "ovs": (.neutron.ovs + $bm_vlan.ovs + {"local_ip": $bm_seed_ip } + {
-      "physical_bridge_route": $bm_bridge_route
+    .[1]["baremetal-network"] as $bm
+    | ($bm.seed.ip // "192.0.2.1") as $bm_seed_ip
+    | .[2] as $bm_vlan
+    | .[3] as $bm_bridge_route
+    | .[0]
+    | . + {
+    "local-ipv4": $bm_seed_ip,
+    "completion-signal": ("http://'"${COMP_IP}"':'"${SEED_COMP_PORT}"'"),
+    "instance-id": "'"${SEED_IMAGE_ID}"'",
+    "bootstack": (.bootstack + {
+        "public_interface_ip": ($bm_seed_ip + "/'"${BM_NETWORK_CIDR##*/}"'"),
+        "masquerade_networks": ([$bm.cidr // "192.0.2.0/24"] + $bm_vlan.masquerade)
+    }),
+    "heat": (.heat + {
+        "watch_server_url": ("http://" + $bm_seed_ip + ":8003"),
+        "waitcondition_server_url": ("http://" + $bm_seed_ip + ":8000/v1/waitcondition"),
+        "metadata_server_url": ("http://" + $bm_seed_ip + ":8000")
+    }),
+    "neutron": (.neutron + {
+        "ovs": (.neutron.ovs + $bm_vlan.ovs + {"local_ip": $bm_seed_ip } + {
+        "physical_bridge_route": $bm_bridge_route
+        })
     })
-  })
 }' tmp_local.json $TE_DATAFILE bm-vlan.json <(echo "$BM_BRIDGE_ROUTE") > local.json
 rm tmp_local.json
 rm bm-vlan.json
@@ -280,9 +283,9 @@ source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 ##    ::
 
 if [ $USE_IRONIC -eq 0 ]; then
-  IRONIC_OPT=
+    IRONIC_OPT=
 else
-  IRONIC_OPT="--ironic-password unset"
+    IRONIC_OPT="--ironic-password unset"
 fi
 
 ## #. Perform setup of your seed cloud.
@@ -393,13 +396,13 @@ nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin
 ##    ::
 
 if [ -z "${ALL_NODES:-}" ]; then #nodocs
-  setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
+    setup-baremetal --service-host seed --nodes <(jq '[.nodes[0]]' $TE_DATAFILE)
 else #nodocs
 
 ##    Otherwise, if you are skipping the undercloud, you should register all
 ##    the nodes.::
 
-  setup-baremetal --service-host seed --nodes <(jq '.nodes' $TE_DATAFILE)
+    setup-baremetal --service-host seed --nodes <(jq '.nodes' $TE_DATAFILE)
 fi #nodocs
 
 ##    If you need to collect the MAC address separately, see ``scripts/get-vm-mac``.

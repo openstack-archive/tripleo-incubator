@@ -5,7 +5,7 @@ BASE=$(readlink -f $(dirname $0)/..)
 VENV_HOME=$BASE/openstack-tools
 
 if [ ! -f $VENV_HOME/bin/activate ]; then
-  virtualenv --setuptools $VENV_HOME
+    virtualenv --setuptools $VENV_HOME
 fi
 
 # NOTE(derekh): we need to use +u to workaround an issue with the activate script
@@ -38,6 +38,6 @@ pip install -U \
     python-swiftclient
 
 for tool in os-apply-config cinder nova glance heat keystone neutron swift ironic ceilometer openstack init-keystone generate-keystone-pki register-nodes setup-neutron; do
-  ln -sf $VENV_HOME/bin/$tool $BASE/scripts/$tool ;
+    )ln -sf $VENV_HOME/bin/$tool $BASE/scripts/$tool ;
 done
 echo "Installed openstack client tool symlinks in $BASE/scripts"

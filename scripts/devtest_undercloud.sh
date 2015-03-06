@@ -11,7 +11,7 @@ DEBUG_LOGGING=
 HEAT_ENV=
 FLAVOR="baremetal"
 
-function show_options () {
+function show_options {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
     echo "Deploys a baremetal cloud via heat."
@@ -31,7 +31,10 @@ function show_options () {
 }
 
 TEMP=$(getopt -o c,h -l build-only,debug-logging,heat-env:,flavor:,help -n $SCRIPT_NAME -- "$@")
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+if [ $? != 0 ]; then
+    echo "Terminating..." >&2;
+    exit 1;
+fi
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
@@ -98,15 +101,15 @@ UNDERCLOUD_STACK_TIMEOUT=${UNDERCLOUD_STACK_TIMEOUT:-60}
 
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 if [ ! -e $TRIPLEO_ROOT/undercloud.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-$TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-    -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
-    ntp baremetal boot-stack os-collect-config dhcp-all-interfaces \
-    neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
-    tee $TRIPLEO_ROOT/dib-undercloud.log
+    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
+        -a $NODE_ARCH -o $TRIPLEO_ROOT/undercloud \
+        ntp baremetal boot-stack os-collect-config dhcp-all-interfaces \
+        neutron-dhcp-agent $DIB_COMMON_ELEMENTS $UNDERCLOUD_DIB_EXTRA_ARGS 2>&1 | \
+        tee $TRIPLEO_ROOT/dib-undercloud.log
 ### --end
 fi
 if [ -n "$BUILD_ONLY" ]; then
-  exit 0
+    exit 0
 fi
 ### --include
 
@@ -157,14 +160,14 @@ UNDERCLOUD_NTP_SERVER=${UNDERCLOUD_NTP_SERVER:-''}
 # different environment you wish to use.
 #
 if [ -e tripleo-undercloud-passwords ]; then
-  echo "Re-using existing passwords in $PWD/tripleo-undercloud-passwords"
-  # Add any new passwords since the file was generated
-  setup-undercloud-passwords tripleo-undercloud-passwords
-  source tripleo-undercloud-passwords
+    echo "Re-using existing passwords in $PWD/tripleo-undercloud-passwords"
+    # Add any new passwords since the file was generated
+    setup-undercloud-passwords tripleo-undercloud-passwords
+    source tripleo-undercloud-passwords
 else
 ### --include
-  setup-undercloud-passwords $TRIPLEO_ROOT/tripleo-undercloud-passwords
-  source $TRIPLEO_ROOT/tripleo-undercloud-passwords
+    setup-undercloud-passwords $TRIPLEO_ROOT/tripleo-undercloud-passwords
+    source $TRIPLEO_ROOT/tripleo-undercloud-passwords
 fi #nodocs
 
 ## #. Export UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD to your environment
@@ -237,13 +240,13 @@ else
     if [ -n "$VLAN_ID" ]; then
         HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic-vlan.yaml"
         ENV_JSON=$(jq .parameters.NeutronPublicInterfaceTag=\"${VLAN_ID}\" <<< $ENV_JSON)
-	# This should be in the heat template, but see
-	# https://bugs.launchpad.net/heat/+bug/1336656
-	# note that this will break if there are more than one subnet, as if
-	# more reason to fix the bug is needed :).
-	PUBLIC_SUBNET_ID=$(neutron net-show public | awk '/subnets/ { print $4 }')
-	VLAN_GW=$(neutron subnet-show $PUBLIC_SUBNET_ID | awk '/gateway_ip/ { print $4}')
-	BM_VLAN_CIDR=$(neutron subnet-show $PUBLIC_SUBNET_ID | awk '/cidr/ { print $4}')
+    # This should be in the heat template, but see
+    # https://bugs.launchpad.net/heat/+bug/1336656
+    # note that this will break if there are more than one subnet, as if
+    # more reason to fix the bug is needed :).
+    PUBLIC_SUBNET_ID=$(neutron net-show public | awk '/subnets/ { print $4 }')
+    VLAN_GW=$(neutron subnet-show $PUBLIC_SUBNET_ID | awk '/gateway_ip/ { print $4}')
+    BM_VLAN_CIDR=$(neutron subnet-show $PUBLIC_SUBNET_ID | awk '/cidr/ { print $4}')
         ENV_JSON=$(jq .parameters.NeutronPublicInterfaceDefaultRoute=\"${VLAN_GW}\" <<< $ENV_JSON)
     else
         HEAT_UNDERCLOUD_TEMPLATE="undercloud-vm-ironic.yaml"
