@@ -212,7 +212,7 @@ that to `build OpenStack images
 use `Heat <https://git.openstack.org/cgit/openstack/heat>`_ to orchestrate
 deployment of those images onto bare metal. Currently Heat can use either the
 `Nova baremetal driver <https://wiki.openstack.org/wiki/Baremetal>`_ or `Ironic
-<https://wiki.openstack.org/wiki/Ironic>` - Ironic is the default. Both are
+<https://wiki.openstack.org/wiki/Ironic>`_ - Ironic is the default. Both are
 tested in our CI process.
 
 Eventually, we will have the Heat instance hosted in only the undercloud,
