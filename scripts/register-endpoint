@@ -85,7 +85,7 @@ case "$TYPE" in
         SUFFIX="/services/Cloud"
         ADMIN_SUFFIX="/services/Admin"
         ;;
-    image|baremetal|network|metering|management)
+    image|baremetal|network|metering)
         SUFFIX="/"
         ;;
     orchestration|volume)
@@ -110,6 +110,9 @@ case "$TYPE" in
     dashboard)
         SUFFIX="/"
         ADMIN_SUFFIX="/admin"
+        ;;
+    management)
+        SUFFIX="/v2"
         ;;
     *)
         echo "Unknown service type" >&2
