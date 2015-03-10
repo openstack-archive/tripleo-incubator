@@ -40,7 +40,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --all-nodes) ALL_NODES="true"; shift 1;;
-        -c) USE_CACHE=1; shift 1;;
+        -c) SEED_USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="--build-only"; shift 1;;
         --debug-logging)
             DEBUG_LOGGING="seed-debug-logging"
@@ -55,6 +55,13 @@ done
 
 set -x
 USE_CACHE=${USE_CACHE:-0}
+
+# SEED_USE_CACHE can be set independently of the global USE_CACHE
+# This is useful if you want to rebuild your seed, but reuse the
+# cached overcloud images.  Do this via SEED_USE_CACHE=0 with
+# the global USE_CACHE=1.  Note this is only overriding the local
+# USE_CACHE variable, not what is set in the environment.
+USE_CACHE=${SEED_USE_CACHE:-$USE_CACHE}
 
 ### --include
 ## devtest_seed
