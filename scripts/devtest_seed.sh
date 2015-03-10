@@ -35,7 +35,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --all-nodes) ALL_NODES="true"; shift 1;;
-        -c) USE_CACHE=1; shift 1;;
+        -c) SEED_USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="--build-only"; shift 1;;
         --debug-logging)
             DEBUG_LOGGING="seed-debug-logging"
@@ -50,6 +50,11 @@ done
 
 set -x
 USE_CACHE=${USE_CACHE:-0}
+
+SEED_USE_CACHE=${SEED_USE_CACHE:-$USE_CACHE}
+if [ "$USE_CACHE" != "$SEED_USE_CACHE" ] ; then
+    USE_CACHE=$SEED_USE_CACHE
+fi
 
 ### --include
 ## devtest_seed
