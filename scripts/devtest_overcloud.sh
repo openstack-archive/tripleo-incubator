@@ -78,7 +78,7 @@ fi
 # NOTE(rpodolyaka): retain backwards compatibility by accepting both positional
 #                   arguments and environment variables. Positional arguments
 #                   take precedence over environment variables
-NeutronPublicInterface=${1:-${NeutronPublicInterface:-'eth0'}}
+NeutronPublicInterface=${1:-${NeutronPublicInterface:-'nic1'}}
 NeutronPublicInterfaceIP=${2:-${NeutronPublicInterfaceIP:-''}}
 NeutronPublicInterfaceRawDevice=${3:-${NeutronPublicInterfaceRawDevice:-''}}
 NeutronPublicInterfaceDefaultRoute=${4:-${NeutronPublicInterfaceDefaultRoute:-''}}
@@ -233,7 +233,7 @@ OVERCLOUD_LIBVIRT_TYPE=${OVERCLOUD_LIBVIRT_TYPE:-"qemu"}
 ## #. Set the public interface of overcloud network node::
 ##    ::
 
-NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
+NeutronPublicInterface=${NeutronPublicInterface:-'nic1'}
 
 ## #. Set the NTP server for the overcloud::
 ##    ::
@@ -249,7 +249,7 @@ OVERCLOUD_NTP_SERVER=${OVERCLOUD_NTP_SERVER:-''}
 OVERCLOUD_FLAT_NETWORKS=${OVERCLOUD_FLAT_NETWORKS:-'datacentre'}
 OVERCLOUD_BRIDGE_MAPPINGS=${OVERCLOUD_BRIDGE_MAPPINGS:-'datacentre:br-ex'}
 OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-'br-ex'}
-OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-'eth0'}
+OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-'nic1'}
 OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
 
 ## #. If enabling distributed virtual routing on the overcloud, some values need

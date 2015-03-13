@@ -122,7 +122,7 @@ UNDERCLOUD_ID=$(load-image -d $TRIPLEO_ROOT/undercloud.qcow2)
 ## #. Set the public interface of the undercloud network node:
 ##    ::
 
-NeutronPublicInterface=${NeutronPublicInterface:-'eth0'}
+NeutronPublicInterface=${NeutronPublicInterface:-'nic1'}
 
 ## #. Set the NTP server for the undercloud::
 ##    ::
