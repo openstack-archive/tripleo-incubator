@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Petr Blaho <pblaho@redhat.com>
+Workflow+1: Petr Blaho <pblaho@redhat.com>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 16 Mar 2015 10:09:06 +0000
+Reviewed-on: https://review.openstack.org/162285
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
