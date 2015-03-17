@@ -48,7 +48,7 @@ to provision in there DHCP server.
     host bm-compute001 {
         hardware ethernet 78:e7:d1:XX:XX:XX ;
         next-server 10.0.1.2 ;
-        filename “pxelinux.0”;
+        filename "pxelinux.0";
     }
 
 Write down the MAC address for the IPMI management interface and the NIC
