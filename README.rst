@@ -84,10 +84,10 @@ used to provide build-time specialisation for disk images. Diskimage-builder
 is quite mature and can be downloaded from
 https://git.openstack.org/cgit/openstack/diskimage-builder.
 
-Nova bare-metal / Ironic
+Nova baremetal / Ironic
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The next layer up, In OpenStack Grizzly Nova bare-metal is able to deliver
+The next layer up, In OpenStack Grizzly Nova baremetal is able to deliver
 ephemeral instances to physical machines with multiple architectures.
 By ephemeral instances, we mean that local storage is lost when a new
 image is deployed / the instance is rebuilt. So the machines operate in
@@ -96,9 +96,9 @@ instance on the machine. Nova depends on a partition image to copy into
 the machine, though the image can be totally generic - diskimage-builder
 can create such images.
 
-During the Portland ODS consensus emerged that the Nova bare-metal plumbing
+During the Portland ODS consensus emerged that the Nova baremetal plumbing
 should be in a dedicated project, which is called Ironic - these limitations
-still apply, but will mostly not be be fixed in Nova bare-metal, instead in
+still apply, but will mostly not be be fixed in Nova baremetal, instead in
 Ironic.
 
 Caveats / limitations:
@@ -114,7 +114,7 @@ Caveats / limitations:
    https://blueprints.launchpad.net/nova/+spec/baremetal-operations (when
    there is no instance).
  - HA support is rudimentary at the moment : need to use corosync+pacemaker
-   (work is in progress to have multiple bare-metal compute hosts dynamically
+   (work is in progress to have multiple baremetal compute hosts dynamically
    take over each others configuration)
  - Dynamic VLAN support is not yet implemented (but was specced at the Havana
    summit). Workaround is to manually configure it via Nova userdata.
@@ -230,9 +230,9 @@ technical and security issues to overcome first.
 
 So this gives us three clouds:
 
-1. A KVM hosted single-node bare-metal cloud that owns a small set of machines
+1. A KVM hosted single-node baremetal cloud that owns a small set of machines
    we deploy the undercloud onto. This is the 'seed cloud'.
-2. A baremetal hosted single-node bare-metal cloud that owns the rest of the
+2. A baremetal hosted single-node baremetal cloud that owns the rest of the
    datacentre and we deploy the overcloud onto. The is the 'under cloud'.
 3. A baremetal hosted many-node KVM cloud which is deployed on the undercloud.
    This is the user facing cloud - the 'over cloud'.
@@ -381,7 +381,7 @@ Iterating on in-instance code
 
 There are broadly three sets of code for TripleO - the heat templates which
 define the cluster, the code that runs within instances to map heat metadata
-to configuration files, restart servies etc, and code that runs after deployment
+to configuration files, restart services etc, and code that runs after deployment
 to customise the deployed cloud using APIs.
 
 The best way to experiment with in-instance code is to build images and deploy
