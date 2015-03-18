@@ -381,7 +381,7 @@ Iterating on in-instance code
 
 There are broadly three sets of code for TripleO - the heat templates which
 define the cluster, the code that runs within instances to map heat metadata
-to configuration files, restart servies etc, and code that runs after deployment
+to configuration files, restart services etc, and code that runs after deployment
 to customise the deployed cloud using APIs.
 
 The best way to experiment with in-instance code is to build images and deploy
