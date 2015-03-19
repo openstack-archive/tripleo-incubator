@@ -10,7 +10,7 @@ fi
 
 VMNAME=$1
 
-vms=$(sudo virsh list --all | grep $VMNAME | awk '{ print $2 }')
+vms=$(sudo virsh list --all | grep " $VMNAME " | awk '{ print $2 }')
 
 macs=""
 for vm in $vms ; do
