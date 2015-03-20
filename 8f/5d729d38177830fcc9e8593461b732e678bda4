@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Code-Review+2: James Polley <jp@jamezpolley.com>
+Workflow+1: James Polley <jp@jamezpolley.com>
+Code-Review+1: Abel Lopez <alopgeek@gmail.com>
+Code-Review+1: Dariusz Smigiel <dariusz.smigiel@intel.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 20 Mar 2015 01:37:48 +0000
+Reviewed-on: https://review.openstack.org/165045
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
