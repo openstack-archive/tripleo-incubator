@@ -25,7 +25,7 @@ export LIBVIRT_DEFAULT_URI=${LIBVIRT_DEFAULT_URI:-"qemu:///system"}
 export LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 
 ## #. By default the node volumes will be created in a volume pool named
-##    'default'. This variable can be to used to specify a custome volume
+##    'default'. This variable can be used to specify a custom volume
 ##    pool. This is useful in scenarios where the default volume pool cannot
 ##    accommodate the storage requirements of the nodes.
 
@@ -63,7 +63,7 @@ fi
 ### --include
 export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$TRIPLEO_ROOT/dib-utils/bin:$PATH
 
-## #. It's posible to deploy the Undercloud without a UI and its dependent elements.
+## #. It's possible to deploy the Undercloud without a UI and its dependent elements.
 ##    The dependent image elements in Undercloud are Horizon, Tuskar-UI (not included
 ##    yet, Tuskar UI element is not finished) and  Ceilometer. In Overcloud it is
 ##    SNMPd image element on every node.
@@ -133,7 +133,7 @@ export UNDERCLOUD_DIB_EXTRA_ARGS=${UNDERCLOUD_DIB_EXTRA_ARGS:-"rabbitmq-server"}
 export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
 
 ## #. The block storage nodes are deployed with the cinder-tgt backend by
-##    default too. Alteratives are cinder-lio and cinder-volume-nfs. Make sure
+##    default too. Alternatives are cinder-lio and cinder-volume-nfs. Make sure
 ##    to check the README files of these elements to configure them as needed.
 ##    ::
 
@@ -172,7 +172,7 @@ fi
 
 # Node definitions are cheap but redeploying testenv's is not.
 # Set NODE_CNT high enough for typical CI and Dev deployments for the
-# forseeable future
+# foreseeable future
 export NODE_CNT=${NODE_CNT:-15}
 
 ## #. Set size of root partition on our disk (GB). The remaining disk space
