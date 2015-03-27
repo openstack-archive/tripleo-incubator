@@ -85,7 +85,7 @@ fi
 if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
     UNDERCLOUD_DIB_EXTRA_ARGS="$UNDERCLOUD_DIB_EXTRA_ARGS ceilometer-collector \
         ceilometer-api ceilometer-agent-central ceilometer-agent-notification \
-        ceilometer-undercloud-config horizon"
+        ceilometer-undercloud-config"
 fi
 
 ## #. Specifiy a client-side timeout in minutes for creating or updating the
