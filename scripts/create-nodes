@@ -44,6 +44,10 @@ if [[ ${DIB_COMMON_ELEMENTS:-} == *enable-serial-console* ]]; then
     EXTRAOPTS="--enable-serial-console"
 fi
 
+if [ "${NODE_DEFAULT_NETWORK:-0}" = "1" ]; then
+    EXTRAOPTS="$EXTRAOPTS --default-net"
+fi
+
 for idx in $(seq 0 $TOTAL) ; do
     vm_name="baremetal${BRIDGE}_$idx"
     (virsh list --all --name | grep -q "^$vm_name\$") && continue
