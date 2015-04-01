@@ -60,6 +60,8 @@ def main():
             help='Enable a serial console')
     parser.add_argument('--uri', default='qemu:///system',
         help='The server uri with which to connect.')
+    parser.add_argument('--default-net', default=False, action='store_true',
+        help='Attach the VM to the default network')
     args = parser.parse_args()
     with file(templatedir + '/vm.xml', 'rb') as f:
         source_template = f.read()
@@ -90,6 +92,15 @@ def main():
         'bmmacaddress': generate_bm_mac_address(),
         'ovsbridge': args.ovsbridge,
         }
+
+    default_net_xml = """
+      <!-- regular natted network, for access to the vm -->
+      <interface type='network'>
+        <source network='default'/>
+        <model type='%(nicdriver)s'/>
+        <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
+      </interface>""" % nicparams
+
     if args.seed:
         if args.ovsbridge:
             params['network'] = """
@@ -100,13 +111,10 @@ def main():
         <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
       </interface>""" % nicparams
         else:
-            params['network'] = """
-      <!-- regular natted network, for access to the vm -->
-      <interface type='network'>
-        <source network='default'/>
-        <model type='%(nicdriver)s'/>
-        <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
-      </interface>""" % nicparams
+            params['network'] = default_net_xml
+
+    if args.default_net:
+        params['network'] = default_net_xml
 
     params['bm_network'] = """
       <!-- bridged 'bare metal' network -->

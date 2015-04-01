@@ -170,6 +170,12 @@ fi
 # foreseeable future
 export NODE_CNT=${NODE_CNT:-15}
 
+# Nodes are typically not connected to the libvirt default network for
+# isolation purposes.  Set NODE_DEFAULT_NETWORK to 1 to instead connect them to
+# the default network. This is useful so that network traffic does not have to
+# be routed through the seed.
+export NODE_DEFAULT_NETWORK=${NODE_DEFAULT_NETWORK:="0"}
+
 ## #. Set size of root partition on our disk (GB). The remaining disk space
 ##    will be used for the persistent ephemeral disk to store node state.
 ##    ::
