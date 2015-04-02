@@ -24,6 +24,7 @@ TOOLS="https://git.openstack.org/openstack/diskimage-builder
 https://git.openstack.org/openstack/dib-utils
 https://git.openstack.org/openstack/heat-templates
 https://git.openstack.org/openstack/tripleo-image-elements
+https://git.openstack.org/openstack/tripleo-puppet-elements
 https://git.openstack.org/openstack/tripleo-heat-templates
 https://git.openstack.org/openstack/tripleo-incubator
 https://git.openstack.org/openstack-infra/tripleo-ci
