@@ -234,6 +234,6 @@ fi
 ##    together or the newer way of doing it directly via Heat.
 ##    ::
 
-export USE_MERGEPY=${USE_MERGEPY:-1}
+export USE_MERGEPY=${USE_MERGEPY:-0}
 
 ### --end
