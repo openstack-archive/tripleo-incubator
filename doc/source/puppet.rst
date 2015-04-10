@@ -73,8 +73,8 @@ in your environment.
    The following instructions assume this pre-existing config from a normal devtest Fedora setup::
 
        export NODE_DIST='fedora selinux-permissive'
-       export DIB_RELEASE=20
-       export RDO_RELEASE=juno
+       export DIB_RELEASE=21
+       export RDO_RELEASE=kilo
 
        # Enable packages for all elements by default
        export DIB_DEFAULT_INSTALLTYPE=package
