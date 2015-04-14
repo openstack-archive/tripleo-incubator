@@ -365,7 +365,7 @@ else
     source $TRIPLEO_ROOT/tripleo-overcloud-passwords
 fi #nodocs
 
-## #. We need an environment file to store the parameters we're gonig to give
+## #. We need an environment file to store the parameters we're going to give
 ##    heat.::
 
 HEAT_ENV=${HEAT_ENV:-"${TRIPLEO_ROOT}/overcloud-env.json"}
@@ -461,11 +461,11 @@ ENV_JSON=$(jq '.parameters = {
 "SnmpdReadonlyUserPassword": "'${UNDERCLOUD_CEILOMETER_SNMPD_PASSWORD}'",
 }' <<< $ENV_JSON)
 
-RESOURCE_REGISTRY=
+HEAT_ENVIRONMENT_FILES=${OVERCLOUD_EXTRA_ENVIRONMENT_FILES:-''}
 RESOURCE_REGISTRY_PATH=${RESOURCE_REGISTRY_PATH:-"$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry.yaml"}
 
 if [ "$USE_MERGEPY" -eq 0 ]; then
-    RESOURCE_REGISTRY="-e $RESOURCE_REGISTRY_PATH"
+    HEAT_ENVIRONMENT_FILES="-e $RESOURCE_REGISTRY_PATH $HEAT_ENVIRONMENT_FILES"
     ENV_JSON=$(jq '.parameters = .parameters + {
     "ControllerCount": '${OVERCLOUD_CONTROLSCALE}',
     "ComputeCount": '${OVERCLOUD_COMPUTESCALE}'
@@ -483,6 +483,8 @@ fi
 
 jq . > "${HEAT_ENV}" <<< $ENV_JSON
 chmod 0600 "${HEAT_ENV}"
+
+HEAT_ENVIRONMENT_FILES="-e $HEAT_ENV $HEAT_ENVIRONMENT_FILES"
 
 ## #. Add Keystone certs/key into the environment file.::
 
@@ -509,8 +511,8 @@ fi
 
 # create stack with a 6 hour timeout, and allow wait_for_stack_ready
 # to impose a realistic timeout.
-heat $HEAT_OP -e "$HEAT_ENV" \
-    $RESOURCE_REGISTRY \
+heat $HEAT_OP \
+    $HEAT_ENVIRONMENT_FILES \
     -t 360 \
     -f "$OVERCLOUD_TEMPLATE" \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
