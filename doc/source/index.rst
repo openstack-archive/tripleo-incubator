@@ -29,6 +29,7 @@ Detailed notes
    devtest_seed
    devtest_undercloud
    devtest_overcloud
+   devtest_overcloud_images
    devtest_end
 
 Further Information
