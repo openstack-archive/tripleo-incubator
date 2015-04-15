@@ -477,6 +477,12 @@ if [ "$USE_MERGEPY" -eq 0 ]; then
     fi
 fi
 
+CUSTOM_HEAT_ENVIRONMENT=
+OVERCLOUD_CUSTOM_HEAT_ENV=${OVERCLOUD_CUSTOM_HEAT_ENV:-''}
+if [ -n "$OVERCLOUD_CUSTOM_HEAT_ENV" ]; then
+  CUSTOM_HEAT_ENVIRONMENT="-e $OVERCLOUD_CUSTOM_HEAT_ENV"
+fi
+
 ### --include
 
 ## #. Save the finished environment file.::
@@ -511,6 +517,7 @@ fi
 # to impose a realistic timeout.
 heat $HEAT_OP -e "$HEAT_ENV" \
     $RESOURCE_REGISTRY \
+    $CUSTOM_HEAT_ENVIRONMENT \
     -t 360 \
     -f "$OVERCLOUD_TEMPLATE" \
     -P "ExtraConfig=${OVERCLOUD_EXTRA_CONFIG}" \
