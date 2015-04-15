@@ -73,8 +73,8 @@ in your environment.
    The following instructions assume this pre-existing config from a normal devtest Fedora setup::
 
        export NODE_DIST='fedora selinux-permissive'
-       export DIB_RELEASE=20
-       export RDO_RELEASE=juno
+       export DIB_RELEASE=21
+       export RDO_RELEASE=kilo
 
        # Enable packages for all elements by default
        export DIB_DEFAULT_INSTALLTYPE=package
@@ -126,7 +126,7 @@ in your environment.
 
 6) Configure your Delorean repo URL. This is used to fetch more recently built upstream packages for your OpenStack services::
 
-    export DELOREAN_REPO_URL="http://104.130.230.24/f21/current/"
+    export DELOREAN_REPO_URL="http://trunk.rdoproject.org/f21/current/"
 
  For more information on Delorean see [2]_
 
