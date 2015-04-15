@@ -9,6 +9,7 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 DEBUG_LOGGING=
 HEAT_ENV=
+DISK_IMAGES_CONFIG=${OVERCLOUD_DISK_IMAGES_CONFIG:-''}
 COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
 BLOCKSTORAGE_FLAVOR="baremetal"
@@ -62,6 +63,7 @@ while true ; do
             shift 1
             ;;
         --heat-env) HEAT_ENV="$2"; shift 2;;
+        --disk-images-config) DISK_IMAGES_CONFIG="$2"; shift 2;;
         --compute-flavor) COMPUTE_FLAVOR="$2"; shift 2;;
         --control-flavor) CONTROL_FLAVOR="$2"; shift 2;;
         --block-storage-flavor) BLOCKSTORAGE_FLAVOR="$2"; shift 2;;
@@ -73,9 +75,43 @@ while true ; do
 done
 
 set -x
-if [ -z "$BUILD_ONLY" ]; then
-    OS_PASSWORD=${OS_PASSWORD:?"OS_PASSWORD is not set. Undercloud credentials are required"}
+
+### --include
+## devtest_overcloud
+## =================
+
+## #. Build images. There are two helper scripts which can be
+##    used to build images. The first method uses environment
+##    variables to create a specific image for each overcloud
+##    role. This method works best if you are using tripleo-image-elements
+##    for configuration (which requires per role image customization).
+##    See the documentation in devtest_overcloud_images.sh for more
+##    details. This method is currently the default.
+
+##    Another option is to make use of the build-images script which
+##    dynamically creates a set of images using a YAML (or JSON) config
+##    file (see the build-images script for details and the expected config
+##    file format). This method is typically preferred when using
+##    tripleo-puppet-elements (Puppet) for configuration which
+##    allows the contents and number of images used to deploy an
+##    overcloud to be more flexibly defined. Example:
+
+##         build-images -d -c $DISK_IMAGES_CONFIG
+
+### --end
+USE_CACHE=${USE_CACHE:-0}
+if [ -n "$DISK_IMAGES_CONFIG" ]; then
+    build-images -d -c $DISK_IMAGES_CONFIG
+else
+    USE_CACHE=$USE_CACHE devtest_overcloud_images.sh
 fi
+if [ -n "$BUILD_ONLY" ]; then
+    echo "--build-only is deprecated. Please use devtest_overcloud_images.sh instead."
+    exit 0
+fi
+
+
+OS_PASSWORD=${OS_PASSWORD:?"OS_PASSWORD is not set. Undercloud credentials are required"}
 
 # Parameters for tripleo-cd - see the tripleo-cd element.
 # NOTE(rpodolyaka): retain backwards compatibility by accepting both positional
@@ -98,23 +134,7 @@ SSLBASE=${11:-''}
 OVERCLOUD_SSL_CERT=${SSLBASE:+$(<$SSLBASE.crt)}
 OVERCLOUD_SSL_KEY=${SSLBASE:+$(<$SSLBASE.key)}
 PUBLIC_API_URL=${12:-''}
-SSL_ELEMENT=${SSLBASE:+openstack-ssl}
-USE_CACHE=${USE_CACHE:-0}
-DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-'stackuser'}
-OVERCLOUD_CONTROL_DIB_ELEMENTS=${OVERCLOUD_CONTROL_DIB_ELEMENTS:-'ntp hosts baremetal boot-stack cinder-api ceilometer-collector ceilometer-api ceilometer-agent-central ceilometer-agent-notification ceilometer-alarm-notifier ceilometer-alarm-evaluator os-collect-config horizon neutron-network-node dhcp-all-interfaces swift-proxy swift-storage keepalived haproxy sysctl'}
-OVERCLOUD_CONTROL_DIB_EXTRA_ARGS=${OVERCLOUD_CONTROL_DIB_EXTRA_ARGS:-'rabbitmq-server cinder-tgt'}
-OVERCLOUD_COMPUTE_DIB_ELEMENTS=${OVERCLOUD_COMPUTE_DIB_ELEMENTS:-'ntp hosts baremetal nova-compute nova-kvm neutron-openvswitch-agent os-collect-config dhcp-all-interfaces sysctl'}
-OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS=${OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS:-''}
-
-OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS=${OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS:-'ntp hosts baremetal os-collect-config dhcp-all-interfaces sysctl'}
-OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS:-'cinder-tgt'}
 TE_DATAFILE=${TE_DATAFILE:?"TE_DATAFILE must be defined before calling this script!"}
-
-if [ "${USE_MARIADB:-}" = 1 ] ; then
-    OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS mariadb-rpm"
-    OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS mariadb-dev-rpm"
-    OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS mariadb-dev-rpm"
-fi
 
 # A client-side timeout in minutes for creating or updating the overcloud
 # Heat stack.
@@ -125,108 +145,30 @@ OVERCLOUD_FIXED_RANGE_CIDR=${OVERCLOUD_FIXED_RANGE_CIDR:-"10.0.0.0/8"}
 OVERCLOUD_FIXED_RANGE_GATEWAY=${OVERCLOUD_FIXED_RANGE_GATEWAY:-"10.0.0.1"}
 OVERCLOUD_FIXED_RANGE_NAMESERVER=${OVERCLOUD_FIXED_RANGE_NAMESERVER:-"8.8.8.8"}
 
-### --include
-## devtest_overcloud
-## =================
-
-## #. Create your overcloud control plane image.
-
-##    This is the image the undercloud
-##    will deploy to become the KVM (or QEMU, Xen, etc.) cloud control plane.
-
-##    ``$OVERCLOUD_*_DIB_EXTRA_ARGS`` (CONTROL, COMPUTE, BLOCKSTORAGE) are
-##    meant to be used to pass additional build-time specific arguments to
-##    ``disk-image-create``.
-
-##    ``$SSL_ELEMENT`` is used when building a cloud with SSL endpoints - it should be
-##    set to openstack-ssl in that situation.
-##    ::
-
 NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
-## #. Undercloud UI needs SNMPd for monitoring of every Overcloud node
+### --include
+
+## #. Load the controller image into Glance (if present).
 ##    ::
 
-if [ "$USE_UNDERCLOUD_UI" -ne 0 ] ; then
-    OVERCLOUD_CONTROL_DIB_EXTRA_ARGS="$OVERCLOUD_CONTROL_DIB_EXTRA_ARGS snmpd"
-    OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS="$OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS snmpd"
-    OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS="$OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS snmpd"
-fi
-
-if [ ! -e $TRIPLEO_ROOT/overcloud-control.qcow2 -o "$USE_CACHE" == "0" ] ; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-control \
-        $OVERCLOUD_CONTROL_DIB_ELEMENTS \
-        $DIB_COMMON_ELEMENTS $OVERCLOUD_CONTROL_DIB_EXTRA_ARGS ${SSL_ELEMENT:-} 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-control.log
-fi #nodocs
-
-## #. Unless you are just building the images, load the image into Glance.
-##    ::
-
-if [ -z "$BUILD_ONLY" ]; then #nodocs
+if [ -f "$TRIPLEO_ROOT/overcloud-control.qcow2" ]; then #nodocs
 OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 fi #nodocs
 
-## #. Create your block storage image if some block storage nodes are to be used. This
-##    is the image the undercloud deploys for the additional cinder-volume instances.
+## #. Load the block storage image into Glance (if present).
 ##    ::
 
-if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
-    if [ ! -e $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
-        $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-            -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-cinder-volume \
-            $OVERCLOUD_BLOCKSTORAGE_DIB_ELEMENTS $DIB_COMMON_ELEMENTS \
-            $OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS 2>&1 | \
-            tee $TRIPLEO_ROOT/dib-overcloud-cinder-volume.log
-    fi #nodocs
-
-## #. And again load the image into Glance, unless you are just building the images.
-
-##    ::
-
-    if [ -z "$BUILD_ONLY" ]; then #nodocs
-    OVERCLOUD_BLOCKSTORAGE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2)
-    fi #nodocs
-fi
-
-## #. Distributed virtual routing can be enabled by setting the environment variable
-##    ``OVERCLOUD_DISTRIBUTED_ROUTERS`` to ``True``.  By default the legacy centralized
-##    routing is enabled.
-
-##    If enabling distributed virtual routing for Neutron on the overcloud the compute node
-##    must have the ``neutron-router`` element installed.
-##    ::
-
-OVERCLOUD_DISTRIBUTED_ROUTERS=${OVERCLOUD_DISTRIBUTED_ROUTERS:-'False'}
-if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
-    ComputeNeutronRole=' neutron-router'
-    OVERCLOUD_COMPUTE_DIB_ELEMENTS=$OVERCLOUD_COMPUTE_DIB_ELEMENTS$ComputeNeutronRole
-fi
-
-## #. Create your overcloud compute image. This is the image the undercloud
-##    deploys to host KVM (or QEMU, Xen, etc.) instances.
-##    ::
-
-if [ ! -e $TRIPLEO_ROOT/overcloud-compute.qcow2 -o "$USE_CACHE" == "0" ]; then #nodocs
-    $TRIPLEO_ROOT/diskimage-builder/bin/disk-image-create $NODE_DIST \
-        -a $NODE_ARCH -o $TRIPLEO_ROOT/overcloud-compute \
-        $OVERCLOUD_COMPUTE_DIB_ELEMENTS $DIB_COMMON_ELEMENTS \
-        $OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS 2>&1 | \
-        tee $TRIPLEO_ROOT/dib-overcloud-compute.log
+if [ -f "$TRIPLEO_ROOT/overcloud-cinder-volume.qcow2" ]; then #nodocs
+OVERCLOUD_BLOCKSTORAGE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2)
 fi #nodocs
 
-## #. Load the image into Glance. If you are just building the images you are done.
+## #. Load the compute image into Glance. (if present)
 ##    ::
 
-### --end
-
-if [ -n "$BUILD_ONLY" ]; then
-    exit 0
-fi
-
-### --include
+if [ -f "$TRIPLEO_ROOT/overcloud-compute.qcow2" ]; then #nodocs
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
+fi #nodocs
 
 ## #. For running an overcloud in VM's. For Physical machines, set to kvm:
 ##    ::
@@ -262,6 +204,7 @@ OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
 NeutronAgentMode='dvr_snat'
 NeutronComputeAgentMode='dvr'
 NeutronAllowl3AgentFailover=${NeutronAllowl3AgentFailover:-'True'}
+OVERCLOUD_DISTRIBUTED_ROUTERS=${OVERCLOUD_DISTRIBUTED_ROUTERS:-'False'}
 if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
     NeutronMechanismDrivers='openvswitch,l2population'
     NeutronTunnelTypes='vxlan'
