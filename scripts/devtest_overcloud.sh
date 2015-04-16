@@ -190,19 +190,36 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     fi #nodocs
 fi
 
-## #. Distributed virtual routing can be enabled by setting the environment variable
-##    ``OVERCLOUD_DISTRIBUTED_ROUTERS`` to ``True``.  This will disable L3 agents HA.
-
-##    If enabling distributed virtual routing for Neutron on the overcloud the compute node
-##    must have the ``neutron-router`` element installed.
+## #. We enable the automatic relocation of L3 routers in Neutron by default,
+##    alternatively you can use the L3 agents high availability mechanism
+##    (only works with three or more controller nodes) or the distributed virtual
+##    routing mechanism (deploying routers on compute nodes).  Set the environment
+##    variable ``OVERCLOUD_L3`` to ``relocate``, ``ha`` or ``dvr``.
 ##    ::
 
+OVERCLOUD_L3=${OVERCLOUD_L3:-'relocate'}
+
+### --end
+
+OVERCLOUD_L3_HA=${OVERCLOUD_L3_HA:-'False'}
 OVERCLOUD_DISTRIBUTED_ROUTERS=${OVERCLOUD_DISTRIBUTED_ROUTERS:-'False'}
+case $OVERCLOUD_L3 in
+    "ha")
+        OVERCLOUD_L3_HA="True"
+        ;;
+    "dvr")
+        OVERCLOUD_DISTRIBUTED_ROUTERS="True"
+        ;;
+esac
+
+# NOTE: If enabling distributed virtual routing for Neutron on the overcloud the
+# compute node must have the ``neutron-router`` element installed.
 if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
     ComputeNeutronRole=' neutron-router'
     OVERCLOUD_COMPUTE_DIB_ELEMENTS=$OVERCLOUD_COMPUTE_DIB_ELEMENTS$ComputeNeutronRole
 fi
 
+### --include
 ## #. Create your overcloud compute image. This is the image the undercloud
 ##    deploys to host KVM (or QEMU, Xen, etc.) instances.
 ##    ::
@@ -425,7 +442,13 @@ if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
     "NeutronNetworkType": "vxlan",
     "NeutronMechanismDrivers": "openvswitch,l2population",
     "NeutronAllowL3AgentFailover": "False",
-    "NeutronL3HA": "False",
+    }' <<< $ENV_JSON)
+fi
+
+if [ $OVERCLOUD_L3_HA == "True" ]; then
+    ENV_JSON=$(jq '.parameters = {} + .parameters + {
+    "NeutronL3HA": "True",
+    "NeutronAllowL3AgentFailover": "False",
     }' <<< $ENV_JSON)
 fi
 
