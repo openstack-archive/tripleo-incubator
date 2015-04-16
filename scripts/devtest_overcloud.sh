@@ -255,29 +255,6 @@ OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE:-'br
 OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE:-'nic1'}
 OVERCLOUD_VIRTUAL_INTERFACE=${OVERCLOUD_VIRTUAL_INTERFACE:-'br-ex'}
 
-## #. If enabling distributed virtual routing on the overcloud, some values need
-##    to be set so that Neutron DVR will work.
-##    ::
-
-NeutronAgentMode='dvr_snat'
-NeutronComputeAgentMode='dvr'
-NeutronAllowl3AgentFailover=${NeutronAllowl3AgentFailover:-'True'}
-if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
-    NeutronMechanismDrivers='openvswitch,l2population'
-    NeutronTunnelTypes='vxlan'
-    NeutronNetworkType='vxlan'
-    NeutronDVR='True'
-    OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE=${NeutronPhysicalBridge:-'br-ex'}
-    OVERCLOUD_HYPERVISOR_PUBLIC_INTERFACE=${NeutronPublicInterface:-''}
-    NeutronAllowL3AgentFailover='False'
-else
-    NeutronMechanismDrivers=${NeutronMechanismDrivers:-'openvswitch'}
-    NeutronTunnelTypes=${NeutronTunnelTypes:-'gre'}
-    NeutronNetworkType=${NeutronNetworkTypes:-'gre'}
-    NeutronDVR='False'
-    NeutronAllowL3AgentFailover='True'
-fi
-
 ## #. If you are using SSL, your compute nodes will need static mappings to your
 ##    endpoint in ``/etc/hosts`` (because we don't do dynamic undercloud DNS yet).
 ##    set this to the DNS name you're using for your SSL certificate - the heat
@@ -438,15 +415,17 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
     }' <<< $ENV_JSON)
 fi
 
+## #. If enabling distributed virtual routing on the overcloud, some values need
+##    to be set so that Neutron DVR will work.
+##    ::
+
 if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
     ENV_JSON=$(jq '.parameters = {} + .parameters + {
-    "NeutronDVR": "'${NeutronDVR}'",
-    "NeutronTunnelTypes": "'${NeutronTunnelTypes}'",
-    "NeutronNetworkType": "'${NeutronNetworkType}'",
-    "NeutronMechanismDrivers": "'${NeutronMechanismDrivers}'",
-    "NeutronAgentMode": "'${NeutronAgentMode}'",
-    "NeutronComputeAgentMode": "'${NeutronComputeAgentMode}'",
-    "NeutronAllowL3AgentFailover": "'${NeutronAllowL3AgentFailover}'",
+    "NeutronDVR": "True",
+    "NeutronTunnelTypes": "vxlan",
+    "NeutronNetworkType": "vxlan",
+    "NeutronMechanismDrivers": "openvswitch,l2population",
+    "NeutronAllowL3AgentFailover": "False",
     }' <<< $ENV_JSON)
 fi
 
