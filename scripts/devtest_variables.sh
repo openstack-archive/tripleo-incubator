@@ -89,7 +89,7 @@ fi
 ##    pip-cache or pypi-openstack if you intend to use them.
 ##    ::
 
-export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv"}
+export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv use-ephemeral"}
 
 ## #. If you have a specific Ubuntu mirror you want to use when building
 ##    images.
@@ -97,11 +97,6 @@ export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv"}
 
 # export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} apt-sources"
 # export DIB_APT_SOURCES=/path/to/a/sources.list to use.
-
-## #. These elements are required for tripleo in all images we build.
-##    ::
-
-export DIB_COMMON_ELEMENTS="${DIB_COMMON_ELEMENTS} use-ephemeral"
 
 ## #. Choose the deploy image element to be used. `deploy-kexec` will relieve you of
 ##    the need to wait for long hardware POST times, however it has known stability
