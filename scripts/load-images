@@ -1,0 +1,130 @@
+#!/usr/bin/env python
+# Copyright 2015 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+
+import argparse
+import logging
+import os
+import subprocess
+import sys
+import yaml
+
+logger = logging.getLogger(__name__)
+env = os.environ.copy()
+
+
+# YAML FILE FORMAT (same format as build-images but only uses the name/type)
+# disk_images:
+#   -
+#      type: qcow2
+#      imagename: overcloud
+#      heat_parameters:
+#        - controllerImage
+#        - NovaImage
+def parse_opts(argv):
+    parser = argparse.ArgumentParser(
+        description='Load images into Glance using a YAML/JSON config file'
+                    ' format.')
+    parser.add_argument('-c', '--config-file', metavar='CONFIG_FILE',
+                        help="""path to the configuration file.""",
+                        default='disk_images.yaml')
+    parser.add_argument('-i', '--images-directory', metavar='DIRECTORY',
+                        help="""images directory for images. """
+                             """Defaults to $TRIPLEO_ROOT""",
+                        default=env.get('TRIPLEO_ROOT'))
+    parser.add_argument('-o', '--output-heat-env', metavar='PATH',
+                        help="""Output path for a heat environment that
+                                contains Glance image IDs set to the
+                                respective heat input name specified in the
+                                config file. """)
+    parser.add_argument('-r', '--remove', action='store_true',
+                        help="""remove duplicate image names from glance.""",
+                        default=False)
+    parser.add_argument('-d', '--debug', dest="debug", action='store_true',
+                        help="Print debugging output.", required=False)
+    parser.add_argument('-v', '--verbose', dest="verbose",
+                        action='store_true', help="Print verbose output.",
+                        required=False)
+
+    opts = parser.parse_args(argv[1:])
+
+    return opts
+
+
+def configure_logger(verbose=False, debug=False):
+    LOG_FORMAT = '[%(asctime)s] [%(levelname)s] %(message)s'
+    DATE_FORMAT = '%Y/%m/%d %I:%M:%S %p'
+    log_level = logging.WARN
+
+    if debug:
+        log_level = logging.DEBUG
+    elif verbose:
+        log_level = logging.INFO
+
+    logging.basicConfig(format=LOG_FORMAT, datefmt=DATE_FORMAT,
+                        level=log_level)
+
+
+def main(argv=sys.argv):
+    opts = parse_opts(argv)
+    configure_logger(opts.verbose, opts.debug)
+    logger.info('Using config file at: %s' % opts.config_file)
+
+    if os.path.exists(opts.config_file):
+        with open(opts.config_file) as cf:
+            disk_images = yaml.load(cf.read()).get("disk_images")
+            logger.debug('disk_images JSON: %s' % str(disk_images))
+    else:
+        logger.error('No config file exists at: %s' % opts.config_file)
+        return 1
+
+    if not opts.images_directory:
+        logger.error('Please specify --images-directory.')
+        return 1
+
+    heat_parameters = {'parameters': {}}
+
+    for image in disk_images:
+        img_type = image.get('type', 'qcow2')
+        imagename = image.get('imagename')
+        image_path = '%s/%s.%s' % (opts.images_directory, imagename, img_type)
+        if os.path.exists(image_path):
+            logger.info('image path: %s' % image_path)
+            cmd = ['load-image']
+            if opts.remove:
+                cmd.append('-d')
+            cmd.append(image_path)
+            logger.info('Running %s' % cmd)
+            retval = subprocess.call(cmd)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, env=env)
+            stdout, stderr = proc.communicate()
+            if proc.returncode != 0:
+                logger.error('Failed to load image: %s' % imagename)
+                return 1
+            if image.get('heat_parameters'):
+                for name in image.get('heat_parameters'):
+                    heat_parameters['parameters'][name] = stdout.strip()
+
+        else:
+            logger.warn('No image file exists for image name: %s' % image_path)
+            continue
+
+    if opts.output_heat_env:
+        with open(opts.output_heat_env, 'w') as of:
+            of.write(yaml.dump(heat_parameters))
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
