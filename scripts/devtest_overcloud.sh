@@ -105,6 +105,8 @@ if [ -n "$DISK_IMAGES_CONFIG" ]; then
     USE_CACHE=$USE_CACHE build-images -d -c $DISK_IMAGES_CONFIG
 else
     USE_CACHE=$USE_CACHE devtest_overcloud_images.sh
+    # use a default disk images YAML file to load images
+    DISK_IMAGES_CONFIG="$TRIPLEO_ROOT/tripleo-incubator/scripts/overcloud_disk_images.yaml"
 fi
 if [ -n "$BUILD_ONLY" ]; then
     echo "--build-only is deprecated. Please use devtest_overcloud_images.sh instead."
@@ -150,26 +152,15 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
 ### --include
 
-## #. Load the controller image into Glance (if present).
+## #. Load all images into Glance (based on the provided disk images config).
+##    This captures all the Glance IDs into a Heat env file which maps
+##    them to the appropriate parameter names. This allows us some
+##    amount of flexability how many images to use for the overcloud
+##    deployment.
 ##    ::
 
-if [ -f "$TRIPLEO_ROOT/overcloud-control.qcow2" ]; then #nodocs
-OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
-fi #nodocs
-
-## #. Load the block storage image into Glance (if present).
-##    ::
-
-if [ -f "$TRIPLEO_ROOT/overcloud-cinder-volume.qcow2" ]; then #nodocs
-OVERCLOUD_BLOCKSTORAGE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2)
-fi #nodocs
-
-## #. Load the compute image into Glance. (if present)
-##    ::
-
-if [ -f "$TRIPLEO_ROOT/overcloud-compute.qcow2" ]; then #nodocs
-OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
-fi #nodocs
+OVERCLOUD_IMAGE_IDS_ENV=${OVERCLOUD_IMAGE_IDS_ENV:-"${TRIPLEO_ROOT}/overcloud-images-env.yaml"}
+load-images -d -c $DISK_IMAGES_CONFIG -o $OVERCLOUD_IMAGE_IDS_ENV
 
 ## #. For running an overcloud in VM's. For Physical machines, set to kvm:
 ##    ::
@@ -318,7 +309,6 @@ ENV_JSON=$(jq '.parameters = {
 "CeilometerMeteringSecret": "'"${OVERCLOUD_CEILOMETER_SECRET}"'",
 "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
 "CloudName": "'"${OVERCLOUD_NAME}"'",
-"controllerImage": "'"${OVERCLOUD_CONTROL_ID}"'",
 "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
 "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
 "HeatStackDomainAdminPassword":  "'"${OVERCLOUD_HEAT_STACK_DOMAIN_PASSWORD}"'",
@@ -335,7 +325,6 @@ ENV_JSON=$(jq '.parameters = {
 "NtpServer": "'"${OVERCLOUD_NTP_SERVER}"'",
 "SwiftHashSuffix": "'"${OVERCLOUD_SWIFT_HASH}"'",
 "SwiftPassword": "'"${OVERCLOUD_SWIFT_PASSWORD}"'",
-"NovaImage": "'"${OVERCLOUD_COMPUTE_ID}"'",
 "SSLCertificate": "'"${OVERCLOUD_SSL_CERT}"'",
 "SSLKey": "'"${OVERCLOUD_SSL_KEY}"'",
 "OvercloudComputeFlavor": "'"${COMPUTE_FLAVOR}"'",
@@ -352,16 +341,9 @@ if [ "$DEBUG_LOGGING" = "1" ]; then
 fi
 ### --include
 
-if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
-    ENV_JSON=$(jq '.parameters = {} + .parameters + {
-    "BlockStorageImage": "'"${OVERCLOUD_BLOCKSTORAGE_ID}"'",
-    }' <<< $ENV_JSON)
-fi
-
 ## #. If enabling distributed virtual routing on the overcloud, some values need
 ##    to be set so that Neutron DVR will work.
 ##    ::
-
 if [ $OVERCLOUD_DISTRIBUTED_ROUTERS == "True" ]; then
     ENV_JSON=$(jq '.parameters = {} + .parameters + {
     "NeutronDVR": "True",
@@ -439,6 +421,7 @@ fi
 # create stack with a 6 hour timeout, and allow wait_for_stack_ready
 # to impose a realistic timeout.
 heat $HEAT_OP -e "$HEAT_ENV" \
+    -e $OVERCLOUD_IMAGE_IDS_ENV \
     $RESOURCE_REGISTRY \
     $CUSTOM_HEAT_ENVIRONMENT \
     -t 360 \
