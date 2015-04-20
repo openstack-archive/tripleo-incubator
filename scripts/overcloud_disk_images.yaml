@@ -1,0 +1,9 @@
+# A default disk images YAML file that will load images
+# created with devtest_overcloud_images.sh.
+disk_images:
+  -
+     imagename: overcloud-control
+  -
+     imagename: overcloud-compute
+  -
+     imagename: overcloud-cinder-volume

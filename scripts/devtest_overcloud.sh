@@ -104,6 +104,8 @@ if [ -n "$DISK_IMAGES_CONFIG" ]; then
     USE_CACHE=$USE_CACHE build-images -d -c $DISK_IMAGES_CONFIG
 else
     USE_CACHE=$USE_CACHE devtest_overcloud_images.sh
+    # use a default disk images YAML file to load images
+    DISK_IMAGES_CONFIG="$TRIPLEO_ROOT/tripleo-incubator/scripts/overcloud_disk_images.yaml"
 fi
 if [ -n "$BUILD_ONLY" ]; then
     echo "--build-only is deprecated. Please use devtest_overcloud_images.sh instead."
@@ -149,26 +151,10 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch --type raw)
 
 ### --include
 
-## #. Load the controller image into Glance (if present).
+## #. Load all images into Glance (based on the provided disk images config)
 ##    ::
 
-if [ -f "$TRIPLEO_ROOT/overcloud-control.qcow2" ]; then #nodocs
-OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
-fi #nodocs
-
-## #. Load the block storage image into Glance (if present).
-##    ::
-
-if [ -f "$TRIPLEO_ROOT/overcloud-cinder-volume.qcow2" ]; then #nodocs
-OVERCLOUD_BLOCKSTORAGE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2)
-fi #nodocs
-
-## #. Load the compute image into Glance. (if present)
-##    ::
-
-if [ -f "$TRIPLEO_ROOT/overcloud-compute.qcow2" ]; then #nodocs
-OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
-fi #nodocs
+load-images -d -c $DISK_IMAGES_CONFIG
 
 ## #. For running an overcloud in VM's. For Physical machines, set to kvm:
 ##    ::
