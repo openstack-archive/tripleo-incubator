@@ -115,9 +115,9 @@ else
     PUBLIC_HOST=$INTERNAL_HOST
 fi
 
-# Skip Heat for now... see heat bug https://launchpad.net/bugs/1235555
 NORMAL_PORT=8004
-SSL_PORT=8004
+SSL_PORT=${SSL:+13004}
+SSL_PORT=${SSL_PORT:-$NORMAL_PORT}
 PASSWORD=$HEAT_PASSWORD register-endpoint $DEBUG -r $REGION -d "Heat Service" heat orchestration -i ${INTERNAL_HOST}${NORMAL_PORT} ${PUBLIC_HOST}${SSL_PORT}
 
 NORMAL_PORT=9696
