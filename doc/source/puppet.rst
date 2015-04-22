@@ -115,6 +115,8 @@ in your environment.
     # NOTE: This pre-installs the Nova, Neutron, and Ceilometer packages in
     # the compute image
     export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS='overcloud-compute'
+    # Set ROOT_DISK == NODE_DISK default value (no ephemeral partition)
+    export ROOT_DISK=40
 
 4) Override the tripleo-heat-templates resource registry::
 
