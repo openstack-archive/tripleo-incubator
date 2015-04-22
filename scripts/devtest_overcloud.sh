@@ -38,8 +38,47 @@ function show_options {
     echo "       --swift-storage-flavor -- Nova flavor to use for swift "
     echo "                                 storage nodes."
     echo "                                 Defaults to 'baremetal'."
+    echo "       --update-puppet-modules -- update the puppet modules in the images with the"
+    echo "                                  a list of targeted modules located in \$TRIPLEO_ROOT/puppet-modules"
+    echo "                                  NOTE. For dev purpose only"
     echo
     exit $1
+}
+
+# DISCLAIMER. This is for development purpose only
+#
+# This function will change an image before it is loaded
+#
+# It reads the content of $TRIPLEO_ROOT/puppet-modules
+# and update the images accordingly
+#
+# Content of $TRIPLEO_ROOT/puppet-modules is as follow
+#
+# tripleo https://github.com/stackforge/puppet-tripleo master refs/changes/58/175958/2
+# rabbitmq https://github.com/me/puppetlabs-rabbitmq mybranch
+#
+function update_puppet_modules {
+    role=$1
+
+    qemu-img convert -O raw $TRIPLEO_ROOT/${role}.qcow2 $TRIPLEO_ROOT/${role}.raw
+    sudo mount -o loop $TRIPLEO_ROOT/${role}.raw /var/opt/
+    while read line; do
+        directory=$(echo $line | awk '{ print $1 }')
+        url=$(echo $line | awk '{ print $2 }')
+        branch=$(echo $line | awk '{ print $3 }')
+        change=$(echo $line | awk '{ print $4 }')
+        if [ -d "/var/opt/opt/stack/puppet-modules/$directory" ]; then
+          sudo rm -rf /var/opt/opt/stack/puppet-modules/$directory
+        fi
+        sudo git clone $url /var/opt/opt/stack/puppet-modules/$directory -b $branch
+        if [ ! -z "$change" ]; then
+          pushd /var/opt/opt/stack/puppet-modules/$directory
+          sudo git fetch $url $change && sudo git cherry-pick FETCH_HEAD
+          popd
+        fi
+    done < <( cat $TRIPLEO_ROOT/puppet-modules)
+    sudo umount /var/opt
+    qemu-img convert -O qcow2 $TRIPLEO_ROOT/${role}.raw $TRIPLEO_ROOT/${role}.qcow2
 }
 
 TEMP=$(getopt -o c,h -l build-only,no-mergepy,debug-logging,heat-env:,compute-flavor:,control-flavor:,block-storage-flavor:,swift-storage-flavor:,help -n $SCRIPT_NAME -- "$@")
@@ -66,6 +105,7 @@ while true ; do
         --control-flavor) CONTROL_FLAVOR="$2"; shift 2;;
         --block-storage-flavor) BLOCKSTORAGE_FLAVOR="$2"; shift 2;;
         --swift-storage-flavor) SWIFTSTORAGE_FLAVOR="$2"; shift 2;;
+        --update-puppet-modules) UPDATE_PUPPET_MODULES="1"; shift 1;;
         -h | --help) show_options 0;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; exit 1 ;;
@@ -165,6 +205,9 @@ fi #nodocs
 ##    ::
 
 if [ -z "$BUILD_ONLY" ]; then #nodocs
+    if [ ! -z "$UPDATE_PUPPET_MODULES" ]; then
+        update_puppet_modules overcloud-control
+    fi
 OVERCLOUD_CONTROL_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-control.qcow2)
 fi #nodocs
 
@@ -186,6 +229,9 @@ if [ $OVERCLOUD_BLOCKSTORAGESCALE -gt 0 ]; then
 ##    ::
 
     if [ -z "$BUILD_ONLY" ]; then #nodocs
+        if [ ! -z "$UPDATE_PUPPET_MODULES" ]; then
+            update_puppet_modules overcloud-cinder-volume
+        fi
     OVERCLOUD_BLOCKSTORAGE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-cinder-volume.qcow2)
     fi #nodocs
 fi
@@ -225,6 +271,9 @@ if [ -n "$BUILD_ONLY" ]; then
 fi
 
 ### --include
+if [ ! -z "$UPDATE_PUPPET_MODULES" ]; then
+    update_puppet_modules overcloud-compute
+fi
 OVERCLOUD_COMPUTE_ID=$(load-image -d $TRIPLEO_ROOT/overcloud-compute.qcow2)
 
 ## #. For running an overcloud in VM's. For Physical machines, set to kvm:
