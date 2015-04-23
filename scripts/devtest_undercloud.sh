@@ -381,8 +381,8 @@ init-keystone -o $UNDERCLOUD_CTL_IP -t $UNDERCLOUD_ADMIN_TOKEN \
     --public $UNDERCLOUD_IP --no-pki-setup
 
 # Creating these roles to be used by tenants using swift
-keystone role-create --name=swiftoperator
-keystone role-create --name=ResellerAdmin
+openstack role create swiftoperator
+openstack role create ResellerAdmin
 
 
 # Create service endpoints and optionally include Ceilometer for UI support
@@ -398,7 +398,7 @@ fi
 
 setup-endpoints $UNDERCLOUD_CTL_IP $ENDPOINT_LIST $REGISTER_SERVICE_OPTS \
     --public $UNDERCLOUD_IP
-keystone role-create --name heat_stack_user
+openstack role create heat_stack_user
 
 user-config
 
@@ -460,7 +460,7 @@ fi
 ##    allow unlimited cores, instances and ram.
 ##    ::
 
-nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin | awk '$2=="id" {print $4}')
+nova quota-update --cores -1 --instances -1 --ram -1 $(openstack project show admin | awk '$2=="id" {print $4}')
 
 ## #. Register two baremetal nodes with your undercloud.
 ##    ::

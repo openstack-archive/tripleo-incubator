@@ -305,10 +305,10 @@ ssh-keyscan -t rsa $BM_NETWORK_SEED_IP | tee -a ~/.ssh/known_hosts | grep -q "^$
 
 init-keystone -o $BM_NETWORK_SEED_IP -t unset -e admin@example.com -p unset --no-pki-setup
 setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
-keystone role-create --name heat_stack_user
+openstack role create heat_stack_user
 # Creating these roles to be used by tenants using swift
-keystone role-create --name=swiftoperator
-keystone role-create --name=ResellerAdmin
+openstack role create swiftoperator
+openstack role create ResellerAdmin
 
 echo "Waiting for nova to initialise..."
 wait_for -w 500 --delay 10 -- nova list
@@ -383,7 +383,7 @@ fi
 ##    allow unlimited cores, instances and ram.
 ##    ::
 
-nova quota-update --cores -1 --instances -1 --ram -1 $(keystone tenant-get admin | awk '$2=="id" {print $4}')
+nova quota-update --cores -1 --instances -1 --ram -1 $(openstack project show admin | awk '$2=="id" {print $4}')
 
 
 ## #. Register "bare metal" nodes with nova and setup Nova baremetal flavors.

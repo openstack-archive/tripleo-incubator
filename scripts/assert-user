@@ -68,8 +68,8 @@ if [ -z "$EMAIL" -o -z "$NAME" -o -z "$TENANT" -o -z "$USERCODE" -o -n "$EXTRA_A
 fi
 
 echo "Checking for user $USERCODE"
-#TODO: fix after bug 1392035 in keystone client
-USER_ID=$(keystone user-list | awk '{print tolower($0)}' |grep " ${USERCODE,,} " |awk '{print$2}')
+#TODO: fix after bug 1392035 in the keystone client library
+USER_ID=$(openstack user list | awk '{print tolower($0)}' |grep " ${USERCODE,,} " |awk '{print$2}')
 if [ -z "$USER_ID" ]; then
     PASSWORD=''
     if [ -e os-asserted-users ]; then
@@ -79,24 +79,23 @@ if [ -z "$USER_ID" ]; then
         PASSWORD=$(os-make-password)
         echo "$USERCODE $PASSWORD" >> os-asserted-users
     fi
-    USER_ID=$(keystone user-create --name=$USERCODE \
-        --pass="$PASSWORD" \
-        --email="$EMAIL" | awk '$2=="id" {print $4}')
+    USER_ID=$(openstack user create --pass "$PASSWORD"
+        --email "$EMAIL" $USERCODE | awk '$2=="id" {print $4}')
 fi
-#TODO: fix after bug 1392035 in keystone client
-TENANT_ID=$(keystone tenant-list | awk '{print tolower($0)}' |grep " ${TENANT,,} " |awk '{print$2}')
+#TODO: fix after bug 1392035 in the keystone client library
+TENANT_ID=$(openstack project list | awk '{print tolower($0)}' |grep " ${TENANT,,} " |awk '{print$2}')
 if [ -z "$TENANT_ID" ]; then
-    TENANT_ID=$(keystone tenant-create --name=$TENANT | awk '$2=="id" {print $4}')
+    TENANT_ID=$(openstack project create $TENANT | awk '$2=="id" {print $4}')
 fi
 if [ "$TENANT" = "admin" ]; then
     ROLE="admin"
 else
     ROLE="_member_"
 fi
-ROLE_ID=$(keystone role-get $ROLE | awk '$2=="id" {print $4}')
-if keystone user-role-list --user-id $USER_ID --tenant-id $TENANT_ID | grep "${ROLE_ID}.*${ROLE}.*${USER_ID}" ; then
+ROLE_ID=$(openstack role show $ROLE | awk '$2=="id" {print $4}')
+if openstack user role list --project $TENANT_ID $USER_ID | grep "${ROLE_ID}.*${ROLE}.*${USER_ID}" ; then
     echo "User already has role '$ROLE'"
 else
-    keystone user-role-add --user-id $USER_ID --role-id $ROLE_ID --tenant-id $TENANT_ID
+    openstack role add --project $TENANT_ID --user $USER_ID $ROLE_ID
 fi
 echo "User $USERCODE configured."
