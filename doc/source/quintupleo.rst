@@ -1,0 +1,1 @@
+.. include:: ../../quintupleo/README.rst

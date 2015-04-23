@@ -1,0 +1,30 @@
+diff --git a/neutron/agent/linux/iptables_firewall.py b/neutron/agent/linux/iptables_firewall.py
+index 4830bc2..1d71913 100644
+--- a/neutron/agent/linux/iptables_firewall.py
++++ b/neutron/agent/linux/iptables_firewall.py
+@@ -243,6 +243,8 @@ class IptablesFirewallDriver(firewall.FirewallDriver):
+             mac_ipv6_pairs.append((mac, ip_address))
+ 
+     def _spoofing_rule(self, port, ipv4_rules, ipv6_rules):
++        # Disable spoofing rules for QuintupleO
++        return
+         #Note(nati) allow dhcp or RA packet
+         ipv4_rules += [comment_rule('-p udp -m udp --sport 68 --dport 67 '
+                                     '-j RETURN', comment=ic.DHCP_CLIENT)]
+@@ -273,6 +275,8 @@ class IptablesFirewallDriver(firewall.FirewallDriver):
+                                        mac_ipv6_pairs, ipv6_rules)
+ 
+     def _drop_dhcp_rule(self, ipv4_rules, ipv6_rules):
++        # Disable DHCP rule for QuintupleO
++        return
+         #Note(nati) Drop dhcp packet from VM
+         ipv4_rules += [comment_rule('-p udp -m udp --sport 67 --dport 68 '
+                                     '-j DROP', comment=ic.DHCP_SPOOF)]
+@@ -440,7 +444,7 @@ class IptablesFirewallDriver(firewall.FirewallDriver):
+ 
+     def _drop_invalid_packets(self, iptables_rules):
+         # Always drop invalid packets
+-        iptables_rules += [comment_rule('-m state --state ' 'INVALID -j DROP',
++        iptables_rules += [comment_rule('-m state --state ' 'INVALID -j ACCEPT',
+                                         comment=ic.INVALID_DROP)]
+         return iptables_rules

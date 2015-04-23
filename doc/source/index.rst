@@ -42,6 +42,7 @@ Further Information
    troubleshooting
    CONTRIBUTING
    selinux-guide
+   quintupleo
 
 
 Indices and tables

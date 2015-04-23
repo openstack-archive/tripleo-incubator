@@ -1,0 +1,170 @@
+heat_template_version: 2014-10-16
+
+description: Template for deploying OpenStack BMC nodes.  Can be wrapped in a ResourceGroup for scaling.
+
+# Usage: heat stack-create -f ./openstack-bmc.yaml -e ./env.json ./resource-registry.yaml -P node_count=3 baremetal
+# Ensure force_config_drive is _not_ set in nova.conf
+
+parameters:
+  bmc_flavor:
+    type: string
+    default: m1.small
+
+  baremetal_flavor:
+    type: string
+    default: baremetal_flavor
+
+  bmc_image:
+    type: string
+    default: openstack-bmc
+
+  baremetal_image:
+    type: string
+    default: empty
+
+  key_name:
+    type: string
+    default: default
+
+  node_count:
+    type: number
+    default: 2
+
+  private_net:
+    type: string
+    default: private
+
+  provision_net_name:
+    type: string
+    default: undercloud
+
+  bmc_prefix:
+    type: string
+    default: bmc
+
+  baremetal_prefix:
+    type: string
+    default: baremetal
+
+  os_user:
+    type: string
+    default: admin
+
+  os_password:
+    type: string
+    hidden: true
+
+  os_tenant:
+    type: string
+
+  os_auth_url:
+    type: string
+
+  undercloud_image:
+    type: string
+
+  undercloud_flavor:
+    type: string
+
+  public_net:
+    type: string
+
+resources:
+
+  provision_net:
+    type: OS::Neutron::Net
+    properties:
+      name: {get_param: provision_net_name}
+
+  provision_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network: {get_resource: provision_net}
+      name: undercloud-subnet
+      cidr: 192.0.2.0/24
+      gateway_ip: null
+      enable_dhcp: false
+      allocation_pools:
+      - start: 192.0.2.5
+        end: 192.0.2.24
+
+  provision_sg:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: provision_sg
+      description: Allows all traffic
+      rules:
+      - protocol: icmp
+      - protocol: tcp
+      - protocol: udp
+
+  private_sg:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: private_sg
+      description: Ping, SSH and IPMI
+      rules:
+      - protocol: icmp
+      - protocol: tcp
+        port_range_min: 22
+        port_range_max: 22
+      - protocol: udp
+        port_range_min: 623
+        port_range_max: 623
+
+  openstack_bmc_servers:
+    type: OS::Heat::AutoScalingGroup
+    depends_on: [provision_subnet]
+    properties:
+      min_size: {get_param: node_count}
+      max_size: {get_param: node_count}
+      resource:
+        type: openstack-bmc-servers.yaml
+        properties:
+          bmc_flavor: {get_param: bmc_flavor}
+          bmc_image: {get_param: bmc_image}
+          baremetal_flavor: {get_param: baremetal_flavor}
+          baremetal_image: {get_param: baremetal_image}
+          key_name: {get_param: key_name}
+          private_net: {get_param: private_net}
+          provision_net: {get_param: provision_net_name}
+          provision_sg: {get_resource: provision_sg}
+          private_sg: {get_resource: private_sg}
+          bmc_prefix: {get_param: bmc_prefix}
+          baremetal_prefix: {get_param: baremetal_prefix}
+          os_user: {get_param: os_user}
+          os_password: {get_param: os_password}
+          os_tenant: {get_param: os_tenant}
+          os_auth_url: {get_param: os_auth_url}
+
+  undercloud_server:
+    type: OS::Nova::Server
+    depends_on: [provision_subnet]
+    properties:
+      name: undercloud
+      image: {get_param: undercloud_image}
+      flavor: {get_param: undercloud_flavor}
+      key_name: {get_param: key_name}
+      networks:
+      - network: {get_param: private_net}
+      - network: {get_resource: provision_net}
+      security_groups:
+      - {get_resource: provision_sg}
+      - {get_resource: private_sg}
+      user_data_format: RAW
+
+  undercloud_floating_ip_assoc:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: {get_resource: undercloud_floating_ip}
+      port_id: {get_attr: [undercloud_server, addresses, {get_param: private_net}, 0, port]}
+
+  undercloud_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: {get_param: public_net}
+
+outputs:
+  undercloud_host:
+    value:
+      get_attr: [undercloud_floating_ip, floating_ip_address]

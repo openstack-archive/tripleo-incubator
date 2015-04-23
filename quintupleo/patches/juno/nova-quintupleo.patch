@@ -1,0 +1,13 @@
+--- a/nova/virt/libvirt/driver.py
++++ b/nova/virt/libvirt/driver.py
+@@ -3882,6 +3882,10 @@
+             else:
+                 guest.os_boot_dev = blockinfo.get_boot_order(disk_info)
+ 
++            if (CONF.libvirt.virt_type in ['qemu', 'kvm'] and
++                    flavor.extra_specs.get('libvirt:pxe-first')):
++                guest.os_boot_dev = ['network'] + guest.os_boot_dev
++
+         if ((CONF.libvirt.virt_type != "lxc" and
+              CONF.libvirt.virt_type != "uml")):
+             guest.acpi = True

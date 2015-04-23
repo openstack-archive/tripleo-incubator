@@ -1,0 +1,132 @@
+heat_template_version: 2014-10-16
+
+parameters:
+  bmc_flavor:
+    type: string
+
+  baremetal_flavor:
+    type: string
+
+  bmc_image:
+    type: string
+
+  baremetal_image:
+    type: string
+
+  key_name:
+    type: string
+
+  bmc_prefix:
+    type: string
+
+  baremetal_prefix:
+    type: string
+
+  private_net:
+    type: string
+
+  private_sg:
+    type: string
+
+  provision_net:
+    type: string
+
+  provision_sg:
+    type: string
+
+  os_user:
+    type: string
+
+  os_password:
+    type: string
+    hidden: true
+
+  os_tenant:
+    type: string
+
+  os_auth_url:
+    type: string
+
+resources:
+
+  suffix:
+    type: OS::Heat::RandomString
+    properties:
+      character_classes:
+      - class: lowercase
+        min: 8
+      length: 8
+
+  bmc_server:
+    type: OS::Nova::Server
+    properties:
+      flavor: {get_param: bmc_flavor}
+      image: {get_param: bmc_image}
+      key_name: {get_param: key_name}
+      security_groups:
+      - {get_param: private_sg}
+      networks:
+      - network: {get_param: private_net}
+      name:
+        list_join:
+        - '_'
+        - - {get_param: bmc_prefix}
+          - {get_attr: [suffix, value]}
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          params:
+            $bm_instance: {get_resource: baremetal_server}
+            $os_user: {get_param: os_user}
+            $os_password: {get_param: os_password}
+            $os_tenant: {get_param: os_tenant}
+            $os_auth_url: {get_param: os_auth_url}
+            $openstackbmc_script: {get_file: openstackbmc}
+          template: |
+            #!/bin/bash
+            set -x
+            cat <<EOF >/usr/lib/systemd/system/openstack-bmc.service
+            [Unit]
+            Description=openstack-bmc Service
+
+            [Service]
+            ExecStart=/usr/local/bin/openstackbmc  --os-user $os_user --os-password $os_password --os-tenant $os_tenant --os-auth-url $os_auth_url --instance $bm_instance
+            User=root
+
+            [Install]
+            WantedBy=multi-user.target
+            Alias=openstack-bmc.service
+            EOF
+
+            cat <<EOF >/usr/local/bin/openstackbmc
+            $openstackbmc_script
+            EOF
+            chmod +x /usr/local/bin/openstackbmc
+
+            yum -y update centos-release # required for rdo-release install to work
+            yum install -y http://mirrors.einstein.yu.edu/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+            yum install -y https://rdo.fedorapeople.org/rdo-release.rpm
+            yum install -y python-pip python-crypto python-novaclient
+            pip install --no-deps pyghmi
+            systemctl enable openstack-bmc
+            systemctl start openstack-bmc
+            systemctl status openstack-bmc
+
+  baremetal_server:
+    type: OS::Nova::Server
+    properties:
+      flavor: {get_param: baremetal_flavor}
+      image: {get_param: baremetal_image}
+      config_drive: false
+      key_name: {get_param: key_name}
+      security_groups:
+      - {get_param: provision_sg}
+      - {get_param: private_sg}
+      networks:
+      - network: {get_param: provision_net}
+      - network: {get_param: private_net}
+      name:
+        list_join:
+        - '_'
+        - - {get_param: baremetal_prefix}
+          - {get_attr: [suffix, value]}
