@@ -61,7 +61,7 @@ if [ -z "$TRIPLEO_ROOT" -o ! -d $TRIPLEO_ROOT/tripleo-incubator/scripts ]; then
     return 1
 fi
 ### --include
-export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$TRIPLEO_ROOT/dib-utils/bin:$PATH
+export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$TRIPLEO_ROOT/dib-utils/bin:$TRIPLEO_ROOT/diskimage-builder/bin:$PATH
 
 ## #. It's possible to deploy the Undercloud without a UI and its dependent elements.
 ##    The dependent image elements in Undercloud are Horizon, Tuskar-UI (not included
