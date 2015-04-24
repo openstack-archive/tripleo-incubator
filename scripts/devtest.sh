@@ -37,7 +37,7 @@ function show_options {
     echo "    --no-undercloud        -- Use the seed as the baremetal cloud to deploy the"
     echo "                              overcloud from."
     echo "    --build-only           -- Builds images but doesn't attempt to run them."
-    echo "    --no-mergepy           -- Use the standalone Heat templates."
+    echo "    --no-mergepy           -- Use the standalone Heat templates (default)."
     echo "    --debug-logging        -- Enable debug logging in the undercloud and overcloud."
     echo "                              This enables build time debug logs by setting the"
     echo "                              OS_DEBUG_LOGGING env var and also sets the Debug"
@@ -80,7 +80,11 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         --build-only) BUILD_ONLY=--build-only; shift 1;;
-        --no-mergepy) USE_MERGEPY=0; shift 1;;
+        --no-mergepy)
+            USE_MERGEPY=0
+            echo "Warning: --no-mergepy is the default now, option is DEPRECATED"
+            shift 1
+            ;;
         --debug-logging)
             DEBUG_LOGGING=--debug-logging
             export OS_DEBUG_LOGGING="1"

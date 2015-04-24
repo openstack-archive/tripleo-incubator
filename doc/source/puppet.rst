@@ -134,9 +134,9 @@ in your environment.
 
     export DIB_INSTALLTYPE_puppet_modules=source
 
-8) Source your undercloud environment RC file (perhaps via the select-cloud script). Then execute devtest_overcloud.sh using the new no-mergepy templates::
+8) Source your undercloud environment RC file (perhaps via the select-cloud script). Then execute devtest_overcloud.sh::
 
-    devtest_overcloud.sh --no-mergepy
+    devtest_overcloud.sh
 
 References
 ----------
