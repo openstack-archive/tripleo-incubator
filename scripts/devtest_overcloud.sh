@@ -23,7 +23,7 @@ function show_options {
     echo "      -h             -- this help"
     echo "      -c             -- re-use existing source/images if they exist."
     echo "      --build-only   -- build the needed images but don't deploy them."
-    echo "      --no-mergepy   -- use the standalone Heat templates."
+    echo "      --no-mergepy   -- use the standalone Heat templates (default)."
     echo "      --debug-logging -- Turn on debug logging in the built overcloud."
     echo "                         Sets both OS_DEBUG_LOGGING and the heat Debug parameter."
     echo "      --heat-env     -- path to a JSON heat environment file."
@@ -55,7 +55,11 @@ while true ; do
     case "$1" in
         -c) USE_CACHE=1; shift 1;;
         --build-only) BUILD_ONLY="1"; shift 1;;
-        --no-mergepy) USE_MERGEPY=0; shift 1;;
+        --no-mergepy)
+            USE_MERGEPY=0
+            echo "Warning: --no-mergepy is the default now, option is DEPRECATED" >&2
+            shift 1
+            ;;
         --debug-logging)
             DEBUG_LOGGING="1"
             export OS_DEBUG_LOGGING="1"
