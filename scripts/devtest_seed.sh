@@ -5,6 +5,8 @@ set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
 
+PATH=$PATH:/usr/sbin:/sbin
+
 function show_options {
     echo "Usage: $SCRIPT_NAME [options]"
     echo
