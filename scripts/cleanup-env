@@ -24,16 +24,26 @@ function show_options {
     echo
     echo "Cleanup vm state left behind by previous runs"
     echo
+    echo "    -b                     -- Baremetal bridge name(s)."
+    echo "                              The create-nodes script names nodes and"
+    echo "                              volumes based on the attached"
+    echo "                              bridge name(s). This parameter provides"
+    echo "                              a way to cleanup nodes attached to the"
+    echo "                              associated bridge name(s)."
     echo "    -n                     -- Test environment number to clean up."
     echo
     echo "If provided, NUM is the environment number to be cleaned up."
     echo "If not provided, the default environment will be cleaned."
+    echo ""
+    echo "If both baremetal bridge names and NUM (-n) are provided the NUM"
+    echo "is appended to the bridge names when searching for VMs to delete."
     exit 1
 }
 
 NUM=
+BRIDGE_NAMES=brbm
 
-TEMP=$(getopt -o h,n: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,b:,n: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ]; then
     show_options;
 fi
@@ -44,6 +54,7 @@ eval set -- "$TEMP"
 while true ; do
     case "$1" in
         -h) show_options ;;
+        -b) BRIDGE_NAMES="${2// /}" ; shift 2 ;;
         -n) NUM="$2" ; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; show_options ;;
@@ -51,14 +62,13 @@ while true ; do
 done
 
 SEED_NAME=seed
-BRIDGE_NAME=
 
 if [ -n "$NUM" ]; then
     SEED_NAME="seed_${NUM}"
-    BRIDGE_NAME="brbm${NUM}"
+    BRIDGE_NAMES="${BRIDGE_NAMES}${NUM}"
 fi
 
-BAREMETAL_REGEX="baremetal${BRIDGE_NAME}"
+BAREMETAL_REGEX="baremetal${BRIDGE_NAMES}"
 
 for NAME in $(sudo virsh list --name | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
     sudo virsh destroy $NAME
