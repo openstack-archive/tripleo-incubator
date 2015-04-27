@@ -20,7 +20,7 @@ TOTAL=$(($5 - 1))
 SSH_USER=$6
 HOSTIP=$7
 TE_DATAFILE=$8
-BRIDGE=${9:-""}
+BRIDGE_NAMES=${9:-""}
 
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
@@ -45,7 +45,8 @@ if [[ ${DIB_COMMON_ELEMENTS:-} == *enable-serial-console* ]]; then
 fi
 
 for idx in $(seq 0 $TOTAL) ; do
-    vm_name="baremetal${BRIDGE}_$idx"
+    # VMs are named after the first bridge name
+    vm_name="baremetal${BRIDGE_NAMES// /_}_$idx"
     (virsh list --all --name | grep -q "^$vm_name\$") && continue
     virsh vol-create-as $LIBVIRT_VOL_POOL $vm_name.qcow2 ${NODE_DISK}G --format qcow2 $PREALLOC >&2
     volume_path=$(virsh vol-path --pool $LIBVIRT_VOL_POOL $vm_name.qcow2)
@@ -53,8 +54,8 @@ for idx in $(seq 0 $TOTAL) ; do
     sudo touch "$volume_path"
     sudo chattr +C "$volume_path" || true
     BAREMETAL_INTERFACE=
-    if [ -n "$BRIDGE" ]; then
-        BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE"
+    if [ -n "$BRIDGE_NAMES" ]; then
+        BAREMETAL_INTERFACE="--baremetal-interface $BRIDGE_NAMES"
     fi
     configure-vm $EXTRAOPTS \
         --bootdev network \
