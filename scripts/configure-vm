@@ -38,7 +38,7 @@ def main():
         help='Use a custom image file (must be qcow2).')
     parser.add_argument('--diskbus', default='sata',
         help='Choose an alternate bus type for the disk')
-    parser.add_argument('--baremetal-interface', default='brbm',
+    parser.add_argument('--baremetal-interface', nargs='+', default=['brbm'],
         help='The interface which bare metal nodes will be connected to.')
     parser.add_argument('--engine', default='kvm',
         help='The virtualization engine to use')
@@ -70,7 +70,6 @@ def main():
     params = {
         'name': args.name,
         'imagefile': imagefile,
-        'bmbridge': args.baremetal_interface,
         'engine': args.engine,
         'arch': args.arch,
         'memory': args.memory,
@@ -86,8 +85,6 @@ def main():
     params['diskbus'] = args.diskbus
     nicparams = {
         'nicdriver': args.libvirt_nic_driver,
-        'bminterface': args.baremetal_interface,
-        'bmmacaddress': generate_bm_mac_address(),
         'ovsbridge': args.ovsbridge,
         }
     if args.seed:
@@ -106,13 +103,20 @@ def main():
         <model type='%(nicdriver)s'/>
       </interface>""" % nicparams
 
-    params['bm_network'] = """
-      <!-- bridged 'bare metal' network -->
-      <interface type='network'>
-        <mac address='%(bmmacaddress)s'/>
-        <source network='%(bminterface)s'/>
-        <model type='%(nicdriver)s'/>
-      </interface>""" % nicparams
+    params['bm_network'] = ""
+    for bm_interface in args.baremetal_interface:
+        bm_interface_params = {
+            'bminterface': bm_interface,
+            'bmmacaddress': generate_bm_mac_address(),
+            'nicdriver': args.libvirt_nic_driver,
+            }
+        params['bm_network'] += """
+          <!-- bridged 'bare metal' network on %(bminterface)s -->
+          <interface type='network'>
+            <mac address='%(bmmacaddress)s'/>
+            <source network='%(bminterface)s'/>
+            <model type='%(nicdriver)s'/>
+          </interface>""" % bm_interface_params
 
     if args.enable_serial_console:
         params['enable_serial_console'] = """
