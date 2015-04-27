@@ -2,19 +2,59 @@
 set -eu
 
 BASE=$(dirname $0)/../
-BRIDGE_SUFFIX=${1:-''}
-BRIDGE_NAME=brbm$BRIDGE_SUFFIX
+BRIDGE_SUFFIX=${1:-''} # support positional arg for legacy support
+BRIDGE_NAMES='brbm'
 
-# Only add bridge if missing
-(sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) || sudo ovs-vsctl add-br ${BRIDGE_NAME}
+SCRIPT_NAME=$(basename $0)
 
-# remove bridge before replacing it.
-(virsh net-list --persistent | grep "${BRIDGE_NAME} ") && virsh net-destroy ${BRIDGE_NAME}
-(virsh net-list --inactive --persistent | grep "${BRIDGE_NAME} ") && virsh net-undefine ${BRIDGE_NAME}
+function show_options {
+    echo "Usage: $SCRIPT_NAME [-n num] [-b space delimited bridge names ]"
+    echo
+    echo "Setup libvirt networking and OVS bridges for TripleO."
+    echo
+    echo "    -n    -- Bridge number/suffix. Added to all bridges."
+    echo "             Useful when creating multiple environments on the same machine."
+    echo "    -b    -- Space delimited list of baremetal bridge name(s). Defaults to brbm."
+    echo
+    exit 1
+}
 
-virsh net-define <(sed s/brbm/$BRIDGE_NAME/ $BASE/templates/brbm.xml)
-virsh net-autostart ${BRIDGE_NAME}
-virsh net-start ${BRIDGE_NAME}
+TEMP=$(getopt -o h,s:,b: -n $SCRIPT_NAME -- "$@")
+if [ $? != 0 ]; then
+    show_options;
+fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -h) show_options ;;
+        -n) BRIDGE_SUFFIX="$2" ; shift 2 ;;
+        -b) BRIDGE_NAMES="$2" ; shift 2 ;;
+        --) shift ; break ;;
+        *) echo "Error: unsupported option $1." ; show_options ;;
+    esac
+done
+
+function create_bridge {
+    BRIDGE_NAME=$1
+    # Only add bridge if missing
+    (sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) || sudo ovs-vsctl add-br ${BRIDGE_NAME}
+
+    # remove bridge before replacing it.
+    (virsh net-list --persistent | grep "${BRIDGE_NAME} ") && virsh net-destroy ${BRIDGE_NAME}
+    (virsh net-list --inactive --persistent | grep "${BRIDGE_NAME} ") && virsh net-undefine ${BRIDGE_NAME}
+
+    virsh net-define <(sed s/brbm/$BRIDGE_NAME/ $BASE/templates/brbm.xml)
+    virsh net-autostart ${BRIDGE_NAME}
+    virsh net-start ${BRIDGE_NAME}
+
+}
+
+for NAME in $BRIDGE_NAMES; do
+    create_bridge $NAME$BRIDGE_SUFFIX
+done
 
 # start default if needed and configure it to autostart
 default_net=$(sudo virsh net-list --all --persistent | grep default | awk 'BEGIN{OFS=":";} {print $2,$3}')
@@ -28,4 +68,3 @@ fi
 if [ "$autostart" != "yes" ]; then
     virsh net-autostart default
 fi
-
