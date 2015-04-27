@@ -3,7 +3,7 @@
 # Test environment creation for devtest.
 # This creates the bridge and VM's
 
-set -eu
+set -eux
 set -o pipefail
 SCRIPT_NAME=$(basename $0)
 SCRIPT_HOME=$(dirname $0)
@@ -16,6 +16,7 @@ function show_options {
     echo "Options:"
     echo "    -b                     -- Name of an already existing OVS bridge to use for "
     echo "                              the public interface of the seed."
+
     echo "    -h                     -- This help."
     echo "    -n                     -- Test environment number to add the seed to."
     echo "    -s                     -- SSH private key path to inject into the JSON."
@@ -27,6 +28,9 @@ function show_options {
     echo "    --bm-networks NETFILE  -- You are supplying your own network layout."
     echo "                              The schema for baremetal-network can be found in"
     echo "                              the devtest_setup documentation."
+    echo "    --baremetal-bridge-names BRIDGE_NAMES -- Name(s) of baremetal bridges"
+    echo "                              To create and attach to each VM."
+
     echo
     echo "    --keep-vms             -- Prevent cleanup of virsh instances for"
     echo "                              undercloud and overcloud"
@@ -42,10 +46,11 @@ NODES_PATH=
 NETS_PATH=
 NUM=
 OVSBRIDGE=
+BRIDGE_NAMES=brbm
 SSH_KEY=~/.ssh/id_rsa_virt_power
 KEEP_VMS=
 
-TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,keep-vms -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,baremetal-bridge-names:,keep-vms -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ]; then
     echo "Terminating..." >&2
     exit 1
@@ -59,6 +64,7 @@ while true ; do
         --nodes) NODES_PATH="$2"; shift 2;;
         --bm-networks) NETS_PATH="$2"; shift 2;;
         --keep-vms) KEEP_VMS=1; shift;;
+        --baremetal-bridge-names) BRIDGE_NAMES="$2" ; shift 2 ;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -147,7 +153,7 @@ NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-3072} NODE_DISK=${NODE_DISK:-40} NO
 ##    This configures an openvswitch bridge and teaches libvirt about it.
 ##    ::
 
-setup-network $NUM
+setup-network -n "$NUM" -b "$BRIDGE_NAMES"
 
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
@@ -157,15 +163,18 @@ setup-network $NUM
 ##    the seed is equivalent to an undercloud in resource requirements.
 ##    ::
 
-BRIDGE=
+NUMBERED_BRIDGE_NAMES=
 SEED_ARGS="-a $NODE_ARCH"
 if [ -n "$NUM" ]; then
     SEED_ARGS="$SEED_ARGS -o seed_${NUM}"
 fi
 if [ -n "$OVSBRIDGE" ]; then
-    BRIDGE="brbm${NUM}"
-    SEED_ARGS="$SEED_ARGS -b $BRIDGE -p $OVSBRIDGE"
+    SEED_ARGS="$SEED_ARGS -p $OVSBRIDGE"
 fi
+for NAME in $BRIDGE_NAMES; do
+    NUMBERED_BRIDGE_NAMES="$NUMBERED_BRIDGE_NAMES$NAME${NUM} "
+done
+
 SEED_CPU=${SEED_CPU:-${NODE_CPU}}
 SEED_MEM=${SEED_MEM:-${NODE_MEM}}
 
@@ -176,14 +185,14 @@ SEED_MEM=${SEED_MEM:-${NODE_MEM}}
 
 if [ -z "$KEEP_VMS" ]; then
     if [ -n "$NUM" ]; then
-        cleanup-env -n $NUM
+        cleanup-env -n $NUM -b "$BRIDGE_NAMES"
     else
-        cleanup-env
+        cleanup-env -b "$BRIDGE_NAMES"
     fi
 fi
 
 #Now start creating the new environment
-setup-seed-vm $SEED_ARGS -c ${SEED_CPU} -m $((1024 * ${SEED_MEM}))
+setup-seed-vm $SEED_ARGS -c ${SEED_CPU} -m $((1024 * ${SEED_MEM})) -b "${NUMBERED_BRIDGE_NAMES% }"
 
 ## #. What user will be used to ssh to run virt commands to control our
 ##    emulated baremetal machines.
@@ -269,6 +278,6 @@ else
 ##    more nodes.
 ##    ::
 
-create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE $BRIDGE
+create-nodes $NODE_CPU $NODE_MEM $NODE_DISK $NODE_ARCH $NODE_CNT $SSH_USER $HOSTIP $JSONFILE "${NUMBERED_BRIDGE_NAMES% }"
 ### --end
 fi
