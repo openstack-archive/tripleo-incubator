@@ -79,6 +79,9 @@ in your environment.
        # Enable packages for all elements by default
        export DIB_DEFAULT_INSTALLTYPE=package
 
+       # Do not manage /etc/hosts via cloud-init
+       export DIB_CLOUD_INIT_ETC_HOSTS=''
+
        # Install undercloud mariadb-rpm this way since we set USE_MARIADB=0
        export SEED_DIB_EXTRA_ARGS='rabbitmq-server mariadb-rpm'
        export UNDERCLOUD_DIB_EXTRA_ARGS='rabbitmq-server mariadb-rpm'
