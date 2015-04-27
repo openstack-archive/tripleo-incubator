@@ -83,6 +83,13 @@ if [ 0 -eq "$USE_IRONIC" ]; then
     echo "Nova-baremetal is deprecated, please migrate to Ironic ASAP." >&2
 fi
 
+## #. Set the value for cloud-init's manage_etc_hosts configuration option.
+##    Possible values are 'true', 'false', 'localhost' and ''. The empty string
+##    means that cloud-init's default is preserved.
+##    ::
+
+export DIB_CLOUD_INIT_ETC_HOSTS=${DIB_CLOUD_INIT_ETC_HOSTS-localhost}
+
 ## #. Set a list of image elements that should be included in all image builds.
 ##    Note that stackuser is only for debugging support - it is not suitable for
 ##    a production network. This is also the place to include elements such as
