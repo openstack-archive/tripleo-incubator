@@ -89,7 +89,7 @@ fi
 ##    pip-cache or pypi-openstack if you intend to use them.
 ##    ::
 
-export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv use-ephemeral"}
+export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv use-ephemeral cloud-init-hosts"}
 
 ## #. If you have a specific Ubuntu mirror you want to use when building
 ##    images.
