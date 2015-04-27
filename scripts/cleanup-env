@@ -25,6 +25,8 @@ function show_options {
     echo "Cleanup vm state left behind by previous runs"
     echo
     echo "    -n                     -- Test environment number to clean up."
+    echo "    -b                     -- Baremetal bridge name(s)."
+    echo "    -a                     -- Cleanup all nodes/volumes."
     echo
     echo "If provided, NUM is the environment number to be cleaned up."
     echo "If not provided, the default environment will be cleaned."
@@ -32,8 +34,10 @@ function show_options {
 }
 
 NUM=
+CLEAN_ALL=0
+BRIDGE_NAME=brbm
 
-TEMP=$(getopt -o h,n: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,a,n:,b: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ]; then
     show_options;
 fi
@@ -45,26 +49,36 @@ while true ; do
     case "$1" in
         -h) show_options ;;
         -n) NUM="$2" ; shift 2 ;;
+        -b) BRIDGE_NAME="${2/ /}" ; shift 2 ;; #remove spaces
+        -a) CLEAN_ALL=1; shift 1 ;; #remove spaces
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; show_options ;;
     esac
 done
 
 SEED_NAME=seed
-BRIDGE_NAME=
 
 if [ -n "$NUM" ]; then
     SEED_NAME="seed_${NUM}"
-    BRIDGE_NAME="brbm${NUM}"
+    BRIDGE_NAME="$BRIDGE_NAMES${NUM}"
 fi
 
 BAREMETAL_REGEX="baremetal${BRIDGE_NAME}"
+echo $BAREMETAL_REGEX
 
-for NAME in $(sudo virsh list --name | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
+function run_cmd {
+  local CMD=$@
+  if [ $CLEAN_ALL == 0 ]; then
+    CMD="$CMD | $grep \"^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$\""
+  fi
+  echo $($CMD)
+}
+
+for NAME in $(run_cmd sudo virsh list --name); do
     sudo virsh destroy $NAME
 done
 
-for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
+for NAME in $(run_cmd sudo virsh list --name --all); do
     if [ $NAME == $SEED_NAME ]; then
         # handle seeds differently since their storage is not managed by libvirt
         sudo virsh undefine --managed-save $NAME
@@ -74,6 +88,6 @@ for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_RE
     fi
 done
 
-for NAME in $(sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\($SEED_NAME\|$BAREMETAL_REGEX\)" ); do
+for NAME in $(run_cmd sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}'); do
     sudo virsh vol-delete --pool $LIBVIRT_VOL_POOL $NAME
 done
