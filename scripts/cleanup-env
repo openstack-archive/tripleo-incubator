@@ -25,15 +25,29 @@ function show_options {
     echo "Cleanup vm state left behind by previous runs"
     echo
     echo "    -n                     -- Test environment number to clean up."
+    echo "    -b                     -- Baremetal bridge name(s)."
+    echo "                              Cleanup all nodes/volumes attached the"
+    echo "                              specified bridge(s). create-nodes names "
+    echo "                              nodes/volumes based on the attached "
+    echo "                              bridge names so this parameter provides "
+    echo "                              a way to select that only a bridge(s) "
+    echo "                              specific environment be cleaned up. "
+    echo "    -a                     -- Cleanup all nodes/volumes."
     echo
     echo "If provided, NUM is the environment number to be cleaned up."
     echo "If not provided, the default environment will be cleaned."
+    echo ""
+    echo "If both -n (NUM) and -b (baremetal bridge name) are provided"
+    echo "then the it is assumed bridges are numbered and only nodes/volumes"
+    echo "attached to that <bridge name><num> will be cleaned up."
     exit 1
 }
 
 NUM=
+CLEAN_ALL=0
+COMPRESSED_BRIDGE_NAME=brbm # this should match how create-nodes names things
 
-TEMP=$(getopt -o h,n: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,a,n:,b: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ]; then
     show_options;
 fi
@@ -45,26 +59,36 @@ while true ; do
     case "$1" in
         -h) show_options ;;
         -n) NUM="$2" ; shift 2 ;;
+        -b) COMPRESSED_BRIDGE_NAME="${2/ /}" ; shift 2 ;; #remove spaces to match create-nodes behavior
+        -a) CLEAN_ALL=1; shift 1 ;; #remove spaces
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; show_options ;;
     esac
 done
 
 SEED_NAME=seed
-BRIDGE_NAME=
 
 if [ -n "$NUM" ]; then
     SEED_NAME="seed_${NUM}"
-    BRIDGE_NAME="brbm${NUM}"
+    COMPRESSED_BRIDGE_NAME="$COMPRESSED_BRIDGE_NAME${NUM}"
 fi
 
-BAREMETAL_REGEX="baremetal${BRIDGE_NAME}"
+BAREMETAL_REGEX="baremetal${COMPRESSED_BRIDGE_NAME}"
 
-for NAME in $(sudo virsh list --name | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
+function run_cmd {
+  local CMD=$@
+  if [ $CLEAN_ALL == 1 ]; then
+    echo $($CMD)
+  else
+    echo $($CMD | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$")
+  fi
+}
+
+for NAME in $(run_cmd sudo virsh list --name); do
     sudo virsh destroy $NAME
 done
 
-for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
+for NAME in $(run_cmd sudo virsh list --name --all); do
     if [ $NAME == $SEED_NAME ]; then
         # handle seeds differently since their storage is not managed by libvirt
         sudo virsh undefine --managed-save $NAME
@@ -74,6 +98,6 @@ for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_RE
     fi
 done
 
-for NAME in $(sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\($SEED_NAME\|$BAREMETAL_REGEX\)" ); do
+for NAME in $(run_cmd sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}'); do
     sudo virsh vol-delete --pool $LIBVIRT_VOL_POOL $NAME
 done
