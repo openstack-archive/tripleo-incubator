@@ -31,13 +31,12 @@ pip install -U \
     python-glanceclient \
     python-heatclient \
     python-ironicclient \
-    python-keystoneclient \
     python-neutronclient \
     python-novaclient \
     python-openstackclient \
     python-swiftclient
 
-for tool in os-apply-config cinder nova glance heat keystone neutron swift ironic ceilometer openstack init-keystone generate-keystone-pki register-nodes setup-neutron; do
+for tool in os-apply-config cinder nova glance heat neutron swift ironic ceilometer openstack init-keystone generate-keystone-pki register-nodes setup-neutron; do
     ln -sf $VENV_HOME/bin/$tool $BASE/scripts/$tool ;
 done
 echo "Installed openstack client tool symlinks in $BASE/scripts"
