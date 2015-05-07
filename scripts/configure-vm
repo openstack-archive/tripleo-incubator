@@ -97,7 +97,6 @@ def main():
         <source bridge='%(ovsbridge)s'/>
         <virtualport type='openvswitch'/>
         <model type='%(nicdriver)s'/>
-        <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
       </interface>""" % nicparams
         else:
             params['network'] = """
@@ -105,7 +104,6 @@ def main():
       <interface type='network'>
         <source network='default'/>
         <model type='%(nicdriver)s'/>
-        <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
       </interface>""" % nicparams
 
     params['bm_network'] = """
@@ -114,7 +112,6 @@ def main():
         <mac address='%(bmmacaddress)s'/>
         <source network='%(bminterface)s'/>
         <model type='%(nicdriver)s'/>
-        <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
       </interface>""" % nicparams
 
     if args.enable_serial_console:
