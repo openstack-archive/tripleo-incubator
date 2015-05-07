@@ -138,7 +138,7 @@ if [ -z "$ADMIN_URL" ]; then
     ADMIN_URL="$INTERNAL_URL"
 fi
 
-ADMIN_ROLE=$(keystone $DEBUG role-list | awk '/ admin / {print $2}')
+ADMIN_ROLE=$(openstack $DEBUG role list | awk '/ admin / {print $2}')
 if [ -z "$ADMIN_ROLE" ]; then
     echo "Could not find admin role" >&2
     exit 1
@@ -146,43 +146,43 @@ fi
 
 # Some services don't need a user
 if [ "dashboard" != "$TYPE" ]; then
-    SERVICE_TENANT=$(keystone $DEBUG tenant-list | awk '/ service / {print $2}')
+    SERVICE_TENANT=$(openstack $DEBUG project list | awk '/ service / {print $2}')
     PASSWORD=${PASSWORD:-$(os-make-password)}
 
     # Some services have multiple endpoints, the user doesn't need to be recreated
-    USER_ID=$(keystone user-get $NAME | awk '$2=="id" { print $4 }')
+    USER_ID=$(openstack $DEBUG user show $NAME | awk '$2=="id" { print $4 }')
     if [ -z "$USER_ID" ]; then
-        USER_ID=$(keystone $DEBUG user-create --name=$NAME --pass=$PASSWORD --tenant-id $SERVICE_TENANT --email=nobody@example.com | awk ' / id / {print $4}')
+        USER_ID=$(openstack $DEBUG user create --password $PASSWORD --project $SERVICE_TENANT --email=nobody@example.com $NAME | awk ' / id / {print $4}')
     fi
-    if ! keystone user-role-list --tenant-id $SERVICE_TENANT --user-id $USER_ID | grep -q " $ADMIN_ROLE "; then
+    if ! openstack role list --project $SERVICE_TENANT --user $USER_ID | grep -q " $ADMIN_ROLE "; then
         echo "Creating user-role assignment for user $NAME, role admin, tenant service"
-        keystone user-role-add $DEBUG \
-            --tenant-id $SERVICE_TENANT \
-            --user-id $USER_ID \
-            --role-id $ADMIN_ROLE
+        openstack role add $DEBUG \
+            --project  $SERVICE_TENANT \
+            --user $USER_ID \
+            $ADMIN_ROLE
     fi
     #Add the admin tenant role for ceilometer user to enable polling services
     if  [ "metering" == "$TYPE" ]; then
-        ADMIN_TENANT=$(keystone $DEBUG tenant-list | awk '/ admin / {print $2}')
-        if ! keystone user-role-list --tenant-id $ADMIN_TENANT --user-id $USER_ID | grep -q " $ADMIN_ROLE "; then
+        ADMIN_TENANT=$(openstack $DEBUG project list | awk '/ admin / {print $2}')
+        if ! openstack role list --project $ADMIN_TENANT --user $USER_ID | grep -q " $ADMIN_ROLE "; then
             echo "Creating user-role assignment for user $NAME, role admin, tenant admin"
-            keystone user-role-add $DEBUG \
-                --tenant-id $ADMIN_TENANT \
-                --user-id $USER_ID \
-                --role-id $ADMIN_ROLE
+            openstack role add $DEBUG \
+                --project $ADMIN_TENANT \
+                --user $USER_ID \
+                $ADMIN_ROLE
             #swift polling requires ResellerAdmin role to be added to the Ceilometer user
-            RESELLER_ADMIN_ROLE=$(keystone $DEBUG role-list | awk '/ ResellerAdmin / {print $2}')
-            keystone user-role-add $DEBUG \
-                --tenant-id $ADMIN_TENANT \
-                --user-id $USER_ID \
-                --role-id $RESELLER_ADMIN_ROLE
+            RESELLER_ADMIN_ROLE=$(openstack $DEBUG role list | awk '/ ResellerAdmin / {print $2}')
+            openstack role add $DEBUG \
+                --project $ADMIN_TENANT \
+                --user $USER_ID \
+                $RESELLER_ADMIN_ROLE
         fi
     fi
 
 fi
-SERVICE_ID=$(keystone $DEBUG service-create --name=$NAME --type=$TYPE "$DESCRIPTION" | awk '/ id / {print $4}')
-keystone endpoint-create $DEBUG --region "$REGION" --service-id $SERVICE_ID \
+SERVICE_ID=$(openstack $DEBUG service create --name $NAME "$DESCRIPTION" $TYPE | awk '/ id / {print $4}')
+openstack endpoint create $DEBUG \
     --publicurl   "${PUBLIC_URL}${SUFFIX}" \
     --adminurl    "${ADMIN_URL}${ADMIN_SUFFIX}" \
-    --internalurl "${INTERNAL_URL}${SUFFIX}"
+    --internalurl "${INTERNAL_URL}${SUFFIX}"  --region "$REGION" $SERVICE_ID
 echo "Service $TYPE created"

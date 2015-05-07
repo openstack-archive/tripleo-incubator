@@ -68,43 +68,43 @@ fi
 
 PASSWORD=${PASSWORD:-$(os-make-password)}
 
-ADMIN_ROLE=$(keystone role-get admin| awk '$2=="id" {print $4}')
+ADMIN_ROLE=$(openstack role show admin| awk '$2=="id" {print $4}')
 if [ -z "$ADMIN_ROLE" ]; then
     echo "Could not find admin role" >&2
     exit 1
 fi
-MEMBER_ROLE=$(keystone role-get _member_| awk '$2=="id" {print $4}')
+MEMBER_ROLE=$(openstack role show _member_| awk '$2=="id" {print $4}')
 # Role _member_ is implicitly created by Keystone only while creating a new user
 # If no users were created, need to create a role explicitly
 if [ -z "$MEMBER_ROLE" ]; then
-    MEMBER_ROLE=$(keystone role-create --name=_member_ | awk '$2=="id" {print $4}')
+    MEMBER_ROLE=$(openstack role create _member_ | awk '$2=="id" {print $4}')
     echo "Created role _member_ with id ${MEMBER_ROLE}" >&2
 fi
-ADMIN_USER_ID=$(keystone user-get admin | awk '$2=="id" {print $4}')
+ADMIN_USER_ID=$(openstack user show admin | awk '$2=="id" {print $4}')
 if [ -z "$ADMIN_USER_ID" ]; then
     echo "Could not find admin user" >&2
     exit 1
 fi
 
-if ! keystone tenant-get $NAME 1>/dev/null 2>&1 ; then
-    USER_TENANT_ID=$(keystone tenant-create --name=$NAME | awk '$2=="id" {print $4}')
+if ! openstack project show $NAME 1>/dev/null 2>&1 ; then
+    USER_TENANT_ID=$(openstack project create $NAME | awk '$2=="id" {print $4}')
     if [ -z "$USER_TENANT_ID" ]; then
         echo "Failed to create tenant $NAME" >&2
         exit 1
     fi
 else
-    USER_TENANT_ID=$(keystone tenant-get $NAME 2>/dev/null| awk '$2=="id" {print $4}')
+    USER_TENANT_ID=$(openstack project show $NAME 2>/dev/null| awk '$2=="id" {print $4}')
     if [ -z "$USER_TENANT_ID" ]; then
         echo "Failed to retrieve existing tenant $NAME" >&2
         exit 1
     fi
 fi
 
-USER_ID=$(keystone user-get $NAME | awk '$2=="id" {print $4}')
+USER_ID=$(openstack user show $NAME | awk '$2=="id" {print $4}')
 if [ -z "$USER_ID" ]; then
-    USER_ID=$(keystone user-create --name=$NAME \
-            --pass="$PASSWORD" \
-            --email=$EMAIL | awk '$2=="id" {print $4}')
+    USER_ID=$(openstack user create \
+            --password "$PASSWORD" \
+            --email $EMAIL $NAME | awk '$2=="id" {print $4}')
     if [ -z "$USER_ID" ]; then
         echo "Failed to create user $NAME" >&2
         exit 1
@@ -115,14 +115,14 @@ else
     echo "User $NAME with id $USER_ID already exists"
 fi
 
-if keystone user-role-list --user-id $USER_ID --tenant-id $USER_TENANT_ID | grep -q "\s$MEMBER_ROLE\s"; then
+if openstack role list --user $USER_ID --project $USER_TENANT_ID | grep -q "\s$MEMBER_ROLE\s"; then
     echo "Role $MEMBER_ROLE is already granted for user $USER_ID with tenant $USER_TENANT_ID"
 else
-    keystone user-role-add --user-id $USER_ID --role-id $MEMBER_ROLE --tenant-id $USER_TENANT_ID
+    openstack role add --user $USER_ID --project $USER_TENANT_ID $MEMBER_ROLE
 fi
 
-if keystone user-role-list --user-id $ADMIN_USER_ID --tenant-id $USER_TENANT_ID | grep -q "\s$ADMIN_ROLE\s"; then
+if openstack role list --user $ADMIN_USER_ID --project $USER_TENANT_ID | grep -q "\s$ADMIN_ROLE\s"; then
     echo "Role $ADMIN_ROLE is already granted for user $ADMIN_USER_ID with tenant $USER_TENANT_ID"
 else
-    keystone user-role-add --user-id $ADMIN_USER_ID --role-id $ADMIN_ROLE --tenant-id $USER_TENANT_ID
+    openstack role add --user $ADMIN_USER_ID --project $USER_TENANT_ID $ADMIN_ROLE
 fi
