@@ -82,10 +82,6 @@ in your environment.
        # Do not manage /etc/hosts via cloud-init
        export DIB_CLOUD_INIT_ETC_HOSTS=''
 
-       # Install undercloud mariadb-rpm this way since we set USE_MARIADB=0
-       export SEED_DIB_EXTRA_ARGS='rabbitmq-server mariadb-rpm'
-       export UNDERCLOUD_DIB_EXTRA_ARGS='rabbitmq-server mariadb-rpm'
-
    By default TripleO uses puppet for configuration only. Packages (RPMs, etc)
    are typically installed at image build time.
 
@@ -105,39 +101,25 @@ in your environment.
 
     export ELEMENTS_PATH=$ELEMENTS_PATH:$TRIPLEO_ROOT/tripleo-puppet-elements/elements:$TRIPLEO_ROOT/heat-templates/hot/software-config/elements
 
-3) Setup variables to override the normal DIB image elements::
+3) Set a variable so that a custom puppet image gets built and loaded into Glance::
 
-    export OVERCLOUD_CONTROL_DIB_ELEMENTS='sysctl hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
-    # NOTE: This pre-installs Rabbit and Maria in the Controller.
-    # We let Puppet install the OpenStack services on the controller for
-    # now as this triggers an initial db_sync. We can re-work the db_sync
-    # Puppet modules a bit and allow pre-installed OS packages in the
-    # controller image.
-    export OVERCLOUD_CONTROL_DIB_EXTRA_ARGS='overcloud-controller'
-    export OVERCLOUD_COMPUTE_DIB_ELEMENTS='sysctl hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet puppet-modules hiera os-net-config delorean-repo rdo-release'
-    # NOTE: This pre-installs the Nova, Neutron, and Ceilometer packages in
-    # the compute image
-    export OVERCLOUD_COMPUTE_DIB_EXTRA_ARGS='overcloud-compute'
+    export OVERCLOUD_DISK_IMAGES_CONFIG=$TRIPLEO_ROOT/tripleo-incubator/scripts/overcloud_puppet_disk_images.yaml
 
 4) Override the tripleo-heat-templates resource registry::
 
     export RESOURCE_REGISTRY_PATH="$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry-puppet.yaml"
 
-5) Explicitly disable the USE_MARIADB flag on Fedora. This is because it injects extra elements into the DIB arguments which we do not want when using Puppet::
-
-    export USE_MARIADB=0
-
-6) Configure your Delorean repo URL. This is used to fetch more recently built upstream packages for your OpenStack services::
+5) Configure your Delorean repo URL. This is used to fetch more recently built upstream packages for your OpenStack services::
 
     export DELOREAN_REPO_URL="http://trunk.rdoproject.org/f21/current/"
 
  For more information on Delorean see [2]_
 
-7) Enable the use of stackforge modules from Git. This is to work around the fact that the Fedora RPM doesn't have puppet-keepalived yet::
+6) Enable the use of stackforge modules from Git. This is to work around the fact that the Fedora RPM doesn't have support for all the required modules yet::
 
     export DIB_INSTALLTYPE_puppet_modules=source
 
-8) Source your undercloud environment RC file (perhaps via the select-cloud script). Then execute devtest_overcloud.sh::
+7) Source your undercloud environment RC file (perhaps via the select-cloud script). Then execute devtest_overcloud.sh::
 
     devtest_overcloud.sh
 
