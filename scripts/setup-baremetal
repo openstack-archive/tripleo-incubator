@@ -69,9 +69,6 @@ if [ -z "$JSON_PATH" ]; then
     exit 1
 fi
 
-NODES=$(cat $JSON_PATH)
-register-nodes -s $SERVICE_HOST -n <(echo $NODES)
-
 if [ $USE_IRONIC -eq 0 ]; then
     deploy_base=deploy-ramdisk
 else
@@ -84,6 +81,9 @@ deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --is-public True 
     --disk-format aki < "$deploy_kernel" | awk ' / id / {print $4}')
 deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --is-public True \
     --disk-format ari < "$deploy_ramdisk" | awk ' / id / {print $4}')
+
+NODES=$(cat $JSON_PATH)
+register-nodes -s $SERVICE_HOST -n <(echo $NODES) -k bm-deploy-kernel -d bm-deploy-ramdisk
 
 function cleanup_flavor {
     local FLAVOR_NAME=${1:?"cleanup_flavor requires a flavor name"}
@@ -116,6 +116,4 @@ fi
 
 nova flavor-create baremetal \
     --ephemeral $EPHEMERAL_DISK auto $MEM $ROOT_DISK $CPU
-nova flavor-key baremetal set "cpu_arch"="$ARCH" \
-    "baremetal:deploy_kernel_id"="$deploy_kernel_id" \
-    "baremetal:deploy_ramdisk_id"="$deploy_ramdisk_id"
+nova flavor-key baremetal set "cpu_arch"="$ARCH"
