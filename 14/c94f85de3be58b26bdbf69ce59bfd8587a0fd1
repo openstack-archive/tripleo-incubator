@@ -1,0 +1,9 @@
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Workflow+1: Marios Andreou <marios@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 11 May 2015 06:36:58 +0000
+Reviewed-on: https://review.openstack.org/173645
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
