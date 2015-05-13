@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Dan Prince <dprince@redhat.com>
+Code-Review+2: Steven Hardy <shardy@redhat.com>
+Workflow+1: Steven Hardy <shardy@redhat.com>
+Submitted-by: Jenkins
+Submitted-at: Wed, 13 May 2015 16:28:51 +0000
+Reviewed-on: https://review.openstack.org/182737
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
