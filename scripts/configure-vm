@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import math
 import os.path
 import random
 
@@ -11,9 +12,12 @@ templatedir = os.path.join(
                   os.path.dirname(
                     os.path.abspath(__file__))), 'templates')
 
-def generate_bm_mac_address():
+MAX_NUM_MACS = math.trunc(0xff/2)
+
+
+def generate_baremetal_macs(count=1):
     """Generate an Ethernet MAC address suitable for baremetal testing."""
-    # NOTE(dprince): We generate our own bare metal MAC address here
+    # NOTE(dprince): We generate our own bare metal MAC address's here
     # instead of relying on libvirt so that we can ensure the
     # locally administered bit is set low. (The libvirt default is
     # to set the 2nd MSB high.) This effectively allows our
@@ -21,13 +25,29 @@ def generate_bm_mac_address():
     # and fixes issues with bridge/DHCP configurations which rely
     # on the fact that bridges assume the MAC address of the lowest
     # attached NIC.
-    mac = [0x00,
-           random.randint(0x00, 0xff),
-           random.randint(0x00, 0xff),
-           random.randint(0x00, 0xff),
-           random.randint(0x00, 0xff),
-           random.randint(0x00, 0xff)]
-    return ':'.join(map(lambda x: "%02x" % x, mac))
+    # MACs generated for a given machine will also be in sequential
+    # order, which matches how most BM machines are laid out as well.
+    # Additionally we increment each MAC by two places.
+    macs = []
+
+    if count > MAX_NUM_MACS:
+        raise ValueError("The MAX num of MACS supported is %i." % MAX_NUM_MACS)
+
+    base_nums = [0x00,
+               random.randint(0x00, 0xff),
+               random.randint(0x00, 0xff),
+               random.randint(0x00, 0xff),
+               random.randint(0x00, 0xff)]
+    base_mac = ':'.join(map(lambda x: "%02x" % x, base_nums))
+
+    start = random.randint(0x00, 0xff)
+    if (start + (count * 2)) > 0xff:
+        # leave room to generate macs in sequence
+        start -= (count * 2)
+    for num in range(0, count*2, 2):
+        mac = start + num
+        macs.append(base_mac + ":" + ("%02x" % mac))
+    return macs
 
 def main():
     parser = argparse.ArgumentParser(
@@ -103,11 +123,13 @@ def main():
         <model type='%(nicdriver)s'/>
       </interface>""" % nicparams
 
+    macs = generate_baremetal_macs(len(args.baremetal_interface))
+
     params['bm_network'] = ""
-    for bm_interface in args.baremetal_interface:
+    for bm_interface, mac in zip(args.baremetal_interface, macs):
         bm_interface_params = {
             'bminterface': bm_interface,
-            'bmmacaddress': generate_bm_mac_address(),
+            'bmmacaddress': mac,
             'nicdriver': args.libvirt_nic_driver,
             }
         params['bm_network'] += """
