@@ -96,6 +96,16 @@ in your environment.
    overcloud-resource-registry-puppet.yaml (see below for instructions
    on how to override your Heat resource registry).
 
+   The following environment variables must also be defined to pin given
+   projects to known good versions::
+
+       # Pin to an earlier puppetlabs-concat
+       # https://bugs.launchpad.net/tripleo/+bug/1444585
+       export DIB_REPOREF_puppetlabs_concat=15ecb98dc3a551024b0b92c6aafdefe960a4596f
+
+       # Pin to a known good Delorean repository
+       export DELOREAN_REPO_URL="http://trunk.rdoproject.org/f21/bf/59/bf59764b9a7f14c1f0223b28aa839142cfec3bf3_c3766014"
+
 1) Git clone the tripleo-puppet-elements [1]_ project into your $TRIPLEO_ROOT.  This is currently a non-standard image elements repository and needs to be manually cloned in order to build Puppet images.
 
 2) Add tripleo-puppet-elements to your ELEMENTS_PATH::
