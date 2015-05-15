@@ -61,7 +61,7 @@ def main():
     parser.add_argument('--uri', default='qemu:///system',
         help='The server uri with which to connect.')
     args = parser.parse_args()
-    with file(templatedir + '/vm.xml', 'rb') as f:
+    with file(templatedir + '/domain.xml', 'rb') as f:
         source_template = f.read()
     imagefile = '/var/lib/libvirt/images/seed.qcow2'
     if args.image:
