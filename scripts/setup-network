@@ -4,6 +4,7 @@ set -eu
 BASE=$(dirname $0)/../
 BRIDGE_SUFFIX=${1:-''} # support positional arg for legacy support
 BRIDGE_NAMES='brbm'
+VLAN_TRUNK_IDS=''
 
 SCRIPT_NAME=$(basename $0)
 
@@ -12,14 +13,18 @@ function show_options {
     echo
     echo "Setup libvirt networking and OVS bridges for TripleO."
     echo
-    echo "    -n    -- Bridge number/suffix. Added to all bridges."
-    echo "             Useful when creating multiple environments on the same machine."
-    echo "    -b    -- Space delimited list of baremetal bridge name(s). Defaults to brbm."
+    echo "    -n                -- Bridge number/suffix. Added to all bridges."
+    echo "                         Useful when creating multiple environments"
+    echo "                         on the same machine."
+    echo "    -b                -- Space delimited list of baremetal bridge"
+    echo "                         name(s). Defaults to brbm."
+    echo "    --vlan-trunk-ids  -- Space delimited list of VLAN IDs which will"
+    echo "                         be trunked on the bridge."
     echo
     exit 1
 }
 
-TEMP=$(getopt -o h,n:,b: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b: -l vlan-trunk-ids: -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ]; then
     show_options;
 fi
@@ -32,13 +37,29 @@ while true ; do
         -h) show_options ;;
         -n) BRIDGE_SUFFIX="$2" ; shift 2 ;;
         -b) BRIDGE_NAMES="$2" ; shift 2 ;;
+        --vlan-trunk-ids) VLAN_TRUNK_IDS="$2" ; shift 2 ;;
         --) shift ; break ;;
         *) echo "Error: unsupported option $1." ; show_options ;;
     esac
 done
 
+function vlan_trunks {
+    local IDS=$1
+    if [ -z "$IDS" ]; then
+        return 0
+    fi
+    DATA="<vlan trunk='yes'><tag id='0' nativeMode='untagged'\/>"
+    for ID in $IDS; do
+        DATA="$DATA<tag id='$ID'\/>"
+    done
+    DATA="$DATA<\/vlan>"
+    echo $DATA
+}
+
 function create_bridge {
-    BRIDGE_NAME=$1
+    local BRIDGE_NAME=$1
+    local VLAN_TRUNK_DATA=$2
+
     # Only add bridge if missing
     (sudo ovs-vsctl list-br | grep ${BRIDGE_NAME}$) || sudo ovs-vsctl add-br ${BRIDGE_NAME}
 
@@ -46,14 +67,16 @@ function create_bridge {
     (virsh net-list --persistent | grep "${BRIDGE_NAME} ") && virsh net-destroy ${BRIDGE_NAME}
     (virsh net-list --inactive --persistent | grep "${BRIDGE_NAME} ") && virsh net-undefine ${BRIDGE_NAME}
 
-    virsh net-define <(sed s/%NETWORK_NAME%/$BRIDGE_NAME/ $BASE/templates/net.xml)
+    virsh net-define <(sed -e "s/%NETWORK_NAME%/$BRIDGE_NAME/" -e "s/%VLAN_TRUNK_DATA%/$VLAN_TRUNK_DATA/" $BASE/templates/net.xml)
     virsh net-autostart ${BRIDGE_NAME}
     virsh net-start ${BRIDGE_NAME}
 
 }
 
+VLAN_TRUNK_DATA=$(vlan_trunks "$VLAN_TRUNK_IDS")
+
 for NAME in $BRIDGE_NAMES; do
-    create_bridge $NAME$BRIDGE_SUFFIX
+    create_bridge "$NAME$BRIDGE_SUFFIX" "$VLAN_TRUNK_DATA"
 done
 
 # start default if needed and configure it to autostart
