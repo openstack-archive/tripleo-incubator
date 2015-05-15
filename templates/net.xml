@@ -3,4 +3,5 @@
   <forward mode='bridge'/>
   <bridge name='%NETWORK_NAME%'/>
   <virtualport type='openvswitch'/>
+  %VLAN_TRUNK_DATA%
 </network>
