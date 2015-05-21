@@ -11,7 +11,7 @@ disk_images:
      arch: amd64
      type: qcow2
      elements:
-       - hosts sysctl baremetal dhcp-all-interfaces os-collect-config heat-config-puppet heat-config-script puppet-modules hiera overcloud-compute overcloud-controller stackuser os-net-config delorean-repo rdo-release
+       - hosts baremetal dhcp-all-interfaces os-collect-config heat-config-puppet heat-config-script puppet-modules hiera overcloud-compute overcloud-controller stackuser os-net-config delorean-repo rdo-release
      heat_parameters:
        - controllerImage
        - NovaImage
