@@ -82,6 +82,10 @@ in your environment.
        # Do not manage /etc/hosts via cloud-init
        export DIB_CLOUD_INIT_ETC_HOSTS=''
 
+       # Set ROOT_DISK == NODE_DISK (no ephemeral partition)
+       export ROOT_DISK=40
+       export NODE_DISK=40
+
    By default TripleO uses puppet for configuration only. Packages (RPMs, etc)
    are typically installed at image build time.
 
