@@ -71,7 +71,7 @@ while true ; do
 done
 
 SEED_NAME=seed
-BAREMETAL_REGEX="baremetal"
+BAREMETAL_PREFIX="baremetal"
 NUMBERED_BRIDGE_NAMES=
 
 if [ -n "$NUM" ]; then
@@ -84,14 +84,14 @@ done
 NUMBERED_BRIDGE_NAMES=${NUMBERED_BRIDGE_NAMES%_}
 
 if [ -z "$CLEANUP_ALL" ]; then
-    BAREMETAL_REGEX="baremetal${NUMBERED_BRIDGE_NAMES}"
+    BAREMETAL_PREFIX="baremetal${NUMBERED_BRIDGE_NAMES}"
 fi
 
-for NAME in $(sudo virsh list --name | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
+for NAME in $(sudo virsh list --name | grep "^\($SEED_NAME\|${BAREMETAL_PREFIX}\)"); do
     sudo virsh destroy $NAME
 done
 
-for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
+for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_PREFIX}\)"); do
     if [ $NAME == $SEED_NAME ]; then
         # handle seeds differently since their storage is not managed by libvirt
         sudo virsh undefine --managed-save $NAME
@@ -101,6 +101,6 @@ for NAME in $(sudo virsh list --name --all | grep "^\($SEED_NAME\|${BAREMETAL_RE
     fi
 done
 
-for NAME in $(sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\($SEED_NAME\|${BAREMETAL_REGEX}_.*\)$"); do
+for NAME in $(sudo virsh vol-list $LIBVIRT_VOL_POOL 2>/dev/null | grep /var/ | awk '{print $1}' | grep "^\($SEED_NAME\|${BAREMETAL_PREFIX}\)"); do
     sudo virsh vol-delete --pool $LIBVIRT_VOL_POOL $NAME
 done
