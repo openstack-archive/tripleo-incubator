@@ -38,6 +38,7 @@ Further Information
    :maxdepth: 1
 
    deploying
+   network_isolation
    puppet
    resources
    troubleshooting
