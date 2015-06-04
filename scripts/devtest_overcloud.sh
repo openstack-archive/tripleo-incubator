@@ -611,6 +611,8 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
     },
     "external": {
         "name": "ext-net",
+        "provider:network_type": "flat",
+        "provider:physical_network": "datacentre",
         "cidr": "$FLOATING_CIDR",
         "allocation_start": "$FLOATING_START",
         "allocation_end": "$FLOATING_END",
