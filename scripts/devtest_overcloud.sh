@@ -610,7 +610,7 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
         "gateway": "$OVERCLOUD_FIXED_RANGE_GATEWAY"
     },
     "external": {
-        "name": "ext-net",
+        "name": "datacentre",
         "cidr": "$FLOATING_CIDR",
         "allocation_start": "$FLOATING_START",
         "allocation_end": "$FLOATING_END",
