@@ -68,23 +68,14 @@ function load_image {
         return
     fi
 
+    # This is a bit of a hack but basically we want to support being able to load full disk
+    # images and boot them (now supported by ironic), so if the kernel or ramdisk is missing
+    # we just load the image as is.
     if [ ! -e "$KERNEL" -o ! -e "$RAMDISK" ] ; then
-        DIGK=$(which disk-image-get-kernel || echo $DIB_PATH/bin/disk-image-get-kernel)
-        if [ ! -e $DIGK ]; then
-            echo "Error: unable to locate disk-image-get-kernel"
-            exit 1
-        fi
-
         echo "Warning: Kernel ($KERNEL) or initrd ($RAMDISK) for specified file $FILE not found."
-        echo "         Trying to extract them with disk-image-get-kernel now."
-        echo "         Please add the \"baremetal\" element to your image-build."
-        export TMP_IMAGE_DIR=$(mktemp -t -d --tmpdir=${TMP_DIR:-/tmp} image.XXXXXXXX)
-        [ $? -eq 0 ] || die "Failed to create tmp directory"
-        trap cleanup EXIT
-
-        $DIGK -d ${TMP_IMAGE_DIR} -o 'tmp' -i $FILE
-        KERNEL=$TMP_IMAGE_DIR/tmp-vmlinuz
-        RAMDISK=$TMP_IMAGE_DIR/tmp-initrd
+        echo "         Loading full image into glance."
+        KERNEL=""
+        RAMDISK=""
     fi
 
     if [ "$REMOVE_OLD_IMAGES" ]; then
@@ -93,27 +84,36 @@ function load_image {
         remove_image "${GLANCE_IMAGE_NAME}"
     fi
 
-    kernel_id=$(glance image-create \
-        --name "${GLANCE_IMAGE_NAME}-vmlinuz" \
-        --is-public True \
-        --disk-format aki \
-        --file "$KERNEL" \
-        | grep ' id ' | awk '{print $4}')
-    ramdisk_id=$(glance image-create \
-        --name "${GLANCE_IMAGE_NAME}-initrd" \
-        --is-public True \
-        --disk-format ari \
-        --file "$RAMDISK" \
-        | grep ' id ' | awk '{print $4}')
+    if [ -n "$KERNEL" -a -n "$RAMDISK" ]; then
+        kernel_id=$(glance image-create \
+            --name "${GLANCE_IMAGE_NAME}-vmlinuz" \
+            --is-public True \
+            --disk-format aki \
+            --file "$KERNEL" \
+            | grep ' id ' | awk '{print $4}')
+        ramdisk_id=$(glance image-create \
+            --name "${GLANCE_IMAGE_NAME}-initrd" \
+            --is-public True \
+            --disk-format ari \
+            --file "$RAMDISK" \
+            | grep ' id ' | awk '{print $4}')
 
-    # >&3 sends to the original stdout as this is what we are after
-    glance image-create --name $GLANCE_IMAGE_NAME \
-                        --is-public True \
-                        --disk-format qcow2 \
-                        --container-format bare \
-                        --property kernel_id=$kernel_id \
-                        --property ramdisk_id=$ramdisk_id \
-                        --file $FILE | awk '/ id / { print $4 }' >&3
+        # >&3 sends to the original stdout as this is what we are after
+        glance image-create --name $GLANCE_IMAGE_NAME \
+                            --is-public True \
+                            --disk-format qcow2 \
+                            --container-format bare \
+                            --property kernel_id=$kernel_id \
+                            --property ramdisk_id=$ramdisk_id \
+                            --file $FILE | awk '/ id / { print $4 }' >&3
+    else
+        # Just load the image straight into glance.
+        glance image-create --name $GLANCE_IMAGE_NAME \
+                            --is-public True \
+                            --disk-format qcow2 \
+                            --container-format bare \
+                            --file $FILE | awk '/ id / { print $4 }' >&3
+    fi
 
     cleanup
     trap EXIT

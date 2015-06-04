@@ -46,6 +46,8 @@ function show_options {
     echo "                           -- heat environment file for the undercloud."
     echo "    --heat-env-overcloud  ENVFILE"
     echo "                           -- heat environment file for the overcloud."
+    echo "    --use-containers"
+    echo "                           -- Use containers to implement nodes."
     echo
     echo "Note that this script just chains devtest_variables, devtest_setup,"
     echo "devtest_testenv, devtest_ramdisk, devtest_seed, devtest_undercloud,"
@@ -64,11 +66,12 @@ NETS_ARG=
 CONTINUE=
 HEAT_ENV_UNDERCLOUD=
 HEAT_ENV_OVERCLOUD=
+export USE_CONTAINERS=0
 USE_CACHE=0
 export TRIPLEO_CLEANUP=1
 DEVTEST_START=$(date +%s) #nodocs
 
-TEMP=$(getopt -o h,c -l build-only,no-mergepy,debug-logging,existing-environment,help,trash-my-machine,nodes:,bm-networks:,no-undercloud,heat-env-overcloud:,heat-env-undercloud: -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,c -l build-only,no-mergepy,debug-logging,existing-environment,help,trash-my-machine,nodes:,bm-networks:,no-undercloud,heat-env-overcloud:,heat-env-undercloud,use-containers -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ]; then
     echo "Terminating..." >&2
     exit 1
@@ -97,6 +100,7 @@ while true ; do
         --no-undercloud) NO_UNDERCLOUD="true"; shift 1;;
         --heat-env-undercloud) HEAT_ENV_UNDERCLOUD="--heat-env $2"; shift 2;;
         --heat-env-overcloud) HEAT_ENV_OVERCLOUD="--heat-env $2"; shift 2;;
+        --use-containers) USE_CONTAINERS=1; shift 1;;
         -c) USE_CACHE=1; shift 1;;
         -h|--help) show_options 0;;
         --) shift ; break ;;
@@ -357,10 +361,25 @@ DEVTEST_UC_END=$(date +%s)
 
 ##    ::
 
+## Simple little block that configures the things needed to support containers.
+
+CONTAINER_ARGS=''
+if [ "$USE_CONTAINERS" == 1 ]; then
+
+    ATOMIC_IMAGE_LOCATION="http://download.fedoraproject.org/pub/fedora/linux/releases/22/Cloud/x86_64/Images"
+    ATOMIC_IMAGE_NAME="Fedora-Cloud-Base-22-20150521.x86_64.qcow2"
+    if [ ! -f "$ATOMIC_IMAGE_NAME" ]; then
+        curl -L -O $ATOMIC_IMAGE_LOCATION/$ATOMIC_IMAGE_NAME
+    fi
+    export RESOURCE_REGISTRY_PATH="$TRIPLEO_ROOT/tripleo-heat-templates/overcloud-resource-registry-docker.yaml"
+    CONTAINER_ARGS='--compute-flavor=baremetal_fulldisk'
+fi
+
 ##         devtest_overcloud.sh
 ### --end
 DEVTEST_OC_START=$(date +%s)
-devtest_overcloud.sh $BUILD_ONLY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD
+
+devtest_overcloud.sh $CONTAINER_ARGS $BUILD_ONLY $DEBUG_LOGGING $HEAT_ENV_OVERCLOUD
 DEVTEST_OC_END=$(date +%s)
 if [ -z "$BUILD_ONLY" ]; then
 ### --include

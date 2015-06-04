@@ -96,10 +96,11 @@ def main(argv=sys.argv):
     for image in disk_images:
         arch = image.get('arch', 'amd64')
         img_type = image.get('type', 'qcow2')
+        build = image.get('build', 'true')
         imagename = image.get('imagename')
         logger.info('imagename: %s' % imagename)
         image_path = '%s/%s.%s' % (opts.output_directory, imagename, img_type)
-        if opts.skip or env.get('USE_CACHE', '0') == '1':
+        if opts.skip or env.get('USE_CACHE', '0') == '1' or build == 'false':
             logger.info('looking for image at path: %s' % image_path)
             if os.path.exists(image_path):
                 logger.warn('Image file exists for image name: %s' % imagename)

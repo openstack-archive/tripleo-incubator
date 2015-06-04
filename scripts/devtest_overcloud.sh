@@ -9,7 +9,7 @@ SCRIPT_HOME=$(dirname $0)
 BUILD_ONLY=
 DEBUG_LOGGING=
 HEAT_ENV=
-DISK_IMAGES_CONFIG=${OVERCLOUD_DISK_IMAGES_CONFIG:-''}
+DISK_IMAGES_CONFIG=${OVERCLOUD_DISK_IMAGES_CONFIG:-"$TRIPLEO_ROOT/tripleo-incubator/scripts/overcloud_disk_images.yaml"}
 COMPUTE_FLAVOR="baremetal"
 CONTROL_FLAVOR="baremetal"
 BLOCKSTORAGE_FLAVOR="baremetal"
@@ -113,7 +113,6 @@ if [ -n "$DISK_IMAGES_CONFIG" ]; then
 else
     USE_CACHE=$USE_CACHE devtest_overcloud_images.sh
     # use a default disk images YAML file to load images
-    DISK_IMAGES_CONFIG="$TRIPLEO_ROOT/tripleo-incubator/scripts/overcloud_disk_images.yaml"
 fi
 if [ -n "$BUILD_ONLY" ]; then
     echo "--build-only is deprecated. Please use devtest_overcloud_images.sh instead."

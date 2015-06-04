@@ -119,3 +119,8 @@ fi
 nova flavor-create baremetal \
     --ephemeral $EPHEMERAL_DISK auto $MEM $ROOT_DISK $CPU
 nova flavor-key baremetal set "cpu_arch"="$ARCH"
+
+# For booting full disk images.
+nova flavor-create baremetal_fulldisk \
+    --ephemeral 0 --swap 0 auto $MEM $ROOT_DISK $CPU
+nova flavor-key baremetal_fulldisk set "cpu_arch"="$ARCH"
