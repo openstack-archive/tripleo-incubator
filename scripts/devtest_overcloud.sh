@@ -614,6 +614,7 @@ if [ "stack-create" = "$HEAT_OP" ]; then #nodocs
         "cidr": "$FLOATING_CIDR",
         "allocation_start": "$FLOATING_START",
         "allocation_end": "$FLOATING_END",
+        "physical_network": "datacentre",
         "gateway": "$BM_NETWORK_GATEWAY"
     }
 }
