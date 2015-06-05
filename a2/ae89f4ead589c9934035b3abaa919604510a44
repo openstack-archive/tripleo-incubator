@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: Steven Hardy <shardy@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Workflow+1: James Slagle <jslagle@redhat.com>
+Code-Review+1: Juan Antonio Osorio Robles <juan.osorio.robles@ericsson.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 05 Jun 2015 11:20:19 +0000
+Reviewed-on: https://review.openstack.org/176484
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
