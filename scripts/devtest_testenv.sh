@@ -231,7 +231,7 @@ fi
 # make the local id_rsa_virt_power.pub be in ``.ssh/authorized_keys`` before
 # that is copied into images via ``local-config``
 if ! grep -qF "$(cat ${SSH_KEY}.pub)" ~/.ssh/authorized_keys; then
-    cat ~/.ssh/id_rsa_virt_power.pub >> ~/.ssh/authorized_keys
+    cat ${SSH_KEY}.pub >> ~/.ssh/authorized_keys
     chmod 0600 ~/.ssh/authorized_keys
 fi
 
