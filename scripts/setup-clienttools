@@ -14,13 +14,9 @@ set +u
 source $VENV_HOME/bin/activate
 set -u
 
-# Need setuptools>=1.0 to manage connections when
-# downloading from pypi using http_proxy and https_proxy
-pip install -U 'setuptools>=1.0'
-
-# bug #1293812 : Avoid easy_install triggering on pbr as easy_install is
-# fragile.
-pip install -U 'pbr>=0.5.21,<1.0'
+# Use latest versions of build/environment tooling.
+pip install -U pip
+pip install -U wheel setuptools pbr
 
 pip install -U \
     os-apply-config \
