@@ -35,8 +35,6 @@ function show_options {
     echo "                              entry so that it seed's ctlplane"
     echo "                              network (also attached to brbm)"
     echo "                              can provision instances."
-    echo "    --vlan-trunk-ids          VLAN_IDS -- A space delimited list of VLAN IDs"
-    echo "                              which will be trunked on all bridge(s)."
     echo "    --keep-vms             -- Prevent cleanup of virsh instances for"
     echo "                              undercloud and overcloud"
     echo "JSON-filename -- the path to write the environment description to."
@@ -52,11 +50,10 @@ NETS_PATH=
 NUM=
 OVSBRIDGE=
 BRIDGE_NAMES=brbm
-VLAN_TRUNK_IDS=
 SSH_KEY=~/.ssh/id_rsa_virt_power
 KEEP_VMS=
 
-TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,baremetal-bridge-names:,vlan-trunk-ids:,keep-vms -n $SCRIPT_NAME -- "$@")
+TEMP=$(getopt -o h,n:,b:,s: -l nodes:,bm-networks:,baremetal-bridge-names:,keep-vms -n $SCRIPT_NAME -- "$@")
 if [ $? != 0 ]; then
     echo "Terminating..." >&2
     exit 1
@@ -71,7 +68,6 @@ while true ; do
         --bm-networks) NETS_PATH="$2"; shift 2;;
         --keep-vms) KEEP_VMS=1; shift;;
         --baremetal-bridge-names) BRIDGE_NAMES="$2" ; shift 2 ;;
-        --vlan-trunk-ids) VLAN_TRUNK_IDS="$2" ; shift 2 ;;
         -b) OVSBRIDGE="$2" ; shift 2 ;;
         -h) show_options 0;;
         -n) NUM="$2" ; shift 2 ;;
@@ -160,7 +156,7 @@ NODE_CPU=${NODE_CPU:-1} NODE_MEM=${NODE_MEM:-3072} NODE_DISK=${NODE_DISK:-40} NO
 ##    This configures an openvswitch bridge and teaches libvirt about it.
 ##    ::
 
-setup-network -n "$NUM" -b "$BRIDGE_NAMES" --vlan-trunk-ids "$VLAN_TRUNK_IDS"
+setup-network -n "$NUM" -b "$BRIDGE_NAMES"
 
 ## #. Configure a seed VM. This VM has a disk image manually configured by
 ##    later scripts, and hosts the statically configured seed which is used
