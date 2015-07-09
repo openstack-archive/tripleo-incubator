@@ -96,6 +96,8 @@ def main(argv=sys.argv):
     for image in disk_images:
         arch = image.get('arch', 'amd64')
         img_type = image.get('type', 'qcow2')
+        skip_base = image.get('skip_base', 'false')
+        docker_target = image.get('docker_target')
         imagename = image.get('imagename')
         logger.info('imagename: %s' % imagename)
         image_path = '%s/%s.%s' % (opts.output_directory, imagename, img_type)
@@ -108,17 +110,25 @@ def main(argv=sys.argv):
         elements = image.get('elements', [])
         options = image.get('options', [])
         packages = image.get('packages', [])
-        cmd = ['disk-image-create', '-a', arch, '-o', image_path]
+        cmd = ['disk-image-create', '-a', arch, '-o', image_path, '-t',
+               img_type]
 
         if packages:
             cmd.append('-p')
             cmd.append(','.join(packages))
 
+        if docker_target:
+            cmd.append('--docker-target')
+            cmd.append(docker_target)
+
+        if skip_base == True:
+            cmd.append('-n')
+
         if options:
             cmd.extend(options)
 
         # NODE_DIST provides a distro specific element hook
-        node_dist = env.get('NODE_DIST')
+        node_dist = image.get('distro') or env.get('NODE_DIST')
         if node_dist:
             cmd.append(node_dist)
 
