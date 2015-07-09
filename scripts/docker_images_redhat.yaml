@@ -1,0 +1,28 @@
+# A docker images YAML file that will build a single
+# docker heat "agent" base image to help us run various
+# Heat software deployment tasks via elements.
+#
+# To create the image run:
+#
+# DIB_DOCKER_IMAGE="docker.io/fedora:21" DISTRO_NAME="fedora" DIB_RELEASE="22" build-images -c docker_images_redhat.yaml
+#
+# The heat_parameter section is used to output a heat
+# environment file that maps heat parameter
+# names to the Glance image IDs.
+disk_images:
+  -
+     imagename: heat_docker_agent
+     arch: amd64
+     type: docker
+     distro: docker
+     skip_base: false
+     docker_target: dprince/heat-docker-agents-base
+     elements:
+       - os-collect-config heat-config-puppet puppet-modules heat-config-script heat-config-docker-compose hiera os-net-config-no-exec rdo-release yum redhat-common dib-init-system
+     packages:
+       - initscripts #https://review.gerrithub.io/#/c/243787/
+       - dhcp-client
+       - ethtool
+       - NetworkManager
+     heat_parameters:
+       - dockerImage
