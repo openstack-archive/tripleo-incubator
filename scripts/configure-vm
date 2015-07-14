@@ -43,7 +43,7 @@ def generate_baremetal_macs(count=1):
     start = random.randint(0x00, 0xff)
     if (start + (count * 2)) > 0xff:
         # leave room to generate macs in sequence
-        start -= (count * 2)
+        start = 0xff - count * 2
     for num in range(0, count*2, 2):
         mac = start + num
         macs.append(base_mac + ":" + ("%02x" % mac))
