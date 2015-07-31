@@ -1,0 +1,73 @@
+#!/bin/bash
+# Copyright 2015 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+set -eux
+
+LOGFILE=undercloud-debug.log
+
+exec > >(tee $LOGFILE)
+exec 2>&1
+
+OS_AUTH_URL=${OS_AUTH_URL:-""}
+if [ -z "$OS_AUTH_URL" ]; then
+    echo "You must source a stackrc file for the Undercloud."
+    exit 1
+fi
+
+nova list
+for i in $(nova list | head -n -1 | tail -n +4 | awk '{print $2}'); do nova show $i; done
+nova flavor-list
+for f in $(nova flavor-list | head -n -1 | tail -n +4 | awk '{print $2}'); do nova flavor-show $f; done
+nova quota-show
+nova hypervisor-list
+nova hypervisor-stats
+nova service-list
+
+ironic node-list
+for n in $(ironic node-list | head -n -1 | tail -n +4 | awk '{print $2}'); do ironic node-show $n; done
+for n in $(ironic node-list | head -n -1 | tail -n +4 | awk '{print $2}'); do ironic node-port-list $n; done
+
+glance image-list
+for i in $(glance image-list | head -n -1 | tail -n +4 | awk '{print $2}'); do glance image-show $i; done
+
+heat stack-list
+if heat stack-list | grep overcloud; then
+    heat stack-show overcloud
+    for failed_deployment in $(heat resource-list --nested-depth 5 overcloud | grep FAILED | grep -E 'OS::Heat::SoftwareDeployment |OS::Heat::StructuredDeployment ' | cut -d '|' -f 3); do
+        echo $failed_deployment;
+        heat deployment-show $failed_deployment;
+    done
+fi
+
+keystone endpoint-list
+keystone catalog
+
+neutron quota-list
+neutron net-list
+neutron port-list
+neutron agent-list
+
+sudo ovs-vsctl show
+sudo ovs-ofctl dump-flows br-ctlplane
+
+set +x
+echo
+echo
+echo "###############################################################"
+echo "# All output saved to undercloud-debug.log"
+echo "# Finished."
+echo "###############################################################"
+
+exit
