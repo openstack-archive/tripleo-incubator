@@ -35,5 +35,4 @@ all these small tools for common case deployments, called Tuskar, but that is
 not yet ready for prime time. We'll start using it ourselves as it becomes
 ready.
 
-Take the time to learn the plumbing - nova, nova-bm or ironic, glance, keystone
-etc.
+Take the time to learn the plumbing - nova, ironic, glance, keystone etc...
