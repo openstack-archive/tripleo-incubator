@@ -26,7 +26,7 @@ exec 3>&1 >&2
 function show_options {
     echo "Usage: $SCRIPT_NAME [options] <file>"
     echo
-    echo "Load an image into Glance for use with Nova BareMetal driver"
+    echo "Load an image into Glance for use with Ironic driver"
     echo
     echo "Options:"
     echo "      -d            -- delete duplicate images from glance before loading"

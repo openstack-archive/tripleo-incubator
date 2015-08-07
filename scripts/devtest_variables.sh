@@ -71,18 +71,6 @@ export PATH=$TRIPLEO_ROOT/tripleo-incubator/scripts:$TRIPLEO_ROOT/dib-utils/bin:
 
 export USE_UNDERCLOUD_UI=${USE_UNDERCLOUD_UI:-1}
 
-## #. Ironic is used as the default baremetal deployment layer. To use the
-##    deprecated Nova-Baremetal deployment layer set USE_IRONIC=0.
-##    Note however that as Nova-Baremetal is deprecated in Nova and TripleO
-##    support for it will be removed once it is removed from Nova.
-##    ::
-
-export USE_IRONIC=${USE_IRONIC:-1}
-
-if [ 0 -eq "$USE_IRONIC" ]; then
-    echo "Nova-baremetal is deprecated, please migrate to Ironic ASAP." >&2
-fi
-
 ## #. Set a list of image elements that should be included in all image builds.
 ##    Note that stackuser is only for debugging support - it is not suitable for
 ##    a production network. This is also the place to include elements such as
@@ -101,19 +89,10 @@ export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv use-eph
 ## #. Choose the deploy image element to be used. `deploy-kexec` will relieve you of
 ##    the need to wait for long hardware POST times, however it has known stability
 ##    issues (please see https://bugs.launchpad.net/diskimage-builder/+bug/1240933).
-##    If stability is preferred over speed, use the `deploy-baremetal` image
-##    element (default) or `deploy-ironic` if using ironic.
 ##    ::
 
-if [ $USE_IRONIC -eq 0 ]; then
-    # nova baremetal
-    export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-baremetal}
-    export DEPLOY_NAME=deploy-ramdisk
-else
-    # Ironic
-    export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-ironic}
-    export DEPLOY_NAME=deploy-ramdisk-ironic
-fi
+export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-ironic}
+export DEPLOY_NAME=deploy-ramdisk-ironic
 
 ## #. A messaging backend is required for the seed, undercloud, and overcloud
 ##    control node. It is not required for overcloud computes. The backend is
@@ -137,17 +116,17 @@ export OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_ARGS=${OVERCLOUD_BLOCKSTORAGE_DIB_EXTRA_
 ## #. Set distribution used for VMs (fedora, opensuse, ubuntu). If unset, this
 ##    will match TRIPLEO_OS_DISTRO, which is automatically gathered by devtest
 ##    and represent your build host distro (where the devtest code runs).
-## 
+##
 ##    For Fedora, set SELinux permissive mode(currently the default when using Fedora)::
-## 
+##
 ##         export NODE_DIST="fedora selinux-permissive"
 
 ##    For openSUSE, use::
-## 
+##
 ##         export NODE_DIST="opensuse"
 
 ##    For Ubuntu, use::
-## 
+##
 ##         export NODE_DIST="ubuntu"
 
 ### --end

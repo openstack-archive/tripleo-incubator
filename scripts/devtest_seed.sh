@@ -82,35 +82,6 @@ cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
 ## #. Ironic and Nova-Baremetal require different metadata to operate.
 ##    ::
 
-if [ $USE_IRONIC -eq 0 ]; then
-# Unsets .ironic as it's unused.
-# TODO replace "ironic": {} with del(.ironic) when jq 1.3 is widely available.
-# Sets:
-# - bm node arch
-# - bm power manager
-# - ssh power host
-# - ssh power key
-# - ssh power user
-    jq -s '
-        .[1] as $config
-        | .[0]
-        | .nova.baremetal as $bm
-        | . + {
-            "ironic": {},
-            "nova": (.nova + {
-                "baremetal": ($bm + {
-                    "arch": $config.arch,
-                    "power_manager": $config.power_manager,
-                    "virtual_power": ($bm.virtual_power + {
-                        "user": $config["ssh-user"],
-                        "ssh_host": $config["host-ip"],
-                        "ssh_key": $config["ssh-key"]
-                    })
-                })
-            })
-        }' config.json $TE_DATAFILE > tmp_local.json
-else
-# Unsets .nova.baremetal as it's unused.
 # TODO replace "baremetal": {} with del(.baremetal) when jq 1.3 is widely available.
 # Sets:
 # - ironic.virtual_power_ssh_key.
@@ -130,7 +101,6 @@ else
                 "scheduler_host_manager": "nova.scheduler.ironic_host_manager.IronicHostManager",
             })
         }' config.json $TE_DATAFILE > tmp_local.json
-fi
 
 # Add Keystone certs/key into the environment file
 generate-keystone-pki --heatenv tmp_local.json -s
@@ -242,7 +212,7 @@ fi
 ##    to :doc:`devtest_undercloud`
 
 ##    ``boot-seed-vm`` will start a VM containing your SSH key for the root user.
-## 
+##
 ##    The IP address of the VM's eth0 is printed out at the end of boot-seed-vm, or
 ##    you can query the testenv json which is updated by boot-seed-vm::
 
@@ -276,11 +246,11 @@ set -u #nodocs
 
 ## #. If you downloaded a pre-built seed image you will need to log into it
 ##    and customise the configuration within it. See footnote [#f1]_.)
-## 
+##
 ## #. Setup a prompt clue so you can tell what cloud you have configured.
 ##    (Do this once).
 ##    ::
-## 
+##
 ##      source $TRIPLEO_ROOT/tripleo-incubator/cloudprompt
 
 ## #. Source the client configuration for the seed cloud.
@@ -291,11 +261,7 @@ source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 ## #. If Ironic is in use, we need to setup a user for it.
 ##    ::
 
-if [ $USE_IRONIC -eq 0 ]; then
-    IRONIC_OPT=
-else
-    IRONIC_OPT="--ironic-password unset"
-fi
+IRONIC_OPT="--ironic-password unset"
 
 ## #. Perform setup of your seed cloud.
 ##    ::
@@ -395,8 +361,8 @@ fi
 nova quota-update --cores -1 --instances -1 --ram -1 $(openstack project show admin | awk '$2=="id" {print $4}')
 
 
-## #. Register "bare metal" nodes with nova and setup Nova baremetal flavors.
-##    When using VMs Nova will PXE boot them as though they use physical
+## #. Register "bare metal" nodes with Ironic and setup flavors.
+##    When using VMs Ironic will PXE boot them as though they use physical
 ##    hardware.
 ##    If you want to create the VM yourself see footnote [#f2]_ for details
 ##    on its requirements.
@@ -417,32 +383,32 @@ fi #nodocs
 ##    If you need to collect the MAC address separately, see ``scripts/get-vm-mac``.
 
 ## .. rubric:: Footnotes
-## 
+##
 ## .. [#f1] Customize a downloaded seed image.
-## 
+##
 ##    If you downloaded your seed VM image, you may need to configure it.
 ##    Setup a network proxy, if you have one (e.g. 192.168.2.1 port 8080)
 ##    ::
-## 
+##
 ##         # Run within the image!
 ##         echo << EOF >> ~/.profile
 ##         export no_proxy=192.0.2.1
 ##         export http_proxy=http://192.168.2.1:8080/
 ##         EOF
-## 
+##
 ##    Add an ~/.ssh/authorized_keys file. The image rejects password authentication
 ##    for security, so you will need to ssh out from the VM console. Even if you
 ##    don't copy your authorized_keys in, you will still need to ensure that
 ##    /home/stack/.ssh/authorized_keys on your seed node has some kind of
 ##    public SSH key in it, or the openstack configuration scripts will error.
-## 
+##
 ##    You can log into the console using the username 'stack' password 'stack'.
-## 
+##
 ## .. [#f2] Requirements for the "baremetal node" VMs
-## 
+##
 ##    If you don't use create-nodes, but want to create your own VMs, here are some
 ##    suggestions for what they should look like.
-## 
+##
 ##    * each VM should have 1 NIC
 ##    * eth0 should be on brbm
 ##    * record the MAC addresses for the NIC of each VM.
@@ -452,24 +418,24 @@ fi #nodocs
 ##      OpenStack), and 768M isn't enough to do repeated deploys with.
 ##    * if using KVM, specify that you will install the virtual machine via PXE.
 ##      This will avoid KVM prompting for a disk image or installation media.
-## 
+##
 ## .. [#f3] Notes when using real bare metal
-## 
+##
 ##    If you want to use real bare metal see the following.
-## 
+##
 ##    * When calling setup-baremetal you can set the MAC, IP address, user,
 ##      and password parameters which should all be space delemited lists
 ##      that correspond to the MAC addresses and power management commands
 ##      your real baremetal machines require. See scripts/setup-baremetal
 ##      for details.
-## 
+##
 ##    * If you see over-mtu packets getting dropped when iscsi data is copied
 ##      over the control plane you may need to increase the MTU on your brbm
 ##      interfaces. Symptoms that this might be the cause include:
 ##      ::
-## 
+##
 ##        iscsid: log shows repeated connection failed errors (and reconnects)
 ##        dmesg shows:
 ##            openvswitch: vnet1: dropped over-mtu packet: 1502 > 1500
-## 
+##
 ### --end

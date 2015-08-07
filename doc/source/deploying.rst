@@ -10,7 +10,7 @@ Essential Components
 Essential components make up the self-deploying infrastructure that is
 the heart of TripleO.
 
--  Baremetal machine deployment (Nova Baremetal, soon to be 'Ironic')
+-  Baremetal machine deployment (Ironic)
 
 -  Baremetal volume management (Cinder - not available yet)
 
