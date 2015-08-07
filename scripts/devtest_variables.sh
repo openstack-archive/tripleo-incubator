@@ -93,8 +93,13 @@ export DIB_COMMON_ELEMENTS=${DIB_COMMON_ELEMENTS:-"stackuser common-venv use-eph
 ##    element.
 ##    ::
 
-export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-deploy-ironic}
+export DEPLOY_IMAGE_ELEMENT=${DEPLOY_IMAGE_ELEMENT:-ironic-agent}
 export DEPLOY_NAME=deploy-ramdisk-ironic
+
+export USE_IPA=0
+if [ "$DEPLOY_IMAGE_ELEMENT" = "ironic-agent" ]; then
+    export USE_IPA=1
+fi
 
 ## #. A messaging backend is required for the seed, undercloud, and overcloud
 ##    control node. It is not required for overcloud computes. The backend is
