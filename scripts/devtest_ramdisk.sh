@@ -54,10 +54,22 @@ NODE_ARCH=$(os-apply-config -m $TE_DATAFILE --key arch)
 if [ ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.kernel -o \
     ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.initramfs -o \
     "$USE_CACHE" == "0" ] ; then
+
+DIB_UTILITY="ramdisk-image-create"
+if [ $USE_IPA -eq 1 ]; then
+    DIB_UTILITY="disk-image-create"
+fi
+
 ### --include
-    $TRIPLEO_ROOT/diskimage-builder/bin/ramdisk-image-create -a $NODE_ARCH \
+    $TRIPLEO_ROOT/diskimage-builder/bin/$DIB_UTILITY -a $NODE_ARCH \
         $NODE_DIST $DEPLOY_IMAGE_ELEMENT -o $TRIPLEO_ROOT/$DEPLOY_NAME \
         $DIB_COMMON_ELEMENTS 2>&1 | \
         tee $TRIPLEO_ROOT/dib-deploy.log
 ### --end
+
+# NOTE(lucasagomes): Old versions of the ironic-agent element won't
+# output a .kernel file.
+# See https://bugs.launchpad.net/diskimage-builder/+bug/1482606
+if [ $USE_IPA -eq 1 ] && [ ! -e $TRIPLEO_ROOT/$DEPLOY_NAME.kernel ]; then
+    sudo ln $TRIPLEO_ROOT/$DEPLOY_NAME.vmlinuz $TRIPLEO_ROOT/$DEPLOY_NAME.kernel
 fi
