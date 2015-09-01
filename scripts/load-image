@@ -60,11 +60,11 @@ function load_image {
         exit 1
     fi
 
-    CURRENT_CHECKSUM=$(glance image-show $GLANCE_IMAGE_NAME 2> /dev/null | awk '/ checksum / {print $4}')
+    CURRENT_CHECKSUM=$(nova image-show $GLANCE_IMAGE_NAME 2> /dev/null | awk '/ checksum / {print $4}')
     NEW_CHECKSUM=$(md5sum $FILE | awk '{print $1}')
     if [ "$CURRENT_CHECKSUM" = "$NEW_CHECKSUM" ]; then
         echo "$FILE checksum matches glance checksum, not creating duplicate image."
-        glance image-show $GLANCE_IMAGE_NAME | awk '/ id / {print $4}' >&3
+        nova image-show $GLANCE_IMAGE_NAME | awk '/ id / {print $4}' >&3
         return
     fi
 
@@ -95,20 +95,22 @@ function load_image {
 
     kernel_id=$(glance image-create \
         --name "${GLANCE_IMAGE_NAME}-vmlinuz" \
-        --is-public True \
+        --visibility public \
         --disk-format aki \
+        --container-format aki \
         --file "$KERNEL" \
         | grep ' id ' | awk '{print $4}')
     ramdisk_id=$(glance image-create \
         --name "${GLANCE_IMAGE_NAME}-initrd" \
-        --is-public True \
+        --visibility public \
         --disk-format ari \
+        --container-format ari \
         --file "$RAMDISK" \
         | grep ' id ' | awk '{print $4}')
 
     # >&3 sends to the original stdout as this is what we are after
     glance image-create --name $GLANCE_IMAGE_NAME \
-                        --is-public True \
+                        --visibility public \
                         --disk-format qcow2 \
                         --container-format bare \
                         --property kernel_id=$kernel_id \

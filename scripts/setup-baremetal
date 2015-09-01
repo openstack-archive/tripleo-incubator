@@ -77,11 +77,11 @@ fi
 
 deploy_kernel=$TRIPLEO_ROOT/$deploy_base.kernel
 deploy_ramdisk=$TRIPLEO_ROOT/$deploy_base.initramfs
-if ! glance image-show bm-deploy-kernel > /dev/null ; then
-    deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --is-public True \
-        --disk-format aki < "$deploy_kernel" | awk ' / id / {print $4}')
-    deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --is-public True \
-        --disk-format ari < "$deploy_ramdisk" | awk ' / id / {print $4}')
+if ! nova image-show bm-deploy-kernel > /dev/null ; then
+    deploy_kernel_id=$(glance image-create --name bm-deploy-kernel --visibility public \
+        --disk-format aki --container-format aki < "$deploy_kernel" | awk ' / id / {print $4}')
+    deploy_ramdisk_id=$(glance image-create --name bm-deploy-ramdisk --visibility public \
+        --disk-format ari --container-format ari < "$deploy_ramdisk" | awk ' / id / {print $4}')
 fi
 
 NODES=$(cat $JSON_PATH)
