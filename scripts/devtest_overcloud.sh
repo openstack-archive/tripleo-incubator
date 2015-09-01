@@ -637,7 +637,7 @@ EOF
 ## #. Register the end user image with glance.
 ##    ::
 
-    glance image-create --name user --is-public True --disk-format qcow2 \
+    glance image-create --name user --visibility public --disk-format qcow2 \
         --container-format bare --file $TRIPLEO_ROOT/$USER_IMG_NAME
 
 fi #nodocs
