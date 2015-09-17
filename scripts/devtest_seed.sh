@@ -82,55 +82,26 @@ cd $TRIPLEO_ROOT/tripleo-image-elements/elements/seed-stack-config
 ## #. Ironic and Nova-Baremetal require different metadata to operate.
 ##    ::
 
-if [ $USE_IRONIC -eq 0 ]; then
-# Unsets .ironic as it's unused.
-# TODO replace "ironic": {} with del(.ironic) when jq 1.3 is widely available.
-# Sets:
-# - bm node arch
-# - bm power manager
-# - ssh power host
-# - ssh power key
-# - ssh power user
-    jq -s '
-        .[1] as $config
-        | .[0]
-        | .nova.baremetal as $bm
-        | . + {
-            "ironic": {},
-            "nova": (.nova + {
-                "baremetal": ($bm + {
-                    "arch": $config.arch,
-                    "power_manager": $config.power_manager,
-                    "virtual_power": ($bm.virtual_power + {
-                        "user": $config["ssh-user"],
-                        "ssh_host": $config["host-ip"],
-                        "ssh_key": $config["ssh-key"]
-                    })
-                })
-            })
-        }' config.json $TE_DATAFILE > tmp_local.json
-else
 # Unsets .nova.baremetal as it's unused.
 # TODO replace "baremetal": {} with del(.baremetal) when jq 1.3 is widely available.
 # Sets:
 # - ironic.virtual_power_ssh_key.
 # - nova.compute_driver to ironic.nova.virt.ironic.driver.IronicDriver.
 # - nova.compute_manager to avoid race conditions on ironic startup.
-    jq -s '
-        .[1] as $config
-        | .[0]
-        | . + {
-            "ironic": (.ironic + {
-                "virtual_power_ssh_key": $config["ssh-key"],
-            }),
-            "nova": (.nova  + {
-                "baremetal": {},
-                "compute_driver": "nova.virt.ironic.driver.IronicDriver",
-                "compute_manager": "ironic.nova.compute.manager.ClusteredComputeManager",
-                "scheduler_host_manager": "nova.scheduler.ironic_host_manager.IronicHostManager",
-            })
-        }' config.json $TE_DATAFILE > tmp_local.json
-fi
+jq -s '
+    .[1] as $config
+    | .[0]
+    | . + {
+        "ironic": (.ironic + {
+            "virtual_power_ssh_key": $config["ssh-key"],
+        }),
+        "nova": (.nova  + {
+            "baremetal": {},
+            "compute_driver": "nova.virt.ironic.driver.IronicDriver",
+            "compute_manager": "ironic.nova.compute.manager.ClusteredComputeManager",
+            "scheduler_host_manager": "nova.scheduler.ironic_host_manager.IronicHostManager",
+        })
+    }' config.json $TE_DATAFILE > tmp_local.json
 
 # Add Keystone certs/key into the environment file
 generate-keystone-pki --heatenv tmp_local.json -s
@@ -288,15 +259,6 @@ set -u #nodocs
 
 source $TRIPLEO_ROOT/tripleo-incubator/seedrc
 
-## #. If Ironic is in use, we need to setup a user for it.
-##    ::
-
-if [ $USE_IRONIC -eq 0 ]; then
-    IRONIC_OPT=
-else
-    IRONIC_OPT="--ironic-password unset"
-fi
-
 ## #. Perform setup of your seed cloud.
 ##    ::
 
@@ -313,7 +275,7 @@ wait_for -w 20 --delay 1 -- ping -c 1 $BM_NETWORK_SEED_IP
 ssh-keyscan -t rsa $BM_NETWORK_SEED_IP | tee -a ~/.ssh/known_hosts | grep -q "^$BM_NETWORK_SEED_IP ssh-rsa "
 
 init-keystone -o $BM_NETWORK_SEED_IP -t unset -e admin@example.com -p unset --no-pki-setup
-setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset $IRONIC_OPT
+setup-endpoints $BM_NETWORK_SEED_IP --glance-password unset --heat-password unset --neutron-password unset --nova-password unset --ironic-password unset
 openstack role create heat_stack_user
 # Creating these roles to be used by tenants using swift
 openstack role create swiftoperator
