@@ -133,13 +133,13 @@ fi
 ##              "seed": {
 ##                  "ip": "192.0.2.1",
 ##                  "range-start": "192.0.2.2",
-##                  "range-end": "192.0.2.20"
+##                  "range-end": "192.0.2.20",
 ##                  "physical_bridge_route": (null),
-##                  "public_vlan": (null),
+##                  "public_vlan": (null)
 ##              },
 ##              "undercloud": {
 ##                  "range-start": "192.0.2.21",
-##                  "range-end": "192.0.2.40"
+##                  "range-end": "192.0.2.40",
 ##                  "public_vlan": (null)
 ##              }
 ##          }
