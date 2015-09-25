@@ -28,3 +28,6 @@ scripts/swift
 
 .tox
 doc/build
+
+AUTHORS
+ChangeLog
