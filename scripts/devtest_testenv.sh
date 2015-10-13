@@ -258,7 +258,7 @@ jq "." <<EOF > $JSONFILE
     "host-ip":"$HOSTIP",
     "power_manager":"$POWER_MANAGER",
     "seed-ip":"$SEEDIP",
-    "ssh-key":"$(cat $SSH_KEY)",
+    "ssh-key":"$(cat $SSH_KEY|sed 's,$,\\n,'|tr -d '\n')",
     "ssh-user":"$SSH_USER"
 }
 EOF
