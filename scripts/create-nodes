@@ -24,10 +24,16 @@ BRIDGE_NAMES=${9:-""}
 
 LIBVIRT_NIC_DRIVER=${LIBVIRT_NIC_DRIVER:-"virtio"}
 LIBVIRT_VOL_POOL=${LIBVIRT_VOL_POOL:-"default"}
+LIBVIRT_VOL_POOL_TARGET=${LIBVIRT_VOL_POOL_TARGET:-"/var/lib/libvirt/images"}
+
+# create the default storage pool target if it isn't there yet
+if [ ! -d $LIBVIRT_VOL_POOL_TARGET ]; then
+    sudo mkdir -p $LIBVIRT_VOL_POOL_TARGET
+fi
 
 # define the default storage pool if its not there yet
 (virsh pool-list --all --persistent | grep -q $LIBVIRT_VOL_POOL) || \
-    (virsh pool-define-as --name $LIBVIRT_VOL_POOL dir --target /var/lib/libvirt/images; \
+    (virsh pool-define-as --name $LIBVIRT_VOL_POOL dir --target $LIBVIRT_VOL_POOL_TARGET ; \
     virsh pool-autostart $LIBVIRT_VOL_POOL; virsh pool-start $LIBVIRT_VOL_POOL) >&2
 
 PREALLOC=
