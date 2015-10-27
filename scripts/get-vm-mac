@@ -8,9 +8,9 @@ if [ "$#" -lt 1 ]; then
     exit 1
 fi
 
-VMNAME=$1
+VMNAME="$1"
 
-vms=$(sudo virsh list --all | grep $VMNAME | awk '{ print $2 }')
+vms=$(sudo virsh list --all | grep "$VMNAME" | awk '{ print $2 }')
 
 macs=""
 for vm in $vms ; do
