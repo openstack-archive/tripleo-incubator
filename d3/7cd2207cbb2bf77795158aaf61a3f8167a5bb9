@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Workflow+1: Dan Prince <dprince@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Code-Review+1: Stefano Canepa <stefano.canepa@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 02 Nov 2015 22:23:35 +0000
+Reviewed-on: https://review.openstack.org/199830
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
