@@ -312,11 +312,13 @@ ENV_JSON=$(jq '.parameters = {
 } + .parameters + {
 "AdminPassword": "'"${OVERCLOUD_ADMIN_PASSWORD}"'",
 "AdminToken": "'"${OVERCLOUD_ADMIN_TOKEN}"'",
+"AodhPassword": "'"${OVERCLOUD_AODH_PASSWORD}"'",
 "CeilometerPassword": "'"${OVERCLOUD_CEILOMETER_PASSWORD}"'",
 "CeilometerMeteringSecret": "'"${OVERCLOUD_CEILOMETER_SECRET}"'",
 "CinderPassword": "'"${OVERCLOUD_CINDER_PASSWORD}"'",
 "CloudName": "'"${OVERCLOUD_NAME}"'",
 "GlancePassword": "'"${OVERCLOUD_GLANCE_PASSWORD}"'",
+"GnocchiPassword": "'"${OVERCLOUD_GNOCCHI_PASSWORD}"'",
 "HeatPassword": "'"${OVERCLOUD_HEAT_PASSWORD}"'",
 "HeatStackDomainAdminPassword":  "'"${OVERCLOUD_HEAT_STACK_DOMAIN_PASSWORD}"'",
 "HypervisorNeutronPhysicalBridge": "'"${OVERCLOUD_HYPERVISOR_PHYSICAL_BRIDGE}"'",
