@@ -65,11 +65,11 @@ for FILE in tripleo-cloud/ssh-keys/*; do
         if ! getent passwd $USER &>/dev/null; then
             useradd --create-home --user-group $USER
         fi
-        mkdir -p /home/$USER/.ssh
-        chown -R $USER:$USER /home/$USER/.ssh
-        chmod 700 /home/$USER/.ssh
-        cp -f $FILE /home/$USER/.ssh/authorized_keys
-        chmod 600 /home/$USER/.ssh/authorized_keys
+        eval mkdir -p ~$USER/.ssh
+        eval chown -R $USER:$USER ~$USER/.ssh
+        eval chmod 700 ~$USER/.ssh
+        eval cp -f $FILE ~$USER/.ssh/authorized_keys
+        eval chmod 600 ~$USER/.ssh/authorized_keys
         touch /etc/sudoers.d/$USER
         chmod 0440 /etc/sudoers.d/$USER
         echo "$USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USER
