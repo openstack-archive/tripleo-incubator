@@ -1,7 +1,8 @@
 <domain type='%(engine)s'>
   <name>%(name)s</name>
   <memory unit='KiB'>%(memory)s</memory>
-  <vcpu>%(cpus)s</vcpu>
+  <vcpu mode='host-passthrough'>%(cpus)s</vcpu>
+  <cpu mode='host-passthrough' />
   <os>
     <type arch='%(arch)s'>hvm</type>
     <boot dev='%(bootdev)s'/>
