@@ -1,5 +1,0 @@
-#!/bin/bash
-set -eu
-
-# Assumes nova etc are on PATH.
-nova keypair-add --pub-key ~/.ssh/id_rsa.pub default
