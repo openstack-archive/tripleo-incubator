@@ -1,5 +1,0 @@
-# Add OS_CLOUDNAME to PS1
-if [ -z "${OS_CLOUDPROMPT_ENABLED:-}" ]; then
-    export PS1=\${OS_CLOUDNAME:+"(\$OS_CLOUDNAME)"}$PS1
-    export OS_CLOUDPROMPT_ENABLED=1
-fi
