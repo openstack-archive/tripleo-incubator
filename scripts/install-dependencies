@@ -58,12 +58,6 @@ if [ "$TRIPLEO_OS_FAMILY" = "debian" ]; then
 fi
 
 if [ "$TRIPLEO_OS_FAMILY" = "redhat" ]; then
-    # For CentOS, python-pip and jq are in EPEL
-    if [ "$TRIPLEO_OS_DISTRO" = "centos" ] && [ ! -f /etc/yum.repos.d/epel.repo ]; then
-        echo EPEL repository is required to install python-pip for CentOS.
-        echo See http://fedoraproject.org/wiki/EPEL
-        exit 1
-    fi
     sudo -E yum install -y python-lxml libvirt-python libvirt qemu-img qemu-kvm git python-pip openssl-devel python-devel gcc audit python-virtualenv openvswitch python-yaml net-tools redhat-lsb-core libxslt-devel jq openssh-server libffi-devel which glusterfs-api python-netaddr
 
     sudo service libvirtd restart
