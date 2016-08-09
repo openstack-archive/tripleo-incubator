@@ -1,0 +1,9 @@
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Code-Review+2: Emilien Macchi <emilien@redhat.com>
+Workflow+1: Emilien Macchi <emilien@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 09 Aug 2016 16:40:06 +0000
+Reviewed-on: https://review.openstack.org/350619
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
