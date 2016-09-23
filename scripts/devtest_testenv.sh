@@ -222,16 +222,6 @@ else
 fi
 
 
-## #. Set the default bare metal power manager. By default devtest uses
-##    nova.virt.baremetal.virtual_power_driver.VirtualPowerManager to
-##    support a fully virtualized TripleO test environment. You may
-##    optionally customize this setting if you are using real baremetal
-##    hardware with the devtest scripts. This setting controls the
-##    power manager used in both the seed VM and undercloud for Nova Baremetal.
-##    ::
-
-POWER_MANAGER=${POWER_MANAGER:-'nova.virt.baremetal.virtual_power_driver.VirtualPowerManager'}
-
 ## #. Ensure we can ssh into the host machine to turn VMs on and off.
 ##    The private key we create will be embedded in the seed VM, and delivered
 ##    dynamically by heat to the undercloud VM.
@@ -252,16 +242,7 @@ fi
 ## #. Wrap this all up into JSON.
 ##    ::
 
-jq "." <<EOF > $JSONFILE
-{
-    "arch":"$NODE_ARCH",
-    "host-ip":"$HOSTIP",
-    "power_manager":"$POWER_MANAGER",
-    "seed-ip":"$SEEDIP",
-    "ssh-key":"$(cat $SSH_KEY|sed 's,$,\\n,'|tr -d '\n')",
-    "ssh-user":"$SSH_USER"
-}
-EOF
+echo '{}' > $JSONFILE
 
 ## #. If you have an existing bare metal cloud network to use, use it. See
 ##    `baremetal-network` section in :ref:`devtest-environment-configuration`
