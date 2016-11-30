@@ -1,0 +1,10 @@
+Code-Review+1: Gael Chamoulaud <gchamoul@redhat.com>
+Code-Review+2: Emilien Macchi <emilien@redhat.com>
+Code-Review+2: Dan Prince <dprince@redhat.com>
+Workflow+1: Dan Prince <dprince@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 30 Nov 2016 16:16:39 +0000
+Reviewed-on: https://review.openstack.org/382602
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
