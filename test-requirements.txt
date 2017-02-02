@@ -1,2 +1,3 @@
+docutils>=0.11,!=0.13.1  # OSI-Approved Open Source, Public Domain
 oslosphinx
 sphinx>=1.1.2,<1.2
