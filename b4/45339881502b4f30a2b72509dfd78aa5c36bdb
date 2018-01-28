@@ -1,0 +1,8 @@
+Code-Review+2: Ben Nemec <openstack@nemebean.com>
+Workflow+1: Sagi Shnaidman <sshnaidm@redhat.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Sun, 28 Jan 2018 09:25:06 +0000
+Reviewed-on: https://review.openstack.org/538267
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
