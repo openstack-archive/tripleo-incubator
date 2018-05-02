@@ -1,13 +1,10 @@
-========================
-Team and repository tags
-========================
+This project is no longer maintained.
 
-.. image:: http://governance.openstack.org/badges/tripleo-incubator.svg
-    :target: http://governance.openstack.org/reference/tags/index.html
+The contents of this repository are still available in the Git
+source code management system.  To see the contents of this
+repository before it reached its end of life, please check out the
+previous commit with "git checkout HEAD^1".
 
-.. Change things from this point on
-
-This Repo is Deprecated
-=======================
-
-Please see the `current TripleO docs <http://docs.openstack.org/developer/tripleo-docs/>`_.
+For any further questions, please email
+openstack-dev@lists.openstack.org or join #openstack-dev on
+Freenode.

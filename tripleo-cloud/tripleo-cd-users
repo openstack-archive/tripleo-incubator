@@ -1,7 +1,0 @@
-openstack-infra,infra-root@openstack.org,OpenStack CI Service hosts,PTL - used by openstack infra for long lived hosts
-openstack-nodepool,jenkins@openstack.org,OpenStack CI nodepool hosts,PTL - used by openstack infra for test hosts
-tripleo-ci,ci@tripleo.org,OpenStack CI Test Environment hosts,PTL - used by tripleo ci for obtaining IPs from neutron
-rpodolyaka,rpodolyaka@mirantis.com,Roman Podoliaka,ATC
-elizabeth,lyz@princessleia.com,Elizabeth Krumbach Joseph,ATC
-stevenk,steven@wedontsleep.org,Steve Kowalik,ATC
-polleyj,jp@jamezpolley.com,James Polley,ATC
