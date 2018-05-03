@@ -99,7 +99,6 @@ jq -s '
             "baremetal": {},
             "compute_driver": "nova.virt.ironic.driver.IronicDriver",
             "compute_manager": "ironic.nova.compute.manager.ClusteredComputeManager",
-            "scheduler_host_manager": "nova.scheduler.ironic_host_manager.IronicHostManager",
         })
     }' config.json $TE_DATAFILE > tmp_local.json
 
