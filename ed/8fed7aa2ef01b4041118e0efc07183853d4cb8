@@ -1,0 +1,9 @@
+Code-Review+2: Emilien Macchi <emilien@redhat.com>
+Code-Review+1: Andreas Jaeger <jaegerandi@gmail.com>
+Workflow+1: Alex Schultz <aschultz@redhat.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Fri, 11 May 2018 14:21:57 +0000
+Reviewed-on: https://review.openstack.org/565838
+Project: openstack/tripleo-incubator
+Branch: refs/heads/master
